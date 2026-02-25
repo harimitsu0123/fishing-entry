@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>釣り大会 受付システム</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 id="app-title">釣り大会 受付</h1>
+            <ul class="nav-links">
+                <li><button class="nav-btn active" data-target="registration-view">受付登録</button></li>
+                <li><button class="nav-btn admin-only hidden" data-target="dashboard-view"
+                        data-secure="true">管理・設定</button></li>
+                <li><button class="nav-btn admin-only hidden" data-target="reception-view"
+                        data-secure="true">当日受付</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Timeframe Message Overlay -->
+    <div id="timeframe-overlay" class="timeframe-overlay hidden">
+        <div class="timeframe-message">
+            <h2 id="timeframe-title">受付時間外です</h2>
+            <p id="timeframe-desc">現在は受付を行っていません。</p>
+        </div>
+    </div>
+
+    <main class="container">
+        <!-- Registration View -->
+        <section id="registration-view" class="view active">
+            <div id="registration-card" class="card">
+                <div class="card-header">
+                    <h2>参加受付</h2>
+                    <button id="show-edit-login" class="btn-text admin-only hidden">既存登録の変更</button>
+                </div>
+
+                <div id="registration-status" class="alert hidden"></div>
+
+                <form id="registration-form">
+                    <input type="hidden" id="edit-entry-id" value="">
+
+                    <div class="section-title">受付情報</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>受付区分 <span class="required">*</span></label>
+                            <div class="source-selector" id="main-source-selector">
+                                <label class="source-option">
+                                    <input type="radio" name="reg-source" value="一般" checked required>
+                                    <span class="source-label">
+                                        <span class="badge badge-ippan">一般</span>
+                                        一般受付
+                                    </span>
+                                </label>
+                                <label class="source-option">
+                                    <input type="radio" name="reg-source" value="みん釣り">
+                                    <span class="source-label">
+                                        <span class="badge badge-mintsuri">みん釣り</span>
+                                        みん釣り公式
+                                    </span>
+                                </label>
+                                <!-- Suiho and Harimitsu moved to Admin section in Settings -->
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="group-name">グループ名 <span class="required">*</span></label>
+                            <input type="text" id="group-name" required placeholder="例：チーム・シーサイド">
+                        </div>
+                    </div>
+
+                    <div class="section-title">代表者連絡先</div>
+                    <div class="form-group">
+                        <label for="representative-name">代表者氏名 <span class="required">*</span></label>
+                        <input type="text" id="representative-name" required placeholder="例：山田 太郎">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rep-phone">電話番号 <span class="required">*</span></label>
+                            <input type="tel" id="rep-phone" required placeholder="090-0000-0000">
+                        </div>
+                        <div class="form-group">
+                            <label for="rep-email">メールアドレス <span class="required">*</span></label>
+                            <input type="email" id="rep-email" required placeholder="example@mail.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rep-email-confirm">メールアドレス（確認用） <span class="required">*</span></label>
+                            <input type="email" id="rep-email-confirm" required placeholder="もう一度入力してください">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-password">編集用パスワード <span class="required">*</span></label>
+                            <input type="password" id="edit-password" required placeholder="変更時に使用します">
+                        </div>
+                    </div>
+
+                    <div class="section-title">参加者リスト（釣り / 見学）</div>
+                    <div id="participant-list">
+                        <!-- Participant rows will be added here -->
+                    </div>
+                    <button type="button" id="add-participant" class="btn-outline w-100 mt-2">+ 参加者を追加</button>
+
+                    <div class="form-actions mt-4">
+                        <button type="button" class="btn-primary" id="btn-to-confirm">確認画面へ</button>
+                        <button type="button" id="cancel-edit" class="btn-secondary hidden">キャンセル</button>
+                    </div>
+                </form>
+
+                <!-- Confirmation View (Hidden by default) -->
+                <div id="confirmation-section" class="hidden">
+                    <h3>登録内容の確認</h3>
+                    <p class="mb-4">以下の内容で登録します。よろしいですか？</p>
+
+                    <div class="confirm-box">
+                        <p><strong>受付区分：</strong> <span id="conf-source"></span></p>
+                        <p><strong>グループ名：</strong> <span id="conf-group"></span></p>
+                        <p><strong>代表者氏名：</strong> <span id="conf-rep-name"></span></p>
+                        <p><strong>電話番号：</strong> <span id="conf-rep-phone"></span></p>
+                        <p><strong>メールアドレス：</strong> <span id="conf-rep-email"></span></p>
+
+                        <div class="mt-2" style="border-top: 1px dashed #ccc; padding-top: 0.5rem;">
+                            <strong>参加者（釣り / 見学）リスト：</strong>
+                            <ul id="conf-participant-summary"
+                                style="padding-left: 1.5rem; margin-top: 0.5rem; font-size: 0.9rem;">
+                                <!-- Detailed rows will be added here via JS -->
+                            </ul>
+                        </div>
+                        <p class="mt-2 text-muted">※編集用パスワードは表示されませんが保存されます。</p>
+                    </div>
+
+                    <div class="form-actions mt-4">
+                        <button type="button" class="btn-primary" id="submit-registration">この内容で登録する</button>
+                        <button type="button" id="back-to-edit" class="btn-secondary">修正する</button>
+                    </div>
+                </div>
+
+                <!-- Edit Verification Login -->
+                <div id="edit-auth-section" class="hidden">
+                    <h3>登録内容の変更</h3>
+                    <p>受付番号と、登録時の情報を入力してください。</p>
+                    <div class="form-group">
+                        <label>受付番号</label>
+                        <input type="text" id="auth-entry-id" placeholder="例：A-001">
+                    </div>
+                    <div class="form-group">
+                        <label>認証情報（パスワード / 電話 / メール のいずれか）</label>
+                        <input type="password" id="auth-credential" placeholder="認証情報を入力">
+                    </div>
+                    <div class="form-actions">
+                        <button id="verify-edit" class="btn-primary">認証して編集する</button>
+                        <button id="hide-edit-login" class="btn-secondary">戻る</button>
+                    </div>
+                    <div id="auth-error" class="alert alert-error mt-2 hidden"></div>
+                </div>
+            </div>
+
+            <!-- Last Registration Modal/Result -->
+            <div id="registration-result" class="card result-card hidden">
+                <h3>登録完了！</h3>
+                <div class="entry-number-container">
+                    <span class="label">受付番号</span>
+                    <span id="result-number" class="entry-number">---</span>
+                </div>
+                <div class="result-details">
+                    <p><strong>グループ：</strong> <span id="result-group"></span></p>
+                    <p><strong>釣り人数：</strong> <span id="result-fishers"></span> 名</p>
+                    <p><strong>受付区分：</strong> <span id="result-source"></span></p>
+                </div>
+
+                <div class="alert alert-warning mt-4 text-center">
+                    <strong style="color:red; font-size: 1.1rem;">【重要】</strong><br>
+                    ご登録ありがとうございます。<br>
+                    <strong>この画面を必ずスクリーンショットして保存してください。</strong><br>
+                    （受付番号は当日の受付で必要になります）
+                </div>
+
+                <button class="btn-secondary mt-4 w-100" id="back-to-form">新しい登録を行う</button>
+            </div>
+        </section>
+
+
+        <!-- Dashboard View -->
+        <section id="dashboard-view" class="view">
+            <div class="card mb-4">
+                <h2>区分別 登録状況</h2>
+                <div class="capacity-split-grid mt-4">
+                    <!-- General -->
+                    <div class="split-card">
+                        <div class="split-header">
+                            <span class="badge badge-ippan">一般</span>
+                            <span class="split-value"><span id="curr-ippan">0</span> / <span
+                                    id="max-ippan">100</span></span>
+                        </div>
+                        <div class="split-details">見学者: <span id="ippan-observers">0</span>名</div>
+                        <div class="progress-bar">
+                            <div id="prog-ippan" class="progress"></div>
+                        </div>
+                    </div>
+                    <!-- Mintsuri -->
+                    <div class="split-card">
+                        <div class="split-header">
+                            <span class="badge badge-mintsuri">みん釣り</span>
+                            <span class="split-value"><span id="curr-mintsuri">0</span> / <span
+                                    id="max-mintsuri">100</span></span>
+                        </div>
+                        <div class="split-details">見学者: <span id="mintsuri-observers">0</span>名</div>
+                        <div class="progress-bar">
+                            <div id="prog-mintsuri" class="progress" style="background:var(--error-color)"></div>
+                        </div>
+                    </div>
+                    <!-- Suiho -->
+                    <div class="split-card">
+                        <div class="split-header">
+                            <span class="badge badge-suiho">水宝</span>
+                            <span class="split-value"><span id="curr-suiho">0</span> / <span
+                                    id="max-suiho">50</span></span>
+                        </div>
+                        <div class="split-details">見学者: <span id="suiho-observers">0</span>名</div>
+                        <div class="progress-bar">
+                            <div id="prog-suiho" class="progress" style="background:#1e90ff"></div>
+                        </div>
+                    </div>
+                    <!-- Harimitsu -->
+                    <div class="split-card admin-only hidden">
+                        <div class="split-header">
+                            <span class="badge badge-harimitsu">ハリミツ</span>
+                            <span class="split-value"><span id="curr-harimitsu">0</span> / <span
+                                    id="max-harimitsu">50</span></span>
+                        </div>
+                        <div class="split-details">見学者: <span id="harimitsu-observers">0</span>名</div>
+                        <div class="progress-bar">
+                            <div id="prog-harimitsu" class="progress" style="background:#9b59b6"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-grid mt-4">
+                    <div class="stat-card">
+                        <h3>総登録グループ</h3>
+                        <p id="total-registrations" class="stat-value">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>釣り参加者合計</h3>
+                        <p class="stat-value"><span id="current-fishers">0</span> / 250</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>見学者合計</h3>
+                        <p id="current-observers" class="stat-value">0</p>
+                    </div>
+                    <div class="stat-card" style="border-top: 5px solid var(--success-color);">
+                        <h3>受付状況（当日）</h3>
+                        <p class="stat-value">来場: <span id="checked-in-count">0</span> / 欠席: <span
+                                id="absent-count">0</span></p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">全 <span
+                                id="total-groups-count">0</span> 組</p>
+                    </div>
+                </div>
+            </div> <!-- End of Status Stats Card -->
+
+            </div> <!-- End of Status Stats Card -->
+
+            <!-- Admin Sub-tabs Navigation -->
+            <nav class="admin-tab-nav">
+                <button class="admin-tab-btn active" data-tab="tab-list">参加申し込み一覧</button>
+                <button class="admin-tab-btn" data-tab="tab-proxy">代理登録</button>
+                <button class="admin-tab-btn" data-tab="tab-settings">大会設定</button>
+                <button class="admin-tab-btn" data-tab="tab-capacity">定員・詳細</button>
+                <button class="admin-tab-btn" data-tab="tab-stats">統計・分析</button>
+                <button class="admin-tab-btn" data-tab="tab-email">一括メール</button>
+                <button class="admin-tab-btn" data-tab="tab-data">データ管理</button>
+            </nav>
+
+            <div id="admin-tab-container">
+                <!-- Tab: Registration List -->
+                <div id="tab-list" class="admin-tab-content active">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>参加申し込み一覧</h2>
+                            <div class="header-actions">
+                                <button id="export-csv" class="btn-outline">CSV(グループ用)</button>
+                                <button id="export-participants-csv" class="btn-outline">Excel用(参加者名簿)</button>
+                            </div>
+                        </div>
+                        <div class="search-box mb-3">
+                            <input type="text" id="dashboard-search" placeholder="番号、グループ名、代表者名で検索...">
+                        </div>
+                        <div class="filter-group mb-4">
+                            <button class="filter-btn active" data-filter="all">すべて</button>
+                            <button class="filter-btn" data-filter="一般">一般</button>
+                            <button class="filter-btn" data-filter="みん釣り">みん釣り</button>
+                            <button class="filter-btn" data-filter="水宝">水宝</button>
+                            <button class="filter-btn admin-only hidden" data-filter="ハリミツ">ハリミツ</button>
+                        </div>
+                        <div class="table-container">
+                            <table id="entry-table">
+                                <thead>
+                                    <tr>
+                                        <th>番号</th>
+                                        <th>区分</th>
+                                        <th>グループ名</th>
+                                        <th>代表者</th>
+                                        <th>釣り人数</th>
+                                        <th>見学</th>
+                                        <th>登録時間</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="entry-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Proxy Registration -->
+                <div id="tab-proxy" class="admin-tab-content">
+                    <div class="card">
+                        <h2>代理・一括登録</h2>
+                        <p class="text-muted mb-3">一般公開されていない「水宝」「ハリミツ」枠での一括登録をここから開始できます。</p>
+                        <div class="flex-gap">
+                            <button type="button" class="btn-primary" onclick="startAdminRegistration('水宝')">
+                                <span class="badge badge-suiho">水宝</span> 水宝枠で登録
+                            </button>
+                            <button type="button" class="btn-primary" onclick="startAdminRegistration('ハリミツ')"
+                                style="background:#9b59b6; border-color:#9b59b6">
+                                <span class="badge badge-harimitsu">ハリミツ</span> ハリミツ枠で登録
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: General Settings -->
+                <div id="tab-settings" class="admin-tab-content">
+                    <div class="card">
+                        <h2>大会基本設定</h2>
+                        <form id="settings-form-proxy"> <!-- Using a wrapper to keep event listeners logic simple -->
+                            <div class="form-group">
+                                <label for="competition-name">大会名称</label>
+                                <input type="text" id="competition-name" placeholder="例：第1回 釣り大会">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="registration-start">受付開始日時</label>
+                                    <input type="datetime-local" id="registration-start">
+                                </div>
+                                <div class="form-group">
+                                    <label for="registration-deadline">受付終了日時</label>
+                                    <input type="datetime-local" id="registration-deadline">
+                                </div>
+                            </div>
+                            <button type="button" class="btn-primary mt-4"
+                                onclick="triggerSettingsSave()">設定を保存</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tab: Capacity & Security -->
+                <div id="tab-capacity" class="admin-tab-content">
+                    <div class="card">
+                        <h2>人数・セキュリティ</h2>
+                        <div class="section-title">定員設定</div>
+                        <div class="alert alert-info mb-3"
+                            style="display:flex; justify-content: space-between; align-items: center; background: #e3f2fd; border: 1px solid #bbdefb; border-radius: 8px; padding: 1rem;">
+                            <div>
+                                <span style="font-weight: 700;">現在の入力合計: </span>
+                                <span id="capacity-total-summary"
+                                    style="font-size: 1.5rem; color: var(--primary-color);">0</span>
+                                <span style="font-weight: 700;"> / 250名</span>
+                            </div>
+                            <div id="capacity-warning-msg" class="hidden"
+                                style="color: var(--error-color); font-weight: bold;">
+                                ⚠️ 250名を超えています！
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cap-ippan">一般 枠</label>
+                                <input type="number" id="cap-ippan" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="cap-mintsuri">みん釣り 枠</label>
+                                <input type="number" id="cap-mintsuri" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="cap-suiho">水宝 枠</label>
+                                <input type="number" id="cap-suiho" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="cap-harimitsu">ハリミツ 枠</label>
+                                <input type="number" id="cap-harimitsu" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="capacity-observers">見学者 枠</label>
+                                <input type="number" id="capacity-observers" min="0">
+                            </div>
+                        </div>
+
+                        <div class="section-title">セキュリティ</div>
+                        <div class="form-group">
+                            <label for="admin-password-set">管理画面パスワード</label>
+                            <input type="text" id="admin-password-set">
+                        </div>
+                        <button type="button" class="btn-primary mt-4" onclick="triggerSettingsSave()">設定を保存</button>
+
+                        <div class="qr-code-section mt-4">
+                            <h3>iPad 連携用 QRコード</h3>
+                            <p class="text-muted mb-3">このQRコードをiPadでスキャンすると、このシステムのURLに直接アクセスできます。</p>
+                            <div class="qr-code-container" id="admin-qr-code-container">
+                                <!-- QR Code will be injected here -->
+                                <p style="padding: 2rem;">URLを取得中...</p>
+                            </div>
+                            <div id="admin-url-display"
+                                style="font-size: 0.9rem; font-family: monospace; color: var(--primary-color); word-break: break-all;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Tab: Statistics -->
+                <div id="tab-stats" class="admin-tab-content">
+                    <div class="card">
+                        <h2>統計・分析（全体）</h2>
+                        <div class="breakdown-grid mt-4">
+                            <div class="breakdown-card">
+                                <div class="section-title">年代別 集計</div>
+                                <div id="age-breakdown-list" class="stats-list">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+                            <div class="breakdown-card">
+                                <div class="section-title">地域別 集計</div>
+                                <div id="region-breakdown-list" class="stats-list">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Bulk Email -->
+                <div id="tab-email" class="admin-tab-content">
+                    <div class="card" style="border-top: 5px solid var(--accent-color);">
+                        <div class="card-header">
+                            <h2>お知らせ一括送信</h2>
+                            <span class="badge badge-ippan" style="background: var(--accent-color)">Admin Only</span>
+                        </div>
+                        <p class="text-muted mb-3">代表者へ一斉メールを送信します。<br>
+                            対象者： <strong id="bulk-mail-recipient-count">0</strong> 名
+                        </p>
+                        <div class="form-group">
+                            <label for="bulk-mail-subject">件名</label>
+                            <input type="text" id="bulk-mail-subject" placeholder="例：【重要】大会当日に関するお知らせ">
+                        </div>
+                        <div class="form-group">
+                            <label for="bulk-mail-body">本文</label>
+                            <textarea id="bulk-mail-body" rows="10"
+                                style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #ddd;"></textarea>
+                        </div>
+                        <div class="form-actions mt-3">
+                            <button type="button" id="btn-send-bulk-mail" class="btn-primary"
+                                style="background: var(--accent-color); border-color: var(--accent-color)">送信する</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Data Management -->
+                <div id="tab-data" class="admin-tab-content">
+                    <div class="card border-danger">
+                        <h2>データ管理</h2>
+                        <p>全ての登録データを削除します。この操作は取り消せません。</p>
+                        <div class="flex-gap mt-3">
+                            <button id="reset-data" class="btn-danger">全データをリセット</button>
+                            <button type="button" class="btn-outline" onclick="generateBulkTestData()"
+                                style="color:var(--secondary-color); border-color:var(--secondary-color)">
+                                🛠️ テストデータ生成 (80件)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reception View -->
+        <section id="reception-view" class="view">
+            <div class="card">
+                <div class="card-header">
+                    <h2>当日受付アシスタント</h2>
+                    <div class="reception-stats-header">
+                        <span class="rec-stat-item">来場: <strong id="rec-check-in-count">0</strong></span>
+                        <span class="rec-stat-item">欠席: <strong id="rec-absent-count">0</strong></span>
+                    </div>
+                </div>
+
+                <div class="reception-container">
+                    <!-- Search & List Column -->
+                    <div class="reception-sidebar">
+                        <div class="search-box mb-2">
+                            <input type="text" id="reception-search" placeholder="受付番号・名前で検索...">
+                        </div>
+                        <div class="flex-between mb-2">
+                            <label class="toggle-control">
+                                <input type="checkbox" id="show-completed-toggle" checked>
+                                <span class="control-label">受付済みも表示</span>
+                            </label>
+                        </div>
+                        <div class="reception-group-list" id="reception-group-list">
+                            <!-- Group list items injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Detail Column (Desk) -->
+                    <div class="reception-desk" id="reception-detail-area">
+                        <div class="reception-placeholder">
+                            <i class="icon-search">🔍</i>
+                            <p>左側のリストからグループを選択してください</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Admin Auth Modal -->
+    <div id="admin-auth-modal" class="modal hidden">
+        <div class="modal-content card">
+            <div class="modal-header">
+                <h3>管理者認証</h3>
+            </div>
+            <div class="p-3">
+                <p class="mb-3">管理画面・当日受付へアクセスするにはパスワードが必要です。</p>
+                <div class="form-group">
+                    <label for="global-admin-password">パスワード</label>
+                    <input type="password" id="global-admin-password" placeholder="••••••••">
+                </div>
+                <div id="admin-auth-error" class="alert alert-error mb-3 hidden">
+                    パスワードが正しくありません。
+                </div>
+                <div class="form-actions mt-4">
+                    <button id="verify-admin" class="btn-primary">ログイン</button>
+                    <button id="cancel-admin" class="btn-secondary">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container"
+            style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem;">
+            <p>&copy; 2026 釣り大会実行委員会</p>
+            <span id="reveal-admin" style="cursor: default; margin-left: 5px; opacity: 0.2;">.</span>
+        </div>
+    </footer>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
