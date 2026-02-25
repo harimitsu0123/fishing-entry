@@ -1,4 +1,4 @@
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxfFxXoOevGIL3KXKLemwzNcH9GEKxbO1x1NegGhhUxz_w8bpVaLVNDAu5U-82kKHph/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwKGvpC2o--sb7nmiLl-6fEaJlVaKbXqRjB7tGe8LU1UBUETWuVI63S23MDK2WSm3og/exec";
 
 // State Management
 let state = {
@@ -13,10 +13,12 @@ let state = {
         startTime: "",
         deadline: "",
         adminPassword: "admin"
-    }
+    },
+    lastUpdated: 0 // Unix timestamp for sync merging
 };
 
-let isAdminAuth = false;
+let isAdminAuth = sessionStorage.getItem('isAdminAuth') === 'true'; // Persistent session
+let currentAdminTab = 'tab-list'; // Track current active tab in Admin
 let dashboardFilter = 'all';
 let currentReceptionId = null;
 let isAdminAuthAction = false; // Flag for admin-led edits
@@ -54,6 +56,11 @@ window.startAdminRegistration = function (source) {
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
     initApp();
+
+    // If persistent login is true, reveal admin parts
+    if (isAdminAuth) {
+        document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+    }
 });
 
 async function loadData() {
@@ -64,21 +71,25 @@ async function loadData() {
         if (response.ok) {
             const cloudData = await response.json();
             if (cloudData && cloudData.entries) {
-                // Determine if local is newer (very basic check)
                 const localData = localStorage.getItem('fishing_app_v3_data');
                 if (localData) {
                     const parsedLocal = JSON.parse(localData);
-                    // If local has more entries or different length, maybe upload?
-                    // For now, let's prioritize cloud but if cloud is empty and local isn't, upload local.
-                    if (cloudData.entries.length === 0 && parsedLocal.entries.length > 0) {
-                        console.log('Cloud is empty but local has data. Uploading local...');
+                    // Compare timestamps
+                    const localTime = parsedLocal.lastUpdated || 0;
+                    const cloudTime = cloudData.lastUpdated || 0;
+
+                    if (localTime > cloudTime) {
+                        console.log('Local data is newer. Syncing to cloud...');
                         state = parsedLocal;
-                        await syncToCloud();
-                        finalizeLoad();
-                        return;
+                        syncToCloud(); // Push local to cloud
+                    } else {
+                        console.log('Cloud data is newer or same. Loading cloud...');
+                        state = cloudData;
                     }
+                } else {
+                    state = cloudData;
                 }
-                state = cloudData;
+
                 console.log('Cloud sync: data loaded');
                 updateSyncStatus('success');
                 finalizeLoad();
@@ -138,6 +149,7 @@ function finalizeLoad() {
 }
 
 function saveData() {
+    state.lastUpdated = Date.now(); // Update timestamp on every save
     localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
     // Also sync to cloud
     syncToCloud();
@@ -203,6 +215,11 @@ function initApp() {
             switchView(btn, target);
         });
     });
+
+    // Restore and re-apply current Admin Tab if we are in admin mode
+    if (isAdminAuth) {
+        switchAdminTab(currentAdminTab);
+    }
 
     // Form logic
     document.getElementById('add-participant').addEventListener('click', () => addParticipantRow());
@@ -328,7 +345,7 @@ function switchView(btnElement, targetId) {
     }
     if (targetId === 'dashboard-view') {
         updateDashboard();
-        switchAdminTab('tab-list'); // Default to list tab
+        switchAdminTab(currentAdminTab); // Use stored tab instead of hardcoding 'tab-list'
     }
     if (targetId === 'reception-view') {
         updateReceptionList();
@@ -374,6 +391,7 @@ function handleAdminLogin() {
     const pw = document.getElementById('global-admin-password').value.trim();
     if (pw === state.settings.adminPassword || pw === 'admin') {
         isAdminAuth = true;
+        sessionStorage.setItem('isAdminAuth', 'true'); // Persist
         document.getElementById('admin-auth-modal').classList.add('hidden');
 
         // Reveal admin elements globally
@@ -389,15 +407,24 @@ function handleAdminLogin() {
 }
 
 function syncSettingsUI() {
-    document.getElementById('competition-name').value = state.settings.competitionName;
-    document.getElementById('cap-ippan').value = state.settings.capacityGeneral;
-    document.getElementById('cap-mintsuri').value = state.settings.capacityMintsuri;
-    document.getElementById('cap-suiho').value = state.settings.capacitySuiho;
-    document.getElementById('cap-harimitsu').value = state.settings.capacityHarimitsu || 50;
-    document.getElementById('capacity-observers').value = state.settings.capacityObservers;
-    document.getElementById('registration-start').value = state.settings.startTime;
-    document.getElementById('registration-deadline').value = state.settings.deadline;
-    document.getElementById('admin-password-set').value = state.settings.adminPassword;
+    // Only update if the user isn't currently typing in the field
+    const updateIfInactive = (id, value) => {
+        const el = document.getElementById(id);
+        if (el && document.activeElement !== el) {
+            el.value = value;
+        }
+    };
+
+    updateIfInactive('competition-name', state.settings.competitionName);
+    updateIfInactive('cap-ippan', state.settings.capacityGeneral);
+    updateIfInactive('cap-mintsuri', state.settings.capacityMintsuri);
+    updateIfInactive('cap-suiho', state.settings.capacitySuiho);
+    updateIfInactive('cap-harimitsu', state.settings.capacityHarimitsu || 50);
+    updateIfInactive('capacity-observers', state.settings.capacityObservers);
+    updateIfInactive('registration-start', state.settings.startTime);
+    updateIfInactive('registration-deadline', state.settings.deadline);
+    updateIfInactive('admin-password-set', state.settings.adminPassword);
+
     document.getElementById('app-title').textContent = state.settings.competitionName;
     updateCapacityTotal();
 }
@@ -1125,14 +1152,13 @@ window.requestAdminEdit = function (id) {
     const entry = state.entries.find(e => e.id === id);
     if (!entry) return;
 
-    const btn = document.querySelector('.nav-btn[data-target="registration-view"]');
-    if (btn) btn.click();
+    // First switch view, then fill form
+    switchView(null, 'registration-view');
 
     isAdminAuthAction = true; // Set flag BEFORE filling form
     fillFormForEdit(entry);
-    // Overwrite some UI for Admin context
+    // Overwrite title for Admin context
     document.getElementById('app-title').innerHTML = `<span class="badge badge-ippan" style="background:#e67e22">管理者修正</span> 管理番号: ${entry.id}`;
-    isAdminAuthAction = true; // Flag to skip password check on submit if needed
 };
 
 window.resendEmail = async function (id) {
@@ -1311,6 +1337,8 @@ async function handleBulkEmailSend() {
 
 // Admin Tab Switching
 function switchAdminTab(tabId) {
+    currentAdminTab = tabId; // Remember tab
+
     document.querySelectorAll('.admin-tab-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
     });
