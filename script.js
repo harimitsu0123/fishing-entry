@@ -1,4 +1,4 @@
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyszcPFOvbJ-eI26GURt6iNTG8jU7EqmMGa-ZEE5vTdMhhBLJdaXszLDkbD-jT-LLHd/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxfFxXoOevGIL3KXKLemwzNcH9GEKxbO1x1NegGhhUxz_w8bpVaLVNDAu5U-82kKHph/exec";
 
 // State Management
 let state = {
@@ -58,19 +58,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadData() {
     // 1. Try to load from Cloud (GAS) first for synchronization
+    updateSyncStatus('syncing');
     try {
         const response = await fetch(`${GAS_WEB_APP_URL}?action=get`);
         if (response.ok) {
             const cloudData = await response.json();
             if (cloudData && cloudData.entries) {
+                // Determine if local is newer (very basic check)
+                const localData = localStorage.getItem('fishing_app_v3_data');
+                if (localData) {
+                    const parsedLocal = JSON.parse(localData);
+                    // If local has more entries or different length, maybe upload?
+                    // For now, let's prioritize cloud but if cloud is empty and local isn't, upload local.
+                    if (cloudData.entries.length === 0 && parsedLocal.entries.length > 0) {
+                        console.log('Cloud is empty but local has data. Uploading local...');
+                        state = parsedLocal;
+                        await syncToCloud();
+                        finalizeLoad();
+                        return;
+                    }
+                }
                 state = cloudData;
                 console.log('Cloud sync: data loaded');
+                updateSyncStatus('success');
                 finalizeLoad();
                 return;
             }
         }
     } catch (e) {
         console.warn('Cloud load failed, falling back to local:', e);
+        updateSyncStatus('error');
     }
 
     // 2. Fallback to LocalStorage
@@ -127,6 +144,7 @@ function saveData() {
 }
 
 async function syncToCloud() {
+    updateSyncStatus('syncing');
     try {
         const payload = {
             action: 'save',
@@ -139,8 +157,33 @@ async function syncToCloud() {
             body: JSON.stringify(payload)
         });
         console.log('Cloud sync: data saved');
+        updateSyncStatus('success');
     } catch (e) {
         console.error('Cloud sync error:', e);
+        updateSyncStatus('error');
+    }
+}
+
+function updateSyncStatus(type) {
+    const badge = document.getElementById('sync-status');
+    const text = badge.querySelector('.sync-text');
+    const icon = badge.querySelector('.sync-icon');
+
+    badge.classList.remove('hidden', 'syncing', 'success', 'error');
+
+    if (type === 'syncing') {
+        badge.classList.add('syncing');
+        text.textContent = '同期中...';
+        icon.textContent = '🔄';
+    } else if (type === 'success') {
+        badge.classList.add('success');
+        text.textContent = '同期完了';
+        icon.textContent = '✅';
+        setTimeout(() => badge.classList.add('hidden'), 2000);
+    } else if (type === 'error') {
+        badge.classList.add('error');
+        text.textContent = '同期失敗';
+        icon.textContent = '⚠️';
     }
 }
 
@@ -263,9 +306,21 @@ function switchView(btnElement, targetId) {
     window.scrollTo(0, 0);
 
     if (btnElement) btnElement.classList.add('active');
-    else document.querySelector(`.nav-btn[data-target="${targetId}"]`).classList.add('active');
+    else {
+        const activeNav = document.querySelector(`.nav-btn[data-target="${targetId}"]`);
+        if (activeNav) activeNav.classList.add('active');
+    }
 
     document.getElementById(targetId).classList.add('active');
+
+    // Reset Title based on view
+    if (targetId === 'dashboard-view') {
+        document.getElementById('app-title').textContent = "管理者ダッシュボード";
+    } else if (targetId === 'reception-view') {
+        document.getElementById('app-title').textContent = "当日受付管理";
+    } else {
+        document.getElementById('app-title').textContent = state.settings.competitionName;
+    }
 
     if (targetId === 'registration-view') {
         resetForm();
@@ -577,8 +632,14 @@ function handleRegistration() {
     // Send automated email via GAS (fire and forget / async)
     sendEmailViaGAS(entryData);
 
-    // Show result view
-    showResult(entryData);
+    if (isAdminAuthAction) {
+        // If it was an admin edit, go back to dashboard instead of result page
+        switchView(null, 'dashboard-view');
+        showToast('修正を保存しました', 'success');
+    } else {
+        // Show result view for normal registrations
+        showResult(entryData);
+    }
 }
 
 async function sendEmailViaGAS(entryData) {
@@ -1273,6 +1334,27 @@ function generateAdminQRCode() {
     // Use current URL
     const currentUrl = window.location.href;
     urlDisplay.textContent = currentUrl;
+
+    // Check if current URL is local (file:// or localhost)
+    const isLocal = currentUrl.startsWith('file://') || currentUrl.includes('127.0.0.1') || currentUrl.includes('localhost');
+
+    if (isLocal) {
+        container.innerHTML = `
+            <div class="alert alert-error" style="background:#fff5f5; border:1px solid #feb2b2; padding:1rem; border-radius:8px; margin-bottom:1rem;">
+                <p style="color:#c53030; font-weight:bold; font-size:0.9rem;">
+                    ⚠️ 注意：現在はPC内のファイルを表示しています。<br>
+                    このQRコードでは携帯からアクセスできません。
+                </p>
+                <p style="font-size:0.8rem; margin-top:0.5rem;">
+                    GitHub Pages のURL（https://...）をPCで開いてから、この画面を再度確認してください。
+                </p>
+            </div>
+            <div style="opacity: 0.3; filter: blur(2px); pointer-events: none;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}" alt="Local QR">
+            </div>
+        `;
+        return;
+    }
 
     // Generate QR using QRServer API
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}`;
