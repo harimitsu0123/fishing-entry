@@ -74,16 +74,26 @@ async function loadData() {
                 const localData = localStorage.getItem('fishing_app_v3_data');
                 if (localData) {
                     const parsedLocal = JSON.parse(localData);
-                    // Compare timestamps
+                    // Compare timestamps and counts for merging
                     const localTime = parsedLocal.lastUpdated || 0;
                     const cloudTime = cloudData.lastUpdated || 0;
+                    const localCount = (parsedLocal.entries || []).length;
+                    const cloudCount = (cloudData.entries || []).length;
 
+                    // Priority: Newer time, or more entries if times match (e.g. 0 vs 0)
+                    let useLocal = false;
                     if (localTime > cloudTime) {
-                        console.log('Local data is newer. Syncing to cloud...');
+                        useLocal = true;
+                    } else if (localTime === cloudTime && localCount > cloudCount) {
+                        useLocal = true;
+                    }
+
+                    if (useLocal) {
+                        console.log('Local data is newer/larger. Syncing to cloud...');
                         state = parsedLocal;
                         syncToCloud(); // Push local to cloud
                     } else {
-                        console.log('Cloud data is newer or same. Loading cloud...');
+                        console.log('Cloud data is newer/loaded.');
                         state = cloudData;
                     }
                 } else {
