@@ -736,16 +736,34 @@ th {
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0.75rem;
+    }
+
     .form-row {
         grid-template-columns: 1fr;
+        gap: 0.75rem;
     }
 
     .participant-row {
         grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        padding: 0.75rem;
     }
 
     .row-actions {
         grid-column: 1 / -1;
+    }
+
+    /* Reduce vertical scrolling on mobile */
+    .card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
     }
 }
 
@@ -974,15 +992,70 @@ th {
 @media (max-width: 1000px) {
     .reception-container {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
     .reception-sidebar {
         border-right: none;
         border-bottom: 2px solid #f0f0f0;
         padding-right: 0;
-        padding-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        max-height: 40vh;
+        /* Limit list height to reduce initial scroll */
     }
 
+    .reception-group-list {
+        max-height: 100%;
+    }
+
+    .reception-group-item {
+        padding: 0.5rem 0.75rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .reception-group-item strong {
+        font-size: 0.95rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .reception-desk {
+        padding: 1rem;
+    }
+
+    .desk-group-name {
+        font-size: 1.25rem;
+    }
+
+    .participant-check-row {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .p-name {
+        font-size: 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .stat-card {
+        padding: 0.75rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+    }
+
+    .admin-tab-nav {
+        gap: 0.25rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .admin-tab-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
 }
 
 /* Toast System */

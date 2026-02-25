@@ -62,7 +62,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isAdminAuth) {
         document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
     }
+    restoreUIState();
 });
+
+function restoreUIState() {
+    if (currentViewId && currentViewId !== 'registration-view') {
+        const lastBtn = document.querySelector(`.nav-btn[data-target="${currentViewId}"]`);
+        switchView(lastBtn, currentViewId);
+    }
+    if (isAdminAuth && currentAdminTab) {
+        switchAdminTab(currentAdminTab);
+    }
+}
 
 async function loadData() {
     // 1. Try to load from Cloud (GAS) first for synchronization
@@ -227,15 +238,8 @@ function initApp() {
         });
     });
 
-    // Restore and re-apply current Admin Tab if we are in admin mode
     if (isAdminAuth) {
         switchAdminTab(currentAdminTab);
-    }
-
-    // Restore Last View
-    if (currentViewId !== 'registration-view') {
-        const lastBtn = document.querySelector(`.nav-btn[data-target="${currentViewId}"]`);
-        switchView(lastBtn, currentViewId);
     }
 
     // Form logic
@@ -445,7 +449,10 @@ function syncSettingsUI() {
     updateIfInactive('registration-deadline', state.settings.deadline);
     updateIfInactive('admin-password-set', state.settings.adminPassword);
 
-    document.getElementById('app-title').textContent = state.settings.competitionName;
+    // Only update title if we are NOT in special admin views (which have their own titles)
+    if (currentViewId === 'registration-view') {
+        document.getElementById('app-title').textContent = state.settings.competitionName;
+    }
     updateCapacityTotal();
 }
 
@@ -1487,6 +1494,7 @@ window.generateBulkTestData = function () {
         if (maxRoom <= 0) continue;
 
         const numFishers = Math.max(1, Math.floor(Math.random() * maxRoom) + 1);
+        const numObservers = Math.floor(Math.random() * 3); // 0-2 observers
         const groupName = groups[Math.floor(Math.random() * groups.length)] + (state.entries.length + 1);
         const repName = names[Math.floor(Math.random() * names.length)] + (state.entries.length + 1);
 
@@ -1495,6 +1503,16 @@ window.generateBulkTestData = function () {
             participants.push({
                 type: 'fisher',
                 name: repName + (j === 0 ? '' : 'の連れ' + j),
+                nickname: '',
+                region: regions[Math.floor(Math.random() * regions.length)],
+                age: ages[Math.floor(Math.random() * ages.length)],
+                status: 'pending'
+            });
+        }
+        for (let j = 0; j < numObservers; j++) {
+            participants.push({
+                type: 'observer',
+                name: repName + 'の見学' + (j + 1),
                 nickname: '',
                 region: regions[Math.floor(Math.random() * regions.length)],
                 age: ages[Math.floor(Math.random() * ages.length)],
@@ -1519,7 +1537,7 @@ window.generateBulkTestData = function () {
             password: 'pass',
             participants: participants,
             fishers: numFishers,
-            observers: 0,
+            observers: numObservers,
             status: 'pending',
             checkedIn: false,
             timestamp: new Date().toLocaleString('ja-JP')
