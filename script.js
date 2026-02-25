@@ -18,7 +18,8 @@ let state = {
 };
 
 let isAdminAuth = sessionStorage.getItem('isAdminAuth') === 'true'; // Persistent session
-let currentAdminTab = 'tab-list'; // Track current active tab in Admin
+let currentViewId = sessionStorage.getItem('currentViewId') || 'registration-view'; // Persistent view
+let currentAdminTab = sessionStorage.getItem('currentAdminTab') || 'tab-list'; // Persistent tab
 let dashboardFilter = 'all';
 let currentReceptionId = null;
 let isAdminAuthAction = false; // Flag for admin-led edits
@@ -231,6 +232,12 @@ function initApp() {
         switchAdminTab(currentAdminTab);
     }
 
+    // Restore Last View
+    if (currentViewId !== 'registration-view') {
+        const lastBtn = document.querySelector(`.nav-btn[data-target="${currentViewId}"]`);
+        switchView(lastBtn, currentViewId);
+    }
+
     // Form logic
     document.getElementById('add-participant').addEventListener('click', () => addParticipantRow());
     document.getElementById('btn-to-confirm').addEventListener('click', showConfirmation);
@@ -326,6 +333,9 @@ function initApp() {
 }
 
 function switchView(btnElement, targetId) {
+    currentViewId = targetId;
+    sessionStorage.setItem('currentViewId', targetId);
+
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
 
@@ -1348,6 +1358,7 @@ async function handleBulkEmailSend() {
 // Admin Tab Switching
 function switchAdminTab(tabId) {
     currentAdminTab = tabId; // Remember tab
+    sessionStorage.setItem('currentAdminTab', tabId);
 
     document.querySelectorAll('.admin-tab-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
