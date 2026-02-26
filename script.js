@@ -79,34 +79,34 @@ async function loadData() {
     // 1. Try to load from Cloud (GAS) first for synchronization
     updateSyncStatus('syncing');
     try {
-        const response = await fetch(`${GAS_WEB_APP_URL}?action=get`);
+        // タイムアウト8秒を設定（これがないと「同期中」が永遠に続く）
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        const response = await fetch(`${GAS_WEB_APP_URL}?action=get`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (response.ok) {
             const cloudData = await response.json();
             if (cloudData && cloudData.entries) {
                 const localData = localStorage.getItem('fishing_app_v3_data');
                 if (localData) {
                     const parsedLocal = JSON.parse(localData);
-                    // Compare timestamps and counts for merging
+                    // ★ タイムスタンプのみで判断（件数比較は削除操作で誤動作するため廃止）
                     const localTime = parsedLocal.lastUpdated || 0;
                     const cloudTime = cloudData.lastUpdated || 0;
-                    const localCount = (parsedLocal.entries || []).length;
-                    const cloudCount = (cloudData.entries || []).length;
 
-                    // Priority: Newer time, or more entries if times match (e.g. 0 vs 0)
-                    let useLocal = false;
                     if (localTime > cloudTime) {
-                        useLocal = true;
-                    } else if (localTime === cloudTime && localCount > cloudCount) {
-                        useLocal = true;
-                    }
-
-                    if (useLocal) {
-                        console.log('Local data is newer/larger. Syncing to cloud...');
+                        // ローカルの方が新しい → クラウドに反映
+                        console.log('Local data is newer. Syncing to cloud...');
                         state = parsedLocal;
-                        syncToCloud(); // Push local to cloud
+                        syncToCloud();
                     } else {
+                        // クラウドの方が新しい（または同じ）→ クラウドを使う
                         console.log('Cloud data is newer/loaded.');
                         state = cloudData;
+                        // ★ ローカルもクラウドと揃える（次回オフライン時のフォールバック用）
+                        localStorage.setItem('fishing_app_v3_data', JSON.stringify(cloudData));
                     }
                 } else {
                     state = cloudData;
@@ -119,7 +119,11 @@ async function loadData() {
             }
         }
     } catch (e) {
-        console.warn('Cloud load failed, falling back to local:', e);
+        if (e.name === 'AbortError') {
+            console.warn('Cloud load timed out, falling back to local');
+        } else {
+            console.warn('Cloud load failed, falling back to local:', e);
+        }
         updateSyncStatus('error');
     }
 
@@ -127,6 +131,8 @@ async function loadData() {
     const savedData = localStorage.getItem('fishing_app_v3_data');
     if (savedData) {
         state = JSON.parse(savedData);
+        // ★ クラウドに繋がらなかった場合もデータを送り直す（前回失敗分のリトライ）
+        syncToCloud();
     } else {
         // Migration from V2
         const oldData = localStorage.getItem('fishing_app_v2_data');
@@ -184,16 +190,28 @@ async function syncToCloud() {
             action: 'save',
             data: state
         };
+        // タイムアウト10秒。no-corsのためレスポンスは読めないが、awaitが完了すれば送信成功とみなす
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
         console.log('Cloud sync: data saved');
+        localStorage.removeItem('fishing_sync_pending'); // ★ 成功したらペンディング解除
         updateSyncStatus('success');
     } catch (e) {
-        console.error('Cloud sync error:', e);
+        if (e.name === 'AbortError') {
+            console.warn('Cloud save timed out');
+        } else {
+            console.error('Cloud sync error:', e);
+        }
+        localStorage.setItem('fishing_sync_pending', '1'); // ★ 失敗したらペンディングフラグを立てる
         updateSyncStatus('error');
     }
 }
