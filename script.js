@@ -241,6 +241,13 @@ function updateSyncStatus(type) {
 
 function initApp() {
     initToast(); // Add toast container helper if needed
+    
+    // Set Public Share URL
+    const shareUrlEl = document.getElementById('public-share-url');
+    if (shareUrlEl) {
+        shareUrlEl.value = window.location.href.split('#')[0];
+    }
+    
     // Navigation
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -443,6 +450,8 @@ function handleAdminLogin() {
             switchView(null, pendingView);
             pendingView = null;
         }
+        // ★ admin-only要素の表示後にDOMが更新されてからスクロール
+        setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
     } else {
         document.getElementById('admin-auth-error').classList.remove('hidden');
     }
@@ -568,7 +577,7 @@ function showConfirmation() {
 
     // Category Capacity Check
     const currentCategoryFishers = state.entries
-        .filter(en => en.id !== editId && en.source === source)
+        .filter(en => en.id !== editId && en.source === source && en.status !== 'cancelled')
         .reduce((sum, en) => sum + en.fishers, 0);
 
     let capacityLimit = 0;
@@ -584,7 +593,7 @@ function showConfirmation() {
 
     // Aggregate Capacity Check (Total 250)
     const totalFishers = state.entries
-        .filter(en => en.id !== editId)
+        .filter(en => en.id !== editId && en.status !== 'cancelled')
         .reduce((sum, en) => sum + en.fishers, 0);
 
     if (totalFishers + fisherCount > 250) {
@@ -642,10 +651,10 @@ function handleRegistration() {
 
     // Final Capacity Check (Double guard)
     const currentCategoryFishers = state.entries
-        .filter(en => en.id !== editId && en.source === source)
+        .filter(en => en.id !== editId && en.source === source && en.status !== 'cancelled')
         .reduce((sum, en) => sum + en.fishers, 0);
     const totalNow = state.entries
-        .filter(en => en.id !== editId)
+        .filter(en => en.id !== editId && en.status !== 'cancelled')
         .reduce((sum, en) => sum + en.fishers, 0);
 
     let capacityLimit = 0;
@@ -866,18 +875,19 @@ function updateDashboard() {
         const observersHarimitsu = sumCategoryObservers('ハリミツ');
 
         const totalFishers = fishersIppan + fishersMintsuri + fishersSuiho + fishersHarimitsu;
-        const totalObservers = state.entries.reduce((s, e) => s + e.observers, 0);
+        const totalObservers = state.entries.filter(e => e.status !== 'cancelled').reduce((s, e) => s + e.observers, 0);
         const checkedInCount = state.entries.filter(e => e.status === 'checked-in').length;
         const absentCount = state.entries.filter(e => e.status === 'absent').length;
+        const validEntriesCount = state.entries.filter(e => e.status !== 'cancelled').length;
 
-        document.getElementById('total-registrations').textContent = state.entries.length;
+        document.getElementById('total-registrations').textContent = validEntriesCount;
         document.getElementById('current-fishers').textContent = totalFishers;
         document.getElementById('current-observers').textContent = totalObservers;
 
         // Reception stats
         document.getElementById('checked-in-count').textContent = checkedInCount;
         document.getElementById('absent-count').textContent = absentCount;
-        document.getElementById('total-groups-count').textContent = state.entries.length;
+        document.getElementById('total-groups-count').textContent = validEntriesCount;
 
         // Also update the reception view stats header if it exists
         const recCheck = document.getElementById('rec-check-in-count');
@@ -920,23 +930,30 @@ function updateDashboard() {
             const tr = document.createElement('tr');
             if (e.status === 'checked-in') tr.classList.add('row-checked-in');
             if (e.status === 'absent') tr.classList.add('row-absent');
+            if (e.status === 'cancelled') {
+                tr.style.opacity = '0.4';
+                tr.style.background = '#f8f9fa';
+            }
 
-            const statusIcon = e.status === 'checked-in' ? '✅' : e.status === 'absent' ? '❌' : '⏳';
-            const statusLabel = e.status === 'checked-in' ? '受済' : e.status === 'absent' ? '欠席' : '受付';
+            const statusIcon = e.status === 'checked-in' ? '✅' : e.status === 'absent' ? '❌' : e.status === 'cancelled' ? '🚫' : '⏳';
+            const statusLabel = e.status === 'checked-in' ? '受済' : e.status === 'absent' ? '欠席' : e.status === 'cancelled' ? 'ｷｬﾝｾﾙ' : '受付';
 
             tr.innerHTML = `
             <td><strong>${e.id}</strong></td>
             <td><span class="badge ${badgeClass}">${e.source}</span></td>
-            <td>${e.groupName}</td>
+            <td><span style="${e.status === 'cancelled' ? 'text-decoration: line-through;' : ''}">${e.groupName}</span></td>
             <td>${e.representative}</td>
             <td>${e.fishers}名</td>
             <td>${e.observers}</td>
             <td><small>${e.status === 'checked-in' ? '✅ ' + e.checkInTime : e.timestamp}</small></td>
             <td>
-                <button class="btn-check-in ${e.status !== 'pending' ? 'active' : ''} ${e.status === 'absent' ? 'absent' : ''}" onclick="jumpToReception('${e.id}')">
+                <button class="btn-check-in ${e.status !== 'pending' && e.status !== 'cancelled' ? 'active' : ''} ${e.status === 'absent' ? 'absent' : ''}" onclick="jumpToReception('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''}>
                     ${statusIcon} ${statusLabel}
                 </button>
-                <button class="btn-text" onclick="requestAdminEdit('${e.id}')">修正</button>
+                <div style="margin-top: 4px;">
+                    <button class="btn-text" onclick="requestAdminEdit('${e.id}')" ${e.status === 'cancelled' ? 'disabled hidden' : ''}>修正</button>
+                    ${e.status !== 'cancelled' ? `<button class="btn-text" style="color:var(--error-color); margin-left: 0.5rem;" onclick="cancelEntry('${e.id}')">削除(ｷｬﾝｾﾙ)</button>` : `<span class="badge" style="background:#dc3545; color:white; margin-left: 0.25rem; font-size:0.7rem;">取消済</span>`}
+                </div>
             </td>
         `;
             list.appendChild(tr);
@@ -955,7 +972,7 @@ function updateReceptionList() {
 
     list.innerHTML = '';
 
-    const processedEntries = state.entries.map(e => {
+    const processedEntries = state.entries.filter(e => e.status !== 'cancelled').map(e => {
         const finishedCount = e.participants.filter(p => p.status === 'checked-in' || p.status === 'absent').length;
         const totalCount = e.participants.length;
         const isCompleted = finishedCount === totalCount && totalCount > 0;
@@ -1110,11 +1127,11 @@ function syncGroupStatusFromParticipants(entry) {
 
 
 function sumCategoryFishers(category) {
-    return state.entries.filter(e => e.source === category).reduce((s, e) => s + e.fishers, 0);
+    return state.entries.filter(e => e.source === category && e.status !== 'cancelled').reduce((s, e) => s + e.fishers, 0);
 }
 
 function sumCategoryObservers(category) {
-    return state.entries.filter(e => e.source === category).reduce((s, e) => s + e.observers, 0);
+    return state.entries.filter(e => e.source === category && e.status !== 'cancelled').reduce((s, e) => s + e.observers, 0);
 }
 
 function updateSplitUI(prefix, current, max, observers) {
@@ -1143,6 +1160,7 @@ function renderBreakdownStats() {
     Object.keys(ageLabels).forEach(key => ageCount[key] = 0);
 
     state.entries.forEach(e => {
+        if (e.status === 'cancelled') return;
         e.participants.forEach(p => {
             // Ages - count everyone
             if (ageCount[p.age] !== undefined) {
@@ -1204,6 +1222,25 @@ window.requestAdminEdit = function (id) {
     fillFormForEdit(entry);
     // Overwrite title for Admin context
     document.getElementById('app-title').innerHTML = `<span class="badge badge-ippan" style="background:#e67e22">管理者修正</span> 管理番号: ${entry.id}`;
+};
+
+window.cancelEntry = function (id) {
+    if (confirm(`本当に受付番号「${id}」をキャンセルしますか？\n枠は解放されますが、データは「キャンセル」として下に残ります。`)) {
+        const entry = state.entries.find(e => e.id === id);
+        if (entry) {
+            entry.status = 'cancelled';
+            saveData();
+            updateDashboard();
+            showToast(`受付番号 「${id}」 をキャンセルにしました`, 'success');
+        }
+    }
+};
+
+window.copyShareUrl = function () {
+    const urlInput = document.getElementById('public-share-url');
+    urlInput.select();
+    document.execCommand('copy');
+    showToast('コピーしました！', 'success');
 };
 
 window.resendEmail = async function (id) {

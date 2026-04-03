@@ -194,6 +194,16 @@
 
         <!-- Dashboard View -->
         <section id="dashboard-view" class="view">
+            <!-- Share URL -->
+            <div class="card mb-4" style="background: rgba(0, 119, 190, 0.05); border: 2px dashed var(--primary-color);">
+                <h2>一般公開用 URL (お客さんに案内するリンク)</h2>
+                <p class="text-muted mt-2">このURL、またはQRコードをお客さんに共有してください。</p>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <input type="text" id="public-share-url" readonly style="flex:1; background: #fff; cursor: text; user-select: all; font-family: monospace; font-size: 1rem;" value="取得中...">
+                    <button class="btn-primary" onclick="copyShareUrl()">コピー</button>
+                </div>
+            </div>
+
             <div class="card mb-4">
                 <h2>区分別 登録状況</h2>
                 <div class="capacity-split-grid mt-4">
