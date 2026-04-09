@@ -83,7 +83,7 @@ async function loadData() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-        const response = await fetch(`${GAS_WEB_APP_URL}?action=get`, { signal: controller.signal });
+        const response = await fetch(`${GAS_WEB_APP_URL}?action=get&_t=${Date.now()}`, { signal: controller.signal });
         clearTimeout(timeoutId);
 
         if (response.ok) {
@@ -131,8 +131,8 @@ async function loadData() {
     const savedData = localStorage.getItem('fishing_app_v3_data');
     if (savedData) {
         state = JSON.parse(savedData);
-        // ★ クラウドに繋がらなかった場合もデータを送り直す（前回失敗分のリトライ）
-        syncToCloud();
+        // ★ ローカルデータを読み込むが、クラウドへは勝手に送らない（上書き防止）
+        console.log('Loaded from local storage (no automatic sync)');
     } else {
         // Migration from V2
         const oldData = localStorage.getItem('fishing_app_v2_data');
@@ -165,7 +165,12 @@ function finalizeLoad() {
             capacityObservers: 100,
             startTime: "",
             deadline: "",
-            adminPassword: "admin"
+            adminPassword: "admin",
+            ikesuList: Array.from({length: 10}, (_, i) => ({
+                id: `ikesu-default-${i+1}`,
+                name: `イケス ${String.fromCharCode(65+i)}`, // A, B, C...
+                capacity: 15
+            }))
         }, ...state.settings
     };
 
@@ -176,11 +181,11 @@ function finalizeLoad() {
     syncSettingsUI();
 }
 
-function saveData() {
+async function saveData() {
     state.lastUpdated = Date.now(); // Update timestamp on every save
     localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
     // Also sync to cloud
-    syncToCloud();
+    return await syncToCloud();
 }
 
 async function syncToCloud() {
@@ -632,7 +637,7 @@ function hideConfirmation() {
     window.scrollTo(0, 0);
 }
 
-function handleRegistration() {
+async function handleRegistration() {
     // Re-gather data (already validated)
     const editId = document.getElementById('edit-entry-id').value;
     const pRows = document.querySelectorAll('.participant-row');
@@ -707,7 +712,7 @@ function handleRegistration() {
         state.entries.push(entryData);
     }
     // Save and Sync
-    saveData();
+    await saveData();
     updateDashboard();
 
     // Send automated email via GAS (fire and forget / async)
@@ -726,6 +731,7 @@ function handleRegistration() {
 async function sendEmailViaGAS(entryData) {
     try {
         const payload = {
+            action: 'sendEmail',
             id: entryData.id,
             groupName: entryData.groupName,
             email: entryData.email,
@@ -958,6 +964,8 @@ function updateDashboard() {
         `;
             list.appendChild(tr);
         });
+        
+        renderIkesuWorkspace();
     } catch (e) {
         console.error('updateDashboard error:', e);
     }
@@ -1651,3 +1659,306 @@ function updateSourceAvailability() {
         if (available) available.checked = true;
     }
 }
+
+// ==========================================
+// IKESU ASSIGNMENT LOGIC (Drag & Drop, Modals)
+// ==========================================
+
+window.openIkesuModal = function(id = null) {
+    document.getElementById('ikesu-modal').classList.remove('hidden');
+    if (id) {
+        const ikesu = state.settings.ikesuList.find(i => i.id === id);
+        if (ikesu) {
+            document.getElementById('ikesu-modal-title').textContent = "イケスの編集";
+            document.getElementById('ikesu-edit-id').value = ikesu.id;
+            document.getElementById('ikesu-name').value = ikesu.name;
+            document.getElementById('ikesu-capacity').value = ikesu.capacity;
+            return;
+        }
+    }
+    document.getElementById('ikesu-modal-title').textContent = "イケスの追加";
+    document.getElementById('ikesu-edit-id').value = '';
+    document.getElementById('ikesu-name').value = '';
+    document.getElementById('ikesu-capacity').value = '15';
+};
+
+window.closeIkesuModal = function() {
+    document.getElementById('ikesu-modal').classList.add('hidden');
+};
+
+window.saveIkesu = function() {
+    const id = document.getElementById('ikesu-edit-id').value;
+    const name = document.getElementById('ikesu-name').value.trim();
+    const capacity = parseInt(document.getElementById('ikesu-capacity').value, 10);
+    
+    if(!name || isNaN(capacity) || capacity < 1) {
+        alert("名前と定員（1以上）を正しく入力してください。");
+        return;
+    }
+    
+    if(!state.settings.ikesuList) state.settings.ikesuList = [];
+    
+    if(id) {
+        // Edit
+        const ikesu = state.settings.ikesuList.find(i => i.id === id);
+        if(ikesu) {
+            ikesu.name = name;
+            ikesu.capacity = capacity;
+        }
+    } else {
+        // Add
+        state.settings.ikesuList.push({
+            id: 'ikesu-' + Date.now(),
+            name: name,
+            capacity: capacity
+        });
+    }
+    
+    saveData();
+    closeIkesuModal();
+    renderIkesuWorkspace();
+};
+
+window.deleteIkesu = function(id) {
+    if(!confirm('本当にこのイケスを削除しますか？\n割り当てられていた人は未割り当てに戻ります。')) return;
+    
+    state.settings.ikesuList = state.settings.ikesuList.filter(i => i.id !== id);
+    
+    // Clear ikesuId for assigned participants
+    state.entries.forEach(e => {
+        e.participants.forEach(p => {
+            if(p.ikesuId === id) p.ikesuId = null;
+        });
+    });
+    
+    saveData();
+    renderIkesuWorkspace();
+};
+
+window.allowDrop = function(ev) {
+    ev.preventDefault();
+    ev.currentTarget.classList.add('drag-over');
+};
+
+window.handleDragLeave = function(ev) {
+    ev.currentTarget.classList.remove('drag-over');
+};
+
+window.dragGroup = function(ev, entryId) {
+    ev.dataTransfer.setData("type", "group");
+    ev.dataTransfer.setData("id", entryId);
+};
+
+window.dragPerson = function(ev, entryId, personIdx) {
+    ev.dataTransfer.setData("type", "person");
+    ev.dataTransfer.setData("id", entryId);
+    ev.dataTransfer.setData("idx", personIdx);
+    ev.stopPropagation(); // Prevent group dragging if child dragged
+};
+
+window.dropToUnassigned = function(ev) {
+    ev.preventDefault();
+    ev.currentTarget.classList.remove('drag-over');
+    processDrop(ev, null);
+};
+
+window.dropToIkesu = function(ev, ikesuId) {
+    ev.preventDefault();
+    ev.currentTarget.classList.remove('drag-over');
+    processDrop(ev, ikesuId);
+};
+
+function processDrop(ev, ikesuId) {
+    const type = ev.dataTransfer.getData("type");
+    const entryId = ev.dataTransfer.getData("id");
+    
+    const entry = state.entries.find(e => e.id === entryId);
+    if(!entry) return;
+    
+    if (type === "group") {
+        // Move all participants of the group to the Target Ikesu
+        entry.participants.forEach(p => p.ikesuId = ikesuId);
+    } else if (type === "person") {
+        const idx = parseInt(ev.dataTransfer.getData("idx"), 10);
+        if(entry.participants[idx]) {
+            entry.participants[idx].ikesuId = ikesuId;
+        }
+    }
+    
+    saveData();
+    renderIkesuWorkspace();
+}
+
+window.toggleGroupExpand = function(targetId) {
+    const el = document.getElementById(`drag-parts-${targetId}`);
+    if(el) {
+        el.classList.toggle('expanded');
+    }
+};
+
+window.renderIkesuWorkspace = function() {
+    const unassignedList = document.getElementById('unassigned-list');
+    const ikesuGrid = document.getElementById('ikesu-grid');
+    if(!unassignedList || !ikesuGrid) return;
+    
+    unassignedList.innerHTML = '';
+    ikesuGrid.innerHTML = '';
+    
+    if(!state.settings.ikesuList) state.settings.ikesuList = [];
+    
+    const assignedData = {};
+    state.settings.ikesuList.forEach(i => assignedData[i.id] = { ikesu: i, fishers: 0, observers: 0, items: [] });
+    
+    const unassignedGroups = [];
+    
+    const searchTerm = document.getElementById('ikesu-search') ? document.getElementById('ikesu-search').value.toLowerCase().trim() : '';
+
+    const validEntries = state.entries.filter(e => e.status !== 'cancelled');
+    
+    validEntries.forEach(entry => {
+        const participantIkesus = entry.participants.map(p => p.ikesuId);
+        const allUnassigned = participantIkesus.every(id => !id);
+        
+        if (allUnassigned) {
+            unassignedGroups.push(entry);
+        } else {
+            let hasUnassignedChild = false;
+            entry.participants.forEach((p, idx) => {
+                if(p.ikesuId && assignedData[p.ikesuId]) {
+                    assignedData[p.ikesuId].items.push({entry, p, idx});
+                    if(p.type === 'fisher') assignedData[p.ikesuId].fishers++;
+                    else assignedData[p.ikesuId].observers++;
+                } else {
+                    hasUnassignedChild = true;
+                }
+            });
+            if (hasUnassignedChild) {
+                unassignedGroups.push(entry);
+            }
+        }
+    });
+    
+    // -- 1. Render Unassigned Area --
+    let unassignedCount = 0;
+    unassignedGroups.forEach(entry => {
+        const unassignedParts = entry.participants.map((p, i) => ({p, i})).filter(x => !x.p.ikesuId);
+        if(unassignedParts.length === 0) return;
+        
+        if (searchTerm) {
+            const matchesGroup = entry.groupName.toLowerCase().includes(searchTerm) || 
+                                 entry.representative.toLowerCase().includes(searchTerm) ||
+                                 String(unassignedParts.length) === searchTerm;
+            const matchesAnyPerson = unassignedParts.some(x => x.p.name.toLowerCase().includes(searchTerm));
+            if (!matchesGroup && !matchesAnyPerson) return;
+        }
+        
+        unassignedCount += unassignedParts.length;
+        const isFullGroup = unassignedParts.length === entry.participants.length;
+        
+        let html = `
+        <div class="drag-item-group ${isFullGroup ? 'draggable' : ''}" 
+             ${isFullGroup ? `draggable="true" ondragstart="dragGroup(event, '${entry.id}')"` : ''}>
+            <div class="drag-item-header">
+                <div>
+                    <strong>[${entry.id}] ${entry.groupName}</strong>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        ${isFullGroup ? '全員' : '一部メンバー'} (${unassignedParts.length}名)
+                    </div>
+                </div>
+                <button class="btn-expand" onclick="toggleGroupExpand('${entry.id}')">∨ 展開</button>
+            </div>
+            <div class="drag-item-participants" id="drag-parts-${entry.id}">
+        `;
+        
+        unassignedParts.forEach(item => {
+            const isFisher = item.p.type === 'fisher';
+            html += `
+                <div class="drag-item-person draggable" draggable="true" ondragstart="dragPerson(event, '${entry.id}', ${item.i})">
+                    <span>${item.p.name}</span>
+                    <span class="badge ${isFisher ? '' : 'badge-observer'}">${isFisher ? '釣り' : '見学'}</span>
+                </div>
+            `;
+        });
+        
+        html += `</div></div>`;
+        unassignedList.insertAdjacentHTML('beforeend', html);
+    });
+    
+    const unassignSpan = document.getElementById('unassigned-count');
+    if(unassignSpan) unassignSpan.textContent = unassignedCount;
+    
+    // -- 2. Render Ikesu Grid --
+    state.settings.ikesuList.forEach(ikesu => {
+        const data = assignedData[ikesu.id];
+        const isOver = data.fishers > ikesu.capacity;
+        
+        const box = document.createElement('div');
+        box.className = 'ikesu-box drag-zone';
+        box.ondragover = allowDrop;
+        box.ondragleave = handleDragLeave;
+        box.ondrop = (ev) => dropToIkesu(ev, ikesu.id);
+        
+        let html = `
+            <div class="ikesu-header">
+                <span class="ikesu-title">${ikesu.name}</span>
+                <div class="ikesu-actions">
+                    <button class="btn-text" style="font-size:0.75rem; color:#666;" onclick="openIkesuModal('${ikesu.id}')">✏️</button>
+                    <button class="btn-text" style="font-size:0.75rem; color:var(--error-color);" onclick="deleteIkesu('${ikesu.id}')">🗑️</button>
+                </div>
+            </div>
+            <div class="ikesu-capacity ${isOver ? 'over' : ''}">
+                釣り: ${data.fishers} / ${ikesu.capacity} 名
+                <span style="color:var(--text-muted); font-weight:normal; margin-left: 0.5rem;">(見学: ${data.observers})</span>
+            </div>
+            <div class="ikesu-drop-area mt-2">
+        `;
+        
+        const groupedItems = {};
+        data.items.forEach(item => {
+            if(!groupedItems[item.entry.id]) groupedItems[item.entry.id] = { entry: item.entry, parts: [] };
+            groupedItems[item.entry.id].parts.push(item);
+        });
+        
+        Object.values(groupedItems).forEach(group => {
+            const entry = group.entry;
+            
+            if (searchTerm) {
+                const matchesGroup = entry.groupName.toLowerCase().includes(searchTerm) || 
+                                     entry.representative.toLowerCase().includes(searchTerm) ||
+                                     String(group.parts.length) === searchTerm;
+                const matchesAnyPerson = group.parts.some(x => x.p.name.toLowerCase().includes(searchTerm));
+                if (!matchesGroup && !matchesAnyPerson) return;
+            }
+            
+            const isFullGroup = group.parts.length === entry.participants.length;
+            const expandId = `ikesu-${ikesu.id}-${entry.id}`;
+            
+            html += `
+            <div class="drag-item-group ${isFullGroup ? 'draggable' : ''}" 
+                 ${isFullGroup ? `draggable="true" ondragstart="dragGroup(event, '${entry.id}')"` : ''}>
+                <div class="drag-item-header">
+                    <div style="font-size: 0.9rem;">
+                        <strong>[${entry.id}] ${entry.groupName}</strong>
+                    </div>
+                    <button class="btn-expand" onclick="toggleGroupExpand('${expandId}')">∨</button>
+                </div>
+                <div class="drag-item-participants" id="drag-parts-${expandId}">
+            `;
+            
+            group.parts.forEach(item => {
+                const isFisher = item.p.type === 'fisher';
+                html += `
+                    <div class="drag-item-person draggable" draggable="true" ondragstart="dragPerson(event, '${entry.id}', ${item.idx})">
+                        <span>${item.p.name}</span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">${isFisher ? '釣り' : '見学'}</span>
+                    </div>
+                `;
+            });
+            html += `</div></div>`;
+        });
+        
+        html += `</div>`;
+        box.innerHTML = html;
+        ikesuGrid.appendChild(box);
+    });
+};

@@ -1407,3 +1407,154 @@ th {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 10;
 }
+
+/* --- Ikesu Assignment UI --- */
+.ikesu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .ikesu-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ikesu-box {
+    background: white;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 0.75rem;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s;
+}
+
+.ikesu-box.drag-over {
+    background: #e7f3ff;
+    border-color: var(--primary-color);
+}
+
+.ikesu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #f1f3f5;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.ikesu-title {
+    font-weight: bold;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ikesu-capacity {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #333;
+    background: #f8f9fa;
+    padding: 0.5rem;
+    border-radius: 6px;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.ikesu-capacity.over {
+    color: white;
+    background: var(--error-color);
+}
+
+.drag-item-group {
+    background: white;
+    border: 1px solid #ddd;
+    border-left: 4px solid var(--primary-color);
+    border-radius: 6px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.drag-item-group.draggable {
+    cursor: grab;
+}
+.drag-item-group.draggable:active {
+    cursor: grabbing;
+}
+
+.drag-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.drag-item-participants {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #eee;
+    display: none;
+}
+
+.drag-item-participants.expanded {
+    display: block;
+}
+
+.drag-item-person {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 0.3rem 0.5rem;
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.drag-item-person.draggable {
+    cursor: grab;
+    border-left: 3px solid #6c757d;
+}
+.drag-item-person.draggable:active {
+    cursor: grabbing;
+}
+
+.ikesu-drop-area {
+    flex: 1;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.unassigned-area .drag-item-group {
+    border-left-color: #6c757d;
+}
+
+.btn-expand {
+    background: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.7rem;
+    cursor: pointer;
+    color: var(--text-color);
+}
+.btn-expand:hover {
+    background: #eee;
+}
+
+.badge-observer {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.ikesu-actions {
+    display: flex;
+    gap: 0.25rem;
+}

@@ -194,96 +194,11 @@
 
         <!-- Dashboard View -->
         <section id="dashboard-view" class="view">
-            <!-- Share URL -->
-            <div class="card mb-4" style="background: rgba(0, 119, 190, 0.05); border: 2px dashed var(--primary-color);">
-                <h2>一般公開用 URL (お客さんに案内するリンク)</h2>
-                <p class="text-muted mt-2">このURL、またはQRコードをお客さんに共有してください。</p>
-                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                    <input type="text" id="public-share-url" readonly style="flex:1; background: #fff; cursor: text; user-select: all; font-family: monospace; font-size: 1rem;" value="取得中...">
-                    <button class="btn-primary" onclick="copyShareUrl()">コピー</button>
-                </div>
-            </div>
-
-            <div class="card mb-4">
-                <h2>区分別 登録状況</h2>
-                <div class="capacity-split-grid mt-4">
-                    <!-- General -->
-                    <div class="split-card">
-                        <div class="split-header">
-                            <span class="badge badge-ippan">一般</span>
-                            <span class="split-value"><span id="curr-ippan">0</span> / <span
-                                    id="max-ippan">100</span></span>
-                        </div>
-                        <div class="split-details">見学者: <span id="ippan-observers">0</span>名</div>
-                        <div class="progress-bar">
-                            <div id="prog-ippan" class="progress"></div>
-                        </div>
-                    </div>
-                    <!-- Mintsuri -->
-                    <div class="split-card">
-                        <div class="split-header">
-                            <span class="badge badge-mintsuri">みん釣り</span>
-                            <span class="split-value"><span id="curr-mintsuri">0</span> / <span
-                                    id="max-mintsuri">100</span></span>
-                        </div>
-                        <div class="split-details">見学者: <span id="mintsuri-observers">0</span>名</div>
-                        <div class="progress-bar">
-                            <div id="prog-mintsuri" class="progress" style="background:var(--error-color)"></div>
-                        </div>
-                    </div>
-                    <!-- Suiho -->
-                    <div class="split-card">
-                        <div class="split-header">
-                            <span class="badge badge-suiho">水宝</span>
-                            <span class="split-value"><span id="curr-suiho">0</span> / <span
-                                    id="max-suiho">50</span></span>
-                        </div>
-                        <div class="split-details">見学者: <span id="suiho-observers">0</span>名</div>
-                        <div class="progress-bar">
-                            <div id="prog-suiho" class="progress" style="background:#1e90ff"></div>
-                        </div>
-                    </div>
-                    <!-- Harimitsu -->
-                    <div class="split-card admin-only hidden">
-                        <div class="split-header">
-                            <span class="badge badge-harimitsu">ハリミツ</span>
-                            <span class="split-value"><span id="curr-harimitsu">0</span> / <span
-                                    id="max-harimitsu">50</span></span>
-                        </div>
-                        <div class="split-details">見学者: <span id="harimitsu-observers">0</span>名</div>
-                        <div class="progress-bar">
-                            <div id="prog-harimitsu" class="progress" style="background:#9b59b6"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="stats-grid mt-4">
-                    <div class="stat-card">
-                        <h3>総登録グループ</h3>
-                        <p id="total-registrations" class="stat-value">0</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>釣り参加者合計</h3>
-                        <p class="stat-value"><span id="current-fishers">0</span> / 250</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>見学者合計</h3>
-                        <p id="current-observers" class="stat-value">0</p>
-                    </div>
-                    <div class="stat-card" style="border-top: 5px solid var(--success-color);">
-                        <h3>受付状況（当日）</h3>
-                        <p class="stat-value">来場: <span id="checked-in-count">0</span> / 欠席: <span
-                                id="absent-count">0</span></p>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">全 <span
-                                id="total-groups-count">0</span> 組</p>
-                    </div>
-                </div>
-            </div> <!-- End of Status Stats Card -->
-
-            </div> <!-- End of Status Stats Card -->
 
             <!-- Admin Sub-tabs Navigation -->
             <nav class="admin-tab-nav">
                 <button class="admin-tab-btn active" data-tab="tab-list">参加申し込み一覧</button>
+                <button class="admin-tab-btn" data-tab="tab-ikesu">イケス割当</button>
                 <button class="admin-tab-btn" data-tab="tab-proxy">代理登録</button>
                 <button class="admin-tab-btn" data-tab="tab-settings">大会設定</button>
                 <button class="admin-tab-btn" data-tab="tab-capacity">定員・詳細</button>
@@ -293,8 +208,114 @@
             </nav>
 
             <div id="admin-tab-container">
+                <!-- Tab: Ikesu Assignment -->
+                <div id="tab-ikesu" class="admin-tab-content">
+                    <div class="card mb-4" style="display: flex; flex-direction: column; height: 80vh;">
+                        <div class="card-header">
+                            <h2>イケス（釣り座）割り当て</h2>
+                            <button class="btn-primary" onclick="openIkesuModal()">+ イケスを追加</button>
+                        </div>
+                        <p class="text-muted mt-2">左側のグループカードを右側のイケスにドラッグ＆ドロップしてください。</p>
+                        
+                        <div class="ikesu-workspace mt-3" style="flex: 1; display: flex; gap: 1rem; overflow: hidden;">
+                            <!-- Left: Unassigned Groups -->
+                            <div class="unassigned-area" style="width: 300px; background: #f8f9fa; border-radius: 8px; padding: 1rem; display: flex; flex-direction: column;">
+                                <h3 style="font-size: 1.1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">未割り当て <span class="badge" id="unassigned-count">0</span></h3>
+                                <input type="text" id="ikesu-search" class="form-control mb-2" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" placeholder="名前や人数で検索..." onkeyup="renderIkesuWorkspace()">
+                                <div id="unassigned-list" class="drag-zone" ondragover="allowDrop(event)" ondrop="dropToUnassigned(event)" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; min-height: 200px;">
+                                    <!-- Draggable group cards will go here -->
+                                </div>
+                            </div>
+                            
+                            <!-- Right: Ikesu Grid -->
+                            <div class="ikesu-grid-area" style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 1rem; display: flex; flex-direction: column;">
+                                <h3 style="font-size: 1.1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;">イケス一覧</h3>
+                                <div id="ikesu-grid" class="ikesu-grid" style="flex: 1; overflow-y: auto; align-content: start;">
+                                    <!-- Ikesu containers will go here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Tab: Registration List -->
                 <div id="tab-list" class="admin-tab-content active">
+                    <!-- Status Stats Card -->
+                    <div class="card mb-4 mt-2">
+                        <h2>区分別 登録状況</h2>
+                        <div class="capacity-split-grid mt-4">
+                            <!-- General -->
+                            <div class="split-card">
+                                <div class="split-header">
+                                    <span class="badge badge-ippan">一般</span>
+                                    <span class="split-value"><span id="curr-ippan">0</span> / <span
+                                            id="max-ippan">100</span></span>
+                                </div>
+                                <div class="split-details">見学者: <span id="ippan-observers">0</span>名</div>
+                                <div class="progress-bar">
+                                    <div id="prog-ippan" class="progress"></div>
+                                </div>
+                            </div>
+                            <!-- Mintsuri -->
+                            <div class="split-card">
+                                <div class="split-header">
+                                    <span class="badge badge-mintsuri">みん釣り</span>
+                                    <span class="split-value"><span id="curr-mintsuri">0</span> / <span
+                                            id="max-mintsuri">100</span></span>
+                                </div>
+                                <div class="split-details">見学者: <span id="mintsuri-observers">0</span>名</div>
+                                <div class="progress-bar">
+                                    <div id="prog-mintsuri" class="progress" style="background:var(--error-color)"></div>
+                                </div>
+                            </div>
+                            <!-- Suiho -->
+                            <div class="split-card">
+                                <div class="split-header">
+                                    <span class="badge badge-suiho">水宝</span>
+                                    <span class="split-value"><span id="curr-suiho">0</span> / <span
+                                            id="max-suiho">50</span></span>
+                                </div>
+                                <div class="split-details">見学者: <span id="suiho-observers">0</span>名</div>
+                                <div class="progress-bar">
+                                    <div id="prog-suiho" class="progress" style="background:#1e90ff"></div>
+                                </div>
+                            </div>
+                            <!-- Harimitsu -->
+                            <div class="split-card admin-only hidden">
+                                <div class="split-header">
+                                    <span class="badge badge-harimitsu">ハリミツ</span>
+                                    <span class="split-value"><span id="curr-harimitsu">0</span> / <span
+                                            id="max-harimitsu">50</span></span>
+                                </div>
+                                <div class="split-details">見学者: <span id="harimitsu-observers">0</span>名</div>
+                                <div class="progress-bar">
+                                    <div id="prog-harimitsu" class="progress" style="background:#9b59b6"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stats-grid mt-4">
+                            <div class="stat-card">
+                                <h3>総登録グループ</h3>
+                                <p id="total-registrations" class="stat-value">0</p>
+                            </div>
+                            <div class="stat-card">
+                                <h3>釣り参加者合計</h3>
+                                <p class="stat-value"><span id="current-fishers">0</span> / 250</p>
+                            </div>
+                            <div class="stat-card">
+                                <h3>見学者合計</h3>
+                                <p id="current-observers" class="stat-value">0</p>
+                            </div>
+                            <div class="stat-card" style="border-top: 5px solid var(--success-color);">
+                                <h3>受付状況（当日）</h3>
+                                <p class="stat-value">来場: <span id="checked-in-count">0</span> / 欠席: <span
+                                        id="absent-count">0</span></p>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">全 <span
+                                        id="total-groups-count">0</span> 組</p>
+                            </div>
+                        </div>
+                    </div> <!-- End of Status Stats Card -->
+
                     <div class="card">
                         <div class="card-header">
                             <h2>参加申し込み一覧</h2>
@@ -352,7 +373,17 @@
 
                 <!-- Tab: General Settings -->
                 <div id="tab-settings" class="admin-tab-content">
-                    <div class="card">
+                    <!-- Share URL -->
+                    <div class="card mb-4" style="background: #e7f3ff; border: 2px dashed var(--primary-color);">
+                        <h2>一般公開用 URL (お客さんに案内するリンク)</h2>
+                        <p class="text-muted mt-2">受付ページへのリンクです。このURLをお客さんに共有して告知してください。</p>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <input type="text" id="public-share-url" readonly style="flex:1; background: #fff; cursor: text; user-select: all; font-family: monospace; font-size: 1rem;" value="取得中...">
+                            <button class="btn-primary" onclick="copyShareUrl()">コピー</button>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
                         <h2>大会基本設定</h2>
                         <form id="settings-form-proxy"> <!-- Using a wrapper to keep event listeners logic simple -->
                             <div class="form-group">
@@ -541,6 +572,30 @@
             </div>
         </section>
     </main>
+
+    <!-- Ikesu Settings Modal -->
+    <div id="ikesu-modal" class="modal hidden">
+        <div class="modal-content card">
+            <div class="modal-header">
+                <h3 id="ikesu-modal-title">イケスの追加</h3>
+            </div>
+            <div class="p-3">
+                <input type="hidden" id="ikesu-edit-id">
+                <div class="form-group">
+                    <label for="ikesu-name">イケス名 <span class="required">*</span></label>
+                    <input type="text" id="ikesu-name" placeholder="例：一般A">
+                </div>
+                <div class="form-group">
+                    <label for="ikesu-capacity">定員（釣り人数） <span class="required">*</span></label>
+                    <input type="number" id="ikesu-capacity" placeholder="例：15" min="1">
+                </div>
+                <div class="form-actions mt-4">
+                    <button id="save-ikesu" class="btn-primary" onclick="saveIkesu()">保存</button>
+                    <button class="btn-secondary" onclick="closeIkesuModal()">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Admin Auth Modal -->
     <div id="admin-auth-modal" class="modal hidden">
