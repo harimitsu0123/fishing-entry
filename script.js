@@ -1,4 +1,4 @@
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwKGvpC2o--sb7nmiLl-6fEaJlVaKbXqRjB7tGe8LU1UBUETWuVI63S23MDK2WSm3og/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby0xbFPVSFFnRQl4xzhB0tSPN67zXzRk9T4vAQL87KE71HwGzcSdbC0_iBedDE0gtM2/exec";
 
 // State Management
 let state = {
