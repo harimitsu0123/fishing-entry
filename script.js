@@ -1348,14 +1348,25 @@ function updateCapacityTotal() {
     }
 }
 
-function confirmReset() {
-    if (confirm('全てのデータを削除します。本当によろしいですか？')) {
-        localStorage.removeItem('fishing_app_v3_data');
+window.confirmReset = async function () {
+    if (confirm('全ての名簿データを削除します。本当によろしいですか？（設定内容は維持されます）')) {
         state.entries = [];
-        saveData();
-        location.reload();
+        state.lastUpdated = Date.now();
+        
+        showToast('リセット中...', 'info');
+        
+        try {
+            // Wait for cloud sync to complete
+            await saveData(); 
+            localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+            location.reload();
+        } catch (e) {
+            console.error('Reset failed:', e);
+            showToast('クラウドの同期に失敗しましたが、ローカルデータは削除されました。', 'error');
+            setTimeout(() => location.reload(), 2000);
+        }
     }
-}
+};
 
 // Exports
 function exportGroupsCSV() {
@@ -1528,11 +1539,12 @@ function showToast(message, type = 'success') {
 // --- Test Data Generator ---
 window.generateBulkTestData = function () {
     const totalCurrent = state.entries.reduce((s, e) => s + e.fishers, 0);
-    if (totalCurrent > 200) {
-        if (!confirm('すでに多くのデータがあります。さらに関係なく生成しますか？（「全データをリセット」してから行うのがおすすめです）')) return;
-    } else {
-        if (!confirm('各枠の定員を守りつつ、合計240名程度になるまでテストデータを生成します。よろしいですか？')) return;
+    if (totalCurrent >= 240) {
+        showToast('すでに定員に近いため、これ以上生成できません。', 'error');
+        return;
     }
+
+    if (!confirm('各枠の定員を守りつつ、10組分（最大40名程度）のテストデータを追加します。よろしいですか？')) return;
 
     const sources = ['一般', 'みん釣り', '水宝', 'ハリミツ'];
     const names = ['田中', '佐藤', '鈴木', '高橋', '渡辺', '伊藤', '山本', '中村', '小林', '加藤'];
@@ -1543,10 +1555,11 @@ window.generateBulkTestData = function () {
     let entriesAdded = 0;
     let fishersAddedTotal = 0;
 
-    // Loop until we are close to 250 or run out of category space
-    for (let i = 0; i < 150; i++) { // Max 150 attempts to avoid infinite loop
+    // Loop for 10 entries
+    for (let i = 0; i < 10; i++) { 
         const totalNow = state.entries.reduce((s, e) => s + e.fishers, 0);
-        if (totalNow >= 240) break; // Stop at 240 to let user test the last 10
+        if (totalNow >= 245) break; 
+
 
         // Pick a source that still has room
         const availableSources = sources.filter(s => {
