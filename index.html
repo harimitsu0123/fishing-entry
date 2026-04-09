@@ -197,11 +197,10 @@
 
             <!-- Admin Sub-tabs Navigation -->
             <nav class="admin-tab-nav">
-                <button class="admin-tab-btn active" data-tab="tab-list">参加申し込み一覧</button>
+                <button class="admin-tab-btn active" data-tab="tab-settings">大会設定</button>
+                <button class="admin-tab-btn" data-tab="tab-list">参加申し込み一覧</button>
                 <button class="admin-tab-btn" data-tab="tab-ikesu">イケス割当</button>
                 <button class="admin-tab-btn" data-tab="tab-proxy">代理登録</button>
-                <button class="admin-tab-btn" data-tab="tab-settings">大会設定</button>
-                <button class="admin-tab-btn" data-tab="tab-capacity">定員・詳細</button>
                 <button class="admin-tab-btn" data-tab="tab-stats">統計・分析</button>
                 <button class="admin-tab-btn" data-tab="tab-email">一括メール</button>
                 <button class="admin-tab-btn" data-tab="tab-data">データ管理</button>
@@ -239,7 +238,7 @@
                 </div>
 
                 <!-- Tab: Registration List -->
-                <div id="tab-list" class="admin-tab-content active">
+                <div id="tab-list" class="admin-tab-content">
                     <!-- Status Stats Card -->
                     <div class="card mb-4 mt-2">
                         <h2>区分別 登録状況</h2>
@@ -372,23 +371,34 @@
                 </div>
 
                 <!-- Tab: General Settings -->
-                <div id="tab-settings" class="admin-tab-content">
-                    <!-- Share URL -->
-                    <div class="card mb-4" style="background: #e7f3ff; border: 2px dashed var(--primary-color);">
-                        <h2>一般公開用 URL (お客さんに案内するリンク)</h2>
-                        <p class="text-muted mt-2">受付ページへのリンクです。このURLをお客さんに共有して告知してください。</p>
-                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                            <input type="text" id="public-share-url" readonly style="flex:1; background: #fff; cursor: text; user-select: all; font-family: monospace; font-size: 1rem;" value="取得中...">
-                            <button class="btn-primary" onclick="copyShareUrl()">コピー</button>
+                <div id="tab-settings" class="admin-tab-content active">
+                    <!-- Share URL & QR Code Combined -->
+                    <div class="card mb-4" style="background: #f0f7ff; border: 2px solid var(--primary-color);">
+                        <div class="form-row" style="align-items: center; gap: 2rem;">
+                            <div style="flex: 2;">
+                                <h2>一般公開用 URL</h2>
+                                <p class="text-muted mt-2">お客さんに案内するリンクです。このURLを共有するか、右のQRコードを掲示してください。</p>
+                                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                                    <input type="text" id="public-share-url" readonly style="flex:1; background: #fff; cursor: text; user-select: all; font-family: monospace; font-size: 1rem;" value="取得中...">
+                                    <button class="btn-primary" onclick="copyShareUrl()">コピー</button>
+                                </div>
+                                <div id="admin-url-display" style="font-size: 0.8rem; color: #666; margin-top: 5px; word-break: break-all;"></div>
+                            </div>
+                            <div style="flex: 1; text-align: center; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <div id="admin-qr-code-container" style="min-height: 150px; display: flex; align-items: center; justify-content: center;">
+                                    <div class="spinner"></div>
+                                </div>
+                                <p style="font-size: 0.75rem; margin-top: 5px; font-weight: bold; color: var(--primary-color);">スキャンして受付を開く</p>
+                            </div>
                         </div>
                     </div>
 
                     <div class="card mb-4">
-                        <h2>大会基本設定</h2>
-                        <form id="settings-form-proxy"> <!-- Using a wrapper to keep event listeners logic simple -->
+                        <h2>大会基本設定・定員</h2>
+                        <form id="settings-form-proxy">
                             <div class="form-group">
                                 <label for="competition-name">大会名称</label>
-                                <input type="text" id="competition-name" placeholder="例：第1回 釣り大会">
+                                <input type="text" id="competition-name" placeholder="例：第1回 釣り大会" style="font-size: 1.2rem; font-weight: bold;">
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -400,73 +410,53 @@
                                     <input type="datetime-local" id="registration-deadline">
                                 </div>
                             </div>
-                            <button type="button" class="btn-primary mt-4"
-                                onclick="triggerSettingsSave()">設定を保存</button>
+
+                            <div class="section-title mt-4">定員設定</div>
+                            <div class="alert alert-info mb-3" style="display:flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <span style="font-weight: 700;">釣り参加 合計: </span>
+                                    <span id="capacity-total-summary" style="font-size: 1.5rem; color: var(--primary-color);">0</span>
+                                    <span style="font-weight: 700;"> / 250名</span>
+                                </div>
+                                <div id="capacity-warning-msg" class="hidden" style="color: var(--error-color); font-weight: bold;">
+                                    ⚠️ 250名を超えています！
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cap-ippan">一般 枠</label>
+                                    <input type="number" id="cap-ippan" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cap-mintsuri">みん釣り 枠</label>
+                                    <input type="number" id="cap-mintsuri" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cap-suiho">水宝 枠</label>
+                                    <input type="number" id="cap-suiho" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cap-harimitsu">ハリミツ 枠</label>
+                                    <input type="number" id="cap-harimitsu" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="capacity-observers">見学者 枠 (合計)</label>
+                                    <input type="number" id="capacity-observers" min="0">
+                                </div>
+                            </div>
+
+                            <div class="section-title mt-4">セキュリティ</div>
+                            <div class="form-group">
+                                <label for="admin-password-set">管理画面パスワード</label>
+                                <input type="text" id="admin-password-set">
+                            </div>
+
+                            <button type="button" class="btn-primary mt-4 btn-large" style="width: 100%;" onclick="triggerSettingsSave()">大会設定をすべて保存</button>
                         </form>
                     </div>
                 </div>
 
-                <!-- Tab: Capacity & Security -->
-                <div id="tab-capacity" class="admin-tab-content">
-                    <div class="card">
-                        <h2>人数・セキュリティ</h2>
-                        <div class="section-title">定員設定</div>
-                        <div class="alert alert-info mb-3"
-                            style="display:flex; justify-content: space-between; align-items: center; background: #e3f2fd; border: 1px solid #bbdefb; border-radius: 8px; padding: 1rem;">
-                            <div>
-                                <span style="font-weight: 700;">現在の入力合計: </span>
-                                <span id="capacity-total-summary"
-                                    style="font-size: 1.5rem; color: var(--primary-color);">0</span>
-                                <span style="font-weight: 700;"> / 250名</span>
-                            </div>
-                            <div id="capacity-warning-msg" class="hidden"
-                                style="color: var(--error-color); font-weight: bold;">
-                                ⚠️ 250名を超えています！
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="cap-ippan">一般 枠</label>
-                                <input type="number" id="cap-ippan" min="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="cap-mintsuri">みん釣り 枠</label>
-                                <input type="number" id="cap-mintsuri" min="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="cap-suiho">水宝 枠</label>
-                                <input type="number" id="cap-suiho" min="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="cap-harimitsu">ハリミツ 枠</label>
-                                <input type="number" id="cap-harimitsu" min="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="capacity-observers">見学者 枠</label>
-                                <input type="number" id="capacity-observers" min="0">
-                            </div>
-                        </div>
 
-                        <div class="section-title">セキュリティ</div>
-                        <div class="form-group">
-                            <label for="admin-password-set">管理画面パスワード</label>
-                            <input type="text" id="admin-password-set">
-                        </div>
-                        <button type="button" class="btn-primary mt-4" onclick="triggerSettingsSave()">設定を保存</button>
-
-                        <div class="qr-code-section mt-4">
-                            <h3>iPad 連携用 QRコード</h3>
-                            <p class="text-muted mb-3">このQRコードをiPadでスキャンすると、このシステムのURLに直接アクセスできます。</p>
-                            <div class="qr-code-container" id="admin-qr-code-container">
-                                <!-- QR Code will be injected here -->
-                                <p style="padding: 2rem;">URLを取得中...</p>
-                            </div>
-                            <div id="admin-url-display"
-                                style="font-size: 0.9rem; font-family: monospace; color: var(--primary-color); word-break: break-all;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
 
                 <!-- Tab: Statistics -->

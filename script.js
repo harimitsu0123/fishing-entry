@@ -467,7 +467,7 @@ function syncSettingsUI() {
     const updateIfInactive = (id, value) => {
         const el = document.getElementById(id);
         if (el && document.activeElement !== el) {
-            el.value = value;
+            el.value = value || "";
         }
     };
 
@@ -481,12 +481,20 @@ function syncSettingsUI() {
     updateIfInactive('registration-deadline', state.settings.deadline);
     updateIfInactive('admin-password-set', state.settings.adminPassword);
 
-    // Only update title if we are NOT in special admin views (which have their own titles)
-    if (currentViewId === 'registration-view') {
-        document.getElementById('app-title').textContent = state.settings.competitionName;
-    }
     updateCapacityTotal();
+    updateAppTitle();
 }
+
+function updateAppTitle() {
+    const titleEl = document.getElementById('app-title');
+    if (titleEl && state.settings.competitionName) {
+        // Special title for admin edit mode is handled in requestAdminEdit
+        if (!isAdminAuthAction || currentViewId !== 'registration-view') {
+           titleEl.textContent = state.settings.competitionName;
+        }
+    }
+}
+
 
 // Participant Row Management
 function addParticipantRow(data = null) {
@@ -1303,7 +1311,8 @@ function handleSettingsUpdate(e) {
     syncSettingsUI();
     updateDashboard();
     checkTimeframe();
-    showToast('大会設定を保存しました', 'success');
+    updateAppTitle();
+    showToast('大会設定をすべて保存しました', 'success');
 }
 
 function updateCapacityTotal() {
@@ -1450,36 +1459,28 @@ function generateAdminQRCode() {
     const urlDisplay = document.getElementById('admin-url-display');
     if (!container) return;
 
-    // Use current URL
-    const currentUrl = window.location.href;
-    urlDisplay.textContent = currentUrl;
+    // Use Public URL (Share URL) instead of current internal URL
+    const publicUrl = window.location.href.split('#')[0].split('?')[0];
+    urlDisplay.textContent = publicUrl;
 
-    // Check if current URL is local (file:// or localhost)
-    const isLocal = currentUrl.startsWith('file://') || currentUrl.includes('127.0.0.1') || currentUrl.includes('localhost');
+    // Check if URL is local
+    const isLocal = publicUrl.startsWith('file://') || publicUrl.includes('127.0.0.1') || publicUrl.includes('localhost');
 
     if (isLocal) {
         container.innerHTML = `
-            <div class="alert alert-error" style="background:#fff5f5; border:1px solid #feb2b2; padding:1rem; border-radius:8px; margin-bottom:1rem;">
-                <p style="color:#c53030; font-weight:bold; font-size:0.9rem;">
-                    ⚠️ 注意：現在はPC内のファイルを表示しています。<br>
-                    このQRコードでは携帯からアクセスできません。
-                </p>
-                <p style="font-size:0.8rem; margin-top:0.5rem;">
-                    GitHub Pages のURL（https://...）をPCで開いてから、この画面を再度確認してください。
-                </p>
-            </div>
-            <div style="opacity: 0.3; filter: blur(2px); pointer-events: none;">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}" alt="Local QR">
+            <div style="font-size: 0.7rem; color: #cc0000; line-height: 1.2;">
+                ⚠️ ローカル実行中<br>
+                (GitHub Pagesで確認してください)
             </div>
         `;
         return;
     }
 
     // Generate QR using QRServer API
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicUrl)}`;
 
     container.innerHTML = `
-        <img src="${qrUrl}" alt="Admin access QR code" onload="this.parentElement.style.background='white'">
+        <img src="${qrUrl}" alt="Registration QR code" style="max-width: 100%; height: auto;" onload="this.parentElement.style.background='white'">
     `;
 }
 
