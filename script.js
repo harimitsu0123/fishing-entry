@@ -483,6 +483,7 @@ function syncSettingsUI() {
 
     updateCapacityTotal();
     updateAppTitle();
+    generateAdminQRCode(); // Ensure QR is generated when UI syncs
 }
 
 function updateAppTitle() {
@@ -1459,7 +1460,7 @@ function switchAdminTab(tabId) {
         content.classList.toggle('active', content.id === tabId);
     });
 
-    if (tabId === 'tab-capacity') {
+    if (tabId === 'tab-settings' || tabId === 'tab-capacity') {
         generateAdminQRCode();
     }
 
