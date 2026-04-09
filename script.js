@@ -966,7 +966,10 @@ function updateDashboard() {
                 </button>
                 <div style="margin-top: 4px;">
                     <button class="btn-text" onclick="requestAdminEdit('${e.id}')" ${e.status === 'cancelled' ? 'disabled hidden' : ''}>修正</button>
-                    ${e.status !== 'cancelled' ? `<button class="btn-text" style="color:var(--error-color); margin-left: 0.5rem;" onclick="cancelEntry('${e.id}')">削除(ｷｬﾝｾﾙ)</button>` : `<span class="badge" style="background:#dc3545; color:white; margin-left: 0.25rem; font-size:0.7rem;">取消済</span>`}
+                    ${e.status !== 'cancelled' ? 
+                        `<button class="btn-text" style="color:var(--error-color); margin-left: 0.5rem;" onclick="cancelEntry('${e.id}')">削除(ｷｬﾝｾﾙ)</button>` : 
+                        `<button class="btn-text" style="color:var(--success-color); margin-left: 0.5rem; font-weight:bold;" onclick="restoreEntry('${e.id}')">復元する</button>`
+                    }
                 </div>
             </td>
         `;
@@ -1252,6 +1255,16 @@ window.cancelEntry = function (id) {
     }
 };
 
+window.restoreEntry = function (id) {
+    const entry = state.entries.find(e => e.id === id);
+    if (entry) {
+        entry.status = 'pending'; // Restore to pending
+        saveData();
+        updateDashboard();
+        showToast(`受付番号 「${id}」 を復元しました`, 'success');
+    }
+};
+
 window.copyShareUrl = function () {
     const urlInput = document.getElementById('public-share-url');
     urlInput.select();
@@ -1459,19 +1472,24 @@ function generateAdminQRCode() {
     const urlDisplay = document.getElementById('admin-url-display');
     if (!container) return;
 
-    // Use Public URL (Share URL) instead of current internal URL
-    const publicUrl = window.location.href.split('#')[0].split('?')[0];
-    urlDisplay.textContent = publicUrl;
-
-    // Check if URL is local
+    // Use Public URL (Share URL). If local, fallback to GitHub Pages URL
+    let publicUrl = window.location.href.split('#')[0].split('?')[0];
     const isLocal = publicUrl.startsWith('file://') || publicUrl.includes('127.0.0.1') || publicUrl.includes('localhost');
+    
+    if (isLocal) {
+        // Hardcode the production URL for QR generation when testing locally
+        publicUrl = "https://harimitsu0123.github.io/fishing-entry/";
+    }
+    
+    urlDisplay.textContent = publicUrl;
 
     if (isLocal) {
         container.innerHTML = `
-            <div style="font-size: 0.7rem; color: #cc0000; line-height: 1.2;">
-                ⚠️ ローカル実行中<br>
-                (GitHub Pagesで確認してください)
+            <div style="font-size: 0.7rem; color: #2ecc71; line-height: 1.2; margin-bottom: 5px;">
+                ✅ 公開版のQRを表示中<br>
+                (ローカル環境)
             </div>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicUrl)}" alt="Registration QR code" style="max-width: 100%; height: auto;" onload="this.parentElement.style.background='white'">
         `;
         return;
     }
