@@ -449,7 +449,7 @@ select:focus {
 .source-option {
     position: relative;
     flex: 1;
-    min-width: 120px;
+    min-width: 80px; /* Reduced from 120px */
 }
 
 .source-option input[type="radio"] {
@@ -464,10 +464,11 @@ select:focus {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 1rem 0.5rem;
+    padding: 0.4rem 0.2rem;
     background: white;
     border: 2px solid #e0e6ed;
-    border-radius: 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
     cursor: pointer;
     font-weight: 700;
     transition: all 0.2s;
