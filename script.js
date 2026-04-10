@@ -31,6 +31,8 @@ const ageLabels = {
     "50s": "50代", "60s": "60代", "70s": "70代", "80s": "80代以上"
 };
 
+const tshirtSizes = ['150', 'S', 'M', 'L', 'XL', '3L', '4L'];
+
 /// Admin Registration Helper
 window.startAdminRegistration = function (source) {
     resetForm();
@@ -524,13 +526,15 @@ function addParticipantRow(data = null) {
             <input type="text" class="p-nick" value="${data && data.nickname ? data.nickname : ''}" placeholder="無記名可">
         </div>
         <div class="form-group">
-            <label>地域（市まで）</label>
-            <input type="text" class="p-region" required value="${data ? data.region : ''}" placeholder="例：姫路市">
-        </div>
-        <div class="form-group">
             <label>年代</label>
             <select class="p-age">
                 ${Object.entries(ageLabels).map(([val, label]) => `<option value="${val}" ${data && data.age === val ? 'selected' : ''}>${label}</option>`).join('')}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Tシャツ</label>
+            <select class="p-tshirt">
+                ${tshirtSizes.map(size => `<option value="${size}" ${data && data.tshirtSize === size ? 'selected' : ''}>${size}</option>`).join('')}
             </select>
         </div>
         <div class="row-actions">
@@ -567,7 +571,8 @@ function showConfirmation() {
         name: row.querySelector('.p-name').value,
         nickname: row.querySelector('.p-nick').value,
         region: row.querySelector('.p-region').value,
-        age: row.querySelector('.p-age').value
+        age: row.querySelector('.p-age').value,
+        tshirtSize: row.querySelector('.p-tshirt').value
     }));
 
     // Basic Validation Check (HTML5 Native)
@@ -631,7 +636,7 @@ function showConfirmation() {
     participants.forEach((p, idx) => {
         const li = document.createElement('li');
         const typeLabel = p.type === 'fisher' ? '【釣り】' : '【見学】';
-        li.textContent = `${idx + 1}. ${typeLabel} ${p.name}` + (p.nickname ? ` (${p.nickname})` : '');
+        li.textContent = `${idx + 1}. ${typeLabel} ${p.name} [${p.tshirtSize}]` + (p.nickname ? ` (${p.nickname})` : '');
         summaryList.appendChild(li);
     });
 
@@ -658,7 +663,8 @@ async function handleRegistration() {
         name: row.querySelector('.p-name').value,
         nickname: row.querySelector('.p-nick').value,
         region: row.querySelector('.p-region').value,
-        age: row.querySelector('.p-age').value
+        age: row.querySelector('.p-age').value,
+        tshirtSize: row.querySelector('.p-tshirt').value
     }));
 
     const sourceEl = document.querySelector('input[name="reg-source"]:checked');
@@ -842,6 +848,10 @@ function showResult(entry) {
     document.getElementById('result-source').textContent = entry.source;
     document.getElementById('app-title').textContent = "受付完了";
 
+    // Screenshot Optimization: Hide the top registration card frame to save space
+    const regCard = document.getElementById('registration-card');
+    if (regCard) regCard.classList.add('hidden');
+
     showToast('✨ 登録完了しました！', 'success');
     window.scrollTo(0, 0);
 }
@@ -855,6 +865,11 @@ function resetForm() {
 
     document.getElementById('participant-list').innerHTML = '';
     addParticipantRow();
+    
+    // Restore the registration card frame
+    const regCard = document.getElementById('registration-card');
+    if (regCard) regCard.classList.remove('hidden');
+
     document.getElementById('registration-form').classList.remove('hidden');
     document.getElementById('confirmation-section').classList.add('hidden');
     document.getElementById('registration-result').classList.add('hidden');
@@ -1382,12 +1397,12 @@ function exportGroupsCSV() {
 
 function exportParticipantsCSV() {
     if (state.entries.length === 0) return alert('データがありません');
-    const headers = ['受付番号', '区分', 'グループ名', '代表者名', '参加区分', '参加者名', 'ニックネーム', '地域', '年代', '登録時間'];
+    const headers = ['受付番号', '区分', 'グループ名', '代表者名', '参加区分', '参加者名', 'ニックネーム', 'Tシャツ', '地域', '年代', '登録時間'];
     const rows = [];
     state.entries.forEach(e => {
         e.participants.forEach(p => {
             const partType = p.type === 'observer' ? '見学' : '釣り';
-            rows.push([e.id, e.source, e.groupName, e.representative, partType, p.name, p.nickname, p.region, ageLabels[p.age] || p.age, e.timestamp]);
+            rows.push([e.id, e.source, e.groupName, e.representative, partType, p.name, p.nickname, p.tshirtSize || "", p.region, ageLabels[p.age] || p.age, e.timestamp]);
         });
     });
     downloadCSV("participants", headers, rows);

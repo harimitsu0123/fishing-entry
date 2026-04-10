@@ -229,7 +229,7 @@ select:focus {
 /* Participant Row (Updated for Nickname) */
 .participant-row {
     display: grid;
-    grid-template-columns: 80px 1fr 1fr 1fr 100px 40px;
+    grid-template-columns: 80px 1.2fr 1fr 1fr 80px 85px 40px;
     gap: 0.5rem;
     background: #f8f9fa;
     padding: 0.75rem;
