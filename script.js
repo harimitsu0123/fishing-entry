@@ -377,14 +377,15 @@ function initApp() {
         if (el) el.addEventListener('input', updateCapacityTotal);
     });
 
-    // Professional Long-Press Reveal (2-second hold on Footer Copyright)
+    // Professional Long-Press Reveal (3-second hold on Footer Copyright)
     const footerReveal = document.getElementById('footer-reveal');
     let pressTimer;
     
     if (footerReveal) {
         const startPress = (e) => {
-            // Prevent default only for touch to avoid gesture conflicts, 
-            // but carefully as we want the browser to handle scrolls elsewhere.
+            // Clear any existing timer safely
+            if (pressTimer) clearTimeout(pressTimer);
+            
             pressTimer = setTimeout(() => {
                 const pw = prompt("管理者パスワードを入力してください");
                 if (pw === state.settings.adminPassword || pw === 'admin') {
@@ -394,7 +395,7 @@ function initApp() {
                 } else if (pw !== null) {
                     showToast('パスワードが違います', 'error');
                 }
-            }, 4000);
+            }, 3000); // Changed to 3 seconds for better reliability
         };
 
         const endPress = () => {
@@ -403,12 +404,21 @@ function initApp() {
 
         // Desktop and Mobile Events
         footerReveal.addEventListener('mousedown', startPress);
-        footerReveal.addEventListener('touchstart', startPress);
+        footerReveal.addEventListener('touchstart', (e) => {
+            // No preventDefault to allow potential scrolling if needed, but start timer
+            startPress(e);
+        });
         
         footerReveal.addEventListener('mouseup', endPress);
         footerReveal.addEventListener('mouseleave', endPress);
         footerReveal.addEventListener('touchend', endPress);
         footerReveal.addEventListener('touchcancel', endPress);
+        
+        // Specifically for mobile, if the finger moves significantly, cancel the press
+        footerReveal.addEventListener('touchmove', (e) => {
+            // If they drag, it's not a long press
+            clearTimeout(pressTimer);
+        });
         
         // Prevent context menu (long-press menu) specifically on this element
         footerReveal.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -442,7 +452,7 @@ function switchView(btnElement, targetId) {
     } else if (targetId === 'reception-view') {
         document.getElementById('app-title').textContent = "当日受付管理";
     } else {
-        document.getElementById('app-title').textContent = state.settings.competitionName;
+        updateAppTitle();
     }
 
     if (targetId === 'registration-view') {
@@ -1441,6 +1451,13 @@ function updateEntryStatus(status) {
 window.triggerSettingsSave = function () {
     handleSettingsUpdate({ preventDefault: () => { } });
 };
+
+function updateAppTitle() {
+    const titleEl = document.getElementById('app-title');
+    if (titleEl) {
+        titleEl.textContent = state.settings.competitionName || "釣り大会 受付";
+    }
+}
 
 function handleSettingsUpdate(e) {
     if (e && e.preventDefault) e.preventDefault();

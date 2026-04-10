@@ -1643,3 +1643,29 @@ th {
     display: flex;
     gap: 0.25rem;
 }
+
+/* Responsive Header Adjustments */
+@media (max-width: 768px) {
+    .navbar {
+        position: static !important; /* Remove sticky on mobile */
+        padding: 0.5rem 0;
+    }
+    
+    #app-title {
+        font-size: 1.1rem; /* Smaller title on mobile */
+    }
+    
+    .nav-container {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .nav-links {
+        gap: 0.5rem;
+    }
+    
+    .nav-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+}
