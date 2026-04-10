@@ -377,17 +377,30 @@ function initApp() {
         if (el) el.addEventListener('input', updateCapacityTotal);
     });
 
-    // Hidden Admin Reveal in Footer
-    const revealAdmin = document.getElementById('reveal-admin');
-    if (revealAdmin) {
-        revealAdmin.addEventListener('click', () => {
-            const pw = prompt("管理者パスワードを入力してください");
-            if (pw === state.settings.adminPassword || pw === 'admin') {
-                isAdminAuth = true;
-                document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                showToast('✨ 管理者メニューを表示しました', 'success');
-            } else if (pw !== null) {
-                showToast('パスワードが違います', 'error');
+    // Stealthy Admin Reveal (5-tap on Footer Copyright)
+    const footerReveal = document.getElementById('footer-reveal');
+    let tapCount = 0;
+    let lastTapTime = 0;
+    if (footerReveal) {
+        footerReveal.addEventListener('click', () => {
+            const now = Date.now();
+            if (now - lastTapTime < 500) {
+                tapCount++;
+            } else {
+                tapCount = 1;
+            }
+            lastTapTime = now;
+
+            if (tapCount === 5) {
+                tapCount = 0; // Reset
+                const pw = prompt("管理者パスワードを入力してください");
+                if (pw === state.settings.adminPassword || pw === 'admin') {
+                    isAdminAuth = true;
+                    document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+                    showToast('✨ 管理者メニューを表示しました', 'success');
+                } else if (pw !== null) {
+                    showToast('パスワードが違います', 'error');
+                }
             }
         });
     }
