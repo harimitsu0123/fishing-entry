@@ -394,7 +394,7 @@ function initApp() {
                 } else if (pw !== null) {
                     showToast('パスワードが違います', 'error');
                 }
-            }, 2000);
+            }, 4000);
         };
 
         const endPress = () => {
