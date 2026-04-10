@@ -926,17 +926,6 @@ function fillFormForEdit(entry) {
     let sourceRadio = document.querySelector(`input[name="reg-source"][value="${entry.source}"]`);
     if (sourceRadio) sourceRadio.checked = true;
 
-    document.getElementById('group-name').value = entry.groupName;
-    document.getElementById('representative-name').value = entry.representative;
-    document.getElementById('rep-phone').value = entry.phone;
-    document.getElementById('rep-email').value = entry.email;
-    document.getElementById('rep-email-confirm').value = entry.email;
-    document.getElementById('edit-password').value = entry.password;
-
-    const list = document.getElementById('participant-list');
-    list.innerHTML = '';
-    entry.participants.forEach(p => addParticipantRow(p));
-
     document.getElementById('edit-auth-section').classList.add('hidden');
     document.getElementById('registration-form').classList.remove('hidden');
     document.getElementById('app-title').textContent = "登録変更: " + entry.id;
