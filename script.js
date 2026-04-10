@@ -426,11 +426,15 @@ function switchView(btnElement, targetId) {
         else el.classList.add('hidden');
     });
 
-    // Hide registration link in navbar if logged in as admin
+    // Navbar visibility logic
     const navRegistration = document.getElementById('nav-registration');
     if (navRegistration) {
-        if (isAdminAuth) navRegistration.parentElement.classList.add('hidden');
-        else navRegistration.parentElement.classList.remove('hidden');
+        // 一般参加者（応募者）には不要なボタンを非表示、管理者の時だけ表示
+        if (!isAdminAuth) {
+            navRegistration.parentElement.classList.add('hidden');
+        } else {
+            navRegistration.parentElement.classList.remove('hidden');
+        }
     }
 }
 
