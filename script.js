@@ -255,6 +255,22 @@ function updateSyncStatus(type) {
     }
 }
 
+// Helper: 24-hour JST date formatting
+function formatDate(dateStr) {
+    if (!dateStr) return "-";
+    // If it's already a cleaner string, try to re-parse it
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    
+    return `${year}/${month}/${day} ${hours}:${minutes}`;
+}
+
 function initApp() {
     initToast(); // Add toast container helper if needed
     
@@ -408,6 +424,8 @@ function switchView(btnElement, targetId) {
     }
 
     if (targetId === 'registration-view') {
+        const adminActions = document.getElementById('admin-extra-actions');
+        if (adminActions) adminActions.classList.add('hidden');
         resetForm();
         updateSourceAvailability();
     }
@@ -598,6 +616,12 @@ function showConfirmation() {
     // Basic Validation Check (HTML5 Native)
     if (!document.getElementById('registration-form').reportValidity()) {
         showStatus("入力内容に不備があります。赤枠の部分をご確認ください。", "error");
+        return;
+    }
+
+    // Minimum 1 participant validation
+    if (participants.length === 0) {
+        showStatus("参加者を1名以上登録してください。", "error");
         return;
     }
 
@@ -814,9 +838,35 @@ function handleEditAuth() {
 }
 
 function fillFormForEdit(entry) {
-    resetForm(); // Start fresh
+    resetForm();
 
     document.getElementById('edit-entry-id').value = entry.id;
+    document.getElementById('group-name').value = entry.groupName;
+    document.getElementById('representative-name').value = entry.representative;
+    document.getElementById('rep-phone').value = entry.phone;
+    document.getElementById('rep-email').value = entry.email;
+    document.getElementById('rep-email-confirm').value = entry.email;
+    document.getElementById('edit-password').value = entry.password;
+
+    const list = document.getElementById('participant-list');
+    list.innerHTML = '';
+    entry.participants.forEach(p => addParticipantRow(p));
+
+    // Show Admin Actions if triggered from dashboard
+    const adminActions = document.getElementById('admin-extra-actions');
+    if (adminActions && isAdminAuthAction) {
+        adminActions.classList.remove('hidden');
+        
+        // Connect buttons to global functions
+        document.getElementById('admin-resend-email').onclick = () => window.resendEmail(entry.id);
+        document.getElementById('admin-cancel-entry').onclick = () => window.cancelEntry(entry.id);
+        document.getElementById('admin-restore-entry').onclick = () => window.restoreEntry(entry.id);
+        
+        // Toggle cancel/restore visibility
+        document.getElementById('admin-cancel-entry').classList.toggle('hidden', entry.status === 'cancelled');
+        document.getElementById('admin-restore-entry').classList.toggle('hidden', entry.status !== 'cancelled');
+    }
+
     // For admin categories, show all possible sources if admin
     if (isAdminAuth || isAdminAuthAction) {
         ['水宝', 'ハリミツ'].forEach(source => {
@@ -969,54 +1019,53 @@ function updateDashboard() {
         // Filter and display
         state.entries.slice().reverse().forEach(e => {
             // Search Filter
-            const matchesSearch =
+            const matchesEntrySearch =
                 e.id.toLowerCase().includes(searchTerm) ||
                 e.groupName.toLowerCase().includes(searchTerm) ||
                 e.representative.toLowerCase().includes(searchTerm);
-
-            if (!matchesSearch) return;
 
             // Category Filter
             if (dashboardFilter !== 'all' && e.source !== dashboardFilter) return;
 
             const badgeMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
             const badgeClass = badgeMap[e.source] || 'badge-ippan';
-            const tr = document.createElement('tr');
-            if (e.status === 'checked-in') tr.classList.add('row-checked-in');
-            if (e.status === 'absent') tr.classList.add('row-absent');
-            if (e.status === 'cancelled') {
-                tr.style.opacity = '0.4';
-                tr.style.background = '#f8f9fa';
-            }
 
-            const statusIcon = e.status === 'checked-in' ? '✅' : e.status === 'absent' ? '❌' : e.status === 'cancelled' ? '🚫' : '⏳';
-            const statusLabel = e.status === 'checked-in' ? '受済' : e.status === 'absent' ? '欠席' : e.status === 'cancelled' ? 'ｷｬﾝｾﾙ' : '受付';
+            e.participants.forEach((p, pIndex) => {
+                const matchesParticipantSearch = p.name.toLowerCase().includes(searchTerm);
+                if (!matchesEntrySearch && !matchesParticipantSearch) return;
 
-            tr.innerHTML = `
-            <td><strong>${e.id}</strong></td>
-            <td><span class="badge ${badgeClass}">${e.source}</span></td>
-            <td><span style="${e.status === 'cancelled' ? 'text-decoration: line-through;' : ''}">${e.groupName}</span></td>
-            <td>${e.representative}</td>
-            <td>${e.fishers}名</td>
-            <td>${e.observers}</td>
-            <td><small>${e.status === 'checked-in' ? '✅ ' + e.checkInTime : e.timestamp}</small></td>
-            <td>
-                <button class="btn-check-in ${e.status !== 'pending' && e.status !== 'cancelled' ? 'active' : ''} ${e.status === 'absent' ? 'absent' : ''}" onclick="jumpToReception('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''}>
-                    ${statusIcon} ${statusLabel}
-                </button>
-                <div style="display:flex; gap: 0.4rem; margin-top: 6px; flex-wrap: wrap;">
-                    <button class="btn-text" onclick="requestAdminEdit('${e.id}')" ${e.status === 'cancelled' ? 'disabled hidden' : ''}>修正</button>
-                    ${e.status !== 'cancelled' ? 
-                        `<button class="btn-text" style="color:var(--primary-color);" onclick="resendEmail('${e.id}')">メール再送</button>` : ''
-                    }
-                    ${e.status !== 'cancelled' ? 
-                        `<button class="btn-text" style="color:var(--error-color);" onclick="cancelEntry('${e.id}')">削除(ｷｬﾝｾﾙ)</button>` : 
-                        `<button class="btn-text" style="color:var(--success-color); font-weight:bold;" onclick="restoreEntry('${e.id}')">復元する</button>`
-                    }
-                </div>
-            </td>
-        `;
-            list.appendChild(tr);
+                const tr = document.createElement('tr');
+                if (e.status === 'cancelled') {
+                    tr.style.opacity = '0.4';
+                    tr.style.background = '#f8f9fa';
+                } else if (e.status === 'checked-in') {
+                    tr.classList.add('row-checked-in');
+                }
+
+                const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 消込' : '⏳ 待機';
+                const pTypeLabel = p.type === 'fisher' ? '釣り' : '見学';
+                const detailLabel = `${ageLabels[p.age] || p.age} / ${p.tshirtSize || '無'}`;
+
+                tr.innerHTML = `
+                    <td>${e.id}</td>
+                    <td><span class="badge ${badgeClass}" style="font-size: 0.7rem;">${e.source}</span></td>
+                    <td><span style="${e.status === 'cancelled' ? 'text-decoration: line-through;' : ''}">${e.groupName}</span></td>
+                    <td><strong>${p.name}</strong> ${pIndex === 0 ? '<small>(代表)</small>' : ''}</td>
+                    <td>${pTypeLabel}</td>
+                    <td><small>${detailLabel}</small></td>
+                    <td><small>${formatDate(e.timestamp)}</small></td>
+                    <td>
+                        <div style="display:flex; gap: 0.3rem; align-items:center;">
+                            <span style="font-size:0.75rem;">${statusLabel}</span>
+                            <button class="btn-check-in ${e.status !== 'pending' && e.status !== 'cancelled' ? 'active' : ''}" onclick="jumpToReception('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.7rem;">
+                                受付
+                            </button>
+                            <button class="btn-text" onclick="requestAdminEdit('${e.id}')" style="font-size: 0.7rem; text-decoration: none; padding: 0.2rem 0;">修正</button>
+                        </div>
+                    </td>
+                `;
+                list.appendChild(tr);
+            });
         });
         
         renderIkesuWorkspace();

@@ -111,6 +111,15 @@
                     </div>
                     <button type="button" id="add-participant" class="btn-outline w-100 mt-2">+ 参加者を追加</button>
 
+                    <div id="admin-extra-actions" class="hidden" style="margin-top: 2rem; padding: 1rem; background: #fff4e6; border-radius: 8px; border: 2px dashed #e67e22;">
+                        <h4 style="color: #d35400; margin-bottom: 0.8rem;">管理者操作</h4>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button type="button" id="admin-resend-email" class="btn-outline" style="border-color: #e67e22; color: #e67e22;">メール再送</button>
+                            <button type="button" id="admin-cancel-entry" class="btn-danger">この申込をキャンセル</button>
+                            <button type="button" id="admin-restore-entry" class="btn-secondary hidden">キャンセルを復元</button>
+                        </div>
+                    </div>
+
                     <div class="form-actions mt-4">
                         <button type="button" class="btn-primary" id="btn-to-confirm">確認画面へ</button>
                         <button type="button" id="cancel-edit" class="btn-secondary hidden">キャンセル</button>
@@ -337,10 +346,10 @@
                                     <tr>
                                         <th>番号</th>
                                         <th>区分</th>
-                                        <th>グループ名</th>
-                                        <th>代表者</th>
-                                        <th>釣り人数</th>
-                                        <th>見学</th>
+                                        <th>グループ</th>
+                                        <th>氏名</th>
+                                        <th>種別</th>
+                                        <th>詳細</th>
                                         <th>登録時間</th>
                                         <th>操作</th>
                                     </tr>
