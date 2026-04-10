@@ -223,7 +223,14 @@ async function syncToCloud() {
     }
 }
 
+let isFirstLoad = true;
+
 function updateSyncStatus(type) {
+    if (isFirstLoad && (type === 'syncing' || type === 'success')) {
+        if (type === 'success') isFirstLoad = false;
+        return;
+    }
+
     const badge = document.getElementById('sync-status');
     const text = badge.querySelector('.sync-text');
     const icon = badge.querySelector('.sync-icon');
@@ -577,6 +584,7 @@ function showConfirmation() {
 
     // Basic Validation Check (HTML5 Native)
     if (!document.getElementById('registration-form').reportValidity()) {
+        showStatus("入力内容に不備があります。赤枠の部分をご確認ください。", "error");
         return;
     }
 
@@ -983,11 +991,14 @@ function updateDashboard() {
                 <button class="btn-check-in ${e.status !== 'pending' && e.status !== 'cancelled' ? 'active' : ''} ${e.status === 'absent' ? 'absent' : ''}" onclick="jumpToReception('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''}>
                     ${statusIcon} ${statusLabel}
                 </button>
-                <div style="margin-top: 4px;">
+                <div style="display:flex; gap: 0.4rem; margin-top: 6px; flex-wrap: wrap;">
                     <button class="btn-text" onclick="requestAdminEdit('${e.id}')" ${e.status === 'cancelled' ? 'disabled hidden' : ''}>修正</button>
                     ${e.status !== 'cancelled' ? 
-                        `<button class="btn-text" style="color:var(--error-color); margin-left: 0.5rem;" onclick="cancelEntry('${e.id}')">削除(ｷｬﾝｾﾙ)</button>` : 
-                        `<button class="btn-text" style="color:var(--success-color); margin-left: 0.5rem; font-weight:bold;" onclick="restoreEntry('${e.id}')">復元する</button>`
+                        `<button class="btn-text" style="color:var(--primary-color);" onclick="resendEmail('${e.id}')">メール再送</button>` : ''
+                    }
+                    ${e.status !== 'cancelled' ? 
+                        `<button class="btn-text" style="color:var(--error-color);" onclick="cancelEntry('${e.id}')">削除(ｷｬﾝｾﾙ)</button>` : 
+                        `<button class="btn-text" style="color:var(--success-color); font-weight:bold;" onclick="restoreEntry('${e.id}')">復元する</button>`
                     }
                 </div>
             </td>
@@ -1080,11 +1091,29 @@ function renderReceptionDesk() {
         </div>
 
         <div class="participant-check-list">
-            ${entry.participants.map((p, idx) => `
+                <!-- Representative is always included first -->
+                <div class="participant-check-row ${entry.status === 'checked-in' ? 'checked-in' : ''} ${entry.status === 'absent' ? 'absent' : ''}" style="border-left: 4px solid var(--primary-color);">
+                    <div class="p-info">
+                        <span class="p-name">代表者: ${entry.representative}</span>
+                        <span class="p-meta">一括受付ステータス</span>
+                    </div>
+                    <div class="p-status-actions">
+                        <button class="btn-status in ${entry.status === 'checked-in' ? 'active' : ''}" onclick="updateGroupStatus('${entry.id}', 'checked-in')">受付</button>
+                        <button class="btn-status out ${entry.status === 'absent' ? 'active' : ''}" onclick="updateGroupStatus('${entry.id}', 'absent')">欠席</button>
+                    </div>
+                </div>
+
+            ${entry.participants.map((p, idx) => {
+                const typeClass = p.type === 'fisher' ? 'p-badge-fisher' : 'p-badge-observer';
+                const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
+                return `
                 <div class="participant-check-row ${p.status === 'checked-in' ? 'checked-in' : ''} ${p.status === 'absent' ? 'absent' : ''}">
                     <div class="p-info">
-                        <span class="p-name">${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}</span>
-                        <span class="p-meta">${p.type === 'fisher' ? '釣り' : '見学'} | ${p.region} | ${ageLabels[p.age] || p.age}</span>
+                        <span class="p-name">
+                            <span class="p-badge ${typeClass}">${typeLabel}</span>
+                            ${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}
+                        </span>
+                        <span class="p-meta">${p.region} | ${ageLabels[p.age] || p.age} | [${p.tshirtSize || '不明'}]</span>
                     </div>
                     <div class="p-status-actions">
                         <button class="btn-status in ${p.status === 'checked-in' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'checked-in')">受付</button>
@@ -1092,7 +1121,8 @@ function renderReceptionDesk() {
                         <button class="btn-status" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'pending')">ー</button>
                     </div>
                 </div>
-            `).join('')}
+                `;
+            }).join('')}
         </div>
 
         <div class="desk-footer">

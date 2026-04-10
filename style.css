@@ -358,8 +358,8 @@ select:focus {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
 }
 
 .stat-card {
@@ -416,6 +416,26 @@ select:focus {
 
 .badge-harimitsu {
     background: #9b59b6;
+}
+
+/* Participant Type Labels (Reception Desk) */
+.p-badge {
+    padding: 0.1rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: white;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+.p-badge-fisher {
+    background: #0077be; /* Primary Blue */
+}
+
+.p-badge-observer {
+    background: #27ae60; /* Success Green */
 }
 
 /* Source Selector (Radio Buttons) */
