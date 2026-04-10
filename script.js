@@ -538,8 +538,8 @@ function addParticipantRow(data = null) {
             </select>
         </div>
         <div class="form-group" style="flex: 2; min-width: 150px;">
-            <label>氏名 <span class="required">(※必須)</span></label>
-            <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="例: 山田 太郎">
+            <label>${index === 0 ? '代表者 ' : ''}氏名 <span class="required">(※必須)</span></label>
+            <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="${index === 0 ? '例: 山田 太郎 (代表者)' : '例: 山田 太郎'}">
         </div>
         <div class="form-group">
             <label>年代 <span class="required">(※必須)</span></label>

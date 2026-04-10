@@ -208,6 +208,7 @@ label {
 .required {
     color: var(--error-color);
     font-weight: bold;
+    font-size: 0.75rem; /* Smaller mandatory label */
 }
 
 input,
@@ -230,8 +231,9 @@ select:focus {
 /* Participant Row (Updated for Nickname) */
 .participant-row {
     display: grid;
-    grid-template-columns: 80px 1.2fr 1fr 1fr 80px 85px 40px;
-    gap: 0.5rem;
+    /* 6 columns: Type (85px), Name (1.5fr), Age (85px), T-shirt (80px), Nick (1fr), Remove (35px) */
+    grid-template-columns: 85px 1.5fr 85px 80px 1fr 35px;
+    gap: 0.4rem;
     background: #f8f9fa;
     padding: 0.75rem;
     border-radius: 8px;
