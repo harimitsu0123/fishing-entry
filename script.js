@@ -377,22 +377,15 @@ function initApp() {
         if (el) el.addEventListener('input', updateCapacityTotal);
     });
 
-    // Stealthy Admin Reveal (5-tap on Footer Copyright)
+    // Professional Long-Press Reveal (2-second hold on Footer Copyright)
     const footerReveal = document.getElementById('footer-reveal');
-    let tapCount = 0;
-    let lastTapTime = 0;
+    let pressTimer;
+    
     if (footerReveal) {
-        footerReveal.addEventListener('click', () => {
-            const now = Date.now();
-            if (now - lastTapTime < 500) {
-                tapCount++;
-            } else {
-                tapCount = 1;
-            }
-            lastTapTime = now;
-
-            if (tapCount === 5) {
-                tapCount = 0; // Reset
+        const startPress = (e) => {
+            // Prevent default only for touch to avoid gesture conflicts, 
+            // but carefully as we want the browser to handle scrolls elsewhere.
+            pressTimer = setTimeout(() => {
                 const pw = prompt("管理者パスワードを入力してください");
                 if (pw === state.settings.adminPassword || pw === 'admin') {
                     isAdminAuth = true;
@@ -401,8 +394,24 @@ function initApp() {
                 } else if (pw !== null) {
                     showToast('パスワードが違います', 'error');
                 }
-            }
-        });
+            }, 2000);
+        };
+
+        const endPress = () => {
+            clearTimeout(pressTimer);
+        };
+
+        // Desktop and Mobile Events
+        footerReveal.addEventListener('mousedown', startPress);
+        footerReveal.addEventListener('touchstart', startPress);
+        
+        footerReveal.addEventListener('mouseup', endPress);
+        footerReveal.addEventListener('mouseleave', endPress);
+        footerReveal.addEventListener('touchend', endPress);
+        footerReveal.addEventListener('touchcancel', endPress);
+        
+        // Prevent context menu (long-press menu) specifically on this element
+        footerReveal.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 
     // Check URL Parameters for special sources
