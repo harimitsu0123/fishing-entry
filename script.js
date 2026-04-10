@@ -31,7 +31,7 @@ const ageLabels = {
     "50s": "50代", "60s": "60代", "70s": "70代", "80s": "80代以上"
 };
 
-const tshirtSizes = ['150', 'S', 'M', 'L', 'XL', '3L', '4L'];
+const tshirtSizes = ['150', 'S', 'M', 'L', 'XL', '3L', '4L', '5L'];
 
 /// Admin Registration Helper
 window.startAdminRegistration = function (source) {
