@@ -426,6 +426,9 @@ function initApp() {
 
     // Check URL Parameters for special sources
     checkUrlParams();
+    
+    // Initialize form with 1st person shown by default
+    resetForm();
 }
 
 function switchView(btnElement, targetId) {
