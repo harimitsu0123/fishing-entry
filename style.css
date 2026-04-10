@@ -441,15 +441,15 @@ select:focus {
 /* Source Selector (Radio Buttons) */
 .source-selector {
     display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
+    gap: 0.25rem;
+    margin-top: 0.2rem;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .source-option {
     position: relative;
-    flex: 1;
-    min-width: 80px; /* Reduced from 120px */
+    /* Removed flex:1 to prevent large box stretching */
 }
 
 .source-option input[type="radio"] {
@@ -461,19 +461,17 @@ select:focus {
 
 .source-label {
     display: flex;
-    flex-direction: column;
+    flex-direction: row; 
     align-items: center;
     justify-content: center;
-    padding: 0.4rem 0.2rem;
-    background: white;
-    border: 2px solid #e0e6ed;
-    border-radius: 8px;
-    font-size: 0.8rem;
+    padding: 0.1rem 0.5rem;
+    background: transparent;
+    border: none;
+    font-size: 0.75rem;
     cursor: pointer;
     font-weight: 700;
     transition: all 0.2s;
-    text-align: center;
-    height: 100%;
+    gap: 4px;
 }
 
 .source-label:hover {

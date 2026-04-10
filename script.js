@@ -518,31 +518,31 @@ function addParticipantRow(data = null) {
     row.dataset.index = index;
     row.innerHTML = `
         <div class="form-group">
-            <label>区分</label>
-            <select class="p-type">
+            <label>区分 <span class="required">(※必須)</span></label>
+            <select class="p-type" required>
                 <option value="fisher" ${data && data.type === 'fisher' ? 'selected' : ''}>釣り</option>
                 <option value="observer" ${data && data.type === 'observer' ? 'selected' : ''}>見学</option>
             </select>
         </div>
-        <div class="form-group">
-            <label>氏名</label>
-            <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="参加者${index + 1}">
+        <div class="form-group" style="flex: 2; min-width: 150px;">
+            <label>氏名 <span class="required">(※必須)</span></label>
+            <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="例: 山田 太郎">
         </div>
         <div class="form-group">
-            <label>ニックネーム <span class="text-muted">(任意)</span></label>
-            <input type="text" class="p-nick" value="${data && data.nickname ? data.nickname : ''}" placeholder="無記名可">
-        </div>
-        <div class="form-group">
-            <label>年代</label>
-            <select class="p-age">
+            <label>年代 <span class="required">(※必須)</span></label>
+            <select class="p-age" required>
                 ${Object.entries(ageLabels).map(([val, label]) => `<option value="${val}" ${data && data.age === val ? 'selected' : ''}>${label}</option>`).join('')}
             </select>
         </div>
         <div class="form-group">
-            <label>Tシャツ</label>
-            <select class="p-tshirt">
+            <label>Tシャツ <span class="required">(※必須)</span></label>
+            <select class="p-tshirt" required>
                 ${tshirtSizes.map(size => `<option value="${size}" ${data && data.tshirtSize === size ? 'selected' : ''}>${size}</option>`).join('')}
             </select>
+        </div>
+        <div class="form-group" style="min-width: 120px;">
+            <label>ニックネーム <span class="text-muted">(任意)</span></label>
+            <input type="text" class="p-nick" value="${data && data.nickname ? data.nickname : ''}" placeholder="無記名可">
         </div>
         <div class="row-actions">
             <button type="button" class="btn-icon remove-p">&times;</button>
