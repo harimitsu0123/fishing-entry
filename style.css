@@ -192,9 +192,10 @@ body {
 }
 
 .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
 }
 
 label {
@@ -263,6 +264,27 @@ select:focus {
     padding: 0.5rem;
     border-radius: 8px;
     font-weight: 600;
+}
+
+#add-participant {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: white;
+    border: 2px dashed var(--primary-color);
+    color: var(--primary-color);
+    padding: 1.2rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: all 0.2s;
+    margin-top: 1rem;
+}
+
+#add-participant:hover {
+    background: rgba(0, 119, 190, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .btn-secondary {

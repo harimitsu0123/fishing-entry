@@ -81,9 +81,9 @@ async function loadData() {
     // 1. Try to load from Cloud (GAS) first for synchronization
     updateSyncStatus('syncing');
     try {
-        // タイムアウト8秒を設定（これがないと「同期中」が永遠に続く）
+        // タイムアウト15秒を設定（通信環境への配慮）
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         const response = await fetch(`${GAS_WEB_APP_URL}?action=get&_t=${Date.now()}`, { signal: controller.signal });
         clearTimeout(timeoutId);
@@ -197,9 +197,9 @@ async function syncToCloud() {
             action: 'save',
             data: state
         };
-        // タイムアウト10秒。no-corsのためレスポンスは読めないが、awaitが完了すれば送信成功とみなす
+        // タイムアウト15秒。no-corsのためレスポンスは読めないが、awaitが完了すれば送信成功とみなす
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
@@ -250,6 +250,8 @@ function updateSyncStatus(type) {
         badge.classList.add('error');
         text.textContent = '同期失敗';
         icon.textContent = '⚠️';
+        // 5秒後に自動で隠す（ずっと出ていると不安を煽るため）
+        setTimeout(() => badge.classList.add('hidden'), 5000);
     }
 }
 
@@ -423,6 +425,13 @@ function switchView(btnElement, targetId) {
         if (isAdminAuth) el.classList.remove('hidden');
         else el.classList.add('hidden');
     });
+
+    // Hide registration link in navbar if logged in as admin
+    const navRegistration = document.getElementById('nav-registration');
+    if (navRegistration) {
+        if (isAdminAuth) navRegistration.parentElement.classList.add('hidden');
+        else navRegistration.parentElement.classList.remove('hidden');
+    }
 }
 
 function checkTimeframe() {
