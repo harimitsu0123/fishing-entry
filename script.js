@@ -364,6 +364,9 @@ function initApp() {
             }
         });
     }
+
+    // Check URL Parameters for special sources
+    checkUrlParams();
 }
 
 function switchView(btnElement, targetId) {
@@ -1266,8 +1269,9 @@ window.restoreEntry = function (id) {
     }
 };
 
-window.copyShareUrl = function () {
-    const urlInput = document.getElementById('public-share-url');
+window.copyShareUrl = function (id = 'public-share-url') {
+    const urlInput = document.getElementById(id);
+    if (!urlInput) return;
     urlInput.select();
     document.execCommand('copy');
     showToast('コピーしました！', 'success');
@@ -1485,15 +1489,24 @@ function generateAdminQRCode() {
     if (!container) return;
 
     // Use Public URL (Share URL). If local, fallback to GitHub Pages URL
-    let publicUrl = window.location.href.split('#')[0].split('?')[0];
-    const isLocal = publicUrl.startsWith('file://') || publicUrl.includes('127.0.0.1') || publicUrl.includes('localhost');
+    let baseUrl = window.location.href.split('#')[0].split('?')[0];
+    const isLocal = baseUrl.startsWith('file://') || baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost');
     
     if (isLocal) {
-        // Hardcode the production URL for QR generation when testing locally
-        publicUrl = "https://harimitsu0123.github.io/fishing-entry/";
+        baseUrl = "https://harimitsu0123.github.io/fishing-entry/";
     }
     
-    urlDisplay.textContent = publicUrl;
+    urlDisplay.textContent = baseUrl;
+    document.getElementById('public-share-url').value = baseUrl;
+
+    // Populate Specialized URLs
+    const mintsuriUrl = `${baseUrl}?src=mintsuri`;
+    const harimitsuUrl = `${baseUrl}?src=harimitsu`;
+    const suihoUrl = `${baseUrl}?src=suiho`;
+
+    if (document.getElementById('url-mintsuri')) document.getElementById('url-mintsuri').value = mintsuriUrl;
+    if (document.getElementById('url-harimitsu')) document.getElementById('url-harimitsu').value = harimitsuUrl;
+    if (document.getElementById('url-suiho')) document.getElementById('url-suiho').value = suihoUrl;
 
     if (isLocal) {
         container.innerHTML = `
@@ -1501,13 +1514,13 @@ function generateAdminQRCode() {
                 ✅ 公開版のQRを表示中<br>
                 (ローカル環境)
             </div>
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicUrl)}" alt="Registration QR code" style="max-width: 100%; height: auto;" onload="this.parentElement.style.background='white'">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(baseUrl)}" alt="Registration QR code" style="max-width: 100%; height: auto;" onload="this.parentElement.style.background='white'">
         `;
         return;
     }
 
     // Generate QR using QRServer API
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicUrl)}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(baseUrl)}`;
 
     container.innerHTML = `
         <img src="${qrUrl}" alt="Registration QR code" style="max-width: 100%; height: auto;" onload="this.parentElement.style.background='white'">
@@ -1691,6 +1704,52 @@ function updateSourceAvailability() {
         const available = selector.querySelector('input[name="reg-source"]:not(:disabled)');
         if (available) available.checked = true;
     }
+}
+
+function checkUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const src = params.get('src');
+    
+    if (src) {
+        const validSources = {
+            'mintsuri': 'みん釣り',
+            'harimitsu': 'ハリミツ',
+            'suiho': '水宝'
+        };
+        
+        if (validSources[src]) {
+            injectSpecialSource(validSources[src]);
+        }
+    }
+}
+
+function injectSpecialSource(sourceName) {
+    const selector = document.getElementById('main-source-selector');
+    if (!selector) return;
+
+    // Clear existing (User said "並べなくていいよ" -> Only show this one)
+    selector.innerHTML = '';
+
+    const badgeClassMap = {
+        'みん釣り': 'badge-mintsuri',
+        'ハリミツ': 'badge-harimitsu',
+        '水宝': 'badge-suiho'
+    };
+
+    const badgeClass = badgeClassMap[sourceName] || 'badge-ippan';
+    const label = document.createElement('label');
+    label.className = 'source-option';
+    label.innerHTML = `
+        <input type="radio" name="reg-source" value="${sourceName}" checked required>
+        <span class="source-label">
+            <span class="badge ${badgeClass}">${sourceName}</span>
+            ${sourceName}受付
+        </span>
+    `;
+    selector.appendChild(label);
+    
+    // Update availability logic for this new radio
+    updateSourceAvailability();
 }
 
 // ==========================================

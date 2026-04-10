@@ -65,14 +65,7 @@
                                         一般受付
                                     </span>
                                 </label>
-                                <label class="source-option">
-                                    <input type="radio" name="reg-source" value="みん釣り">
-                                    <span class="source-label">
-                                        <span class="badge badge-mintsuri">みん釣り</span>
-                                        みん釣り公式
-                                    </span>
-                                </label>
-                                <!-- Suiho and Harimitsu moved to Admin section in Settings -->
+                                <!-- Specialized sources (Mintsuri, Harimitsu, Suiho) are injected dynamically via URL parameters -->
                             </div>
                         </div>
                         <div class="form-group">
@@ -380,7 +373,7 @@
                                 <p class="text-muted mt-2">お客さんに案内するリンクです。このURLを共有するか、右のQRコードを掲示してください。</p>
                                 <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
                                     <input type="text" id="public-share-url" readonly style="flex:1; background: #fff; cursor: text; user-select: all; font-family: monospace; font-size: 1rem;" value="取得中...">
-                                    <button class="btn-primary" onclick="copyShareUrl()">コピー</button>
+                                    <button class="btn-primary" onclick="copyShareUrl('public-share-url')">コピー</button>
                                 </div>
                                 <div id="admin-url-display" style="font-size: 0.8rem; color: #666; margin-top: 5px; word-break: break-all;"></div>
                             </div>
@@ -389,6 +382,36 @@
                                     <div class="spinner"></div>
                                 </div>
                                 <p style="font-size: 0.75rem; margin-top: 5px; font-weight: bold; color: var(--primary-color);">スキャンして受付を開く</p>
+                            </div>
+                        </div>
+
+                        <!-- Specialized URLs Section -->
+                        <div class="special-urls mt-4" style="border-top: 1px solid #cce5ff; padding-top: 1.5rem;">
+                            <h3 style="font-size: 1rem; color: var(--text-dark);">個別受付用 URL（隠しURL）</h3>
+                            <p class="text-muted small">URLを知っている人だけがアクセスできる登録ページです。</p>
+                            
+                            <div class="mt-3" style="display: flex; flex-direction: column; gap: 1rem;">
+                                <div class="url-copy-row">
+                                    <span class="badge badge-mintsuri">みん釣り</span>
+                                    <div style="display: flex; gap: 0.5rem; flex: 1;">
+                                        <input type="text" id="url-mintsuri" readonly class="form-control" style="font-size: 0.85rem;">
+                                        <button class="btn-outline btn-small" onclick="copyShareUrl('url-mintsuri')">コピー</button>
+                                    </div>
+                                </div>
+                                <div class="url-copy-row">
+                                    <span class="badge badge-harimitsu">ハリミツ</span>
+                                    <div style="display: flex; gap: 0.5rem; flex: 1;">
+                                        <input type="text" id="url-harimitsu" readonly class="form-control" style="font-size: 0.85rem;">
+                                        <button class="btn-outline btn-small" onclick="copyShareUrl('url-harimitsu')">コピー</button>
+                                    </div>
+                                </div>
+                                <div class="url-copy-row">
+                                    <span class="badge badge-suiho">水宝</span>
+                                    <div style="display: flex; gap: 0.5rem; flex: 1;">
+                                        <input type="text" id="url-suiho" readonly class="form-control" style="font-size: 0.85rem;">
+                                        <button class="btn-outline btn-small" onclick="copyShareUrl('url-suiho')">コピー</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
