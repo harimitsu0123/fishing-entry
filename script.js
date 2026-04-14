@@ -395,7 +395,7 @@ function initApp() {
                 } else if (pw !== null) {
                     showToast('パスワードが違います', 'error');
                 }
-            }, 3000); // Changed to 3 seconds for better reliability
+            }, 2000); // Changed to 2 seconds for better mobile experience
         };
 
         const endPress = () => {
@@ -419,9 +419,50 @@ function initApp() {
             // If they drag, it's not a long press
             clearTimeout(pressTimer);
         });
+
+        // --- NEW: 5-Tap Reveal for iOS/Mobile Reliability ---
+        let tapCount = 0;
+        let tapTimer;
+        footerReveal.addEventListener('click', (e) => {
+            tapCount++;
+            clearTimeout(tapTimer);
+            
+            if (tapCount >= 5) {
+                tapCount = 0;
+                const pw = prompt("管理者パスワードを入力してください (Tap Access)");
+                if (pw === state.settings.adminPassword || pw === 'admin') {
+                    isAdminAuth = true;
+                    document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+                    showToast('✨ 管理者メニューを表示しました', 'success');
+                } else if (pw !== null) {
+                    showToast('パスワードが違います', 'error');
+                }
+            } else {
+                tapTimer = setTimeout(() => { tapCount = 0; }, 500); // Reset if 500ms gaps
+            }
+        });
         
         // Prevent context menu (long-press menu) specifically on this element
         footerReveal.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+
+    // --- NEW: Cancel Edit functionality ---
+    const cancelEditBtn = document.getElementById('cancel-edit-btn');
+    if (cancelEditBtn) {
+        cancelEditBtn.addEventListener('click', () => {
+             if (confirm('修正を中止して戻りますか？（変更内容は保存されません）')) {
+                 resetForm();
+                 switchView(null, isAdminAuth ? 'admin-view' : 'registration-view'); 
+                 isAdminAuthAction = false;
+                 updateAppTitle();
+             }
+        });
+    }
+
+    // --- NEW: Back to Edit from Confirmation ---
+    const backToEditFromConf = document.getElementById('back-to-edit-from-conf');
+    if (backToEditFromConf) {
+        backToEditFromConf.addEventListener('click', hideConfirmation);
     }
 
     // Check URL Parameters for special sources
@@ -479,16 +520,57 @@ function switchView(btnElement, targetId) {
         else el.classList.add('hidden');
     });
 
-    // Navbar visibility logic
-    const navRegistration = document.getElementById('nav-registration');
-    if (navRegistration) {
-        // 一般参加者（応募者）には不要なボタンを非表示、管理者の時だけ表示
-        if (!isAdminAuth) {
-            navRegistration.parentElement.classList.add('hidden');
-        } else {
-            navRegistration.parentElement.classList.remove('hidden');
-        }
+    // Ensure Admin toolbar is handled separately if needed
+    updateAdminToolbar();
+}
+
+function updateAdminToolbar() {
+    let toolbar = document.getElementById('admin-toolbar');
+    if (!isAdminAuth) {
+        if (toolbar) toolbar.remove();
+        return;
     }
+
+    if (!toolbar) {
+        toolbar = document.createElement('div');
+        toolbar.id = 'admin-toolbar';
+        toolbar.className = 'admin-toolbar';
+        toolbar.innerHTML = `
+            <div class="toolbar-content">
+                <button class="btn-toolbar active" data-target="registration-view">受付</button>
+                <button class="btn-toolbar" data-target="dashboard-view">管理</button>
+                <button class="btn-toolbar" data-target="reception-view">当日</button>
+                <button class="btn-toolbar logout" id="admin-logout">ログアウト</button>
+            </div>
+        `;
+        document.body.appendChild(toolbar);
+
+        toolbar.querySelectorAll('.btn-toolbar').forEach(btn => {
+            if (btn.id === 'admin-logout') {
+                btn.addEventListener('click', () => {
+                    isAdminAuth = false;
+                    sessionStorage.removeItem('isAdminAuth');
+                    location.reload();
+                });
+                return;
+            }
+            btn.addEventListener('click', () => {
+                const target = btn.getAttribute('data-target');
+                switchView(btn, target);
+                toolbar.querySelectorAll('.btn-toolbar').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    }
+
+    // Update active state in toolbar
+    toolbar.querySelectorAll('.btn-toolbar').forEach(btn => {
+        if (btn.getAttribute('data-target') === currentViewId) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
 }
 
 function checkTimeframe() {
@@ -564,15 +646,6 @@ function syncSettingsUI() {
     generateAdminQRCode(); // Ensure QR is generated when UI syncs
 }
 
-function updateAppTitle() {
-    const titleEl = document.getElementById('app-title');
-    if (titleEl && state.settings.competitionName) {
-        // Special title for admin edit mode is handled in requestAdminEdit
-        if (!isAdminAuthAction || currentViewId !== 'registration-view') {
-           titleEl.textContent = state.settings.competitionName;
-        }
-    }
-}
 
 
 // Participant Row Management
@@ -583,35 +656,46 @@ function addParticipantRow(data = null) {
     row.className = 'participant-row';
     row.dataset.index = index;
     row.innerHTML = `
+        <div style="font-weight: bold; color: var(--primary-color); padding-bottom: 0.5rem; margin-bottom: 0.5rem; border-bottom: 1px solid #eee;">
+            参加者 ${index + 1}
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="flex: 1; min-width: 140px;">
+                <label>区分 <span class="required">*</span></label>
+                <select class="p-type" required>
+                    <option value="fisher" ${data && data.type === 'fisher' ? 'selected' : ''}>釣りをする</option>
+                    <option value="observer" ${data && data.type === 'observer' ? 'selected' : ''}>見学のみ</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex: 2; min-width: 200px;">
+                <label>${index === 0 ? '代表者 ' : ''}お名前 <span class="required">*</span></label>
+                <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="${index === 0 ? '例: 山田 太郎 (代表者)' : '例: 山田 太郎'}">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="flex: 1; min-width: 140px;">
+                <label>年代 <span class="required">*</span></label>
+                <select class="p-age" required>
+                    ${Object.entries(ageLabels).map(([val, label]) => `<option value="${val}" ${data && data.age === val ? 'selected' : ''}>${label}</option>`).join('')}
+                </select>
+            </div>
+            <div class="form-group" style="flex: 1; min-width: 140px;">
+                <label>地域 <span class="required">*</span></label>
+                <input type="text" class="p-region" required value="${data && data.region ? data.region : ''}" placeholder="例: 大阪市">
+            </div>
+            <div class="form-group" style="flex: 1; min-width: 100px;">
+                <label>Tシャツ <span class="required">*</span></label>
+                <select class="p-tshirt" required>
+                    ${tshirtSizes.map(size => `<option value="${size}" ${data && data.tshirtSize === size ? 'selected' : ''}>${size}</option>`).join('')}
+                </select>
+            </div>
+        </div>
         <div class="form-group">
-            <label>区分 <span class="required">(※必須)</span></label>
-            <select class="p-type" required>
-                <option value="fisher" ${data && data.type === 'fisher' ? 'selected' : ''}>釣り</option>
-                <option value="observer" ${data && data.type === 'observer' ? 'selected' : ''}>見学</option>
-            </select>
-        </div>
-        <div class="form-group" style="flex: 2; min-width: 150px;">
-            <label>${index === 0 ? '代表者 ' : ''}氏名 <span class="required">(※必須)</span></label>
-            <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="${index === 0 ? '例: 山田 太郎 (代表者)' : '例: 山田 太郎'}">
-        </div>
-        <div class="form-group">
-            <label>年代 <span class="required">(※必須)</span></label>
-            <select class="p-age" required>
-                ${Object.entries(ageLabels).map(([val, label]) => `<option value="${val}" ${data && data.age === val ? 'selected' : ''}>${label}</option>`).join('')}
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Tシャツ <span class="required">(※必須)</span></label>
-            <select class="p-tshirt" required>
-                ${tshirtSizes.map(size => `<option value="${size}" ${data && data.tshirtSize === size ? 'selected' : ''}>${size}</option>`).join('')}
-            </select>
-        </div>
-        <div class="form-group" style="min-width: 120px;">
             <label>ニックネーム <span class="text-muted">(任意)</span></label>
-            <input type="text" class="p-nick" value="${data && data.nickname ? data.nickname : ''}" placeholder="無記名可">
+            <input type="text" class="p-nick" value="${data && data.nickname ? data.nickname : ''}" placeholder="名簿用の愛称（空欄可）">
         </div>
         <div class="row-actions">
-            <button type="button" class="btn-icon remove-p">&times;</button>
+            <button type="button" class="btn-icon remove-p" title="削除">&times;</button>
         </div>
     `;
     list.appendChild(row);
@@ -873,8 +957,6 @@ function handleEditAuth() {
 }
 
 function fillFormForEdit(entry) {
-    resetForm();
-
     document.getElementById('edit-entry-id').value = entry.id;
     document.getElementById('group-name').value = entry.groupName;
     document.getElementById('representative-name').value = entry.representative;
@@ -886,6 +968,10 @@ function fillFormForEdit(entry) {
     const list = document.getElementById('participant-list');
     list.innerHTML = '';
     entry.participants.forEach(p => addParticipantRow(p));
+
+    // UI Adjustments for Edit Mode
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+    if (cancelBtn) cancelBtn.classList.remove('hidden');
 
     // Show Admin Actions if triggered from dashboard
     const adminActions = document.getElementById('admin-extra-actions');
@@ -901,6 +987,10 @@ function fillFormForEdit(entry) {
         document.getElementById('admin-cancel-entry').classList.toggle('hidden', entry.status === 'cancelled');
         document.getElementById('admin-restore-entry').classList.toggle('hidden', entry.status !== 'cancelled');
     }
+
+    // Show cancel edit button
+    const cancelEditBtn = document.getElementById('cancel-edit');
+    if (cancelEditBtn) cancelEditBtn.classList.remove('hidden');
 
     // For admin categories, show all possible sources if admin
     if (isAdminAuth || isAdminAuthAction) {
@@ -1040,7 +1130,7 @@ function updateDashboard() {
 
         list.innerHTML = '';
 
-        // Filter and display
+        // Filter and display groups
         state.entries.slice().reverse().forEach(e => {
             // Search Filter
             const matchesEntrySearch =
@@ -1048,48 +1138,54 @@ function updateDashboard() {
                 e.groupName.toLowerCase().includes(searchTerm) ||
                 e.representative.toLowerCase().includes(searchTerm);
 
+            const pNames = e.participants.map(p => p.name).join(', ');
+            const matchesParticipantSearch = pNames.toLowerCase().includes(searchTerm);
+            if (!matchesEntrySearch && !matchesParticipantSearch) return;
+
             // Category Filter
             if (dashboardFilter !== 'all' && e.source !== dashboardFilter) return;
 
             const badgeMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
             const badgeClass = badgeMap[e.source] || 'badge-ippan';
 
-            e.participants.forEach((p, pIndex) => {
-                const matchesParticipantSearch = p.name.toLowerCase().includes(searchTerm);
-                if (!matchesEntrySearch && !matchesParticipantSearch) return;
+            const tr = document.createElement('tr');
+            if (e.status === 'cancelled') {
+                tr.classList.add('row-cancelled');
+            } else if (e.status === 'checked-in') {
+                tr.classList.add('row-checked-in');
+            }
 
-                const tr = document.createElement('tr');
-                if (e.status === 'cancelled') {
-                    tr.style.opacity = '0.4';
-                    tr.style.background = '#f8f9fa';
-                } else if (e.status === 'checked-in') {
-                    tr.classList.add('row-checked-in');
-                }
+            const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 キャンセル' : '⏳ 待機';
+            
+            // Build participants summary
+            const rep = e.participants[0] || {name: e.representative};
+            const othersCount = e.participants.length - 1;
+            const pSummary = `
+                <div><strong>${rep.name}</strong> <small style="color:var(--primary-color); font-weight:bold;">(代表)</small></div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    ${e.participants.slice(1).map(p => p.name).join(', ')}
+                </div>
+            `;
 
-                const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 消込' : '⏳ 待機';
-                const pTypeLabel = p.type === 'fisher' ? '釣り' : '見学';
-                const detailLabel = `${ageLabels[p.age] || p.age} / ${p.tshirtSize || '無'}`;
-
-                tr.innerHTML = `
-                    <td>${e.id}</td>
-                    <td><span class="badge ${badgeClass}" style="font-size: 0.7rem;">${e.source}</span></td>
-                    <td><span style="${e.status === 'cancelled' ? 'text-decoration: line-through;' : ''}">${e.groupName}</span></td>
-                    <td><strong>${p.name}</strong> ${pIndex === 0 ? '<small>(代表)</small>' : ''}</td>
-                    <td>${pTypeLabel}</td>
-                    <td><small>${detailLabel}</small></td>
-                    <td><small>${formatDate(e.timestamp)}</small></td>
-                    <td>
-                        <div style="display:flex; gap: 0.3rem; align-items:center;">
-                            <span style="font-size:0.75rem;">${statusLabel}</span>
-                            <button class="btn-check-in ${e.status !== 'pending' && e.status !== 'cancelled' ? 'active' : ''}" onclick="jumpToReception('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.7rem;">
-                                受付
-                            </button>
+            tr.innerHTML = `
+                <td>${e.id}</td>
+                <td><span class="badge ${badgeClass}" style="font-size: 0.7rem;">${e.source}</span></td>
+                <td><div style="font-weight:700; ${e.status === 'cancelled' ? 'text-decoration: line-through;' : ''}">${e.groupName}</div></td>
+                <td>${pSummary}</td>
+                <td><small>釣:${e.fishers} / 見:${e.observers}</small></td>
+                <td><small>${formatDate(e.timestamp)}</small></td>
+                <td>
+                    <div style="display:flex; flex-direction:column; gap:0.2rem; align-items:center;">
+                        <span style="font-size:0.75rem; font-weight:700;">${statusLabel}</span>
+                        <div style="display:flex; gap:0.3rem;">
+                            <button class="btn-check-in ${e.status !== 'pending' && e.status !== 'cancelled' ? 'active' : ''}" onclick="jumpToReception('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.7rem;">受付</button>
                             <button class="btn-text" onclick="requestAdminEdit('${e.id}')" style="font-size: 0.7rem; text-decoration: none; padding: 0.2rem 0;">修正</button>
+                            <button class="btn-text" onclick="cancelEntry('${e.id}')" style="font-size: 0.7rem; text-decoration: none; color: var(--error-color);">${e.status === 'cancelled' ? '復元' : 'キャンセル'}</button>
                         </div>
-                    </td>
-                `;
-                list.appendChild(tr);
-            });
+                    </div>
+                </td>
+            `;
+            list.appendChild(tr);
         });
         
         renderIkesuWorkspace();
@@ -1379,24 +1475,23 @@ window.requestAdminEdit = function (id) {
 };
 
 window.cancelEntry = function (id) {
-    if (confirm(`本当に受付番号「${id}」をキャンセルしますか？\n枠は解放されますが、データは「キャンセル」として下に残ります。`)) {
-        const entry = state.entries.find(e => e.id === id);
-        if (entry) {
+    const entry = state.entries.find(e => e.id === id);
+    if (!entry) return;
+
+    if (entry.status === 'cancelled') {
+        if (confirm(`受付番号「${id}」を元の状態に復元しますか？`)) {
+            entry.status = 'pending';
+            saveData();
+            updateDashboard();
+            showToast(`受付番号 「${id}」 を復元しました`, 'success');
+        }
+    } else {
+        if (confirm(`本当に受付番号「${id}」をキャンセル（辞退扱い）にしますか？\n消去はされず、記録として残ります。`)) {
             entry.status = 'cancelled';
             saveData();
             updateDashboard();
-            showToast(`受付番号 「${id}」 をキャンセルにしました`, 'success');
+            showToast(`受付番号 「${id}」 をキャンセルしました`, 'success');
         }
-    }
-};
-
-window.restoreEntry = function (id) {
-    const entry = state.entries.find(e => e.id === id);
-    if (entry) {
-        entry.status = 'pending'; // Restore to pending
-        saveData();
-        updateDashboard();
-        showToast(`受付番号 「${id}」 を復元しました`, 'success');
     }
 };
 
@@ -1434,10 +1529,6 @@ function closeReceptionModal() {
     currentReceptionId = null;
 }
 
-function updateEntryStatus(status) {
-    // This function is deprecated in favor of updateParticipantStatus/updateGroupStatus
-    // but kept just in case of stale refs.
-}
 
 // Settings
 window.triggerSettingsSave = function () {
