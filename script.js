@@ -1956,7 +1956,7 @@ function injectSpecialSource(sourceName) {
     const selector = document.getElementById('main-source-selector');
     if (!selector) return;
 
-    // Clear existing (User said "並べなくていいよ" -> Only show this one)
+    // Clear existing
     selector.innerHTML = '';
 
     const badgeClassMap = {
@@ -1972,11 +1972,14 @@ function injectSpecialSource(sourceName) {
         <input type="radio" name="reg-source" value="${sourceName}" checked required>
         <span class="source-label">
             <span class="badge ${badgeClass}">${sourceName}</span>
-            ${sourceName}受付
         </span>
     `;
     selector.appendChild(label);
-    
+
+    // 特別URLの場合のみ受付区分欄を表示
+    const group = document.getElementById('source-selector-group');
+    if (group) group.classList.remove('hidden');
+
     // Update availability logic for this new radio
     updateSourceAvailability();
 }

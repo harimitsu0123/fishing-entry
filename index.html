@@ -50,17 +50,19 @@
                     <div class="section-title">受付情報</div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>受付区分</label>
-                            <div class="source-selector" id="main-source-selector">
-                                <label class="source-option">
-                                    <input type="radio" name="reg-source" value="一般" checked required>
-                                    <span class="source-label">
-                                        <span class="badge badge-ippan">一般</span>
-                                    </span>
-                                </label>
-                                <!-- Specialized sources (Mintsuri, Harimitsu, Suiho) are injected dynamically via URL parameters -->
+                            <!-- 受付区分は特別URLでのみ表示 -->
+                            <div class="form-group hidden" id="source-selector-group">
+                                <label>受付区分</label>
+                                <div class="source-selector" id="main-source-selector">
+                                    <label class="source-option">
+                                        <input type="radio" name="reg-source" value="一般" checked required>
+                                        <span class="source-label">
+                                            <span class="badge badge-ippan">一般</span>
+                                        </span>
+                                    </label>
+                                    <!-- Specialized sources (Mintsuri, Harimitsu, Suiho) are injected dynamically via URL parameters -->
+                                </div>
                             </div>
-                        </div>
                         <div class="form-group" style="flex: 1.5;">
                             <label for="group-name">グループ名 <span class="required">(※必須)</span>
                                 <small style="display:block; font-weight:normal; font-size: 0.8rem; margin-top:2px; color: var(--primary-color);">※個人参加の方は「個人」または「お名前」を記入</small>
