@@ -282,6 +282,7 @@ select:focus {
     .participant-row {
         gap: 0.5rem;
     }
+
     .participant-row .form-row {
         flex-wrap: nowrap;
     }
@@ -525,13 +526,13 @@ th {
 
 @media (max-width: 768px) {
     body {
-        line-height: 1.05 !important;
-        font-size: 14px !important;
+        line-height: 1.2 !important;
+        font-size: 16px !important;
     }
 
     .container {
         margin: 0 !important;
-        padding: 0 0.1rem !important;
+        padding: 0 0.75rem !important;
     }
 
     .navbar {
@@ -575,20 +576,20 @@ th {
     }
 
     .form-row {
-        gap: 0.4rem !important;
+        gap: 0.2rem !important;
     }
 
     input,
     select,
     textarea {
-        padding: 0.2rem 0.4rem !important;
-        font-size: 0.85rem !important;
+        padding: 0.3rem 0.5rem !important;
+        font-size: 1rem !important;
         border-width: 1px !important;
         border-radius: 4px !important;
     }
 
     label {
-        font-size: 0.7rem !important;
+        font-size: 0.85rem !important;
         margin-bottom: 0 !important;
         font-weight: bold !important;
         color: #666 !important;
@@ -641,11 +642,25 @@ th {
     }
 
     /* Override utility margins for absolute density on mobile */
-    .mt-1 { margin-top: 0.02rem !important; }
-    .mt-2 { margin-top: 0.05rem !important; }
-    .mt-3 { margin-top: 0.1rem !important; }
-    .mt-4 { margin-top: 0.15rem !important; }
-    .mb-4 { margin-bottom: 0.15rem !important; }
+    .mt-1 {
+        margin-top: 0.02rem !important;
+    }
+
+    .mt-2 {
+        margin-top: 0.05rem !important;
+    }
+
+    .mt-3 {
+        margin-top: 0.1rem !important;
+    }
+
+    .mt-4 {
+        margin-top: 0.15rem !important;
+    }
+
+    .mb-4 {
+        margin-bottom: 0.15rem !important;
+    }
 
     .ikesu-grid {
         gap: 0.4rem !important;
@@ -656,7 +671,7 @@ th {
         padding: 0.3rem !important;
         min-height: auto !important;
     }
-    
+
     /* Footer slimming */
     .footer .container {
         padding: 0.5rem 0 !important;
