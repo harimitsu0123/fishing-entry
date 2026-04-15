@@ -527,7 +527,7 @@ th {
 @media (max-width: 768px) {
     body {
         line-height: 1.2 !important;
-        font-size: 15px !important;
+        font-size: 17px !important;
     }
 
     .container {
@@ -540,7 +540,7 @@ th {
     }
 
     #app-title {
-        font-size: 0.85rem !important;
+        font-size: 1.2rem !important;
     }
 
     .nav-container {
@@ -562,13 +562,13 @@ th {
     }
 
     .card h2 {
-        font-size: 0.9rem !important;
+        font-size: 1.15rem !important;
     }
 
     .section-title {
-        margin: 0.1rem 0 0.05rem 0 !important;
-        font-size: 0.8rem !important;
-        padding: 0.05rem 0.3rem !important;
+        margin: 0.3rem 0 0.1rem 0 !important;
+        font-size: 1rem !important;
+        padding: 0.2rem 0.5rem !important;
     }
 
     .form-group {
@@ -576,7 +576,7 @@ th {
     }
 
     .form-row {
-        gap: 0.3rem !important;
+        gap: 0.4rem !important;
     }
 
     input,
