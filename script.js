@@ -57,14 +57,33 @@ window.startAdminRegistration = function (source) {
 };
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    loadData();
-    initApp();
+    try {
+        console.log("BORIJIN APP v4.0: Starting Initialization (Compact Mode)...");
 
-    // If persistent login is true, reveal admin parts
-    if (isAdminAuth) {
-        document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+        // --- STEP 1: UI INITIALIZATION (CRITICAL) ---
+        // Ensure the registration form has at least one participant row 
+        // immediately so the user sees something even if loading is slow.
+        resetForm();
+        console.log("BORIJIN APP: Initial resetForm() called.");
+
+        // --- STEP 2: LOAD DATA (ASYNC) ---
+        loadData().catch(e => console.error("BORIJIN APP: loadData background error", e));
+
+        // --- STEP 3: APP LISTENERS & STATE ---
+        initApp();
+
+        // If persistent login is true, reveal admin parts
+        if (isAdminAuth) {
+            document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+        }
+        restoreUIState();
+
+        console.log("BORIJIN APP: Initialization Sequence Finished successfully.");
+    } catch (e) {
+        console.error("BORIJIN APP: FATAL INITIALIZATION ERROR", e);
+        // Alert the user so we know exactly why it's failing
+        alert("システム起動時にエラーが発生しました: " + e.message + "\n画面情報を再読み込みしてください。");
     }
-    restoreUIState();
 });
 
 function restoreUIState() {
@@ -168,9 +187,9 @@ function finalizeLoad() {
             startTime: "",
             deadline: "",
             adminPassword: "admin",
-            ikesuList: Array.from({length: 10}, (_, i) => ({
-                id: `ikesu-default-${i+1}`,
-                name: `イケス ${String.fromCharCode(65+i)}`, // A, B, C...
+            ikesuList: Array.from({ length: 10 }, (_, i) => ({
+                id: `ikesu-default-${i + 1}`,
+                name: `イケス ${String.fromCharCode(65 + i)}`, // A, B, C...
                 capacity: 15
             }))
         }, ...state.settings
@@ -218,8 +237,9 @@ async function syncToCloud() {
         } else {
             console.error('Cloud sync error:', e);
         }
-        localStorage.setItem('fishing_sync_pending', '1'); // ★ 失敗したらペンディングフラグを立てる
-        updateSyncStatus('error');
+        // ローカル保存は成功。クラウド同期のエラーはサイレントに記録のみ
+        localStorage.setItem('fishing_sync_pending', '1');
+        updateSyncStatus('error-silent');
     }
 }
 
@@ -252,6 +272,10 @@ function updateSyncStatus(type) {
         icon.textContent = '⚠️';
         // 5秒後に自動で隠す（ずっと出ていると不安を煽るため）
         setTimeout(() => badge.classList.add('hidden'), 5000);
+    } else if (type === 'error-silent') {
+        // クラウド同期のエラーはサイレント（ローカル保存は成功しているため表示しない）
+        badge.classList.add('hidden');
+        console.warn('Cloud sync failed silently. Local data is safe.');
     }
 }
 
@@ -261,25 +285,25 @@ function formatDate(dateStr) {
     // If it's already a cleaner string, try to re-parse it
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    
+
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     const hours = String(d.getHours()).padStart(2, '0');
     const minutes = String(d.getMinutes()).padStart(2, '0');
-    
+
     return `${year}/${month}/${day} ${hours}:${minutes}`;
 }
 
 function initApp() {
     initToast(); // Add toast container helper if needed
-    
+
     // Set Public Share URL
     const shareUrlEl = document.getElementById('public-share-url');
     if (shareUrlEl) {
         shareUrlEl.value = window.location.href.split('#')[0];
     }
-    
+
     // Navigation
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -299,35 +323,45 @@ function initApp() {
         switchAdminTab(currentAdminTab);
     }
 
+    // Safe listener registration helper
+    const safeAddListener = (id, event, callback) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener(event, callback);
+    };
+
     // Form logic
-    document.getElementById('add-participant').addEventListener('click', () => addParticipantRow());
-    document.getElementById('btn-to-confirm').addEventListener('click', showConfirmation);
-    document.getElementById('back-to-edit').addEventListener('click', hideConfirmation);
-    document.getElementById('submit-registration').addEventListener('click', handleRegistration);
-    document.getElementById('back-to-form').addEventListener('click', resetForm);
-    document.getElementById('reset-data').addEventListener('click', confirmReset);
+    safeAddListener('add-participant', 'click', () => addParticipantRow());
+    safeAddListener('btn-to-confirm', 'click', showConfirmation);
+    safeAddListener('submit-registration', 'click', handleRegistration);
+    safeAddListener('back-to-form', 'click', resetForm);
+    safeAddListener('reset-data', 'click', confirmReset);
 
     // Auth logic
-    document.getElementById('show-edit-login').addEventListener('click', () => {
-        document.getElementById('registration-form').classList.add('hidden');
-        document.getElementById('edit-auth-section').classList.remove('hidden');
+    safeAddListener('show-edit-login', 'click', () => {
+        const form = document.getElementById('registration-form');
+        const auth = document.getElementById('edit-auth-section');
+        if (form) form.classList.add('hidden');
+        if (auth) auth.classList.remove('hidden');
     });
-    document.getElementById('hide-edit-login').addEventListener('click', () => {
-        document.getElementById('registration-form').classList.remove('hidden');
-        document.getElementById('edit-auth-section').classList.add('hidden');
+    safeAddListener('hide-edit-login', 'click', () => {
+        const form = document.getElementById('registration-form');
+        const auth = document.getElementById('edit-auth-section');
+        if (form) form.classList.remove('hidden');
+        if (auth) auth.classList.add('hidden');
     });
-    document.getElementById('verify-edit').addEventListener('click', handleEditAuth);
-    document.getElementById('cancel-edit').addEventListener('click', resetForm);
+    safeAddListener('verify-edit', 'click', handleEditAuth);
+    safeAddListener('cancel-edit', 'click', resetForm);
 
     // Admin Auth Logic
-    document.getElementById('verify-admin').addEventListener('click', handleAdminLogin);
-    document.getElementById('cancel-admin').addEventListener('click', () => {
-        document.getElementById('admin-auth-modal').classList.add('hidden');
+    safeAddListener('verify-admin', 'click', handleAdminLogin);
+    safeAddListener('cancel-admin', 'click', () => {
+        const modal = document.getElementById('admin-auth-modal');
+        if (modal) modal.classList.add('hidden');
     });
 
     // Export logic
-    document.getElementById('export-csv').addEventListener('click', exportGroupsCSV);
-    document.getElementById('export-participants-csv').addEventListener('click', exportParticipantsCSV);
+    safeAddListener('export-csv', 'click', exportGroupsCSV);
+    safeAddListener('export-participants-csv', 'click', exportParticipantsCSV);
 
     // Dashboard Search & Filters
     const dashSearch = document.getElementById('dashboard-search');
@@ -380,12 +414,12 @@ function initApp() {
     // Professional Long-Press Reveal (3-second hold on Footer Copyright)
     const footerReveal = document.getElementById('footer-reveal');
     let pressTimer;
-    
+
     if (footerReveal) {
         const startPress = (e) => {
             // Clear any existing timer safely
             if (pressTimer) clearTimeout(pressTimer);
-            
+
             pressTimer = setTimeout(() => {
                 const pw = prompt("管理者パスワードを入力してください");
                 if (pw === state.settings.adminPassword || pw === 'admin') {
@@ -408,12 +442,12 @@ function initApp() {
             // No preventDefault to allow potential scrolling if needed, but start timer
             startPress(e);
         });
-        
+
         footerReveal.addEventListener('mouseup', endPress);
         footerReveal.addEventListener('mouseleave', endPress);
         footerReveal.addEventListener('touchend', endPress);
         footerReveal.addEventListener('touchcancel', endPress);
-        
+
         // Specifically for mobile, if the finger moves significantly, cancel the press
         footerReveal.addEventListener('touchmove', (e) => {
             // If they drag, it's not a long press
@@ -426,7 +460,7 @@ function initApp() {
         footerReveal.addEventListener('click', (e) => {
             tapCount++;
             clearTimeout(tapTimer);
-            
+
             if (tapCount >= 5) {
                 tapCount = 0;
                 const pw = prompt("管理者パスワードを入力してください (Tap Access)");
@@ -441,7 +475,7 @@ function initApp() {
                 tapTimer = setTimeout(() => { tapCount = 0; }, 500); // Reset if 500ms gaps
             }
         });
-        
+
         // Prevent context menu (long-press menu) specifically on this element
         footerReveal.addEventListener('contextmenu', (e) => e.preventDefault());
     }
@@ -450,12 +484,12 @@ function initApp() {
     const cancelEditBtn = document.getElementById('cancel-edit-btn');
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener('click', () => {
-             if (confirm('修正を中止して戻りますか？（変更内容は保存されません）')) {
-                 resetForm();
-                 switchView(null, isAdminAuth ? 'admin-view' : 'registration-view'); 
-                 isAdminAuthAction = false;
-                 updateAppTitle();
-             }
+            if (confirm('修正を中止して戻りますか？（変更内容は保存されません）')) {
+                resetForm();
+                switchView(null, isAdminAuth ? 'dashboard-view' : 'registration-view');
+                isAdminAuthAction = false;
+                updateAppTitle();
+            }
         });
     }
 
@@ -467,12 +501,20 @@ function initApp() {
 
     // Check URL Parameters for special sources
     checkUrlParams();
-    
-    // Initialize form with 1st person shown by default
-    resetForm();
 }
 
 function switchView(btnElement, targetId) {
+    if (!targetId) return;
+
+    // Auto-correction for legacy or incorrect names
+    if (targetId === 'admin-view') targetId = 'dashboard-view';
+
+    const targetView = document.getElementById(targetId);
+    if (!targetView) {
+        console.warn(`Attempted to switch to non-existent view: ${targetId}`);
+        return;
+    }
+
     currentViewId = targetId;
     sessionStorage.setItem('currentViewId', targetId);
 
@@ -488,7 +530,7 @@ function switchView(btnElement, targetId) {
         if (activeNav) activeNav.classList.add('active');
     }
 
-    document.getElementById(targetId).classList.add('active');
+    targetView.classList.add('active');
 
     // Reset Title based on view
     if (targetId === 'dashboard-view') {
@@ -502,7 +544,11 @@ function switchView(btnElement, targetId) {
     if (targetId === 'registration-view') {
         const adminActions = document.getElementById('admin-extra-actions');
         if (adminActions) adminActions.classList.add('hidden');
-        resetForm();
+        // 参加者行が既にある場合（初期表示時など）はresetFormをスキップ
+        const pList = document.getElementById('participant-list');
+        if (!pList || pList.children.length === 0) {
+            resetForm();
+        }
         updateSourceAvailability();
     }
     if (targetId === 'dashboard-view') {
@@ -651,13 +697,17 @@ function syncSettingsUI() {
 // Participant Row Management
 function addParticipantRow(data = null) {
     const list = document.getElementById('participant-list');
+    if (!list) {
+        console.error("Critical: 'participant-list' element not found during addParticipantRow");
+        return;
+    }
     const index = list.children.length;
     const row = document.createElement('div');
     row.className = 'participant-row';
     row.dataset.index = index;
     row.innerHTML = `
-        <div style="font-weight: bold; color: var(--primary-color); padding-bottom: 0.5rem; margin-bottom: 0.5rem; border-bottom: 1px solid #eee;">
-            参加者 ${index + 1}
+        <div class="participant-label">
+            参加者 ${index + 1}${index === 0 ? ' <span class="label-rep">（代表者）</span>' : ''}
         </div>
         <div class="form-row">
             <div class="form-group" style="flex: 1; min-width: 140px;">
@@ -668,7 +718,7 @@ function addParticipantRow(data = null) {
                 </select>
             </div>
             <div class="form-group" style="flex: 2; min-width: 200px;">
-                <label>${index === 0 ? '代表者 ' : ''}お名前 <span class="required">*</span></label>
+                <label>お名前 <span class="required">*</span></label>
                 <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="${index === 0 ? '例: 山田 太郎 (代表者)' : '例: 山田 太郎'}">
             </div>
         </div>
@@ -977,12 +1027,12 @@ function fillFormForEdit(entry) {
     const adminActions = document.getElementById('admin-extra-actions');
     if (adminActions && isAdminAuthAction) {
         adminActions.classList.remove('hidden');
-        
+
         // Connect buttons to global functions
         document.getElementById('admin-resend-email').onclick = () => window.resendEmail(entry.id);
         document.getElementById('admin-cancel-entry').onclick = () => window.cancelEntry(entry.id);
         document.getElementById('admin-restore-entry').onclick = () => window.restoreEntry(entry.id);
-        
+
         // Toggle cancel/restore visibility
         document.getElementById('admin-cancel-entry').classList.toggle('hidden', entry.status === 'cancelled');
         document.getElementById('admin-restore-entry').classList.toggle('hidden', entry.status !== 'cancelled');
@@ -1050,7 +1100,7 @@ function resetForm() {
 
     document.getElementById('participant-list').innerHTML = '';
     addParticipantRow();
-    
+
     // Restore the registration card frame
     const regCard = document.getElementById('registration-card');
     if (regCard) regCard.classList.remove('hidden');
@@ -1156,9 +1206,9 @@ function updateDashboard() {
             }
 
             const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 キャンセル' : '⏳ 待機';
-            
+
             // Build participants summary
-            const rep = e.participants[0] || {name: e.representative};
+            const rep = e.participants[0] || { name: e.representative };
             const othersCount = e.participants.length - 1;
             const pSummary = `
                 <div><strong>${rep.name}</strong> <small style="color:var(--primary-color); font-weight:bold;">(代表)</small></div>
@@ -1187,7 +1237,7 @@ function updateDashboard() {
             `;
             list.appendChild(tr);
         });
-        
+
         renderIkesuWorkspace();
     } catch (e) {
         console.error('updateDashboard error:', e);
@@ -1254,8 +1304,8 @@ function renderReceptionDesk() {
     if (!entry) {
         desk.innerHTML = `
             <div class="reception-placeholder">
-                <i>🔍</i>
-                <p>左側のリストからグループを選択してください、E/p>
+                <i class="icon-search">🔍</i>
+                <p>左側のリストからグループを選択してください。</p>
             </div>
         `;
         return;
@@ -1286,9 +1336,9 @@ function renderReceptionDesk() {
                 </div>
 
             ${entry.participants.map((p, idx) => {
-                const typeClass = p.type === 'fisher' ? 'p-badge-fisher' : 'p-badge-observer';
-                const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
-                return `
+        const typeClass = p.type === 'fisher' ? 'p-badge-fisher' : 'p-badge-observer';
+        const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
+        return `
                 <div class="participant-check-row ${p.status === 'checked-in' ? 'checked-in' : ''} ${p.status === 'absent' ? 'absent' : ''}">
                     <div class="p-info">
                         <span class="p-name">
@@ -1304,7 +1354,7 @@ function renderReceptionDesk() {
                     </div>
                 </div>
                 `;
-            }).join('')}
+    }).join('')}
         </div>
 
         <div class="desk-footer">
@@ -1585,12 +1635,12 @@ window.confirmReset = async function () {
     if (confirm('全ての名簿データを削除します。本当によろしいですか？（設定内容は維持されます）')) {
         state.entries = [];
         state.lastUpdated = Date.now();
-        
+
         showToast('リセット中...', 'info');
-        
+
         try {
             // Wait for cloud sync to complete
-            await saveData(); 
+            await saveData();
             localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
             location.reload();
         } catch (e) {
@@ -1720,11 +1770,11 @@ function generateAdminQRCode() {
     // Use Public URL (Share URL). If local, fallback to GitHub Pages URL
     let baseUrl = window.location.href.split('#')[0].split('?')[0];
     const isLocal = baseUrl.startsWith('file://') || baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost');
-    
+
     if (isLocal) {
         baseUrl = "https://harimitsu0123.github.io/fishing-entry/";
     }
-    
+
     urlDisplay.textContent = baseUrl;
     document.getElementById('public-share-url').value = baseUrl;
 
@@ -1798,9 +1848,9 @@ window.generateBulkTestData = function () {
     let fishersAddedTotal = 0;
 
     // Loop for 10 entries
-    for (let i = 0; i < 10; i++) { 
+    for (let i = 0; i < 10; i++) {
         const totalNow = state.entries.reduce((s, e) => s + e.fishers, 0);
-        if (totalNow >= 245) break; 
+        if (totalNow >= 245) break;
 
 
         // Pick a source that still has room
@@ -1938,14 +1988,14 @@ function updateSourceAvailability() {
 function checkUrlParams() {
     const params = new URLSearchParams(window.location.search);
     const src = params.get('src');
-    
+
     if (src) {
         const validSources = {
             'mintsuri': 'みん釣り',
             'harimitsu': 'ハリミツ',
             'suiho': '水宝'
         };
-        
+
         if (validSources[src]) {
             injectSpecialSource(validSources[src]);
         }
@@ -1988,7 +2038,7 @@ function injectSpecialSource(sourceName) {
 // IKESU ASSIGNMENT LOGIC (Drag & Drop, Modals)
 // ==========================================
 
-window.openIkesuModal = function(id = null) {
+window.openIkesuModal = function (id = null) {
     document.getElementById('ikesu-modal').classList.remove('hidden');
     if (id) {
         const ikesu = state.settings.ikesuList.find(i => i.id === id);
@@ -2006,26 +2056,26 @@ window.openIkesuModal = function(id = null) {
     document.getElementById('ikesu-capacity').value = '15';
 };
 
-window.closeIkesuModal = function() {
+window.closeIkesuModal = function () {
     document.getElementById('ikesu-modal').classList.add('hidden');
 };
 
-window.saveIkesu = function() {
+window.saveIkesu = function () {
     const id = document.getElementById('ikesu-edit-id').value;
     const name = document.getElementById('ikesu-name').value.trim();
     const capacity = parseInt(document.getElementById('ikesu-capacity').value, 10);
-    
-    if(!name || isNaN(capacity) || capacity < 1) {
+
+    if (!name || isNaN(capacity) || capacity < 1) {
         alert("名前と定員（1以上）を正しく入力してください。");
         return;
     }
-    
-    if(!state.settings.ikesuList) state.settings.ikesuList = [];
-    
-    if(id) {
+
+    if (!state.settings.ikesuList) state.settings.ikesuList = [];
+
+    if (id) {
         // Edit
         const ikesu = state.settings.ikesuList.find(i => i.id === id);
-        if(ikesu) {
+        if (ikesu) {
             ikesu.name = name;
             ikesu.capacity = capacity;
         }
@@ -2037,56 +2087,56 @@ window.saveIkesu = function() {
             capacity: capacity
         });
     }
-    
+
     saveData();
     closeIkesuModal();
     renderIkesuWorkspace();
 };
 
-window.deleteIkesu = function(id) {
-    if(!confirm('本当にこのイケスを削除しますか？\n割り当てられていた人は未割り当てに戻ります。')) return;
-    
+window.deleteIkesu = function (id) {
+    if (!confirm('本当にこのイケスを削除しますか？\n割り当てられていた人は未割り当てに戻ります。')) return;
+
     state.settings.ikesuList = state.settings.ikesuList.filter(i => i.id !== id);
-    
+
     // Clear ikesuId for assigned participants
     state.entries.forEach(e => {
         e.participants.forEach(p => {
-            if(p.ikesuId === id) p.ikesuId = null;
+            if (p.ikesuId === id) p.ikesuId = null;
         });
     });
-    
+
     saveData();
     renderIkesuWorkspace();
 };
 
-window.allowDrop = function(ev) {
+window.allowDrop = function (ev) {
     ev.preventDefault();
     ev.currentTarget.classList.add('drag-over');
 };
 
-window.handleDragLeave = function(ev) {
+window.handleDragLeave = function (ev) {
     ev.currentTarget.classList.remove('drag-over');
 };
 
-window.dragGroup = function(ev, entryId) {
+window.dragGroup = function (ev, entryId) {
     ev.dataTransfer.setData("type", "group");
     ev.dataTransfer.setData("id", entryId);
 };
 
-window.dragPerson = function(ev, entryId, personIdx) {
+window.dragPerson = function (ev, entryId, personIdx) {
     ev.dataTransfer.setData("type", "person");
     ev.dataTransfer.setData("id", entryId);
     ev.dataTransfer.setData("idx", personIdx);
     ev.stopPropagation(); // Prevent group dragging if child dragged
 };
 
-window.dropToUnassigned = function(ev) {
+window.dropToUnassigned = function (ev) {
     ev.preventDefault();
     ev.currentTarget.classList.remove('drag-over');
     processDrop(ev, null);
 };
 
-window.dropToIkesu = function(ev, ikesuId) {
+window.dropToIkesu = function (ev, ikesuId) {
     ev.preventDefault();
     ev.currentTarget.classList.remove('drag-over');
     processDrop(ev, ikesuId);
@@ -2095,62 +2145,62 @@ window.dropToIkesu = function(ev, ikesuId) {
 function processDrop(ev, ikesuId) {
     const type = ev.dataTransfer.getData("type");
     const entryId = ev.dataTransfer.getData("id");
-    
+
     const entry = state.entries.find(e => e.id === entryId);
-    if(!entry) return;
-    
+    if (!entry) return;
+
     if (type === "group") {
         // Move all participants of the group to the Target Ikesu
         entry.participants.forEach(p => p.ikesuId = ikesuId);
     } else if (type === "person") {
         const idx = parseInt(ev.dataTransfer.getData("idx"), 10);
-        if(entry.participants[idx]) {
+        if (entry.participants[idx]) {
             entry.participants[idx].ikesuId = ikesuId;
         }
     }
-    
+
     saveData();
     renderIkesuWorkspace();
 }
 
-window.toggleGroupExpand = function(targetId) {
+window.toggleGroupExpand = function (targetId) {
     const el = document.getElementById(`drag-parts-${targetId}`);
-    if(el) {
+    if (el) {
         el.classList.toggle('expanded');
     }
 };
 
-window.renderIkesuWorkspace = function() {
+window.renderIkesuWorkspace = function () {
     const unassignedList = document.getElementById('unassigned-list');
     const ikesuGrid = document.getElementById('ikesu-grid');
-    if(!unassignedList || !ikesuGrid) return;
-    
+    if (!unassignedList || !ikesuGrid) return;
+
     unassignedList.innerHTML = '';
     ikesuGrid.innerHTML = '';
-    
-    if(!state.settings.ikesuList) state.settings.ikesuList = [];
-    
+
+    if (!state.settings.ikesuList) state.settings.ikesuList = [];
+
     const assignedData = {};
     state.settings.ikesuList.forEach(i => assignedData[i.id] = { ikesu: i, fishers: 0, observers: 0, items: [] });
-    
+
     const unassignedGroups = [];
-    
+
     const searchTerm = document.getElementById('ikesu-search') ? document.getElementById('ikesu-search').value.toLowerCase().trim() : '';
 
     const validEntries = state.entries.filter(e => e.status !== 'cancelled');
-    
+
     validEntries.forEach(entry => {
         const participantIkesus = entry.participants.map(p => p.ikesuId);
         const allUnassigned = participantIkesus.every(id => !id);
-        
+
         if (allUnassigned) {
             unassignedGroups.push(entry);
         } else {
             let hasUnassignedChild = false;
             entry.participants.forEach((p, idx) => {
-                if(p.ikesuId && assignedData[p.ikesuId]) {
-                    assignedData[p.ikesuId].items.push({entry, p, idx});
-                    if(p.type === 'fisher') assignedData[p.ikesuId].fishers++;
+                if (p.ikesuId && assignedData[p.ikesuId]) {
+                    assignedData[p.ikesuId].items.push({ entry, p, idx });
+                    if (p.type === 'fisher') assignedData[p.ikesuId].fishers++;
                     else assignedData[p.ikesuId].observers++;
                 } else {
                     hasUnassignedChild = true;
@@ -2161,24 +2211,24 @@ window.renderIkesuWorkspace = function() {
             }
         }
     });
-    
+
     // -- 1. Render Unassigned Area --
     let unassignedCount = 0;
     unassignedGroups.forEach(entry => {
-        const unassignedParts = entry.participants.map((p, i) => ({p, i})).filter(x => !x.p.ikesuId);
-        if(unassignedParts.length === 0) return;
-        
+        const unassignedParts = entry.participants.map((p, i) => ({ p, i })).filter(x => !x.p.ikesuId);
+        if (unassignedParts.length === 0) return;
+
         if (searchTerm) {
-            const matchesGroup = entry.groupName.toLowerCase().includes(searchTerm) || 
-                                 entry.representative.toLowerCase().includes(searchTerm) ||
-                                 String(unassignedParts.length) === searchTerm;
+            const matchesGroup = entry.groupName.toLowerCase().includes(searchTerm) ||
+                entry.representative.toLowerCase().includes(searchTerm) ||
+                String(unassignedParts.length) === searchTerm;
             const matchesAnyPerson = unassignedParts.some(x => x.p.name.toLowerCase().includes(searchTerm));
             if (!matchesGroup && !matchesAnyPerson) return;
         }
-        
+
         unassignedCount += unassignedParts.length;
         const isFullGroup = unassignedParts.length === entry.participants.length;
-        
+
         let html = `
         <div class="drag-item-group ${isFullGroup ? 'draggable' : ''}" 
              ${isFullGroup ? `draggable="true" ondragstart="dragGroup(event, '${entry.id}')"` : ''}>
@@ -2193,7 +2243,7 @@ window.renderIkesuWorkspace = function() {
             </div>
             <div class="drag-item-participants" id="drag-parts-${entry.id}">
         `;
-        
+
         unassignedParts.forEach(item => {
             const isFisher = item.p.type === 'fisher';
             html += `
@@ -2203,25 +2253,25 @@ window.renderIkesuWorkspace = function() {
                 </div>
             `;
         });
-        
+
         html += `</div></div>`;
         unassignedList.insertAdjacentHTML('beforeend', html);
     });
-    
+
     const unassignSpan = document.getElementById('unassigned-count');
-    if(unassignSpan) unassignSpan.textContent = unassignedCount;
-    
+    if (unassignSpan) unassignSpan.textContent = unassignedCount;
+
     // -- 2. Render Ikesu Grid --
     state.settings.ikesuList.forEach(ikesu => {
         const data = assignedData[ikesu.id];
         const isOver = data.fishers > ikesu.capacity;
-        
+
         const box = document.createElement('div');
         box.className = 'ikesu-box drag-zone';
         box.ondragover = allowDrop;
         box.ondragleave = handleDragLeave;
         box.ondrop = (ev) => dropToIkesu(ev, ikesu.id);
-        
+
         let html = `
             <div class="ikesu-header">
                 <span class="ikesu-title">${ikesu.name}</span>
@@ -2236,27 +2286,27 @@ window.renderIkesuWorkspace = function() {
             </div>
             <div class="ikesu-drop-area mt-2">
         `;
-        
+
         const groupedItems = {};
         data.items.forEach(item => {
-            if(!groupedItems[item.entry.id]) groupedItems[item.entry.id] = { entry: item.entry, parts: [] };
+            if (!groupedItems[item.entry.id]) groupedItems[item.entry.id] = { entry: item.entry, parts: [] };
             groupedItems[item.entry.id].parts.push(item);
         });
-        
+
         Object.values(groupedItems).forEach(group => {
             const entry = group.entry;
-            
+
             if (searchTerm) {
-                const matchesGroup = entry.groupName.toLowerCase().includes(searchTerm) || 
-                                     entry.representative.toLowerCase().includes(searchTerm) ||
-                                     String(group.parts.length) === searchTerm;
+                const matchesGroup = entry.groupName.toLowerCase().includes(searchTerm) ||
+                    entry.representative.toLowerCase().includes(searchTerm) ||
+                    String(group.parts.length) === searchTerm;
                 const matchesAnyPerson = group.parts.some(x => x.p.name.toLowerCase().includes(searchTerm));
                 if (!matchesGroup && !matchesAnyPerson) return;
             }
-            
+
             const isFullGroup = group.parts.length === entry.participants.length;
             const expandId = `ikesu-${ikesu.id}-${entry.id}`;
-            
+
             html += `
             <div class="drag-item-group ${isFullGroup ? 'draggable' : ''}" 
                  ${isFullGroup ? `draggable="true" ondragstart="dragGroup(event, '${entry.id}')"` : ''}>
@@ -2268,7 +2318,7 @@ window.renderIkesuWorkspace = function() {
                 </div>
                 <div class="drag-item-participants" id="drag-parts-${expandId}">
             `;
-            
+
             group.parts.forEach(item => {
                 const isFisher = item.p.type === 'fisher';
                 html += `
@@ -2280,7 +2330,7 @@ window.renderIkesuWorkspace = function() {
             });
             html += `</div></div>`;
         });
-        
+
         html += `</div>`;
         box.innerHTML = html;
         ikesuGrid.appendChild(box);
