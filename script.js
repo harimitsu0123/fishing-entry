@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v6.5: Script Loaded Successfully (v6.5 Concurrency Optimized)");
+        console.log("BORIJIN APP v6.7: Script Loaded Successfully (v6.7 Sorting Revert)");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -208,7 +208,13 @@ function mergeData(local, cloud) {
 
     merged.settings = { ...local.settings, ...cloud.settings };
     const uniqueEntries = Array.from(new Map(merged.entries.map(e => [e.id, e])).values());
-    merged.entries = uniqueEntries.sort((a, b) => a.id.localeCompare(b.id));
+    merged.entries = uniqueEntries.sort((a, b) => {
+        const timeA = new Date(a.timestamp || 0).getTime();
+        const timeB = new Date(b.timestamp || 0).getTime();
+        if (timeA === timeB) return a.id.localeCompare(b.id);
+        return timeA - timeB;
+    });
+
 
     return merged;
 }
