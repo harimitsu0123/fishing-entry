@@ -1256,7 +1256,6 @@ async function testEmailFeature() {
     } catch (e) { alert("エラー: " + e.message); }
 }
 
-}
 
 // --- Reception View Logic ---
 
