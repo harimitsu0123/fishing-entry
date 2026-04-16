@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v6.8: ATOMIC SERVER-SIDE SYNC (Concurrency Secured)");
+        console.log("BORIJIN APP v6.8.1: ATOMIC SYNC & FORCED RESET FIXED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1760,13 +1760,13 @@ window.confirmReset = async function () {
         showToast('リセット中...', 'info');
 
         try {
-            // Wait for cloud sync to complete
-            await saveData();
+            // v6.8.1: Bypass saveData's "Fetch-First & Merge" logic to force-clear cloud
+            await syncToCloud();
             localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
             location.reload();
         } catch (e) {
             console.error('Reset failed:', e);
-            showToast('クラウドの同期に失敗しましたが、ローカルデータは削除されました。', 'error');
+            showToast('クラウドの消去に失敗しました。', 'error');
             setTimeout(() => location.reload(), 2000);
         }
     }
