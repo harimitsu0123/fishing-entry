@@ -39,7 +39,7 @@ body {
 }
 
 .container {
-    max-width: 1250px;
+    max-width: 1450px;
     margin: 2rem auto;
     padding: 0 1rem;
 }
@@ -57,7 +57,7 @@ body {
 }
 
 .nav-container {
-    max-width: 1250px;
+    max-width: 1450px;
     margin: 0 auto;
     display: flex;
     justify-content: center;
@@ -93,7 +93,7 @@ body {
 }
 
 .admin-toolbar .toolbar-content {
-    max-width: 1250px;
+    max-width: 1450px;
     margin: 0 auto;
     display: flex;
     justify-content: space-around;
@@ -465,7 +465,13 @@ select:focus {
     transition: transform 0.2s, box-shadow 0.2s;
     position: relative;
     overflow: hidden;
+    border-top: 4px solid var(--primary-color); /* Ensure one consistent border */
 }
+
+.split-card:nth-child(2) { border-top-color: var(--error-color); }
+.split-card:nth-child(3) { border-top-color: #00b894; }
+.split-card:nth-child(4) { border-top-color: #e17055; }
+
 
 .split-card:hover {
     transform: translateY(-2px);

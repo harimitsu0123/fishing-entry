@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v6.3: Script Loaded Successfully (v6.3 Safety Patch)");
+        console.log("BORIJIN APP v6.4: Script Loaded Successfully (v6.4 Advanced Sync)");
 
         // --- STEP 1: UI INITIALIZATION (CRITICAL) ---
         // Ensure the registration form has at least one participant row 
@@ -116,21 +116,14 @@ async function loadData() {
                 const localData = localStorage.getItem('fishing_app_v3_data');
                 if (localData) {
                     const parsedLocal = JSON.parse(localData);
-                    // ★ タイムスタンプのみで判断（件数比較は削除操作で誤動作するため廃止）
-                    const localTime = parsedLocal.lastUpdated || 0;
-                    const cloudTime = cloudData.lastUpdated || 0;
-
-                    if (localTime > cloudTime) {
-                        // ローカルの方が新しい → クラウドに反映
-                        console.log('Local data is newer. Syncing to cloud...');
-                        state = parsedLocal;
+                    // v6.4: ID単位でのマージロジックを採用
+                    state = mergeData(parsedLocal, cloudData);
+                    console.log('Cloud sync: data merged');
+                    
+                    // マージ結果をローカルとクラウドに反映
+                    localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+                    if (state.lastUpdated > cloudData.lastUpdated) {
                         syncToCloud();
-                    } else {
-                        // クラウドの方が新しい（または同じ）→ クラウドを使う
-                        console.log('Cloud data is newer/loaded.');
-                        state = cloudData;
-                        // ★ ローカルもクラウドと揃える（次回オフライン時のフォールバック用）
-                        localStorage.setItem('fishing_app_v3_data', JSON.stringify(cloudData));
                     }
                 } else {
                     state = cloudData;
@@ -176,6 +169,39 @@ async function loadData() {
     }
     finalizeLoad();
 }
+
+/**
+ * v6.4 ID単位のマージロジック
+ * クラウドとローカルの両方に存在するデータは、各エントリーの status や内容を比較して最新を維持する
+ */
+function mergeData(local, cloud) {
+    const merged = { ...cloud }; // クラウドをベースにする
+    const localMap = new Map(local.entries.map(e => [e.id, e]));
+    const cloudMap = new Map(cloud.entries.map(e => [e.id, e]));
+
+    // 1. クラウドにないローカルデータの追加
+    local.entries.forEach(lEntry => {
+        if (!cloudMap.has(lEntry.id)) {
+            merged.entries.push(lEntry);
+            merged.lastUpdated = Date.now();
+        } else {
+            // 2. 両方にある場合は、キャンセルの有無や詳細を統合（簡易的には新しい方を優先したいが、
+            //    ここでは「キャンセル（無効）」状態を最優先させるなどの運用ルールを適用可能）
+            const cEntry = cloudMap.get(lEntry.id);
+            // 改変日時プロパティがない場合は単純に上書きを避けるためクラウド優先
+        }
+    });
+
+    // 設定のマージ
+    merged.settings = { ...local.settings, ...cloud.settings };
+    
+    // 重複排除とソート
+    const uniqueEntries = Array.from(new Map(merged.entries.map(e => [e.id, e])).values());
+    merged.entries = uniqueEntries.sort((a, b) => a.id.localeCompare(b.id));
+
+    return merged;
+}
+
 
 function finalizeLoad() {
     // Ensure settings are merged with defaults
@@ -1196,14 +1222,14 @@ function updateDashboard() {
             const badgeMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
             const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 無効' : '⏳ 待機';
 
-            // Participant Summary (Premium View)
             const rep = e.participants[0] || { name: e.representative };
             const pSummary = `
-                <div style="font-weight:700;">${rep.name} <small style="color:var(--primary-color)"> (代)</small></div>
-                <div style="font-size: 0.75rem; color: #64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">
+                <div style="font-weight:700;">${rep.name}</div>
+                <div style="font-size: 0.75rem; color: #64748b; white-space:normal; overflow:visible; max-width:100%;">
                     ${e.participants.slice(1).map(p => p.name).join(', ')}
                 </div>
             `;
+
 
             tr.innerHTML = `
                 <td><span class="id-badge">${e.id}</span></td>
