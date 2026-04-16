@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 受付システム</title>
-    <link rel="stylesheet" href="style.css?v=compact_v19">
+    <link rel="stylesheet" href="style.css?v=compact_v21">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -138,20 +138,13 @@
                         <p><strong>電話番号：</strong> <span id="conf-rep-phone"></span></p>
                         <p><strong>メールアドレス：</strong> <span id="conf-rep-email"></span></p>
 
-                        <div class="mt-2" style="border-top: 1px dashed #ccc; padding-top: 0.5rem;">
-                            <strong>参加者（釣り / 見学）リスト：</strong>
-                            <ul id="conf-participant-summary"
-                                style="padding-left: 1.5rem; margin-top: 0.5rem; font-size: 0.9rem;">
-                                <!-- Detailed rows will be added here via JS -->
-                            </ul>
-                        </div>
-                        <p class="mt-2 text-muted">※編集用パスワードは表示されませんが保存されます。</p>
+                        <p class="mt-1" style="font-size: 0.7rem; color: #64748b;">※編集用パスワードは非表示ですが保存されます。</p>
                     </div>
 
                     <div class="registration-actions"
-                        style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem;">
+                        style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem;">
                         <button type="button" class="btn-primary w-100" id="submit-registration"
-                            style="padding: 1.2rem; font-size: 1.2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 119, 190, 0.3);">はい、この内容で登録する</button>
+                            style="padding: 1rem; font-size: 1.1rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 119, 190, 0.3);">はい、この内容で登録する</button>
                         <button type="button" class="btn-secondary w-100" id="back-to-edit-from-conf"
                             style="padding: 0.8rem;">入力画面に戻って修正する</button>
                         <button type="button" id="cancel-edit-btn" class="btn-text w-100 mt-2 hidden"
@@ -698,7 +691,7 @@
             <p id="footer-reveal"
                 style="cursor: default; -webkit-user-select: none; -webkit-touch-callout: none; -moz-user-select: none; -ms-user-select: none; user-select: none; touch-action: manipulation;">
                 &copy; 2026 釣り大会実行委員会</p>
-            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v5.1</span>
+            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v5.4</span>
         </div>
     </footer>
 

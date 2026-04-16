@@ -1195,7 +1195,7 @@ function updateDashboard() {
         const absentCount = state.entries.filter(e => e.status === 'absent').length;
         const validEntriesCount = state.entries.filter(e => e.status !== 'cancelled').length;
 
-        // Global Stats Summary Cards (v5.1 Restoration)
+        // Global Stats Summary Cards (v5.4 Compact)
         renderGlobalStatsSummary(validEntriesCount, totalFishers, totalObservers, checkedInCount, absentCount);
 
         // Email count
@@ -1207,6 +1207,62 @@ function updateDashboard() {
         updateSplitUI('suiho', fishersSuiho, state.settings.capacitySuiho, observersSuiho);
         updateSplitUI('harimitsu', fishersHarimitsu, state.settings.capacityHarimitsu, observersHarimitsu);
 
+        // Dashboard List Rendering (Fixed & Cleaned v5.4)
+        const list = document.getElementById('entry-list');
+        const searchTerm = document.getElementById('dashboard-search').value.toLowerCase();
+        list.innerHTML = '';
+
+        state.entries.slice().reverse().forEach(e => {
+            // Search / Filter logic
+            const matchesEntrySearch = e.id.toLowerCase().includes(searchTerm) || e.groupName.toLowerCase().includes(searchTerm) || e.representative.toLowerCase().includes(searchTerm);
+            const pNames = e.participants.map(p => p.name).join(', ');
+            const matchesParticipantSearch = pNames.toLowerCase().includes(searchTerm);
+            if (!matchesEntrySearch && !matchesParticipantSearch) return;
+
+            if (dashboardFilter !== 'all' && e.source !== dashboardFilter) return;
+
+            const tr = document.createElement('tr');
+            if (e.status === 'cancelled') tr.classList.add('row-cancelled');
+            else if (e.status === 'checked-in') tr.classList.add('row-checked-in');
+
+            const badgeMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
+            const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 無効' : '⏳ 待機';
+
+            // Participant Summary (Premium View)
+            const rep = e.participants[0] || { name: e.representative };
+            const pSummary = `
+                <div style="font-weight:700;">${rep.name} <small style="color:var(--primary-color)"> (代)</small></div>
+                <div style="font-size: 0.75rem; color: #64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">
+                    ${e.participants.slice(1).map(p => p.name).join(', ')}
+                </div>
+            `;
+
+            tr.innerHTML = `
+                <td><span class="id-badge">${e.id}</span></td>
+                <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}">${e.source}</span></td>
+                <td><div style="font-weight:800; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}">${e.groupName}</div></td>
+                <td>${pSummary}</td>
+                <td><small>${e.fishers}/${e.observers}</small></td>
+                <td>
+                    <div style="display:flex; flex-direction:column; gap:0.2rem; align-items:center;">
+                        <span style="font-size:0.75rem; font-weight:700;">${statusLabel}</span>
+                        <div style="display:flex; gap:0.3rem;">
+                            <button class="btn-check-in ${e.status !== 'pending' && e.status !== 'cancelled' ? 'active' : ''}" onclick="jumpToReception('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''}>受付</button>
+                            <button class="btn-text" onclick="requestAdminEdit('${e.id}')" style="font-size:0.7rem">修正</button>
+                        </div>
+                    </div>
+                </td>
+            `;
+            list.appendChild(tr);
+        });
+
+        renderIkesuWorkspace();
+    } catch (e) {
+        console.error("Dashboard update failed:", e);
+    }
+}
+
+// Global Stats Rendering (v5.4 Global Scope)
 function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent) {
     const container = document.getElementById('global-stats-summary');
     if (!container) return;
@@ -1218,83 +1274,37 @@ function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent)
                 <div class="summary-value">${groups} <small>組</small></div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">釣り参加者合計</div>
-                <div class="summary-value">${fishers} <small>/ 250名</small></div>
+                <div class="summary-label">釣り参加者</div>
+                <div class="summary-value">${fishers} <small>/ 250</small></div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">見学者合計</div>
+                <div class="summary-label">見学者</div>
                 <div class="summary-value">${observers} <small>名</small></div>
             </div>
             <div class="summary-card highlight-green">
-                <div class="summary-label">当日受付状況</div>
-                <div class="summary-value">${checkedIn} <small>来場</small> / ${absent} <small>欠席</small></div>
+                <div class="summary-label">当日の受付状況</div>
+                <div class="summary-value">${checkedIn} <small>受済</small> / ${absent} <small>欠席</small></div>
             </div>
         </div>
     `;
 }
 
-// Stats-list - Simple and Clean per request
-        const searchTerm = document.getElementById('dashboard-search').value.toLowerCase();
-
-        list.innerHTML = '';
-
-        // Filter and display groups
-        state.entries.slice().reverse().forEach(e => {
-            // Search Filter
-            const matchesEntrySearch =
-                e.id.toLowerCase().includes(searchTerm) ||
-                e.groupName.toLowerCase().includes(searchTerm) ||
-                e.representative.toLowerCase().includes(searchTerm);
-
-            const pNames = e.participants.map(p => p.name).join(', ');
-            const matchesParticipantSearch = pNames.toLowerCase().includes(searchTerm);
-            if (!matchesEntrySearch && !matchesParticipantSearch) return;
-
-            // Category Filter
-            if (dashboardFilter !== 'all' && e.source !== dashboardFilter) return;
-
-            const badgeMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
-            const badgeClass = badgeMap[e.source] || 'badge-ippan';
-
-            const tr = document.createElement('tr');
-            if (e.status === 'cancelled') {
-                tr.classList.add('row-cancelled');
-            } else if (e.status === 'checked-in') {
-                tr.classList.add('row-checked-in');
-            }
-
-            const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 キャンセル' : '⏳ 待機';
-
-            // Build participants summary
-            const rep = e.participants[0] || { name: e.representative };
-            const othersCount = e.participants.length - 1;
-            const pSummary = `
-                <div><strong>${rep.name}</strong> <small style="color:var(--primary-color); font-weight:bold;">(代表)</small></div>
-                <div style="font-size: 0.75rem; color: var(--text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    ${e.participants.slice(1).map(p => p.name).join(', ')}
-                </div>
-            `;
-
-            tr.innerHTML = `
-                <td>${e.id}</td>
-                <td><span class="badge ${badgeClass}" style="font-size: 0.7rem;">${e.source}</span></td>
-                <td><div style="font-weight:700; ${e.status === 'cancelled' ? 'text-decoration: line-through;' : ''}">${e.groupName}</div></td>
-                <td>${pSummary}</td>
-                <td><small>釣:${e.fishers} / 見:${e.observers}</small></td>
-                <td><small>${formatDate(e.timestamp)}</small></td>
-                <td>
-                    <div style="display:flex; flex-direction:column; gap:0.2rem; align-items:center;">
-                        <span style="font-size:0.75rem; font-weight:700;">${statusLabel}</span>
-                        <div style="display:flex; gap:0.3rem;">
-                            <button class="btn-check-in ${e.status !== 'pending' && e.status !== 'cancelled' ? 'active' : ''}" onclick="jumpToReception('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.7rem;">受付</button>
-                            <button class="btn-text" onclick="requestAdminEdit('${e.id}')" style="font-size: 0.7rem; text-decoration: none; padding: 0.2rem 0;">修正</button>
-                            <button class="btn-text" onclick="cancelEntry('${e.id}')" style="font-size: 0.7rem; text-decoration: none; color: var(--error-color);">${e.status === 'cancelled' ? '復元' : 'キャンセル'}</button>
-                        </div>
-                    </div>
-                </td>
-            `;
-            list.appendChild(tr);
+// Admin Debug Methods
+async function testEmailFeature() {
+    const testEmail = prompt("テストメールの送信先を入力してください:", "test@example.com");
+    if (!testEmail) return;
+    showToast('テストメール送信中...', 'info');
+    try {
+        await sendEmailViaGAS({
+            action: 'sendEmail', id: 'TEST-000', groupName: 'テスト',
+            email: testEmail, representative: 'テスト氏名',
+            fishers: 1, observers: 0, source: '一般', participants: [{name: 'テスト参加者', type: 'fisher'}]
         });
+        alert("送信リクエスト完了。設定URL: " + GAS_WEB_APP_URL);
+    } catch (e) { alert("エラー: " + e.message); }
+}
+
+function debugGasUrl() { alert("設定済みURL: " + GAS_WEB_APP_URL); }
 
         renderIkesuWorkspace();
     } catch (e) {
