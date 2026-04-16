@@ -656,10 +656,11 @@ function switchView(btnElement, targetId) {
     if (targetId === 'registration-view') {
         const adminActions = document.getElementById('admin-extra-actions');
         if (adminActions) adminActions.classList.add('hidden');
-        // 参加者行が既にある場合（初期表示時など）はresetFormをスキップ
-        const pList = document.getElementById('participant-list');
-        if (!pList || pList.children.length === 0) {
-            resetForm();
+        
+        // v7.1.1: Always ensure a fresh form if not editing
+        const editId = document.getElementById('edit-entry-id').value;
+        if (!editId) {
+            resetForm(); 
         }
         updateSourceAvailability();
     }
@@ -894,6 +895,14 @@ function addParticipantRow(data = null) {
         </div>
     `;
     list.appendChild(row);
+
+    // v7.1.1: Auto-focus first person's name field for immediate entry
+    if (index === 0) {
+        setTimeout(() => {
+            const nameInput = row.querySelector('.p-name');
+            if (nameInput) nameInput.focus();
+        }, 100);
+    }
     row.querySelector('.remove-p').addEventListener('click', () => {
         if (list.children.length > 1) {
             row.remove();
