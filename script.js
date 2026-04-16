@@ -25,10 +25,13 @@ let currentReceptionId = null;
 let isAdminAuthAction = false; // Flag for admin-led edits
 let activeReceptionEntryId = null; // Currently selected in reception desk
 
-// Age labels map
+// Age labels map - v4.8 Updated
 const ageLabels = {
-    "10s": "10代以下", "20s": "20代", "30s": "30代", "40s": "40代",
-    "50s": "50代", "60s": "60代", "70s": "70代", "80s": "80代以上"
+    "elementary": "小学生以下",
+    "middle_high": "中・高校生",
+    "19_20s": "19歳〜20代",
+    "30s": "30代", "40s": "40代", "50s": "50代",
+    "60s": "60代", "70s": "70代", "80s": "80歳以上"
 };
 
 const tshirtSizes = ['150', 'S', 'M', 'L', 'XL', '3L', '4L', '5L'];
@@ -953,41 +956,54 @@ async function handleRegistration() {
         lastModified: editId ? new Date().toLocaleString('ja-JP') : null
     };
 
-    if (editId) {
-        entryData.id = editId;
-        const idx = state.entries.findIndex(en => en.id === editId);
-        state.entries[idx] = entryData;
-        showToast('登録内容を更新しました', 'success');
-        // If editing from dashboard, jumping back is better
-        switchView(null, 'dashboard-view');
-    } else {
-        // Determine prefix based on source
-        const prefixMap = { '一般': 'A', 'みん釣り': 'M', '水宝': 'S', 'ハリミツ': 'H' };
-        const prefix = prefixMap[source] || 'A';
+    // Loading state for UX
+    const submitBtn = document.getElementById('submit-registration');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = "送信中... そのままお待ちください";
 
-        // Find existing entries with this prefix and get the max number
-        const samePrefixEntries = state.entries.filter(e => e.id.startsWith(prefix + '-'));
-        const nextNum = (samePrefixEntries.length > 0)
-            ? Math.max(...samePrefixEntries.map(e => parseInt(e.id.split('-')[1]))) + 1
-            : 1;
+    try {
+        if (editId) {
+            entryData.id = editId;
+            const idx = state.entries.findIndex(en => en.id === editId);
+            state.entries[idx] = entryData;
+            showToast('登録内容を更新しました', 'success');
+            // If editing from dashboard, jumping back is better
+            switchView(null, 'dashboard-view');
+        } else {
+            // Determine prefix based on source
+            const prefixMap = { '一般': 'A', 'みん釣り': 'M', '水宝': 'S', 'ハリミツ': 'H' };
+            const prefix = prefixMap[source] || 'A';
 
-        entryData.id = `${prefix}-${String(nextNum).padStart(3, '0')}`;
-        state.entries.push(entryData);
-    }
-    // Save and Sync
-    await saveData();
-    updateDashboard();
+            // Find existing entries with this prefix and get the max number
+            const samePrefixEntries = state.entries.filter(e => e.id.startsWith(prefix + '-'));
+            const nextNum = (samePrefixEntries.length > 0)
+                ? Math.max(...samePrefixEntries.map(e => parseInt(e.id.split('-')[1]))) + 1
+                : 1;
 
-    // Send automated email via GAS (fire and forget / async)
-    sendEmailViaGAS(entryData);
+            entryData.id = `${prefix}-${String(nextNum).padStart(3, '0')}`;
+            state.entries.push(entryData);
+        }
+        // Save and Sync
+        await saveData();
+        updateDashboard();
 
-    if (isAdminAuthAction) {
-        // If it was an admin edit, go back to dashboard instead of result page
-        switchView(null, 'dashboard-view');
-        showToast('修正を保存しました', 'success');
-    } else {
-        // Show result view for normal registrations
-        showResult(entryData);
+        // Send automated email via GAS (fire and forget / async)
+        sendEmailViaGAS(entryData);
+
+        if (isAdminAuthAction) {
+            // If it was an admin edit, go back to dashboard instead of result page
+            switchView(null, 'dashboard-view');
+            showToast('修正を保存しました', 'success');
+        } else {
+            // Show result view for normal registrations
+            showResult(entryData);
+        }
+    } catch (e) {
+        console.error("Registration error:", e);
+        showStatus("送信中にエラーが発生しました。ネットワーク環境を確認してください。", "error");
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
     }
 }
 
