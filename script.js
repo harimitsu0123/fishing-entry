@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v6.2: Script Loaded Successfully (v6.2 Dashboard Refresh)");
+        console.log("BORIJIN APP v6.3: Script Loaded Successfully (v6.3 Safety Patch)");
 
         // --- STEP 1: UI INITIALIZATION (CRITICAL) ---
         // Ensure the registration form has at least one participant row 
@@ -1085,6 +1085,18 @@ function showResult(entry) {
     document.getElementById('result-fishers').textContent = entry.fishers;
     document.getElementById('result-source').textContent = entry.source;
     document.getElementById('app-title').textContent = "受付完了";
+
+    // Populate Recovery Backup Details (v6.3)
+    document.getElementById('res-rep-name').textContent = entry.representative;
+    document.getElementById('res-rep-phone').textContent = entry.phone;
+    document.getElementById('res-rep-email').textContent = entry.email;
+    
+    const pList = document.getElementById('res-participant-list');
+    if (pList) {
+        pList.innerHTML = entry.participants.map(p => 
+            `<li>${p.name} (${p.type === 'fisher' ? '釣り' : '見学'})</li>`
+        ).join('');
+    }
 
     // Screenshot Optimization: Hide the top registration card frame to save space
     const regCard = document.getElementById('registration-card');
