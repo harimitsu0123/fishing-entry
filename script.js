@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v6.8.2: SYNC STATUS HANG FIXED");
+        console.log("BORIJIN APP v6.9: HIGH-LOAD RESILIENT (Retries & Jitter Enabled)");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -981,60 +981,69 @@ async function handleRegistration() {
     submitBtn.textContent = "送信中... そのままお待ちください";
 
     try {
+        // v6.9: Random jitter (0-500ms) to spread initial burst load
+        await new Promise(r => setTimeout(r, Math.random() * 500));
+
         if (editId) {
             entryData.id = editId;
             const idx = state.entries.findIndex(en => en.id === editId);
             state.entries[idx] = entryData;
             showToast('登録内容を更新しました', 'success');
-            await saveData(); // Standard merge-save for edits
+            await saveData();
         } else {
-            // v6.8: ATOMIC SERVER-SIDE SUBMISSION
-            const submitPayload = {
-                action: 'submit',
-                entry: entryData
-            };
-            
-            const response = await fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                mode: 'cors', // Changed to cors to receive JSON response
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify(submitPayload)
-            });
+            // v6.9: Robust Retry Loop for atomic submission
+            let attempts = 0;
+            let success = false;
+            while (attempts < 3 && !success) {
+                try {
+                    const submitPayload = { action: 'submit', entry: entryData };
+                    const response = await fetch(GAS_WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(submitPayload)
+                    });
 
-            if (!response.ok) throw new Error("サーバーとの通信に失敗しました。時間をおいて再試行してください。");
-            
-            const result = await response.json();
-            if (result.status === 'success' && result.entry) {
-                entryData = result.entry; // Get the assigned ID from server
-                state.entries.push(entryData);
-                // Sync local state with new server data
-                localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
-                showToast('登録が完了しました！', 'success');
-            } else {
-                throw new Error("登録エラー: " + (result.message || "不明なエラー"));
+                    if (!response.ok) throw new Error("Server busy");
+                    const result = await response.json();
+                    if (result.status === 'success' && result.entry) {
+                        entryData = result.entry;
+                        state.entries.push(entryData);
+                        localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+                        showToast('登録が完了しました！', 'success');
+                        success = true;
+                    } else {
+                        throw new Error(result.message || "Unknown error");
+                    }
+                } catch (err) {
+                    attempts++;
+                    if (attempts >= 3) throw err;
+                    submitBtn.textContent = `混雑しています... 再試行中 (${attempts}/3)`;
+                    await new Promise(r => setTimeout(r, 1000 + (Math.random() * 1000))); // Backoff
+                }
             }
         }
 
         updateDashboard();
-
-        // Send automated email via GAS (Awaited for reliability v5.1)
         showToast('送信中... 少々お待ちください', 'info');
         await sendEmailViaGAS(entryData);
 
         if (isAdminAuthAction) {
-            // If it was an admin edit, go back to dashboard instead of result page
             switchView(null, 'dashboard-view');
             showToast('修正を保存しました', 'success');
         } else {
-            // Show result view for normal registrations
             showResult(entryData);
         }
     } catch (e) {
         console.error("Registration error:", e);
-        showStatus("送信中にエラーが発生しました。ネットワーク環境を確認してください。", "error");
+        showStatus("サーバーが大変混み合っています。少し時間をおいて再度お試しいただくか、ネットワーク環境を確認してください。", "error");
         submitBtn.disabled = false;
         submitBtn.textContent = originalBtnText;
+    } finally {
+        // v6.9: Guarantee sync status cleanup
+        updateSyncStatus('success'); 
     }
+}
 }
 
 async function sendEmailViaGAS(entryData) {
