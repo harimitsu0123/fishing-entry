@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v6.7: Script Loaded Successfully (v6.7 Sorting Revert)");
+        console.log("BORIJIN APP v6.7.1: FINAL STABLE (Concurrency & Navigation Optimized)");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1895,8 +1895,11 @@ function switchAdminTab(tabId) {
     });
 
     if (tabId === 'tab-settings' || tabId === 'tab-capacity') {
+        syncSettingsUI(); // Ensure settings fields are populated
         generateAdminQRCode();
     }
+    if (tabId === 'tab-ikesu') renderIkesuWorkspace();
+    if (tabId === 'tab-stats') renderBreakdownStats();
 
     // Scroll to top
     window.scrollTo(0, 0);
@@ -2230,8 +2233,9 @@ window.saveIkesu = function () {
         });
     }
 
-    entry.lastModified = new Date().toLocaleString('ja-JP');
+    state.lastUpdated = Date.now();
     saveData();
+
 
     closeIkesuModal();
     renderIkesuWorkspace();
@@ -2249,8 +2253,9 @@ window.deleteIkesu = function (id) {
         });
     });
 
-    entry.lastModified = new Date().toLocaleString('ja-JP');
+    state.lastUpdated = Date.now();
     saveData();
+
 
     renderIkesuWorkspace();
 };
