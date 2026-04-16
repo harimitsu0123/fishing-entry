@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 受付システム</title>
-    <link rel="stylesheet" href="style.css?v=6.9.1">
+    <link rel="stylesheet" href="style.css?v=7.0.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -17,7 +17,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <h1 id="app-title">釣り大会 受付</h1>
-            <div id="sync-status" class="sync-badge hidden">
+            <div id="sync-status-nav" class="sync-badge hidden">
                 <span class="sync-icon">🔄</span>
                 <span class="sync-text">同期中...</span>
             </div>
@@ -688,19 +688,19 @@
         <div class="container"
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" style="cursor: default;">&copy; 2026 釣り大会 実行委員会</p>
-            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v6.9.1</span>
+            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.0.0</span>
         </div>
     </footer>
 
-    <!-- Global Sync Status (v6.5) -->
-    <div id="sync-status" class="sync-status-indicator admin-only hidden">
+    <!-- Global Sync Status (v7.1) -->
+    <div id="sync-status-footer" class="sync-status-indicator admin-only hidden">
         <div id="sync-dot" class="sync-dot"></div>
         <span id="sync-text">クラウド同期: 待機中</span>
     </div>
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=6.9.1"></script>
+    <script src="script.js?v=7.0.0"></script>
 </body>
 
 </html>

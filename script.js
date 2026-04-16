@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v6.9.1: ADMIN TRIGGER RELIEVED");
+        console.log("BORIJIN APP v7.1.0: CONCURRENCY & ERROR RECOVERY ENABLED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -247,7 +247,90 @@ function finalizeLoad() {
     updateReceptionList();
     updateSourceAvailability();
     syncSettingsUI();
+
+    // v7.0: 自動復旧チェック（再読み込み時）
+    setTimeout(checkPendingRegistration, 500);
 }
+
+/**
+ * v7.0: 送信中データの二重登録チェック & 復旧ロジック
+ */
+async function checkPendingRegistration() {
+    const pendingJson = localStorage.getItem('fishing_app_pending_reg');
+    if (!pendingJson) return;
+
+    try {
+        const pending = JSON.parse(pendingJson);
+        const now = Date.now();
+        // 1時間以上前の古いデータは無視
+        if (now - (pending._ts || 0) > 3600000) {
+            localStorage.removeItem('fishing_app_pending_reg');
+            return;
+        }
+
+        console.log("Pending registration found, checking list...", pending);
+        
+        // 最新データを強制リロード（同期）
+        await loadDataFromCloudOnly();
+
+        const match = state.entries.find(e => 
+            e.representative === pending.representative && 
+            e.phone === pending.phone && 
+            e.groupName === pending.groupName &&
+            e.status !== 'cancelled'
+        );
+
+        if (match) {
+            console.log("Match found! Restoring success screen.", match);
+            localStorage.removeItem('fishing_app_pending_reg');
+            showResult(match);
+            showToast('前回の登録が確認できました✨', 'success');
+        }
+    } catch (e) {
+        console.warn("Pending check failed:", e);
+    }
+}
+
+/**
+ * v7.0: サーバーから最新データのみを確実に取得する（マージなしの最新確認用）
+ */
+async function loadDataFromCloudOnly() {
+    try {
+        const response = await fetch(`${GAS_WEB_APP_URL}?action=get&_t=${Date.now()}`);
+        if (response.ok) {
+            const cloudData = await response.json();
+            if (cloudData && cloudData.entries) {
+                state.entries = cloudData.entries;
+                state.settings = { ...state.settings, ...cloudData.settings };
+                state.lastUpdated = cloudData.lastUpdated;
+                localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+            }
+        }
+    } catch (e) {
+        console.error("Cloud fetch failed:", e);
+    }
+}
+
+/**
+ * v7.0: 手動での状態確認（エラー画面のボタンから呼び出し）
+ */
+window.handleCheckStatus = async function() {
+    const btn = document.querySelector('.btn-check-status');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "確認中...";
+    }
+    
+    await checkPendingRegistration();
+    
+    // 見つからなかった場合
+    const pendingJson = localStorage.getItem('fishing_app_pending_reg');
+    if (pendingJson && btn) {
+        btn.disabled = false;
+        btn.textContent = "登録状況を再確認する";
+        showToast('まだ登録が確認できません。もう一度お試しいただくか、再入力してください。', 'info');
+    }
+};
 
 async function saveData() {
     state.lastUpdated = Date.now();
@@ -308,12 +391,22 @@ async function syncToCloud() {
     }
 }
 
-function updateSyncStatus(type) {
-    const text = document.getElementById('sync-text');
-    const dot = document.getElementById('sync-dot');
-    const container = document.getElementById('sync-status');
+    const containerNav = document.getElementById('sync-status-nav');
+    const containerFooter = document.getElementById('sync-status-footer');
     
-    if (container) container.classList.remove('hidden');
+    // Update Nav Badge
+    if (containerNav) {
+        containerNav.classList.remove('hidden');
+        const navText = containerNav.querySelector('.sync-text');
+        if (type === 'syncing') navText.textContent = '同期中...';
+        else if (type === 'success') {
+            navText.textContent = '同期完了';
+            setTimeout(() => { navText.textContent = '同期: 待機中'; }, 2000);
+        } else navText.textContent = '同期待機';
+    }
+
+    // Update Footer Indicator
+    if (containerFooter) containerFooter.classList.remove('hidden');
 
     if (type === 'syncing') {
         if (text) text.textContent = '同期中...';
@@ -957,7 +1050,8 @@ async function handleRegistration() {
         return;
     }
 
-    const entryData = {
+    let entryData = {
+        transactionId: Date.now() + Math.random().toString(36).substring(2, 10), // Unique ID for deduplication
         source: source,
         groupName: document.getElementById('group-name').value,
         representative: document.getElementById('representative-name').value,
@@ -980,7 +1074,11 @@ async function handleRegistration() {
     submitBtn.disabled = true;
     submitBtn.textContent = "送信中... そのままお待ちください";
 
+    // v7.0: 二重登録防止のため、送信開始時に内容を一時保存
     try {
+        entryData._ts = Date.now();
+        localStorage.setItem('fishing_app_pending_reg', JSON.stringify(entryData));
+        
         // v6.9: Random jitter (0-500ms) to spread initial burst load
         await new Promise(r => setTimeout(r, Math.random() * 500));
 
@@ -1010,6 +1108,7 @@ async function handleRegistration() {
                         entryData = result.entry;
                         state.entries.push(entryData);
                         localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+                        localStorage.removeItem('fishing_app_pending_reg'); // 成功したので一時データを削除
                         showToast('登録が完了しました！', 'success');
                         success = true;
                     } else {
@@ -1019,7 +1118,9 @@ async function handleRegistration() {
                     attempts++;
                     if (attempts >= 3) throw err;
                     submitBtn.textContent = `混雑しています... 再試行中 (${attempts}/3)`;
-                    await new Promise(r => setTimeout(r, 1000 + (Math.random() * 1000))); // Backoff
+                    // Exponential backoff: 1s, 2s, 4s... with random jitter
+                    const waitTime = Math.pow(2, attempts) * 1000 + (Math.random() * 1000);
+                    await new Promise(r => setTimeout(r, waitTime));
                 }
             }
         }
@@ -1036,14 +1137,29 @@ async function handleRegistration() {
         }
     } catch (e) {
         console.error("Registration error:", e);
-        showStatus("サーバーが大変混み合っています。少し時間をおいて再度お試しいただくか、ネットワーク環境を確認してください。", "error");
+        const errorHtml = `
+            <div style="font-weight:bold; margin-bottom:0.5rem;">通信エラー（または混雑）が発生しました。</div>
+            <p style="font-size:0.9rem; margin-bottom:1rem;">
+                データが送信されている可能性があります。<strong>何度もボタンを押さず</strong>、
+                まずは下の「確認ボタン」を押して番号が出るか試してください。<br>
+                （または数分待ってからページを再読み込みしてください）
+            </p>
+            <button type="button" class="btn-primary btn-check-status" onclick="handleCheckStatus()" 
+                style="background:#00b894; border:none; padding:8px 15px; border-radius:8px;">✅ 登録されたか確認する</button>
+        `;
+        showStatus(errorHtml, "error");
+        
+        // showStatusがテキストのみを想定している場合があるため、innerHTMLを許容するように修正が必要かも
+        // 手動でHTMLを流し込む
+        const statusDiv = document.getElementById('registration-status');
+        if (statusDiv) statusDiv.innerHTML = errorHtml;
+
         submitBtn.disabled = false;
         submitBtn.textContent = originalBtnText;
     } finally {
         // v6.9: Guarantee sync status cleanup
         updateSyncStatus('success'); 
     }
-}
 }
 
 async function sendEmailViaGAS(entryData) {
@@ -1224,7 +1340,7 @@ function resetForm() {
 
 function showStatus(msg, type) {
     const div = document.getElementById('registration-status');
-    div.textContent = msg;
+    div.innerHTML = msg;
     div.className = `alert alert-${type}`;
     div.classList.remove('hidden');
     window.scrollTo(0, 0);
