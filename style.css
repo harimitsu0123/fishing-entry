@@ -37,12 +37,18 @@ body {
     position: relative;
     -webkit-font-smoothing: antialiased;
 }
-
 .container {
-    max-width: 1450px;
+    max-width: 1100px;
     margin: 2rem auto;
     padding: 0 1rem;
+    transition: max-width 0.3s ease; /* Smooth transition when widening */
 }
+
+
+.container.view-wide {
+    max-width: 1450px;
+}
+
 
 /* Navbar - Slimmed down and simplified */
 .navbar {
@@ -57,13 +63,18 @@ body {
 }
 
 .nav-container {
-    max-width: 1450px;
+    max-width: 1100px;
     margin: 0 auto;
     display: flex;
     justify-content: center;
-    /* Center title by default */
     align-items: center;
     padding: 0 1rem;
+    transition: max-width 0.3s ease;
+}
+
+.container.view-wide .nav-container,
+.view-wide .nav-container {
+    max-width: 1450px;
 }
 
 #app-title {
@@ -93,11 +104,16 @@ body {
 }
 
 .admin-toolbar .toolbar-content {
-    max-width: 1450px;
+    max-width: 1100px;
     margin: 0 auto;
     display: flex;
     justify-content: space-around;
-    gap: 1rem;
+    padding: 0.5rem;
+    transition: max-width 0.3s ease;
+}
+
+.view-wide .admin-toolbar .toolbar-content {
+    max-width: 1450px;
 }
 
 .btn-toolbar {

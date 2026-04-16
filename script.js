@@ -568,6 +568,18 @@ function switchView(btnElement, targetId) {
         updateReceptionList();
     }
 
+    // v6.6: Dynamic Width Control
+    const container = document.querySelector('.container');
+    if (container) {
+        if (targetId === 'dashboard-view' || targetId === 'reception-view') {
+            container.classList.add('view-wide');
+            document.body.classList.add('view-wide');
+        } else {
+            container.classList.remove('view-wide');
+            document.body.classList.remove('view-wide');
+        }
+    }
+
     // Toggle admin visibility based on state
     const adminElements = document.querySelectorAll('.admin-only');
     adminElements.forEach(el => {
