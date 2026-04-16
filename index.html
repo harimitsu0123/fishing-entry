@@ -188,11 +188,17 @@
                     <p><strong>受付区分：</strong> <span id="result-source"></span></p>
                 </div>
 
-                <div class="alert alert-warning mt-4 text-center">
-                    <strong style="color:red; font-size: 1.1rem;">【重要】</strong><br>
-                    ご登録ありがとうございます。<br>
-                    <strong>この画面を必ずスクリーンショットして保存してください。</strong><br>
-                    （受付番号は当日の受付で必要になります）
+                <div class="alert alert-warning mt-4 text-center" style="border: 2px solid #e67e22; background: #fffaf0;">
+                    <strong style="color:var(--error-color); font-size: 1.15rem;">【重要】</strong><br>
+                    <p style="font-size: 1rem; margin-top: 0.5rem; line-height: 1.6;">
+                        ご登録ありがとうございます。<br>
+                        後日、内容を確認した後に<strong>「公式の確定メール」</strong>をお送りいたします。<br>
+                        一週間たっても返事が届かない場合は、お問い合わせください。
+                    </p>
+                    <p style="font-size: 0.95rem; margin-top: 1rem; background: #fff; padding: 0.5rem; border-radius: 6px; border: 1px dashed #e67e22;">
+                        <strong>この画面を必ずスクリーンショットして保存してください。</strong><br>
+                        （受付番号は当日の受付で必要になります）
+                    </p>
                 </div>
 
                 <button class="btn-secondary mt-4 w-100" id="back-to-form">新しい登録を行う</button>
@@ -266,7 +272,7 @@
                         <h2>区分別 登録状況</h2>
                         <div class="capacity-split-grid mt-4">
                             <!-- General -->
-                            <div class="split-card">
+                            <div class="split-card" style="border-top: 4px solid #0984e3;">
                                 <div class="split-header">
                                     <span class="badge badge-ippan">一般</span>
                                     <span class="split-value"><span id="curr-ippan">0</span> / <span
@@ -274,11 +280,11 @@
                                 </div>
                                 <div class="split-details">見学者: <span id="ippan-observers">0</span>名</div>
                                 <div class="progress-bar">
-                                    <div id="prog-ippan" class="progress"></div>
+                                    <div id="prog-ippan" class="progress" style="background:#0984e3"></div>
                                 </div>
                             </div>
                             <!-- Mintsuri -->
-                            <div class="split-card">
+                            <div class="split-card" style="border-top: 4px solid #6c5ce7;">
                                 <div class="split-header">
                                     <span class="badge badge-mintsuri">みん釣り</span>
                                     <span class="split-value"><span id="curr-mintsuri">0</span> / <span
@@ -286,12 +292,11 @@
                                 </div>
                                 <div class="split-details">見学者: <span id="mintsuri-observers">0</span>名</div>
                                 <div class="progress-bar">
-                                    <div id="prog-mintsuri" class="progress" style="background:var(--error-color)">
-                                    </div>
+                                    <div id="prog-mintsuri" class="progress" style="background:#6c5ce7"></div>
                                 </div>
                             </div>
                             <!-- Suiho -->
-                            <div class="split-card">
+                            <div class="split-card" style="border-top: 4px solid #00b894;">
                                 <div class="split-header">
                                     <span class="badge badge-suiho">水宝</span>
                                     <span class="split-value"><span id="curr-suiho">0</span> / <span
@@ -299,11 +304,11 @@
                                 </div>
                                 <div class="split-details">見学者: <span id="suiho-observers">0</span>名</div>
                                 <div class="progress-bar">
-                                    <div id="prog-suiho" class="progress" style="background:#1e90ff"></div>
+                                    <div id="prog-suiho" class="progress" style="background:#00b894"></div>
                                 </div>
                             </div>
                             <!-- Harimitsu -->
-                            <div class="split-card admin-only hidden">
+                            <div class="split-card admin-only hidden" style="border-top: 4px solid #e17055;">
                                 <div class="split-header">
                                     <span class="badge badge-harimitsu">ハリミツ</span>
                                     <span class="split-value"><span id="curr-harimitsu">0</span> / <span
@@ -311,31 +316,12 @@
                                 </div>
                                 <div class="split-details">見学者: <span id="harimitsu-observers">0</span>名</div>
                                 <div class="progress-bar">
-                                    <div id="prog-harimitsu" class="progress" style="background:#9b59b6"></div>
+                                    <div id="prog-harimitsu" class="progress" style="background:#e17055"></div>
                                 </div>
                             </div>
                         </div>
-                        <div class="stats-grid mt-4">
-                            <div class="stat-card">
-                                <h3>総登録グループ</h3>
-                                <p id="total-registrations" class="stat-value">0</p>
-                            </div>
-                            <div class="stat-card">
-                                <h3>釣り参加者合計</h3>
-                                <p class="stat-value"><span id="current-fishers">0</span> / 250</p>
-                            </div>
-                            <div class="stat-card">
-                                <h3>見学者合計</h3>
-                                <p id="current-observers" class="stat-value">0</p>
-                            </div>
-                            <div class="stat-card" style="border-top: 5px solid var(--success-color);">
-                                <h3>受付状況（当日）</h3>
-                                <p class="stat-value">来場: <span id="checked-in-count">0</span> / 欠席: <span
-                                        id="absent-count">0</span></p>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">全 <span
-                                        id="total-groups-count">0</span> 組</p>
-                            </div>
-                        </div>
+                        <!-- Global Summary Stats (v6.2 Card-Based-Unified) -->
+                        <div id="global-stats-summary" class="mt-4"></div>
                     </div> <!-- End of Status Stats Card -->
 
                     <div class="card">
@@ -688,7 +674,7 @@
             <p id="footer-reveal"
                 style="cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation;">
                 &copy; 2026 釣り大会実行委員会</p>
-            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v6.1</span>
+            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v6.2</span>
         </div>
     </footer>
 

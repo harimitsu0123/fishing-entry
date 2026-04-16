@@ -558,36 +558,40 @@ select:focus {
 
 .summary-card {
     background: white;
-    padding: 0.8rem;
-    border-radius: 10px;
+    padding: 1rem 0.8rem;
+    border-radius: 12px;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     text-align: center;
+    border-top: 5px solid #cbd5e1; /* Default soft gray */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .summary-label {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 700;
-    color: #64748b;
-    margin-bottom: 0.2rem;
+    color: #475569;
+    margin-bottom: 0.5rem;
 }
 
 .summary-value {
-    font-size: 1.35rem;
+    font-size: 1.6rem;
     font-weight: 900;
     color: var(--primary-color);
-    line-height: 1.2;
+    line-height: 1;
 }
 
 .summary-value small {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     font-weight: 400;
     color: #94a3b8;
 }
 
-.highlight-green .summary-value {
-    color: #10b981;
-}
+.badge-ippan { background-color: #0984e3 !important; }
+.badge-mintsuri { background-color: #6c5ce7 !important; }
+.badge-suiho { background-color: #00b894 !important; }
+.badge-harimitsu { background-color: #e17055 !important; }
+
 
 /* Result Card (Screenshot Optimization) - v4.8 */
 .result-card {

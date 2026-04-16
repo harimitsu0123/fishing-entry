@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v6.1: Script Loaded Successfully (v6.1 Patch)");
+        console.log("BORIJIN APP v6.2: Script Loaded Successfully (v6.2 Dashboard Refresh)");
 
         // --- STEP 1: UI INITIALIZATION (CRITICAL) ---
         // Ensure the registration form has at least one participant row 
@@ -1227,19 +1227,23 @@ function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent)
         <div class="stats-summary-grid">
             <div class="summary-card">
                 <div class="summary-label">総登録グループ</div>
-                <div class="summary-value">${groups} <small>組</small></div>
+                <div class="summary-value" id="total-registrations">${groups} <small>組</small></div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">釣り参加者</div>
-                <div class="summary-value">${fishers} <small>/ 250</small></div>
+                <div class="summary-label">釣り参加者合計</div>
+                <div class="summary-value"><span id="current-fishers">${fishers}</span> <small>/ 250</small></div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">見学者</div>
-                <div class="summary-value">${observers} <small>名</small></div>
+                <div class="summary-label">見学者合計</div>
+                <div class="summary-value" id="current-observers">${observers} <small>名</small></div>
             </div>
-            <div class="summary-card highlight-green">
-                <div class="summary-label">当日の受付状況</div>
-                <div class="summary-value">${checkedIn} <small>受済</small> / ${absent} <small>欠席</small></div>
+            <div class="summary-card" style="border-top: 5px solid #10b981;">
+                <div class="summary-label">当日受付状況</div>
+                <div class="summary-value" style="font-size: 1.1rem; line-height: 1.4;">
+                    <span style="color: var(--primary-color)">来場: <span id="checked-in-count">${checkedIn}</span></span> / 
+                    <span style="color: var(--error-color)">欠席: <span id="absent-count">${absent}</span></span>
+                </div>
+                <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">全 <span id="total-groups-count">${groups}</span> 組</div>
             </div>
         </div>
     `;
