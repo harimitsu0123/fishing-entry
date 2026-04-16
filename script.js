@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v5.9: Script Loaded Successfully (Final Refresh)");
+        console.log("BORIJIN APP v6.1: Script Loaded Successfully (v6.1 Patch)");
 
         // --- STEP 1: UI INITIALIZATION (CRITICAL) ---
         // Ensure the registration form has at least one participant row 
@@ -1022,9 +1022,13 @@ function fillFormForEdit(entry) {
     const cancelBtn = document.getElementById('cancel-edit-btn');
     if (cancelBtn) cancelBtn.classList.remove('hidden');
 
+    // Ensure all success/confirm sections are hidden
+    document.getElementById('confirmation-section').classList.add('hidden');
+    document.getElementById('registration-result').classList.add('hidden');
+    
     // Show Admin Actions if triggered from dashboard
     const adminActions = document.getElementById('admin-extra-actions');
-    if (adminActions && isAdminAuthAction) {
+    if (adminActions && (isAdminAuth || isAdminAuthAction)) {
         adminActions.classList.remove('hidden');
 
         // Connect buttons to global functions
