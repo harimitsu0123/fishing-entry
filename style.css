@@ -1164,9 +1164,37 @@ select:focus {
     display: inline-block;
 }
 
+/* --- Reception List High-Visibility & Color Coding (v6.0) --- */
+.reception-group-item {
+    padding: 1rem !important;
+    margin-bottom: 0.5rem !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    border: 1px solid #e1e8ed !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03) !important;
+    width: 100% !important;
+    cursor: pointer;
+}
+
+.reception-group-item.active {
+    border-color: var(--primary-color) !important;
+    background: #f0f7ff !important;
+    box-shadow: 0 4px 12px rgba(0, 91, 181, 0.1) !important;
+}
+
+.badge-ippan { background-color: #0984e3 !important; color: white !important; }
+.badge-mintsuri { background-color: #6c5ce7 !important; color: white !important; }
+.badge-suiho { background-color: #00b894 !important; color: white !important; }
+.badge-harimitsu { background-color: #e17055 !important; color: white !important; }
+
+.reception-desk {
+    padding: 1.5rem !important;
+    background: #fdfdfd !important;
+}
+
 @media (max-width: 768px) {
     .confirm-box {
-        padding: 0.8rem !important; /* More compact on mobile */
+        padding: 0.8rem !important;
     }
     
     .confirm-box strong {
@@ -1175,18 +1203,5 @@ select:focus {
     
     .confirm-box span {
         font-size: 0.9rem !important;
-    }
-
-    .result-card h3 {
-        font-size: 1.3rem !important;
-    }
-
-    .entry-number {
-        font-size: 2rem !important;
-    }
-    
-    .entry-number-container {
-        min-width: 180px !important;
-        padding: 0.8rem 1.2rem !important;
     }
 }

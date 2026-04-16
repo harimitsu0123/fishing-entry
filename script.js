@@ -1293,11 +1293,16 @@ function updateReceptionList() {
         item.className = `reception-group-item ${activeReceptionEntryId === e.id ? 'active' : ''} ${e.isCompleted ? 'completed' : ''}`;
         item.onclick = () => selectReceptionEntry(e.id);
 
+        const badgeClass = e.source === 'みん釣り' ? 'badge-mintsuri' : e.source === '一般' ? 'badge-ippan' : e.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho';
+        
         item.innerHTML = `
-            <strong>${e.id} | ${e.groupName}</strong>
-            <div class="item-meta">
-                <span>${e.representative}</span>
-                <span>${e.isCompleted ? '✅ 受付済' : `確認: ${e.finishedCount} / ${e.totalCount}`}</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+                <strong style="font-size:1.1rem; color:#2d3436;">${e.id} | ${e.groupName}</strong>
+                <span class="badge ${badgeClass}" style="font-size:0.7rem; padding:0.1rem 0.4rem;">${e.source}</span>
+            </div>
+            <div class="item-meta" style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:1rem; color:#636e72;">${e.representative}</span>
+                <span style="font-size:0.9rem; font-weight:700; color: #0984e3;">${e.isCompleted ? '✅ 受付済' : `確認: ${e.finishedCount} / ${e.totalCount}`}</span>
             </div>
         `;
         list.appendChild(item);
