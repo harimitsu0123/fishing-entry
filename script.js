@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v6.9: HIGH-LOAD RESILIENT (Retries & Jitter Enabled)");
+        console.log("BORIJIN APP v6.9.1: ADMIN TRIGGER RELIEVED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -492,7 +492,7 @@ function initApp() {
                     showToast('パスワードが違います', 'error');
                 }
             } else {
-                tapTimer = setTimeout(() => { tapCount = 0; }, 1200); // 1.2s window for 5 taps
+                tapTimer = setTimeout(() => { tapCount = 0; }, 3000); // 3s window for 5 taps
             }
         });
         // Block context menu
