@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v4.0: Starting Initialization (Compact Mode)...");
+        console.log("BORIJIN APP v5.9: Script Loaded Successfully (Final Refresh)");
 
         // --- STEP 1: UI INITIALIZATION (CRITICAL) ---
         // Ensure the registration form has at least one participant row 
