@@ -61,7 +61,13 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v6.4: Script Loaded Successfully (v6.4 Advanced Sync)");
+        console.log("BORIJIN APP v6.5: Script Loaded Successfully (v6.5 Concurrency Optimized)");
+
+        // v6.5: Start Background Auto-Sync if Admin
+        if (isAdminAuth) {
+            startAutoSync();
+        }
+
 
         // --- STEP 1: UI INITIALIZATION (CRITICAL) ---
         // Ensure the registration form has at least one participant row 
@@ -116,18 +122,19 @@ async function loadData() {
                 const localData = localStorage.getItem('fishing_app_v3_data');
                 if (localData) {
                     const parsedLocal = JSON.parse(localData);
-                    // v6.4: ID単位でのマージロジックを採用
+                    // v6.5: ID + lastModified単位での高度マージ
                     state = mergeData(parsedLocal, cloudData);
                     console.log('Cloud sync: data merged');
                     
-                    // マージ結果をローカルとクラウドに反映
                     localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+                    // もしクラウドよりローカルが新しければ（マージによって新しくなれば）同期
                     if (state.lastUpdated > cloudData.lastUpdated) {
                         syncToCloud();
                     }
                 } else {
                     state = cloudData;
                 }
+
 
                 console.log('Cloud sync: data loaded');
                 updateSyncStatus('success');
@@ -171,36 +178,41 @@ async function loadData() {
 }
 
 /**
- * v6.4 ID単位のマージロジック
- * クラウドとローカルの両方に存在するデータは、各エントリーの status や内容を比較して最新を維持する
+ * v6.5 高度マージロジック: ID単位 + 個別タイムスタンプ(lastModified)で比較
  */
 function mergeData(local, cloud) {
-    const merged = { ...cloud }; // クラウドをベースにする
+    const merged = { ...cloud }; 
     const localMap = new Map(local.entries.map(e => [e.id, e]));
     const cloudMap = new Map(cloud.entries.map(e => [e.id, e]));
 
-    // 1. クラウドにないローカルデータの追加
+    // 1. ローカル固有、またはローカルの方が新しいデータをマージ
     local.entries.forEach(lEntry => {
         if (!cloudMap.has(lEntry.id)) {
             merged.entries.push(lEntry);
             merged.lastUpdated = Date.now();
         } else {
-            // 2. 両方にある場合は、キャンセルの有無や詳細を統合（簡易的には新しい方を優先したいが、
-            //    ここでは「キャンセル（無効）」状態を最優先させるなどの運用ルールを適用可能）
             const cEntry = cloudMap.get(lEntry.id);
-            // 改変日時プロパティがない場合は単純に上書きを避けるためクラウド優先
+            const lTime = new Date(lEntry.lastModified || lEntry.timestamp || 0).getTime();
+            const cTime = new Date(cEntry.lastModified || cEntry.timestamp || 0).getTime();
+
+            // ローカルの方が更新が新しい場合、そのエントリーを差し替える
+            if (lTime > cTime) {
+                const idx = merged.entries.findIndex(e => e.id === lEntry.id);
+                if (idx !== -1) {
+                    merged.entries[idx] = lEntry;
+                    merged.lastUpdated = Date.now();
+                }
+            }
         }
     });
 
-    // 設定のマージ
     merged.settings = { ...local.settings, ...cloud.settings };
-    
-    // 重複排除とソート
     const uniqueEntries = Array.from(new Map(merged.entries.map(e => [e.id, e])).values());
     merged.entries = uniqueEntries.sort((a, b) => a.id.localeCompare(b.id));
 
     return merged;
 }
+
 
 
 function finalizeLoad() {
@@ -232,11 +244,34 @@ function finalizeLoad() {
 }
 
 async function saveData() {
-    state.lastUpdated = Date.now(); // Update timestamp on every save
+    state.lastUpdated = Date.now();
     localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
-    // Also sync to cloud
+    
+    // v6.5: 同期前に最新を一度取得してマージする「Fetch-First」方式
+    try {
+        const response = await fetch(`${GAS_WEB_APP_URL}?action=get&_t=${Date.now()}`);
+        if (response.ok) {
+            const cloudData = await response.json();
+            state = mergeData(state, cloudData);
+            localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+        }
+    } catch (e) { console.warn("Save pre-fetch failed, pushing current instead."); }
+
     return await syncToCloud();
 }
+
+/** 
+ * v6.5 自動同期サイクル (1分)
+ */
+function startAutoSync() {
+    if (window._autoSyncTimer) return;
+    window._autoSyncTimer = setInterval(() => {
+        if (!isAdminAuth) return;
+        console.log("Auto-Syncing...");
+        loadData();
+    }, 60000); 
+}
+
 
 async function syncToCloud() {
     updateSyncStatus('syncing');
@@ -245,7 +280,6 @@ async function syncToCloud() {
             action: 'save',
             data: state
         };
-        // タイムアウト15秒。no-corsのためレスポンスは読めないが、awaitが完了すれば送信成功とみなす
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
 
@@ -258,55 +292,39 @@ async function syncToCloud() {
         });
         clearTimeout(timeoutId);
         console.log('Cloud sync: data saved');
-        localStorage.removeItem('fishing_sync_pending'); // ★ 成功したらペンディング解除
+        localStorage.removeItem('fishing_sync_pending');
         updateSyncStatus('success');
     } catch (e) {
-        if (e.name === 'AbortError') {
-            console.warn('Cloud save timed out');
-        } else {
-            console.error('Cloud sync error:', e);
-        }
-        // ローカル保存は成功。クラウド同期のエラーはサイレントに記録のみ
+        if (e.name === 'AbortError') console.warn('Cloud save timed out');
+        else console.error('Cloud sync error:', e);
         localStorage.setItem('fishing_sync_pending', '1');
         updateSyncStatus('error-silent');
     }
 }
 
-let isFirstLoad = true;
-
 function updateSyncStatus(type) {
-    if (isFirstLoad && (type === 'syncing' || type === 'success')) {
-        if (type === 'success') isFirstLoad = false;
-        return;
-    }
-
-    const badge = document.getElementById('sync-status');
-    const text = badge.querySelector('.sync-text');
-    const icon = badge.querySelector('.sync-icon');
-
-    badge.classList.remove('hidden', 'syncing', 'success', 'error');
+    const text = document.getElementById('sync-text');
+    const dot = document.getElementById('sync-dot');
+    const container = document.getElementById('sync-status');
+    
+    if (container) container.classList.remove('hidden');
 
     if (type === 'syncing') {
-        badge.classList.add('syncing');
-        text.textContent = '同期中...';
-        icon.textContent = '🔄';
+        if (text) text.textContent = '同期中...';
+        if (dot) { dot.className = 'sync-dot syncing'; }
     } else if (type === 'success') {
-        badge.classList.add('success');
-        text.textContent = '同期完了';
-        icon.textContent = '✅';
-        setTimeout(() => badge.classList.add('hidden'), 2000);
+        if (text) text.textContent = '同期完了';
+        if (dot) { dot.className = 'sync-dot success'; }
+        setTimeout(() => { if (text) text.textContent = '同期: 待機中'; }, 2000);
     } else if (type === 'error') {
-        badge.classList.add('error');
-        text.textContent = '同期失敗';
-        icon.textContent = '⚠️';
-        // 5秒後に自動で隠す（ずっと出ていると不安を煽るため）
-        setTimeout(() => badge.classList.add('hidden'), 5000);
+        if (text) text.textContent = '同期失敗';
+        if (dot) { dot.className = 'sync-dot error'; }
     } else if (type === 'error-silent') {
-        // クラウド同期のエラーはサイレント（ローカル保存は成功しているため表示しない）
-        badge.classList.add('hidden');
-        console.warn('Cloud sync failed silently. Local data is safe.');
+        if (dot) { dot.className = 'sync-dot error'; }
     }
 }
+
+
 
 // Helper: 24-hour JST date formatting
 function formatDate(dateStr) {
@@ -1439,7 +1457,9 @@ window.updateParticipantStatus = function (entryId, pIdx, status) {
     const statusLabel = status === 'checked-in' ? '受付済' : status === 'absent' ? '欠席' : '未受付';
     showToast(`${entry.participants[pIdx].name} 様を「${statusLabel}」に更新しました`, 'info');
 
+    entry.lastModified = new Date().toLocaleString('ja-JP');
     saveData();
+
     renderReceptionDesk();
     updateReceptionList();
     updateDashboard();
@@ -1462,7 +1482,9 @@ window.updateGroupStatus = function (entryId, status) {
         showToast('グループ全員を受付しました', 'success');
     }
 
+    entry.lastModified = new Date().toLocaleString('ja-JP');
     saveData();
+
     renderReceptionDesk();
     updateReceptionList();
     updateDashboard();
@@ -1595,6 +1617,7 @@ window.cancelEntry = function (id) {
     if (entry.status === 'cancelled') {
         if (confirm(`受付番号「${id}」を元の状態に復元しますか？`)) {
             entry.status = 'pending';
+            entry.lastModified = new Date().toLocaleString('ja-JP');
             saveData();
             updateDashboard();
             showToast(`受付番号 「${id}」 を復元しました`, 'success');
@@ -1602,6 +1625,7 @@ window.cancelEntry = function (id) {
     } else {
         if (confirm(`本当に受付番号「${id}」をキャンセル（辞退扱い）にしますか？\n消去はされず、記録として残ります。`)) {
             entry.status = 'cancelled';
+            entry.lastModified = new Date().toLocaleString('ja-JP');
             saveData();
             updateDashboard();
             showToast(`受付番号 「${id}」 をキャンセルしました`, 'success');
@@ -1669,6 +1693,7 @@ function handleSettingsUpdate(e) {
     state.settings.adminPassword = document.getElementById('admin-password-set').value;
 
     saveData();
+
     syncSettingsUI();
     updateDashboard();
     checkTimeframe();
@@ -2034,6 +2059,8 @@ window.generateBulkTestData = function () {
     }
 
     saveData();
+
+
     updateDashboard();
     updateReceptionList();
     showToast(`${entriesAdded}件（釣り人計 ${fishersAddedTotal}名）のテストデータを作成しました。合計 ${state.entries.reduce((s, e) => s + e.fishers, 0)}名となり、定員(250)まで残りわずかです。`, 'success');
@@ -2185,7 +2212,9 @@ window.saveIkesu = function () {
         });
     }
 
+    entry.lastModified = new Date().toLocaleString('ja-JP');
     saveData();
+
     closeIkesuModal();
     renderIkesuWorkspace();
 };
@@ -2202,7 +2231,9 @@ window.deleteIkesu = function (id) {
         });
     });
 
+    entry.lastModified = new Date().toLocaleString('ja-JP');
     saveData();
+
     renderIkesuWorkspace();
 };
 
@@ -2256,7 +2287,9 @@ function processDrop(ev, ikesuId) {
         }
     }
 
+    entry.lastModified = new Date().toLocaleString('ja-JP');
     saveData();
+
     renderIkesuWorkspace();
 }
 

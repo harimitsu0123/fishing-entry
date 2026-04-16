@@ -1214,21 +1214,41 @@ select:focus {
 .badge-suiho { background-color: #00b894 !important; color: white !important; }
 .badge-harimitsu { background-color: #e17055 !important; color: white !important; }
 
-.reception-desk {
-    padding: 1.5rem !important;
-    background: #fdfdfd !important;
+/* --- Global Sync Status Indicator (v6.5) --- */
+.sync-status-indicator {
+    position: fixed;
+    right: 1rem;
+    bottom: 2.5rem; /* Just above the version tag */
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 5001;
+    border: 1px solid #e2e8f0;
 }
 
-@media (max-width: 768px) {
-    .confirm-box {
-        padding: 0.8rem !important;
-    }
-    
-    .confirm-box strong {
-        font-size: 0.8rem !important;
-    }
-    
-    .confirm-box span {
-        font-size: 0.9rem !important;
-    }
+.sync-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #94a3b8; /* Default gray */
+    transition: background-color 0.3s;
+}
+
+.sync-dot.syncing { 
+    background: #3498db; 
+    animation: syncPulse 1.5s infinite;
+}
+.sync-dot.success { background: #10b981; }
+.sync-dot.error { background: #ef4444; }
+
+@keyframes syncPulse {
+    0% { transform: scale(0.8); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 0.5; }
 }
