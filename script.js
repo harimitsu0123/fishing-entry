@@ -424,8 +424,11 @@ function initApp() {
                 const pw = prompt("管理者パスワードを入力してください");
                 if (pw === state.settings.adminPassword || pw === 'admin') {
                     isAdminAuth = true;
+                    sessionStorage.setItem('isAdminAuth', 'true');
                     document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                    showToast('✨ 管理者メニューを表示しました', 'success');
+                    showToast('✨ 管理画面を表示します', 'success');
+                    switchView(null, 'dashboard-view');
+                    switchAdminTab('tab-list');
                 } else if (pw !== null) {
                     showToast('パスワードが違います', 'error');
                 }
@@ -466,8 +469,11 @@ function initApp() {
                 const pw = prompt("管理者パスワードを入力してください (Tap Access)");
                 if (pw === state.settings.adminPassword || pw === 'admin') {
                     isAdminAuth = true;
+                    sessionStorage.setItem('isAdminAuth', 'true');
                     document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                    showToast('✨ 管理者メニューを表示しました', 'success');
+                    showToast('✨ 管理画面を表示します', 'success');
+                    switchView(null, 'dashboard-view');
+                    switchAdminTab('tab-list');
                 } else if (pw !== null) {
                     showToast('パスワードが違います', 'error');
                 }
