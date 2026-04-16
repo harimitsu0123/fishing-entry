@@ -78,6 +78,61 @@ body {
     /* Hide top nav links for standard users as requested */
 }
 
+/* Admin Toolbar - Professional Overlay */
+.admin-toolbar {
+    position: fixed;
+    bottom: 0px;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid #e1e8ed;
+    padding: 0.75rem 1rem;
+    z-index: 5000;
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.admin-toolbar .toolbar-content {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-around;
+    gap: 1rem;
+}
+
+.btn-toolbar {
+    flex: 1;
+    padding: 0.6rem;
+    border: none;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-toolbar.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-toolbar.logout {
+    color: var(--error-color);
+    background: rgba(231, 76, 60, 0.05);
+}
+
+/* Version Display logic */
+body {
+    padding-bottom: 30px; /* Minimal default padding */
+}
+
+body.view-dashboard-view,
+body.view-reception-view {
+    padding-bottom: 80px; /* Leave room for admin toolbar */
+}
+
 /* Views & Overlays */
 .view {
     display: none;
@@ -393,28 +448,98 @@ select:focus {
     opacity: 0.5;
 }
 
-/* Table */
-.table-container {
-    overflow-x: auto;
+/* Capacity Split Grid - Premium Cards */
+.capacity-split-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.2rem;
+    margin-top: 1.5rem;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
+.split-card {
     background: white;
+    padding: 1.25rem;
+    border-radius: 12px;
+    border: 1px solid #e1e8ed;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
 }
 
-th,
-td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
+.split-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.05);
 }
 
-th {
-    font-weight: 700;
-    color: var(--text-muted);
+.split-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 4px;
+    background: var(--primary-color);
+}
+
+.split-card:nth-child(2)::before { background: var(--error-color); }
+.split-card:nth-child(3)::before { background: #1e90ff; }
+.split-card:nth-child(4)::before { background: #9b59b6; }
+
+.split-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.split-value {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text-dark);
+}
+
+.split-details {
     font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+/* Stats-list - Simple and Clean per request */
+.stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.stats-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: #f8fafc;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.stats-label {
+    font-weight: 600;
+    color: #475569;
+}
+
+.stats-count {
+    font-weight: 800;
+    color: var(--primary-color);
 }
 
 /* Reception View Layout */

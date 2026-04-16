@@ -576,6 +576,10 @@ function switchView(btnElement, targetId) {
         else el.classList.add('hidden');
     });
 
+    // Handle body class for toolbar space (v4.6)
+    document.body.className = document.body.className.replace(/view-\S+/g, '').trim();
+    document.body.classList.add('view-' + targetId);
+
     // Ensure Admin toolbar is handled separately if needed
     updateAdminToolbar();
 }
@@ -1682,7 +1686,17 @@ window.confirmReset = async function () {
 function exportGroupsCSV() {
     if (state.entries.length === 0) return alert('データがありません');
     const headers = ['受付番号', '区分', 'グループ名', '代表者名', '電話番号', 'メール', '釣り人数', '見学人数', '登録時間'];
-    const rows = state.entries.map(e => [e.id, e.source, e.groupName, e.representative, e.phone, e.email, e.fishers, e.observers, e.timestamp]);
+    const rows = state.entries.map(e => [
+        e.id,
+        e.source,
+        e.groupName,
+        e.representative,
+        e.phone,
+        e.email,
+        e.fishers,
+        e.observers,
+        formatDateForCSV(e.timestamp)
+    ]);
     downloadCSV("groups", headers, rows);
 }
 
@@ -1693,7 +1707,19 @@ function exportParticipantsCSV() {
     state.entries.forEach(e => {
         e.participants.forEach(p => {
             const partType = p.type === 'observer' ? '見学' : '釣り';
-            rows.push([e.id, e.source, e.groupName, e.representative, partType, p.name, p.nickname, p.tshirtSize || "", p.region, ageLabels[p.age] || p.age, e.timestamp]);
+            rows.push([
+                e.id,
+                e.source,
+                e.groupName,
+                e.representative,
+                partType,
+                p.name,
+                p.nickname,
+                p.tshirtSize || "",
+                p.region,
+                ageLabels[p.age] || p.age,
+                formatDateForCSV(e.timestamp)
+            ]);
         });
     });
     downloadCSV("participants", headers, rows);
@@ -1701,13 +1727,24 @@ function exportParticipantsCSV() {
 
 function downloadCSV(name, headers, rows) {
     let csv = "\uFEFF" + headers.join(",") + "\n";
-    rows.forEach(row => csv += row.map(c => `"${c}"`).join(",") + "\n");
+    rows.forEach(row => csv += row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",") + "\n");
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
+    const dateStr = new Date().toLocaleDateString('ja-JP').replace(/\//g, '');
     link.href = URL.createObjectURL(blob);
-    link.download = `fishing_${name}_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `fishing_${name}_${dateStr}.csv`;
     link.click();
     showToast(`${name} CSVを出力しました`, 'info');
+}
+
+function formatDateForCSV(dateStr) {
+    if (!dateStr) return "";
+    try {
+        // Remove 000Z and other ISO noise if present, or just use the string if it's already JST
+        return dateStr.split('.')[0].replace('T', ' ').replace('Z', '');
+    } catch (e) {
+        return dateStr;
+    }
 }
 
 // Bulk Email
