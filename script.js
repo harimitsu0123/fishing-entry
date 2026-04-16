@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v6.7.1: FINAL STABLE (Concurrency & Navigation Optimized)");
+        console.log("BORIJIN APP v6.7.3: FINAL STABLE (Timeframe & Reset Fixed)");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -387,7 +387,10 @@ function initApp() {
     safeAddListener('btn-to-confirm', 'click', showConfirmation);
     safeAddListener('submit-registration', 'click', handleRegistration);
     safeAddListener('back-to-form', 'click', resetForm);
-    safeAddListener('reset-data', 'click', confirmReset);
+    safeAddListener('reset-data', 'click', () => {
+        if (typeof window.confirmReset === 'function') window.confirmReset();
+        else if (typeof confirmReset === 'function') confirmReset();
+    });
 
     // Auth logic
     safeAddListener('show-edit-login', 'click', () => {
@@ -1714,7 +1717,7 @@ function handleSettingsUpdate(e) {
 
     syncSettingsUI();
     updateDashboard();
-    checkTimeframe();
+    checkTimeframe(); // Instant refresh of lock screen status
     updateAppTitle();
     showToast('大会設定をすべて保存しました', 'success');
 }
