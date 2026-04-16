@@ -542,6 +542,46 @@ select:focus {
     color: var(--primary-color);
 }
 
+/* Dashboard Premium Summary Cards (v5.1) */
+.stats-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.summary-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #e1e8ed;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    text-align: center;
+}
+
+.summary-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.summary-value {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--primary-color);
+}
+
+.summary-value small {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #94a3b8;
+}
+
+.highlight-green .summary-value {
+    color: var(--secondary-color);
+}
+
 /* Result Card (Screenshot Optimization) - v4.8 */
 .result-card {
     text-align: center;
@@ -555,20 +595,23 @@ select:focus {
     font-size: 1.4rem;
 }
 
+/* High Contrast Entry Number (v5.1) */
 .entry-number-container {
-    background: #f8fafc;
-    border: 3px solid var(--primary-color);
+    background: #003366; /* Deep Navy Background */
+    border: none;
     border-radius: 12px;
-    padding: 0.75rem;
-    margin: 0.5rem 0;
+    padding: 1.2rem;
+    margin: 0.75rem 0;
+    box-shadow: 0 8px 16px rgba(0,51,102,0.2);
 }
 
 .entry-number {
     display: block;
-    font-size: 3rem; /* Large enough to see, but not too tall */
+    font-size: 3.5rem;
     font-weight: 900;
-    color: var(--primary-color);
+    color: #ffffff; /* Explicit White Text */
     line-height: 1;
+    letter-spacing: 2px;
 }
 
 .result-details {

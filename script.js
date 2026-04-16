@@ -988,8 +988,9 @@ async function handleRegistration() {
         await saveData();
         updateDashboard();
 
-        // Send automated email via GAS (fire and forget / async)
-        sendEmailViaGAS(entryData);
+        // Send automated email via GAS (Awaited for reliability v5.1)
+        showToast('送信中... 少々お待ちください', 'info');
+        await sendEmailViaGAS(entryData);
 
         if (isAdminAuthAction) {
             // If it was an admin edit, go back to dashboard instead of result page
@@ -1008,6 +1009,7 @@ async function handleRegistration() {
 }
 
 async function sendEmailViaGAS(entryData) {
+    if (!entryData.email) return;
     try {
         const payload = {
             action: 'sendEmail',
@@ -1020,22 +1022,20 @@ async function sendEmailViaGAS(entryData) {
             observers: entryData.observers,
             source: entryData.source,
             timestamp: entryData.timestamp,
-            participants: entryData.participants // 全参加者リストを追加
+            participants: entryData.participants || []
         };
 
-        // Use fetch with 'no-cors' if GAS doesn't handle CORS, but GAS Web App typically handles it
-        // Or send as a form submission to avoid CORS issues if necessary
+        // Added keepalive for survival through potential lifecycle changes
         await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
-            mode: 'no-cors', // GAS Web App works better with no-cors if not returning JSON
-            headers: {
-                'Content-Type': 'text/plain',
-            },
-            body: JSON.stringify(payload)
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(payload),
+            keepalive: true 
         });
-        console.log('Email request sent to GAS');
-    } catch (error) {
-        console.error('Error sending email via GAS:', error);
+        console.log('Email request sent to GAS (awaited)');
+    } catch (err) {
+        console.error('Email fetch error:', err);
     }
 }
 
@@ -1195,20 +1195,8 @@ function updateDashboard() {
         const absentCount = state.entries.filter(e => e.status === 'absent').length;
         const validEntriesCount = state.entries.filter(e => e.status !== 'cancelled').length;
 
-        document.getElementById('total-registrations').textContent = validEntriesCount;
-        document.getElementById('current-fishers').textContent = totalFishers;
-        document.getElementById('current-observers').textContent = totalObservers;
-
-        // Reception stats
-        document.getElementById('checked-in-count').textContent = checkedInCount;
-        document.getElementById('absent-count').textContent = absentCount;
-        document.getElementById('total-groups-count').textContent = validEntriesCount;
-
-        // Also update the reception view stats header if it exists
-        const recCheck = document.getElementById('rec-check-in-count');
-        const recAbs = document.getElementById('rec-absent-count');
-        if (recCheck) recCheck.textContent = checkedInCount;
-        if (recAbs) recAbs.textContent = absentCount;
+        // Global Stats Summary Cards (v5.1 Restoration)
+        renderGlobalStatsSummary(validEntriesCount, totalFishers, totalObservers, checkedInCount, absentCount);
 
         // Email count
         updateBulkMailCount();
@@ -1219,10 +1207,33 @@ function updateDashboard() {
         updateSplitUI('suiho', fishersSuiho, state.settings.capacitySuiho, observersSuiho);
         updateSplitUI('harimitsu', fishersHarimitsu, state.settings.capacityHarimitsu, observersHarimitsu);
 
-        // Breakdown stats
-        renderBreakdownStats();
+function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent) {
+    const container = document.getElementById('global-stats-summary');
+    if (!container) return;
 
-        const list = document.getElementById('entry-list');
+    container.innerHTML = `
+        <div class="stats-summary-grid">
+            <div class="summary-card">
+                <div class="summary-label">総登録グループ</div>
+                <div class="summary-value">${groups} <small>組</small></div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">釣り参加者合計</div>
+                <div class="summary-value">${fishers} <small>/ 250名</small></div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">見学者合計</div>
+                <div class="summary-value">${observers} <small>名</small></div>
+            </div>
+            <div class="summary-card highlight-green">
+                <div class="summary-label">当日受付状況</div>
+                <div class="summary-value">${checkedIn} <small>来場</small> / ${absent} <small>欠席</small></div>
+            </div>
+        </div>
+    `;
+}
+
+// Stats-list - Simple and Clean per request
         const searchTerm = document.getElementById('dashboard-search').value.toLowerCase();
 
         list.innerHTML = '';
