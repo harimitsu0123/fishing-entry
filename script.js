@@ -438,7 +438,7 @@ function initApp() {
                     showToast('パスワードが違います', 'error');
                 }
             } else {
-                tapTimer = setTimeout(() => { tapCount = 0; }, 500);
+                tapTimer = setTimeout(() => { tapCount = 0; }, 1200); // 1.2s window for 5 taps
             }
         });
         // Block context menu
@@ -1256,12 +1256,6 @@ async function testEmailFeature() {
     } catch (e) { alert("エラー: " + e.message); }
 }
 
-function debugGasUrl() { alert("設定済みURL: " + GAS_WEB_APP_URL); }
-
-        renderIkesuWorkspace();
-    } catch (e) {
-        console.error('updateDashboard error:', e);
-    }
 }
 
 // --- Reception View Logic ---
