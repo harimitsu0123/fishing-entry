@@ -1,4 +1,4 @@
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwgms7n112kavYjKq3319FuX_-UOHG9s5XwAJ-Jpk_XfkiM2URvjmBA-exOHGkthn5l/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbznBpljlAaofjzo67li4KtyKsg1dYEcMcdJtXeKrGgfRRAkhHH9-E4GENp-fp9NqIug/exec";
 
 // State Management
 let state = {
@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v6.7.3: FINAL STABLE (Timeframe & Reset Fixed)");
+        console.log("BORIJIN APP v6.8: ATOMIC SERVER-SIDE SYNC (Concurrency Secured)");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -985,24 +985,35 @@ async function handleRegistration() {
             const idx = state.entries.findIndex(en => en.id === editId);
             state.entries[idx] = entryData;
             showToast('登録内容を更新しました', 'success');
-            // If editing from dashboard, jumping back is better
-            switchView(null, 'dashboard-view');
+            await saveData(); // Standard merge-save for edits
         } else {
-            // Determine prefix based on source
-            const prefixMap = { '一般': 'A', 'みん釣り': 'M', '水宝': 'S', 'ハリミツ': 'H' };
-            const prefix = prefixMap[source] || 'A';
+            // v6.8: ATOMIC SERVER-SIDE SUBMISSION
+            const submitPayload = {
+                action: 'submit',
+                entry: entryData
+            };
+            
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'cors', // Changed to cors to receive JSON response
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(submitPayload)
+            });
 
-            // Find existing entries with this prefix and get the max number
-            const samePrefixEntries = state.entries.filter(e => e.id.startsWith(prefix + '-'));
-            const nextNum = (samePrefixEntries.length > 0)
-                ? Math.max(...samePrefixEntries.map(e => parseInt(e.id.split('-')[1]))) + 1
-                : 1;
-
-            entryData.id = `${prefix}-${String(nextNum).padStart(3, '0')}`;
-            state.entries.push(entryData);
+            if (!response.ok) throw new Error("サーバーとの通信に失敗しました。時間をおいて再試行してください。");
+            
+            const result = await response.json();
+            if (result.status === 'success' && result.entry) {
+                entryData = result.entry; // Get the assigned ID from server
+                state.entries.push(entryData);
+                // Sync local state with new server data
+                localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+                showToast('登録が完了しました！', 'success');
+            } else {
+                throw new Error("登録エラー: " + (result.message || "不明なエラー"));
+            }
         }
-        // Save and Sync
-        await saveData();
+
         updateDashboard();
 
         // Send automated email via GAS (Awaited for reliability v5.1)
