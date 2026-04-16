@@ -427,6 +427,8 @@ function initApp() {
                     sessionStorage.setItem('isAdminAuth', 'true');
                     document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
                     showToast('✨ 管理画面を表示します', 'success');
+                    currentAdminTab = 'tab-list';
+                    sessionStorage.setItem('currentAdminTab', 'tab-list');
                     switchView(null, 'dashboard-view');
                     switchAdminTab('tab-list');
                 } else if (pw !== null) {
@@ -472,6 +474,8 @@ function initApp() {
                     sessionStorage.setItem('isAdminAuth', 'true');
                     document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
                     showToast('✨ 管理画面を表示します', 'success');
+                    currentAdminTab = 'tab-list';
+                    sessionStorage.setItem('currentAdminTab', 'tab-list');
                     switchView(null, 'dashboard-view');
                     switchAdminTab('tab-list');
                 } else if (pw !== null) {
@@ -673,6 +677,9 @@ function handleAdminLogin() {
         document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
 
         // Always go to dashboard-view / tab-list unless it's a specific pending view that isn't dashboard
+        currentAdminTab = 'tab-list';
+        sessionStorage.setItem('currentAdminTab', 'tab-list');
+
         if (pendingView && pendingView !== 'dashboard-view') {
             switchView(null, pendingView);
         } else {
@@ -843,7 +850,7 @@ function showConfirmation() {
     else if (source === 'ハリミツ') capacityLimit = state.settings.capacityHarimitsu;
 
     if (currentCategoryFishers + fisherCount > capacityLimit) {
-        showStatus(`【${source}枠】の定員（${capacityLimit}名）を超えています。残り：${capacityLimit - currentCategoryFishers}名`, "error");
+        showStatus(`大変申し訳ありません。この枠（${source}）は定員に達したため、現在受付を停止しております。`, "error");
         return;
     }
 
@@ -853,7 +860,7 @@ function showConfirmation() {
         .reduce((sum, en) => sum + en.fishers, 0);
 
     if (totalFishers + fisherCount > 250) {
-        showStatus(`大会全体の定員（250名）を超えています。現在の合計：${totalFishers}名、残り：${250 - totalFishers}名`, "error");
+        showStatus("大変申し訳ありません。大会全体の定員に達したため、受付を終了いたしました。", "error");
         return;
     }
 
