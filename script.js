@@ -621,9 +621,18 @@ function updateAdminToolbar() {
 
 function checkTimeframe() {
     const overlay = document.getElementById('timeframe-overlay');
+    if (!overlay) return;
+
+    // Admins bypass timeframe checks to allow setup and proxy registrations
+    if (isAdminAuth) {
+        overlay.classList.add('hidden');
+        return;
+    }
+
     const title = document.getElementById('timeframe-title');
     const desc = document.getElementById('timeframe-desc');
     const now = new Date();
+
 
     if (state.settings.startTime && now < new Date(state.settings.startTime)) {
         title.textContent = "受付開始前です";
@@ -657,10 +666,15 @@ function handleAdminLogin() {
         // Reveal admin elements globally
         document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
 
-        if (pendingView) {
+        // Always go to dashboard-view / tab-list unless it's a specific pending view that isn't dashboard
+        if (pendingView && pendingView !== 'dashboard-view') {
             switchView(null, pendingView);
-            pendingView = null;
+        } else {
+            switchView(null, 'dashboard-view');
+            switchAdminTab('tab-list');
         }
+        pendingView = null;
+
         // ★ admin-only要素の表示後にDOMが更新されてからスクロール
         setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
     } else {

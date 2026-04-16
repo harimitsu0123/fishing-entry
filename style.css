@@ -258,11 +258,12 @@ select:focus {
 /* Participant row header label */
 .participant-label {
     font-weight: bold;
-    color: var(--primary-color);
-    padding-bottom: 0.3rem;
-    margin-bottom: 0.3rem;
-    border-bottom: 1px solid #eee;
-    font-size: 0.95rem;
+    font-size: 1.2rem;
+    background: #f0f7ff;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+    border-left: 4px solid var(--primary-color);
 }
 
 .label-rep {
@@ -347,11 +348,12 @@ select:focus {
     background: white;
     border: 2px dashed var(--primary-color);
     color: var(--primary-color);
-    padding: 1.2rem;
-    font-size: 1.1rem;
-    font-weight: 700;
+    padding: 1.5rem;
+    font-size: 1.4rem;
+    font-weight: 800;
     transition: all 0.2s;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 91, 181, 0.15);
 }
 
 .btn-text {
@@ -603,9 +605,9 @@ th {
     }
 
     .participant-label {
-        padding-bottom: 0.15rem !important;
-        margin-bottom: 0.15rem !important;
-        font-size: 0.75rem !important;
+        padding-bottom: 0.3rem !important;
+        margin-bottom: 0.5rem !important;
+        font-size: 1rem !important;
         border-bottom: 1px solid #eee !important;
     }
 
@@ -716,4 +718,182 @@ th {
 
 .btn-toolbar.logout {
     color: #e74c3c;
+}
+
+/* --- Registration Confirmation Styles --- */
+.confirm-box {
+    background: #f8fbff;
+    border: 1px solid #d1e3f8;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+}
+
+.confirm-box p {
+    margin-bottom: 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Improved alignment */
+    border-bottom: 1px dashed #e1e8ed;
+    padding-bottom: 0.4rem;
+}
+
+.confirm-box p:last-child {
+    border-bottom: none;
+}
+
+.confirm-box strong {
+    font-size: 0.95rem; /* Slightly larger labels for better ratio */
+    color: #5a6a7a;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.confirm-box span {
+    font-size: 1.0rem; /* Adjusted from 1.1rem for better balance */
+    color: var(--text-color);
+    font-weight: 800;
+    text-align: right;
+    word-break: break-all;
+    margin-left: 1rem;
+    background: #fff;
+    padding: 2px 10px;
+    border-radius: 6px;
+    border: 1px solid #e1e8ed;
+}
+
+#conf-participant-summary li {
+    background: white;
+    margin-bottom: 0.4rem;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    list-style: none;
+    font-weight: 700;
+}
+
+/* --- Premium Result Card (Screenshot Area) --- */
+.result-card {
+    text-align: center;
+    padding: 3rem 1.5rem !important;
+    background: linear-gradient(135deg, #ffffff 0%, #eef7ff 100%) !important;
+    border: 6px double var(--primary-color) !important; /* Thick double border for premium feel */
+    border-radius: 20px !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0, 91, 181, 0.2) !important;
+}
+
+.result-card::after {
+    content: "REGISTERED";
+    position: absolute;
+    top: 15px;
+    right: -25px;
+    background: var(--primary-color);
+    color: white;
+    padding: 5px 40px;
+    transform: rotate(45deg);
+    font-size: 0.7rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.result-card::before {
+    content: "✅";
+    font-size: 5rem;
+    display: block;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.1));
+}
+
+.result-card h3 {
+    font-size: 2rem;
+    color: var(--success-color);
+    margin-bottom: 1.5rem;
+    font-weight: 900;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.entry-number-container {
+    background: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 2rem 2.5rem;
+    border-radius: 20px;
+    margin: 1.5rem auto;
+    display: inline-block;
+    min-width: 260px;
+    box-shadow: 0 10px 25px rgba(0, 91, 181, 0.4);
+    border: 2px solid rgba(255,255,255,0.2);
+}
+
+.entry-number-container .label {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.9;
+    font-weight: 600;
+    letter-spacing: 2px;
+}
+
+.entry-number {
+    font-size: 4rem; /* Super large for screenshots */
+    font-weight: 900;
+    letter-spacing: 4px;
+    display: block;
+    line-height: 1;
+    text-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+}
+
+.result-details {
+    background: white;
+    padding: 1.2rem;
+    border-radius: 14px;
+    margin-top: 2rem;
+    border: 1px solid #e1e8ed;
+    text-align: left;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.result-details p {
+    margin-bottom: 0.6rem;
+    font-size: 1.1rem;
+    border-bottom: 1px dashed #f0f4f8;
+    padding-bottom: 0.4rem;
+}
+
+.result-details strong {
+    color: var(--text-muted);
+    font-weight: 700;
+    width: 8rem;
+    display: inline-block;
+}
+
+@media (max-width: 768px) {
+    .confirm-box {
+        padding: 1rem !important;
+    }
+    
+    .confirm-box strong {
+        font-size: 0.85rem !important;
+    }
+    
+    .confirm-box span {
+        font-size: 0.95rem !important;
+    }
+
+    .result-card h3 {
+        font-size: 1.6rem !important;
+    }
+
+    .entry-number {
+        font-size: 3rem !important;
+    }
+    
+    .entry-number-container {
+        min-width: 220px !important;
+        padding: 1.5rem !important;
+    }
 }
