@@ -414,82 +414,34 @@ function initApp() {
         if (el) el.addEventListener('input', updateCapacityTotal);
     });
 
-    // Professional Long-Press Reveal (3-second hold on Footer Copyright)
+    // Admin Reveal (5-Tap on Footer Copyright) - v5.7 Simplified
     const footerReveal = document.getElementById('footer-reveal');
-    let pressTimer;
+    let tapCount = 0;
+    let tapTimer;
 
     if (footerReveal) {
-        const startPress = (e) => {
-            // Clear any existing timer safely
-            if (pressTimer) clearTimeout(pressTimer);
-
-            pressTimer = setTimeout(() => {
-                const pw = prompt("管理者パスワードを入力してください");
-                if (pw === state.settings.adminPassword || pw === 'admin') {
-                    isAdminAuth = true;
-                    sessionStorage.setItem('isAdminAuth', 'true');
-                    document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                    showToast('✨ 管理画面を表示します', 'success');
-                    currentAdminTab = 'tab-list';
-                    sessionStorage.setItem('currentAdminTab', 'tab-list');
-                    switchView(null, 'dashboard-view');
-                    switchAdminTab('tab-list');
-                } else if (pw !== null) {
-                    showToast('パスワードが違います', 'error');
-                }
-            }, 2000); // Changed to 2 seconds for better mobile experience
-        };
-
-        const endPress = () => {
-            clearTimeout(pressTimer);
-        };
-
-        // Desktop and Mobile Events
-        footerReveal.addEventListener('mousedown', startPress);
-        footerReveal.addEventListener('touchstart', (e) => {
-            // No preventDefault to allow potential scrolling if needed, but start timer
-            startPress(e);
-        });
-
-        footerReveal.addEventListener('mouseup', endPress);
-        footerReveal.addEventListener('mouseleave', endPress);
-        footerReveal.addEventListener('touchend', endPress);
-        footerReveal.addEventListener('touchcancel', endPress);
-
-        // Specifically for mobile, if the finger moves significantly, cancel the press
-        footerReveal.addEventListener('touchmove', (e) => {
-            // If they drag, it's not a long press
-            clearTimeout(pressTimer);
-        });
-
-        // --- NEW: 5-Tap Reveal for iOS/Mobile Reliability ---
-        let tapCount = 0;
-        let tapTimer;
         footerReveal.addEventListener('click', (e) => {
             tapCount++;
             clearTimeout(tapTimer);
 
             if (tapCount >= 5) {
                 tapCount = 0;
-                const pw = prompt("管理者パスワードを入力してください (Tap Access)");
+                const pw = prompt("管理者パスワードを入力してください");
                 if (pw === state.settings.adminPassword || pw === 'admin') {
                     isAdminAuth = true;
                     sessionStorage.setItem('isAdminAuth', 'true');
                     document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                    showToast('✨ 管理画面を表示します', 'success');
+                    showToast('✨ 管理者ログイン完了', 'success');
                     currentAdminTab = 'tab-list';
-                    sessionStorage.setItem('currentAdminTab', 'tab-list');
                     switchView(null, 'dashboard-view');
-                    switchAdminTab('tab-list');
                 } else if (pw !== null) {
                     showToast('パスワードが違います', 'error');
                 }
             } else {
-                tapTimer = setTimeout(() => { tapCount = 0; }, 500); // Reset if 500ms gaps
+                tapTimer = setTimeout(() => { tapCount = 0; }, 500);
             }
         });
-
-        // Prevent context menu (long-press menu) specifically on this element
+        // Block context menu
         footerReveal.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 
