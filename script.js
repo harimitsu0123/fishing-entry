@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v6.8.1: ATOMIC SYNC & FORCED RESET FIXED");
+        console.log("BORIJIN APP v6.8.2: SYNC STATUS HANG FIXED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -326,6 +326,7 @@ function updateSyncStatus(type) {
         if (text) text.textContent = '同期失敗';
         if (dot) { dot.className = 'sync-dot error'; }
     } else if (type === 'error-silent') {
+        if (text) text.textContent = '同期: 待機中';
         if (dot) { dot.className = 'sync-dot error'; }
     }
 }
