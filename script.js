@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.1.0: CONCURRENCY & ERROR RECOVERY ENABLED");
+        console.log("BORIJIN APP v7.1.2: CONCURRENCY & ERROR RECOVERY ENABLED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
