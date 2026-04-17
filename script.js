@@ -941,7 +941,7 @@ function showConfirmation() {
 
     // Basic Validation Check (HTML5 Native)
     if (!document.getElementById('registration-form').reportValidity()) {
-        showStatus("入力内容に不備があります。赤枠の部分をご確認ください。", "error");
+        showStatus("入力内容に不備があります。赤枠の部分をご確認ください。", "error", true);
         return;
     }
 
@@ -1350,12 +1350,12 @@ function resetForm() {
     window.scrollTo(0, 0);
 }
 
-function showStatus(msg, type) {
+function showStatus(msg, type, noScroll = false) {
     const div = document.getElementById('registration-status');
     div.innerHTML = msg;
     div.className = `alert alert-${type}`;
     div.classList.remove('hidden');
-    window.scrollTo(0, 0);
+    if (!noScroll) window.scrollTo(0, 0);
 }
 
 // Admin / Dashboard
