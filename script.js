@@ -391,6 +391,9 @@ async function syncToCloud() {
     }
 }
 
+function updateSyncStatus(type) {
+    const text = document.getElementById('sync-text');
+    const dot = document.getElementById('sync-dot');
     const containerNav = document.getElementById('sync-status-nav');
     const containerFooter = document.getElementById('sync-status-footer');
     
