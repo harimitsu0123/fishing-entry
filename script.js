@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.1.6: CONCURRENCY & DATA INTEGRITY FIX");
+        console.log("BORIJIN APP v7.2.0: ENHANCED SYNC & CACHE MANAGEMENT");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -188,6 +188,16 @@ function mergeData(local, cloud) {
     // 1. ローカル固有、またはローカルの方が新しいデータをマージ
     local.entries.forEach(lEntry => {
         if (!cloudMap.has(lEntry.id)) {
+            // v7.2: サーバー発行済みIDを持ち、かつクラウドの最終更新の方が新しい場合、
+            // それは「サーバーで削除された」とみなし、マージ（復活）させない。
+            const isServerId = /^[AMSH]-\d{3}$/.test(lEntry.id);
+            if (isServerId) {
+                const lTime = lEntry._ts || new Date(lEntry.lastModified || lEntry.timestamp || 0).getTime();
+                if (cloud.lastUpdated > lTime) {
+                    console.log(`[Sync] ${lEntry.id} is missing from server (deleted). Skipping.`);
+                    return;
+                }
+            }
             merged.entries.push(lEntry);
             merged.lastUpdated = Date.now();
         } else {
@@ -1363,6 +1373,16 @@ function showStatus(msg, type, noScroll = false) {
 }
 
 // Admin / Dashboard
+function clearLocalCache() {
+    if (!confirm("ブラウザに保存されているキャッシュを削除し、クラウドから最新データを再取得しますか？\n（現在送信中のデータがある場合は失われる可能性があります）")) {
+        return;
+    }
+    localStorage.removeItem('fishing_app_v3_data');
+    localStorage.removeItem('fishing_app_pending_reg');
+    showToast("キャッシュをクリアしました。再読み込みします...", "info");
+    setTimeout(() => location.reload(), 1000);
+}
+
 function updateDashboard() {
     try {
         const fishersIppan = sumCategoryFishers('一般');

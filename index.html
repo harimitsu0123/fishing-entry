@@ -583,13 +583,24 @@
                 <!-- Tab: Data Management -->
                 <div id="tab-data" class="admin-tab-content">
                     <div class="card border-danger">
-                        <h2>データ管理</h2>
+                        <h2>データ管理 (サーバー共有)</h2>
                         <p>全ての登録データを削除します。この操作は取り消せません。</p>
                         <div class="flex-gap mt-3">
                             <button id="reset-data" class="btn-danger">全データをリセット</button>
                             <button type="button" class="btn-outline" onclick="generateBulkTestData()"
                                 style="color:var(--secondary-color); border-color:var(--secondary-color)">
                                 🛠️ テストデータ生成 (80件)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card mt-4" style="border-left: 5px solid var(--accent-color);">
+                        <h2>端末のキャッシュ管理 (ブラウザ内)</h2>
+                        <p class="text-muted">「削除したはずのデータがまだ表示される」などの不整合が起きる場合に使用してください。ブラウザ内の古い記録を消去し、クラウドから最新データを強制的に再取得します。</p>
+                        <div class="mt-3">
+                            <button type="button" class="btn-outline" onclick="clearLocalCache()" 
+                                style="color:var(--accent-color); border-color:var(--accent-color); font-weight: bold;">
+                                🔄 ローカルキャッシュを初期化して再読込
                             </button>
                         </div>
                     </div>
@@ -688,7 +699,7 @@
         <div class="container"
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" style="cursor: default;">&copy; 2026 釣り大会 実行委員会</p>
-            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.1.6</span>
+            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.2.0</span>
         </div>
     </footer>
 
