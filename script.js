@@ -328,6 +328,13 @@ window.copyShareUrl = function(inputId) {
     }
 }
 
+window.openShareUrl = function(inputId) {
+    const el = document.getElementById(inputId);
+    if (el && el.value) {
+        window.open(el.value, '_blank');
+    }
+}
+
 /**
  * v7.0: 送信中データの二重登録チェック & 復旧ロジック
  */
