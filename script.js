@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.2.0: ENHANCED SYNC & CACHE MANAGEMENT");
+        console.log("BORIJIN APP v7.2.1: UI CLEANUP & EDIT-LINK ADDITION");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -408,20 +408,8 @@ async function syncToCloud() {
 function updateSyncStatus(type) {
     const text = document.getElementById('sync-text');
     const dot = document.getElementById('sync-dot');
-    const containerNav = document.getElementById('sync-status-nav');
     const containerFooter = document.getElementById('sync-status-footer');
     
-    // Update Nav Badge
-    if (containerNav) {
-        containerNav.classList.remove('hidden');
-        const navText = containerNav.querySelector('.sync-text');
-        if (type === 'syncing') navText.textContent = '同期中...';
-        else if (type === 'success') {
-            navText.textContent = '同期完了';
-            setTimeout(() => { navText.textContent = '同期: 待機中'; }, 2000);
-        } else navText.textContent = '同期待機';
-    }
-
     // Update Footer Indicator
     if (containerFooter) containerFooter.classList.remove('hidden');
 
