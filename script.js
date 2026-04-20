@@ -1604,6 +1604,7 @@ function updateDashboard() {
 }
 
 // v7.3.0: Public Statistics Rendering (Security Optimized)
+window.renderPublicStats = function() {
     const validEntries = state.entries.filter(e => e.status !== 'cancelled');
     
     const categories = [
