@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=7.6.5">
+    <link rel="stylesheet" href="style.css?v=7.6.6">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -571,7 +571,19 @@
                 <!-- Tab: Statistics -->
                 <div id="tab-stats" class="admin-tab-content">
                     <div class="card">
-                        <h2>統計・分析（全体）</h2>
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <h2>統計・分析</h2>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.3rem 0.6rem; border-radius: 8px;">
+                                <label for="stats-filter-source" style="font-size: 0.8rem; font-weight: 700; color: #475569;">絞り込み:</label>
+                                <select id="stats-filter-source" onchange="renderBreakdownStats(this.value)" style="border: none; background: transparent; font-size: 0.85rem; font-weight: 700; color: var(--primary-color); outline: none; cursor: pointer;">
+                                    <option value="all">全体表示</option>
+                                    <option value="一般">一般枠</option>
+                                    <option value="みん釣り">みん釣り枠</option>
+                                    <option value="水宝">水宝枠</option>
+                                    <option value="ハリミツ">ハリミツ枠</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="breakdown-grid mt-4">
                             <div class="breakdown-card">
                                 <div class="section-title">年代別 集計</div>
@@ -732,8 +744,28 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="form-actions mt-4">
-                    <button class="btn-secondary w-100" onclick="resetForm(); switchView(null, 'registration-view')">戻る</button>
+
+                <!-- v7.6.6: Added breakdown stats for Mintsuri Coordinator -->
+                <div class="mt-5" style="border-top: 2px solid #e1e8ed; padding-top: 2rem;">
+                    <h3 style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 1.5rem;">📊 みん釣り枠 分析データ</h3>
+                    <div class="breakdown-grid">
+                        <div class="breakdown-card">
+                            <div class="section-title">年代別</div>
+                            <div id="mintsuri-age-breakdown-list" class="stats-list"></div>
+                        </div>
+                        <div class="breakdown-card">
+                            <div class="section-title">性別</div>
+                            <div id="mintsuri-gender-breakdown-list" class="stats-list"></div>
+                        </div>
+                        <div class="breakdown-card">
+                            <div class="section-title">地域別</div>
+                            <div id="mintsuri-region-breakdown-list" class="stats-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions mt-4" style="border-top: 1px solid #eee; padding-top: 1rem; opacity: 0.5;">
+                    <p class="small text-muted text-center">※この画面はみん釣り担当者専用です</p>
                 </div>
             </div>
         </section>
@@ -790,7 +822,7 @@
         <div class="container"
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" style="cursor: default;">&copy; 2026 釣り大会 実行委員会</p>
-            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.6.5</span>
+            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.6.6</span>
         </div>
     </footer>
 
@@ -802,7 +834,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=7.6.5"></script>
+    <script src="script.js?v=7.6.6"></script>
 </body>
 
 </html>

@@ -1371,25 +1371,29 @@ function fillFormForEdit(entry) {
     const cancelEditBtn = document.getElementById('cancel-edit');
     if (cancelEditBtn) cancelEditBtn.classList.remove('hidden');
 
-    // For admin categories, show all possible sources if admin
+    // v7.6.6: Enable catgory migration for admins. Ensure all categories are available.
     if (isAdminAuth || isAdminAuthAction) {
-        ['水宝', 'ハリミツ'].forEach(source => {
+        ['一般', 'みん釣り', '水宝', 'ハリミツ'].forEach(source => {
             let sourceRadio = document.querySelector(`input[name="reg-source"][value="${source}"]`);
             if (!sourceRadio) {
                 const selector = document.getElementById('main-source-selector');
-                const badgeClass = source === '水宝' ? 'badge-suiho' : 'badge-harimitsu';
+                const badgeClassMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
+                const badgeClass = badgeClassMap[source] || 'badge-ippan';
                 const label = document.createElement('label');
                 label.className = 'source-option admin-only temp-option';
                 label.innerHTML = `
                     <input type="radio" name="reg-source" value="${source}" required>
                     <span class="source-label">
                         <span class="badge ${badgeClass}">${source}</span>
-                        ${source}受付
+                        ${source}枠として保存
                     </span>
                 `;
                 selector.appendChild(label);
             }
         });
+        // Make source selector group visible if it was hidden
+        const sourceGroup = document.getElementById('source-selector-group');
+        if (sourceGroup) sourceGroup.classList.remove('hidden');
     }
 
     let sourceRadio = document.querySelector(`input[name="reg-source"][value="${entry.source}"]`);
@@ -1577,7 +1581,8 @@ function updateDashboard() {
             `;
 
 
-            const regTime = e.timestamp ? new Date(e.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
+            // v7.6.6: Use uniform MM/DD HH:mm format
+            const regTime = e.timestamp ? new Date(e.timestamp).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--:--';
 
             tr.innerHTML = `
                 <td><span class="id-badge">${e.id}</span></td>
@@ -1634,8 +1639,14 @@ function updateSplitUI(prefix, current, max, observers) {
     }
 }
 
-function renderBreakdownStats() {
-    const validEntries = state.entries.filter(e => e.status !== 'cancelled');
+// v7.6.6: Generalize stats for category filtering and target prefixes
+function renderBreakdownStats(filterSource = 'all', prefix = '') {
+    const validEntries = state.entries.filter(e => {
+        if (e.status === 'cancelled') return false;
+        if (filterSource !== 'all' && e.source !== filterSource) return false;
+        return true;
+    });
+
     const ageCount = {};
     const genderCount = { 'male': 0, 'female': 0, 'other': 0 };
     const regionCount = {};
@@ -1649,7 +1660,7 @@ function renderBreakdownStats() {
     });
 
     // Render Age
-    const ageList = document.getElementById('age-breakdown-list');
+    const ageList = document.getElementById(prefix + 'age-breakdown-list');
     if (ageList) {
         ageList.innerHTML = Object.entries(ageCount)
             .sort((a,b) => {
@@ -1665,7 +1676,7 @@ function renderBreakdownStats() {
     }
 
     // Render Genders
-    const genderList = document.getElementById('gender-breakdown-list');
+    const genderList = document.getElementById(prefix + 'gender-breakdown-list');
     if (genderList) {
         genderList.innerHTML = Object.entries(genderCount)
             .filter(([_, count]) => count > 0)
@@ -1678,7 +1689,7 @@ function renderBreakdownStats() {
     }
 
     // Render Regions
-    const regionList = document.getElementById('region-breakdown-list');
+    const regionList = document.getElementById(prefix + 'region-breakdown-list');
     if (regionList) {
         regionList.innerHTML = Object.entries(regionCount)
             .sort((a,b) => b[1] - a[1])
@@ -1760,15 +1771,21 @@ window.renderMintsuriCoordinatorView = function() {
             </div>`;
     }
 
-    list.innerHTML = mintsuriEntries.slice().reverse().map(e => `
+    list.innerHTML = mintsuriEntries.slice().reverse().map(e => {
+        const regTime = e.timestamp ? new Date(e.timestamp).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--:--';
+        return `
         <tr>
             <td><span class="id-badge">${e.id}</span></td>
             <td><strong>${e.groupName}</strong></td>
             <td>${e.representative}</td>
             <td>${e.fishers} / ${e.observers}</td>
-            <td><small>${new Date(e.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small></td>
+            <td><small>${regTime}</small></td>
         </tr>
-    `).join('') || '<tr><td colspan="5" style="text-align:center; padding:2rem;">まだ登録はありません</td></tr>';
+    `;
+    }).join('') || '<tr><td colspan="5" style="text-align:center; padding:2rem;">まだ登録はありません</td></tr>';
+
+    // v7.6.6: Also render breakdown for Mintsuri view
+    renderBreakdownStats('みん釣り', 'mintsuri-');
 }
 
 window.exportMintsuriCSV = function() {
