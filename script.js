@@ -1821,12 +1821,12 @@ function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent)
     container.innerHTML = `
         <div class="stats-summary-grid">
             <div class="summary-card">
-                <div class="summary-label">総登録グループ</div>
-                <div class="summary-value" id="total-registrations">${groups} <small>組</small></div>
-            </div>
-            <div class="summary-card">
                 <div class="summary-label">釣り参加者合計</div>
                 <div class="summary-value"><span id="current-fishers">${fishers}</span> <small>/ ${state.settings.capacityTotal}</small></div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">総登録グループ</div>
+                <div class="summary-value" id="total-registrations">${groups} <small>組</small></div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">見学者合計</div>
