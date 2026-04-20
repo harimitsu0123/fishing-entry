@@ -283,16 +283,26 @@ body.view-reception-view {
 .form-row {
     display: flex;
     gap: 1.5rem;
-    align-items: flex-start;
+    align-items: flex-end; /* Align inputs to the bottom */
     flex-wrap: wrap;
+    margin-top: 1rem; /* Add breathing room above rows */
 }
 
 label {
     display: block;
-    margin-bottom: 0.8rem; /* Increased from 0.6rem */
+    margin-bottom: 0.8rem;
     font-weight: 700;
-    font-size: 1.05rem; /* Slightly larger */
+    font-size: 1.05rem;
     color: var(--text-color);
+    min-height: 1.4em; /* Ensure at least 1 line height for alignment */
+}
+
+/* Fix for label wrapping causing misalignment in rows */
+.form-row .form-group label {
+    min-height: 2.8rem; /* Enough for 2 lines on mobile */
+    display: flex;
+    align-items: flex-end; /* Keep label text text at the bottom near input */
+    padding-bottom: 2px;
 }
 
 .required {
