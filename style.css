@@ -1420,7 +1420,7 @@ th {
 .badge-suiho { background-color: #00b894 !important; color: white !important; }
 .badge-harimitsu { background-color: #e17055 !important; color: white !important; }
 
-/* --- Global Sync Status Indicator (v6.5) --- */
+/* --- Global Sync Status Indicator (v7.3.2) --- */
 .sync-status-indicator {
     position: fixed;
     right: 1rem;

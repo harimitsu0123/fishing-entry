@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.3.1: ADMIN EDIT FIX");
+        console.log("BORIJIN APP v7.3.2: TIMEFRAME ENFORCEMENT & UI FIX");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1037,6 +1037,19 @@ function hideConfirmation() {
 }
 
 async function handleRegistration() {
+    // v7.3.2: Submission Timeframe Guard
+    const now = new Date();
+    if (!isAdminAuth) {
+        if (state.settings.startTime && now < new Date(state.settings.startTime)) {
+            alert('受付開始前です。まだ申し込みはできません。');
+            return;
+        }
+        if (state.settings.deadline && now > new Date(state.settings.deadline)) {
+            alert('受付は終了しました。');
+            return;
+        }
+    }
+
     // Re-gather data (already validated)
     const editId = document.getElementById('edit-entry-id').value;
     const pRows = document.querySelectorAll('.participant-row');
@@ -2710,7 +2723,7 @@ window.renderIkesuWorkspace = function () {
             </div>
             <div class="ikesu-capacity ${isOver ? 'over' : ''}">
                 釣り: ${data.fishers} / ${ikesu.capacity} 名
-                <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.3.1</span>
+                <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.3.2</span>
                 <span style="color:var(--text-muted); font-weight:normal; margin-left: 0.5rem;">(見学: ${data.observers})</span>
             </div>
             <div class="ikesu-drop-area mt-2">
