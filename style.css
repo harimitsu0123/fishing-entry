@@ -46,7 +46,8 @@ body {
 
 
 .container.view-wide {
-    max-width: 1450px;
+    max-width: 98%; /* Use almost full screen width for dashboard/reception */
+    width: 1800px;  /* But cap it for extremely wide screens to stay usable */
 }
 
 
@@ -752,6 +753,24 @@ textarea:focus {
     overflow-y: auto;
 }
 
+th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e1e8ed;
+}
+
+th {
+    background-color: #f8fafc;
+    font-weight: 800;
+    color: #475569;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
 .reception-group-item {
     padding: 0.75rem 1rem;
     border-bottom: 1px solid #eee;
@@ -900,6 +919,7 @@ textarea:focus {
     .container {
         margin: 0 !important;
         padding: 0 0.75rem !important;
+        max-width: 98% !important;
     }
 
     .navbar {
@@ -1368,6 +1388,19 @@ textarea:focus {
     max-width: 500px;
     width: 100%;
     border: 1px solid #e1e8ed;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1.5rem;
 }
 
 .timeframe-message h2 {
