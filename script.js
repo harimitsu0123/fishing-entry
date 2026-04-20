@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.2.6: DASHBOARD WIDE-MODE ACTIVATED");
+        console.log("BORIJIN APP v7.2.7: DASHBOARD COLUMNS & DENSITY FIX");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1434,19 +1434,20 @@ function updateDashboard() {
             `;
 
 
+            const regTime = e.registeredAt ? new Date(e.registeredAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
+
             tr.innerHTML = `
                 <td><span class="id-badge">${e.id}</span></td>
                 <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}">${e.source}</span></td>
                 <td><div style="font-weight:800; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}">${e.groupName}</div></td>
                 <td>${pSummary}</td>
                 <td><small>${e.fishers}/${e.observers}</small></td>
+                <td><span style="font-size:0.75rem; font-weight:700;">${statusLabel}</span></td>
+                <td><small>${regTime}</small></td>
                 <td>
-                    <div style="display:flex; flex-direction:column; gap:0.2rem; align-items:center;">
-                        <span style="font-size:0.75rem; font-weight:700;">${statusLabel}</span>
-                        <div style="display:flex; gap:0.3rem;">
-                            <button class="btn-check-in ${e.status !== 'pending' && e.status !== 'cancelled' ? 'active' : ''}" onclick="jumpToReception('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''}>受付</button>
-                            <button class="btn-text" onclick="requestAdminEdit('${e.id}')" style="font-size:0.7rem">修正</button>
-                        </div>
+                    <div style="display:flex; gap:0.3rem;">
+                        <button class="btn-check-in ${e.status !== 'pending' && e.status !== 'cancelled' ? 'active' : ''}" onclick="jumpToReception('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''}>受付</button>
+                        <button class="btn-text" onclick="requestAdminEdit('${e.id}')" style="font-size:0.7rem">修正</button>
                     </div>
                 </td>
             `;
@@ -2606,7 +2607,7 @@ window.renderIkesuWorkspace = function () {
             </div>
             <div class="ikesu-capacity ${isOver ? 'over' : ''}">
                 釣り: ${data.fishers} / ${ikesu.capacity} 名
-                <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.2.6</span>
+                <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.2.7</span>
                 <span style="color:var(--text-muted); font-weight:normal; margin-left: 0.5rem;">(見学: ${data.observers})</span>
             </div>
             <div class="ikesu-drop-area mt-2">
