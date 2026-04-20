@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.2.4: PASSWORD VISIBILITY UPDATE");
+        console.log("BORIJIN APP v7.2.5: CACHE BUSTING ENABLED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -2604,7 +2604,7 @@ window.renderIkesuWorkspace = function () {
             </div>
             <div class="ikesu-capacity ${isOver ? 'over' : ''}">
                 釣り: ${data.fishers} / ${ikesu.capacity} 名
-                <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.2.4</span>
+                <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.2.5</span>
                 <span style="color:var(--text-muted); font-weight:normal; margin-left: 0.5rem;">(見学: ${data.observers})</span>
             </div>
             <div class="ikesu-drop-area mt-2">
