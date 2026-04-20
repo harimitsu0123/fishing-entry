@@ -252,19 +252,32 @@ body.view-reception-view {
 }
 
 .section-title {
-    font-size: 1.15rem;
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 800;
     color: var(--primary-color);
-    margin: 2rem 0 1rem 0;
-    padding: 0.5rem 1rem;
+    margin: 3.5rem 0 1.5rem 0; /* Increased margin */
+    padding: 0.6rem 1.2rem;
     background: #f0f7ff;
-    border-radius: 6px;
-    border-left: 4px solid var(--primary-color);
+    border-radius: 8px;
+    border-left: 5px solid var(--primary-color);
+}
+
+.form-section-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    border: 2px solid #e1e8ed;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.form-section-card .form-group:last-child {
+    margin-bottom: 0;
 }
 
 /* Form Elements - High Contrast & Large Targets */
 .form-group {
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.8rem; /* Increased from 1.2rem */
 }
 
 .form-row {
@@ -276,10 +289,9 @@ body.view-reception-view {
 
 label {
     display: block;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.8rem; /* Increased from 0.6rem */
     font-weight: 700;
-    font-size: 1rem;
-    /* Slightly larger for legibility */
+    font-size: 1.05rem; /* Slightly larger */
     color: var(--text-color);
 }
 

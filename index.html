@@ -52,50 +52,52 @@
                     </div>
 
 
-                    <div class="form-row">
-                        <!-- Specialized source selector (hidden by default) -->
-                        <div class="form-group hidden" id="source-selector-group" style="margin-bottom: 0;">
-                            <label>受付区分</label>
-                            <div class="source-selector" id="main-source-selector">
-                                <label class="source-option">
-                                    <input type="radio" name="reg-source" value="一般" checked required>
-                                    <span class="source-label">
-                                        <span class="badge badge-ippan">一般</span>
-                                    </span>
-                                </label>
+                    <div class="form-section-card">
+                        <div class="form-row">
+                            <!-- Specialized source selector (hidden by default) -->
+                            <div class="form-group hidden" id="source-selector-group" style="margin-bottom: 0;">
+                                <label>受付区分</label>
+                                <div class="source-selector" id="main-source-selector">
+                                    <label class="source-option">
+                                        <input type="radio" name="reg-source" value="一般" checked required>
+                                        <span class="source-label">
+                                            <span class="badge badge-ippan">一般</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="flex: 1.5;">
+                                <label for="group-name">グループ名 <span class="required">(※必須)</span></label>
+                                <input type="text" id="group-name" required placeholder="例：チーム・シーサイド">
+                                <small
+                                    style="display:block; font-weight:normal; font-size: 0.75rem; color: var(--primary-color);">※個人参加は「個人」または自分の名前</small>
                             </div>
                         </div>
 
-                        <div class="form-group" style="flex: 1.5;">
-                            <label for="group-name">グループ名 <span class="required">(※必須)</span></label>
-                            <input type="text" id="group-name" required placeholder="例：チーム・シーサイド">
-                            <small
-                                style="display:block; font-weight:normal; font-size: 0.75rem; color: var(--primary-color);">※個人参加は「個人」または自分の名前</small>
+                        <div class="form-group">
+                            <label for="representative-name">代表者氏名 <span class="required">(※必須)</span></label>
+                            <input type="text" id="representative-name" required placeholder="例：山田 太郎">
                         </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="representative-name">代表者氏名 <span class="required">(※必須)</span></label>
-                        <input type="text" id="representative-name" required placeholder="例：山田 太郎">
-                    </div>
-                    <div class="form-group">
-                        <label for="rep-phone">電話番号 <span class="required">(※必須)</span></label>
-                        <input type="tel" id="rep-phone" required placeholder="090-0000-0000">
-                    </div>
-                    <div class="form-group">
-                        <label for="rep-email">メールアドレス <span class="required">(※必須)</span></label>
-                        <input type="email" id="rep-email" required placeholder="example@mail.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="rep-email-confirm">メールアドレス（確認用） <span class="required">(※必須)</span></label>
-                        <input type="email" id="rep-email-confirm" required placeholder="もう一度入力してください（コピー不可）">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-password">編集用パスワード <span class="required">(※必須)</span></label>
-                        <input type="password" id="edit-password" required minlength="4"
-                            placeholder="例：fish2025（4文字以上）">
-                        <small class="text-muted"
-                            style="display:block; margin-top:4px; font-size: 0.75rem;">※<strong>4文字以上</strong>で設定。内容変更に必要です。必ず覚えておいてください。</small>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label for="rep-phone">電話番号 <span class="required">(※必須)</span></label>
+                                <input type="tel" id="rep-phone" required placeholder="090-0000-0000">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="edit-password">編集用パスワード <span class="required">(※必須)</span></label>
+                                <input type="password" id="edit-password" required minlength="4"
+                                    placeholder="例：fish2025">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="rep-email">メールアドレス <span class="required">(※必須)</span></label>
+                            <input type="email" id="rep-email" required placeholder="example@mail.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="rep-email-confirm">メールアドレス（確認用） <span class="required">(※必須)</span></label>
+                            <input type="email" id="rep-email-confirm" required placeholder="もう一度入力してください">
+                        </div>
                     </div>
 
                     <div class="section-title">参加者リスト（釣り / 見学）

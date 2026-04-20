@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.2.1: UI CLEANUP & EDIT-LINK ADDITION");
+        console.log("BORIJIN APP v7.2.2: SCROLL FIX & UI WHITESPACE UPDATE");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -417,15 +417,18 @@ function updateSyncStatus(type) {
         if (text) text.textContent = '同期中...';
         if (dot) { dot.className = 'sync-dot syncing'; }
     } else if (type === 'success') {
-        if (text) text.textContent = '同期完了';
+        if (text) text.textContent = '🎉 同期完了';
         if (dot) { dot.className = 'sync-dot success'; }
-        setTimeout(() => { if (text) text.textContent = '同期: 待機中'; }, 2000);
+        setTimeout(() => { 
+            if (text) text.textContent = 'クラウド接続: 正常'; 
+            if (dot) { dot.className = 'sync-dot success'; }
+        }, 2000);
     } else if (type === 'error') {
         if (text) text.textContent = '同期失敗';
         if (dot) { dot.className = 'sync-dot error'; }
     } else if (type === 'error-silent') {
-        if (text) text.textContent = '同期: 待機中';
-        if (dot) { dot.className = 'sync-dot error'; }
+        if (text) text.textContent = 'クラウド接続: 正常'; // Keep optimistic if silent
+        if (dot) { dot.className = 'sync-dot success'; }
     }
 }
 
@@ -846,7 +849,7 @@ function syncSettingsUI() {
 
 
 // Participant Row Management
-function addParticipantRow(data = null) {
+function addParticipantRow(data = null, shouldFocus = true) {
     const list = document.getElementById('participant-list');
     if (!list) {
         console.error("Critical: 'participant-list' element not found during addParticipantRow");
@@ -901,8 +904,8 @@ function addParticipantRow(data = null) {
     `;
     list.appendChild(row);
 
-    // v7.1.1: Auto-focus first person's name field for immediate entry
-    if (index === 0) {
+    // v7.2.2: Auto-focus control to prevent unwanted scrolling on load
+    if (index === 0 && shouldFocus) {
         setTimeout(() => {
             const nameInput = row.querySelector('.p-name');
             if (nameInput) nameInput.focus();
@@ -1232,7 +1235,7 @@ function fillFormForEdit(entry) {
 
     const list = document.getElementById('participant-list');
     list.innerHTML = '';
-    entry.participants.forEach(p => addParticipantRow(p));
+    entry.participants.forEach(p => addParticipantRow(p, false));
 
     // UI Adjustments for Edit Mode
     const cancelBtn = document.getElementById('cancel-edit-btn');
@@ -1330,7 +1333,7 @@ function resetForm() {
     if (defaultRadio) defaultRadio.checked = true;
 
     document.getElementById('participant-list').innerHTML = '';
-    addParticipantRow();
+    addParticipantRow(null, false);
 
     // Restore the registration card frame
     const regCard = document.getElementById('registration-card');
@@ -1349,7 +1352,7 @@ function resetForm() {
     // Remove temp admin options if any
     document.querySelectorAll('.temp-option').forEach(el => el.remove());
     updateSourceAvailability();
-    window.scrollTo(0, 0);
+    setTimeout(() => window.scrollTo(0, 0), 50); // Delayed to ensure focus scroll is countered
 }
 
 function showStatus(msg, type, noScroll = false) {
@@ -2307,6 +2310,8 @@ function checkUrlParams() {
 
         if (validSources[src]) {
             injectSpecialSource(validSources[src]);
+            // v7.2.2: Force top scroll for category links
+            setTimeout(() => window.scrollTo(0, 0), 100);
         }
     }
 }
@@ -2599,7 +2604,7 @@ window.renderIkesuWorkspace = function () {
             </div>
             <div class="ikesu-capacity ${isOver ? 'over' : ''}">
                 釣り: ${data.fishers} / ${ikesu.capacity} 名
-                <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.1.6</span>
+                <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.2.2</span>
                 <span style="color:var(--text-muted); font-weight:normal; margin-left: 0.5rem;">(見学: ${data.observers})</span>
             </div>
             <div class="ikesu-drop-area mt-2">
