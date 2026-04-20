@@ -102,6 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function restoreUIState() {
+    // v7.6.1: If URL has a 'view' parameter, DON'T restore previous view
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('view')) return;
+
     if (currentViewId && currentViewId !== 'registration-view') {
         const lastBtn = document.querySelector(`.nav-btn[data-target="${currentViewId}"]`);
         switchView(lastBtn, currentViewId);
@@ -276,14 +280,48 @@ function finalizeLoad() {
     updateSourceAvailability();
     syncSettingsUI();
 
-    // v7.3.0: Update public stats if visible
-    const publicStatsView = document.getElementById('public-stats-view');
-    if (publicStatsView && publicStatsView.style.display !== 'none') {
-        renderPublicStats();
-    }
+    // v7.6.1: Run URL parameter check AFTER loading is fully settled
+    checkUrlParams();
+
+    // v7.6.1: Initialize specialized URL display in Admin Tab
+    generateSpecialUrls();
 
     // v7.0: 自動復旧チェック（再読み込み時）
     setTimeout(checkPendingRegistration, 500);
+}
+
+function generateSpecialUrls() {
+    const baseUrl = window.location.href.split('?')[0];
+    
+    const setVal = (id, url) => {
+        const el = document.getElementById(id);
+        if (el) el.value = url;
+    };
+
+    setVal('url-stats', `${baseUrl}?view=stats`);
+    setVal('url-mintsuri', `${baseUrl}?view=mintsuri`);
+    setVal('url-harimitsu-proxy', `${baseUrl}?src=harimitsu`);
+    setVal('url-suiho-proxy', `${baseUrl}?src=suiho`);
+}
+
+window.copyShareUrl = function(inputId) {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    
+    el.select();
+    el.setSelectionRange(0, 99999); // Mobile
+    
+    try {
+        navigator.clipboard.writeText(el.value).then(() => {
+            showToast('📋 クリップボードにコピーしました', 'success');
+        }).catch(() => {
+            // Fallback for older browsers or non-https
+            document.execCommand('copy');
+            showToast('📋 コピーしました（ブラウザ機能）', 'success');
+        });
+    } catch (err) {
+        showToast('コピーに失敗しました', 'error');
+    }
 }
 
 /**

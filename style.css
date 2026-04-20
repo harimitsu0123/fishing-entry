@@ -242,6 +242,14 @@ body.view-reception-view {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    white-space: nowrap; /* Prevents vertical wrapping (v7.6.1) */
+}
+
+.source-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap; /* v7.6.1: Force single line on mobile */
 }
 
 .card h2::before {
