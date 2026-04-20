@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.3.0: PUBLIC STATS & CACHE BUSTING");
+        console.log("BORIJIN APP v7.3.1: ADMIN EDIT FIX");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1247,9 +1247,16 @@ function fillFormForEdit(entry) {
     const cancelBtn = document.getElementById('cancel-edit-btn');
     if (cancelBtn) cancelBtn.classList.remove('hidden');
 
-    // Ensure all success/confirm sections are hidden
+    // Ensure all success/confirm sections are hidden, and FORM is shown
+    document.getElementById('registration-form').classList.remove('hidden');
     document.getElementById('confirmation-section').classList.add('hidden');
     document.getElementById('registration-result').classList.add('hidden');
+    
+    const regCard = document.getElementById('registration-card');
+    if (regCard) regCard.classList.remove('hidden');
+    
+    // Switch to registration-view if not already there (safety)
+    // switchView(null, 'registration-view'); 
     
     // Show Admin Actions if triggered from dashboard
     const adminActions = document.getElementById('admin-extra-actions');
@@ -2703,7 +2710,7 @@ window.renderIkesuWorkspace = function () {
             </div>
             <div class="ikesu-capacity ${isOver ? 'over' : ''}">
                 釣り: ${data.fishers} / ${ikesu.capacity} 名
-                <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.3.0</span>
+                <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.3.1</span>
                 <span style="color:var(--text-muted); font-weight:normal; margin-left: 0.5rem;">(見学: ${data.observers})</span>
             </div>
             <div class="ikesu-drop-area mt-2">
