@@ -68,7 +68,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.8.4: T-SHIRT MIGRATION HOTFIX");
+        console.log("BORIJIN APP v7.8.5: NAVIGATION HISTORY & HEALTH CHECK");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -760,15 +760,21 @@ function switchView(btnElement, targetId) {
     currentViewId = targetId;
     sessionStorage.setItem('currentViewId', targetId);
 
-    // v7.7.2: Sync URL parameter with current section ID
+    // v7.8.5: Support browser back/forward buttons using pushState
     const url = new URL(window.location.href);
-    if (targetId === 'registration-view') {
-        url.searchParams.delete('view');
-    } else {
-        // Use the exact ID for better restoration on refresh
+    const currentParams = new URLSearchParams(window.location.search);
+    const newViewId = targetId === 'registration-view' ? null : targetId;
+    
+    if (newViewId) {
         url.searchParams.set('view', targetId);
+    } else {
+        url.searchParams.delete('view');
     }
-    window.history.replaceState({}, '', url);
+
+    // Only push if the view actually changed to avoid junk history
+    if (currentParams.get('view') !== newViewId) {
+        window.history.pushState({ viewId: targetId }, '', url);
+    }
 
     if (targetId === 'mintsuri-coordinator-view') {
         renderMintsuriCoordinatorView();
@@ -1752,6 +1758,11 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             `).join('') || '<div class="text-muted small">データなし</div>';
     }
 
+    // v7.8.5: Check for suspicious T-shirt sizes (Adults with 140) in current view
+    if (prefix === '') { // Only run for global stats
+        checkTshirtSizeAnomalies(validEntries);
+    }
+
     // Render Genders
     const genderList = document.getElementById(prefix + 'gender-breakdown-list');
     if (genderList) {
@@ -1799,6 +1810,50 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
                     <span class="stats-count">${count}枚</span>
                 </div>
             `).join('') || '<div class="text-muted small">データなし</div>';
+    }
+}
+
+function checkTshirtSizeAnomalies(entries) {
+    const anomalies = [];
+    entries.forEach(e => {
+        e.participants.forEach((p, idx) => {
+            // Suspicious if age is not elementary but size is 140
+            if (p.age !== 'elementary' && p.tshirtSize === '140') {
+                anomalies.push({
+                    id: e.id,
+                    groupName: e.groupName,
+                    pName: p.name,
+                    age: ageLabels[p.age] || p.age,
+                    pIndex: idx
+                });
+            }
+        });
+    });
+
+    const container = document.getElementById('global-stats-summary');
+    if (!container) return;
+
+    // Check if we already have the alert, if so remove it
+    const existingAlert = document.getElementById('tshirt-anomaly-alert');
+    if (existingAlert) existingAlert.remove();
+
+    if (anomalies.length > 0) {
+        const alert = document.createElement('div');
+        alert.id = 'tshirt-anomaly-alert';
+        alert.className = 'alert alert-info mt-4';
+        alert.style.borderLeft = '5px solid var(--error-color)';
+        alert.innerHTML = `
+            <div style="font-weight:bold; color:var(--error-color); margin-bottom:0.5rem;">⚠️ Tシャツサイズの確認推奨 (${anomalies.length}件)</div>
+            <div style="font-size:0.85rem; color:var(--text-color); margin-bottom:0.5rem;">
+                中学生以上の年代でサイズが「140」になっている方がいます。変更漏れの可能性があるため、名簿から内容をご確認ください。
+            </div>
+            <div style="max-height:120px; overflow-y:auto; font-size:0.8rem; background:rgba(0,0,0,0.03); padding:0.5rem; border-radius:4px;">
+                ${anomalies.map(a => `
+                    <div style="margin-bottom:0.25rem;">・[${a.id}] ${a.groupName} - ${a.pName} (${a.age})</div>
+                `).join('')}
+            </div>
+        `;
+        container.appendChild(alert);
     }
 }
 
@@ -2747,6 +2802,31 @@ function checkUrlParams() {
             setTimeout(() => window.scrollTo(0, 0), 100);
         }
     }
+
+    // v7.8.5: Listener for browser nav buttons (Back/Forward)
+    window.onpopstate = function(event) {
+        const params = new URLSearchParams(window.location.search);
+        const viewId = params.get('view') || 'registration-view';
+        console.log("BORIJIN APP: Popstate navigation to", viewId);
+        
+        // Restore view without adding to history (switch internal state)
+        const viewToSwitch = document.getElementById(viewId);
+        if (viewToSwitch && viewToSwitch.classList.contains('view')) {
+            currentViewId = viewId;
+            sessionStorage.setItem('currentViewId', viewId);
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            viewToSwitch.classList.add('active');
+            
+            // Sync nav buttons
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.target === viewId);
+            });
+
+            // Trigger specific view updates if needed
+            if (viewId === 'dashboard-view') updateDashboard();
+            if (viewId === 'mintsuri-coordinator-view') renderMintsuriCoordinatorView();
+        }
+    };
 }
 
 function injectSpecialSource(sourceName) {
