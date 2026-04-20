@@ -291,18 +291,18 @@ body.view-reception-view {
 
 /* Participant row density (v7.3.3) */
 .participant-row .form-group {
-    margin-bottom: 0.8rem !important;
+    margin-bottom: 0.4rem !important; /* Extremely tight */
 }
 
 .participant-row .form-row {
-    margin-top: 0.2rem !important;
-    gap: 0.75rem !important;
+    margin-top: 0.1rem !important;
+    gap: 0.5rem !important; /* Reduced for mobile flow (v7.5.2) */
 }
 
 .participant-row {
-    padding-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
     border-bottom: 1px dashed #eee;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .participant-row:last-child {
@@ -311,19 +311,18 @@ body.view-reception-view {
 
 label {
     display: block;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.4rem; /* Reduced for better density */
     font-weight: 700;
-    font-size: 1.05rem;
+    font-size: 0.95rem; /* Slightly smaller for density */
     color: var(--text-color);
-    min-height: 1.4em; /* Ensure at least 1 line height for alignment */
 }
 
 /* Fix for label wrapping causing misalignment in rows */
 .form-row .form-group label {
-    min-height: 2.8rem; /* Enough for 2 lines on mobile */
+    min-height: auto; /* Allow auto dynamic height */
     display: flex;
-    align-items: flex-end; /* Keep label text text at the bottom near input */
-    padding-bottom: 2px;
+    align-items: flex-end;
+    padding-bottom: 1px;
 }
 
 .required {
@@ -388,11 +387,11 @@ textarea:focus {
 /* Participant Card (Mobile/Desktop Optimized) */
 .participant-row {
     background: #ffffff;
-    padding: 1.5rem;
-    border-radius: 12px;
-    margin-bottom: 1.2rem;
+    padding: 1rem 0.85rem; /* Aggressively slimmed (v7.5.2) */
+    border-radius: 10px;
+    margin-bottom: 0.8rem;
     border: 2px solid #dee2e6;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.02);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -403,10 +402,10 @@ textarea:focus {
 /* Participant row header label */
 .participant-label {
     font-weight: bold;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     background: #f0f7ff;
-    padding: 0.5rem 1rem;
-    margin-bottom: 1rem;
+    padding: 0.3rem 0.75rem;
+    margin-bottom: 0.6rem;
     border-radius: 6px;
     border-left: 4px solid var(--primary-color);
 }
