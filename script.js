@@ -1577,7 +1577,7 @@ function updateDashboard() {
             `;
 
 
-            const regTime = e.registeredAt ? new Date(e.registeredAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
+            const regTime = e.timestamp ? new Date(e.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
 
             tr.innerHTML = `
                 <td><span class="id-badge">${e.id}</span></td>
