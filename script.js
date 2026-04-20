@@ -68,7 +68,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.8.6: T-SHIRT DEFAULT PROTECTION & MAPPING ENHANCEMENT");
+        console.log("BORIJIN APP v7.8.7: EXPANDED SEARCH (GENDER/TSHIRT)");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1631,15 +1631,19 @@ function updateDashboard() {
         list.innerHTML = '';
 
         state.entries.slice().reverse().forEach(e => {
-            // Search / Filter logic
+            // Search / Filter logic (v7.8.7 Expanded)
             const matchesEntrySearch = e.id.toLowerCase().includes(searchTerm) || e.groupName.toLowerCase().includes(searchTerm) || e.representative.toLowerCase().includes(searchTerm);
-            const pNames = e.participants.map(p => p.name).join(', ');
-            const pRegions = e.participants.map(p => p.region || "").join(', ');
             
-            const matchesParticipantSearch = pNames.toLowerCase().includes(searchTerm);
-            const matchesRegionSearch = pRegions.toLowerCase().includes(searchTerm);
+            const pNames = e.participants.map(p => p.name).join(' ');
+            const pRegions = e.participants.map(p => p.region || "").join(' ');
+            const pTshirts = e.participants.map(p => p.tshirtSize || "").join(' ');
+            const pGenders = e.participants.map(p => genderLabels[p.gender] || "").join(' ');
+            
+            // Full text search across all relevant fields
+            const combinedParticipantInfo = (pNames + " " + pRegions + " " + pTshirts + " " + pGenders).toLowerCase();
+            const matchesParticipantSearch = combinedParticipantInfo.includes(searchTerm);
 
-            if (!matchesEntrySearch && !matchesParticipantSearch && !matchesRegionSearch) return;
+            if (!matchesEntrySearch && !matchesParticipantSearch) return;
 
             if (dashboardFilter !== 'all' && e.source !== dashboardFilter) return;
 
@@ -1922,19 +1926,30 @@ window.renderMintsuriCoordinatorView = function() {
             </div>`;
     }
 
-    list.innerHTML = mintsuriEntries.slice().reverse().map(e => {
-        const regTime = e.timestamp ? new Date(e.timestamp).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--:--';
-        const repInfo = e.participants[0] || { name: e.representative, nickname: '' };
-        return `
-        <tr>
-            <td><span class="id-badge">${e.id}</span></td>
-            <td><strong>${e.groupName}</strong></td>
-            <td>${e.representative}${repInfo.nickname ? ` <small>(${repInfo.nickname})</small>` : ''}</td>
-            <td>${e.fishers} / ${e.observers}</td>
-            <td><small>${regTime}</small></td>
-        </tr>
-    `;
-    }).join('') || '<tr><td colspan="5" style="text-align:center; padding:2rem;">まだ登録はありません</td></tr>';
+    const searchTerm = (document.getElementById('mintsuri-search')?.value || "").toLowerCase();
+
+    list.innerHTML = mintsuriEntries.slice().reverse()
+        .filter(e => {
+            if (!searchTerm) return true;
+            const pNames = e.participants.map(p => p.name).join(' ');
+            const pGenders = e.participants.map(p => genderLabels[p.gender] || "").join(' ');
+            const pTshirts = e.participants.map(p => p.tshirtSize || "").join(' ');
+            const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pGenders} ${pTshirts}`.toLowerCase();
+            return combined.includes(searchTerm);
+        })
+        .map(e => {
+            const regTime = e.timestamp ? new Date(e.timestamp).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--:--';
+            const repInfo = e.participants[0] || { name: e.representative, nickname: '' };
+            return `
+            <tr>
+                <td><span class="id-badge">${e.id}</span></td>
+                <td><strong>${e.groupName}</strong></td>
+                <td>${e.representative}${repInfo.nickname ? ` <small>(${repInfo.nickname})</small>` : ''}</td>
+                <td>${e.fishers} / ${e.observers}</td>
+                <td><small>${regTime}</small></td>
+            </tr>
+        `;
+        }).join('') || '<tr><td colspan="5" style="text-align:center; padding:2rem;">該当する登録はありません</td></tr>';
 
     // v7.6.6: Also render breakdown for Mintsuri view
     renderBreakdownStats('みん釣り', 'mintsuri-');
@@ -2021,11 +2036,13 @@ function updateReceptionList() {
     });
 
     processedEntries.forEach(e => {
-        // Search Filter
-        const matchesSearch = e.id.toLowerCase().includes(searchTerm) ||
-            e.groupName.toLowerCase().includes(searchTerm) ||
-            e.representative.toLowerCase().includes(searchTerm);
-        if (!matchesSearch) return;
+        // Search Filter (v7.8.7 Expanded)
+        const pNames = e.participants.map(p => p.name).join(' ');
+        const pTshirts = e.participants.map(p => p.tshirtSize || "").join(' ');
+        const pGenders = e.participants.map(p => genderLabels[p.gender] || "").join(' ');
+        const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pTshirts} ${pGenders}`.toLowerCase();
+        
+        if (searchTerm && !combined.includes(searchTerm)) return;
 
         // Completion Filter
         if (!showCompleted && e.isCompleted) return;
@@ -3051,11 +3068,12 @@ window.renderIkesuWorkspace = function () {
         if (unassignedParts.length === 0) return;
 
         if (searchTerm) {
-            const matchesGroup = entry.groupName.toLowerCase().includes(searchTerm) ||
-                entry.representative.toLowerCase().includes(searchTerm) ||
-                String(unassignedParts.length) === searchTerm;
-            const matchesAnyPerson = unassignedParts.some(x => x.p.name.toLowerCase().includes(searchTerm));
-            if (!matchesGroup && !matchesAnyPerson) return;
+            const pNames = entry.participants.map(p => p.name).join(' ');
+            const pGenders = entry.participants.map(p => genderLabels[p.gender] || "").join(' ');
+            const pTshirts = entry.participants.map(p => p.tshirtSize || "").join(' ');
+            const combined = `${entry.id} ${entry.groupName} ${entry.representative} ${unassignedParts.length} ${pNames} ${pGenders} ${pTshirts}`.toLowerCase();
+            
+            if (!combined.includes(searchTerm)) return;
         }
 
         unassignedCount += unassignedParts.length;
