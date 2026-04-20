@@ -61,7 +61,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.2.8: STATS LAYOUT OPTIMIZATION");
+        console.log("BORIJIN APP v7.3.0: PUBLIC STATS & CACHE BUSTING");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -261,6 +261,12 @@ function finalizeLoad() {
     updateReceptionList();
     updateSourceAvailability();
     syncSettingsUI();
+
+    // v7.3.0: Update public stats if visible
+    const publicStatsView = document.getElementById('public-stats-view');
+    if (publicStatsView && publicStatsView.style.display !== 'none') {
+        renderPublicStats();
+    }
 
     // v7.0: 自動復旧チェック（再読み込み時）
     setTimeout(checkPendingRegistration, 500);
@@ -683,7 +689,7 @@ function switchView(btnElement, targetId) {
     // v6.6: Dynamic Width Control
     const container = document.querySelector('.container');
     if (container) {
-        if (targetId === 'dashboard-view' || targetId === 'reception-view') {
+        if (targetId === 'dashboard-view' || targetId === 'reception-view' || targetId === 'public-stats-view') {
             container.classList.add('view-wide');
             document.body.classList.add('view-wide');
         } else {
@@ -1404,7 +1410,20 @@ function updateDashboard() {
         updateSplitUI('suiho', fishersSuiho, state.settings.capacitySuiho, observersSuiho);
         updateSplitUI('harimitsu', fishersHarimitsu, state.settings.capacityHarimitsu, observersHarimitsu);
 
-        // Dashboard List Rendering (Fixed & Cleaned v5.4)
+        // v7.3: Individual special URLs
+        ['mintsuri', 'harimitsu', 'stats'].forEach(key => {
+            const el = document.getElementById(`url-${key}`);
+            if (el) {
+                const baseUrl = window.location.href.split('?')[0];
+                if (key === 'stats') {
+                    el.value = `${baseUrl}?view=stats`;
+                } else {
+                    el.value = `${baseUrl}?src=${encodeURIComponent(key)}`;
+                }
+            }
+        });
+
+        // Dashboard List Rendering (Fixed & Cleaned v7.3.0)
         const list = document.getElementById('entry-list');
         const searchTerm = document.getElementById('dashboard-search').value.toLowerCase();
         list.innerHTML = '';
@@ -1460,7 +1479,75 @@ function updateDashboard() {
     }
 }
 
-// Global Stats Rendering (v5.4 Global Scope)
+// v7.3.0: Public Statistics Rendering (Security Optimized)
+function renderPublicStats() {
+    const container = document.getElementById('public-stats-container');
+    if (!container) return;
+
+    const validEntries = state.entries.filter(e => e.status !== 'cancelled');
+    
+    const categories = [
+        { id: 'ippan', name: '一般', source: '一般', capacity: state.settings.capacityGeneral, color: 'ippan' },
+        { id: 'mintsuri', name: 'みん釣り', source: 'みん釣り', capacity: state.settings.capacityMintsuri, color: 'mintsuri' },
+        { id: 'suiho', name: '水宝', source: '水宝', capacity: state.settings.capacitySuiho, color: 'suiho' },
+        { id: 'harimitsu', name: 'ハリミツ', source: 'ハリミツ', capacity: state.settings.capacityHarimitsu, color: 'harimitsu' }
+    ];
+
+    let html = `<div class="public-stats-grid">`;
+
+    categories.forEach(cat => {
+        const catEntries = validEntries.filter(e => e.source === cat.source);
+        const count = catEntries.reduce((sum, e) => sum + e.fishers, 0);
+        const remaining = Math.max(0, cat.capacity - count);
+        const progress = Math.min(100, (count / cat.capacity) * 100);
+        const statusText = remaining === 0 ? '満員' : `あと ${remaining} 名`;
+
+        html += `
+            <div class="public-stat-card bg-light border-top-${cat.color}">
+                <div class="public-stat-label">
+                    <span>${cat.name}</span>
+                    <span class="badge ${count >= cat.capacity ? 'badge-danger' : 'badge-success'}">${statusText}</span>
+                </div>
+                <div class="public-stat-main">
+                    <span class="public-stat-value">${count}</span>
+                    <span class="public-stat-unit">名</span>
+                </div>
+                <div class="public-progress-container">
+                    <div class="public-progress bg-${cat.color}" style="width: ${progress}%"></div>
+                </div>
+                <div class="public-stat-capacity mt-3">
+                    <span>定員: ${cat.capacity} 名</span>
+                    <span>充足率: <strong>${Math.round(progress)}%</strong></span>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    
+    // Total Summary
+    const totalCount = validEntries.reduce((sum, e) => sum + e.fishers, 0);
+    const totalCapacity = state.settings.capacityGeneral + state.settings.capacityMintsuri + state.settings.capacitySuiho + state.settings.capacityHarimitsu;
+    
+    html += `
+        <div class="card mt-4" style="background:#2c3e50; color:white; border:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:0.9rem; opacity:0.8;">全てのカテゴリー 合計</div>
+                    <div style="font-size:2.5rem; font-weight:900;">${totalCount} <small style="font-size:1rem; opacity:0.8;">/ ${totalCapacity} 名</small></div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:0.8rem; opacity:0.7;">最終更新: ${new Date().toLocaleTimeString()}</div>
+                    <div style="font-size:1.2rem; font-weight:700; color:#3498db;">${totalCapacity - totalCount} 名 空きあり</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
+
+// Global Stats Rendering (v7.3.0 Global Scope)
 function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent) {
     const container = document.getElementById('global-stats-summary');
     if (!container) return;
@@ -2304,6 +2391,15 @@ function checkUrlParams() {
     const params = new URLSearchParams(window.location.search);
     const src = params.get('src');
 
+    const view = params.get('view');
+
+    // v7.3.0: Handle Public Stats View
+    if (view === 'stats') {
+        switchView('public-stats-view');
+        // Initial fetch will trigger render
+        return;
+    }
+
     if (src) {
         const validSources = {
             'mintsuri': 'みん釣り',
@@ -2607,7 +2703,7 @@ window.renderIkesuWorkspace = function () {
             </div>
             <div class="ikesu-capacity ${isOver ? 'over' : ''}">
                 釣り: ${data.fishers} / ${ikesu.capacity} 名
-                <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.2.8</span>
+                <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.3.0</span>
                 <span style="color:var(--text-muted); font-weight:normal; margin-left: 0.5rem;">(見学: ${data.observers})</span>
             </div>
             <div class="ikesu-drop-area mt-2">

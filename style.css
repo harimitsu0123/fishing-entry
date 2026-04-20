@@ -637,6 +637,88 @@ textarea:focus {
     color: #475569;
 }
 
+/* --- Public Stats Dashboard (v7.3) --- */
+.public-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.public-stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 20px;
+    border: 1px solid #e1e8ed;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    text-align: left;
+    transition: transform 0.2s ease;
+    border-top: 6px solid var(--primary-color);
+}
+
+.public-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.public-stat-label {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.public-stat-main {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.public-stat-value {
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: var(--text-dark);
+}
+
+.public-stat-unit {
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+
+.public-stat-capacity {
+    margin-top: auto;
+    font-size: 0.9rem;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.public-stat-capacity strong {
+    color: var(--primary-color);
+}
+
+.public-progress-container {
+    margin-top: 1rem;
+    height: 12px;
+    background: #ecf0f1;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.public-progress {
+    height: 100%;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bg-ippan { background: #0984e3 !important; }
+.bg-mintsuri { background: #6c5ce7 !important; }
+.bg-suiho { background: #00b894 !important; }
+.bg-harimitsu { background: #e17055 !important; }
+
 .stats-count {
     font-weight: 800;
     color: var(--primary-color);
