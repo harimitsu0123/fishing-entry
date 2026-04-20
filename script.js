@@ -68,7 +68,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.8.0: NAVIGATION & LIST IMPROVEMENTS");
+        console.log("BORIJIN APP v7.8.1: NAVIGATION RECOVERY & FIXES");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -752,14 +752,19 @@ function switchView(btnElement, targetId) {
     currentViewId = targetId;
     sessionStorage.setItem('currentViewId', targetId);
 
-    // v7.7.1: Sync URL parameter with current view to prevent "trapped" views on refresh
+    // v7.7.2: Sync URL parameter with current section ID
     const url = new URL(window.location.href);
     if (targetId === 'registration-view') {
         url.searchParams.delete('view');
     } else {
+        // Use the exact ID for better restoration on refresh
         url.searchParams.set('view', targetId);
     }
     window.history.replaceState({}, '', url);
+
+    if (targetId === 'mintsuri-coordinator-view') {
+        renderMintsuriCoordinatorView();
+    }
 
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -2692,16 +2697,25 @@ function checkUrlParams() {
     const params = new URLSearchParams(window.location.search);
     const src = params.get('src');
 
-    const view = params.get('view');
+    const viewId = params.get('view');
 
-    // v7.3.0: Handle Public Stats View
-    if (view === 'stats') {
-        switchView(null, 'public-stats-view');
-        return;
-    }
-    if (view === 'mintsuri') {
-        switchView(null, 'mintsuri-coordinator-view');
-        return;
+    // v7.8.1: Generic view restoration logic
+    if (viewId) {
+        const targetView = document.getElementById(viewId);
+        if (targetView && targetView.classList.contains('view')) {
+            switchView(null, viewId);
+            return;
+        }
+        
+        // Aliases for short/legacy URLs
+        if (viewId === 'stats') {
+            switchView(null, 'public-stats-view');
+            return;
+        }
+        if (viewId === 'mintsuri') {
+            switchView(null, 'mintsuri-coordinator-view');
+            return;
+        }
     }
 
     if (src) {
