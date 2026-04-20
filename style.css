@@ -626,7 +626,7 @@ textarea:focus {
 .stats-list {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem; /* Tighter gap */
+    gap: 0.2rem; /* Extremely tight gap (v7.8.3) */
 }
 
 .breakdown-grid {
@@ -638,12 +638,12 @@ textarea:focus {
 .breakdown-card {
     background: #f8fafc;
     border-radius: 12px;
-    padding: 1.2rem;
+    padding: 0.8rem; /* Reduced padding (v7.8.3) */
     border: 1px solid #e2e8f0;
 }
 
 .breakdown-card .section-title {
-    margin: 0 0 1rem 0 !important;
+    margin: 0 0 0.5rem 0 !important; /* Reduced margin (v7.8.3) */
     background: transparent;
     padding: 0;
     border-left: 3px solid var(--primary-color);
@@ -653,7 +653,7 @@ textarea:focus {
 .stats-item {
     display: flex;
     justify-content: space-between;
-    padding: 0.5rem 0.75rem;
+    padding: 0.25rem 0.6rem; /* Tightened row padding (v7.8.3) */
     background: #f8fafc;
     border-radius: 6px;
     font-size: 0.9rem;
