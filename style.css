@@ -256,7 +256,7 @@ body.view-reception-view {
     font-size: 1.25rem;
     font-weight: 800;
     color: var(--primary-color);
-    margin: 3.5rem 0 1.5rem 0; /* Increased margin */
+    margin: 1.5rem 0 1rem 0; /* Reduced from 3.5rem top margin (v7.3.3) */
     padding: 0.6rem 1.2rem;
     background: #f0f7ff;
     border-radius: 8px;
@@ -286,7 +286,27 @@ body.view-reception-view {
     gap: 1.5rem;
     align-items: flex-end; /* Align inputs to the bottom */
     flex-wrap: wrap;
-    margin-top: 1rem; /* Add breathing room above rows */
+    margin-top: 0.5rem; /* Reduced from 1rem (v7.3.3) */
+}
+
+/* Participant row density (v7.3.3) */
+.participant-row .form-group {
+    margin-bottom: 0.8rem !important;
+}
+
+.participant-row .form-row {
+    margin-top: 0.2rem !important;
+    gap: 0.75rem !important;
+}
+
+.participant-row {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed #eee;
+    margin-bottom: 0.75rem;
+}
+
+.participant-row:last-child {
+    border-bottom: none;
 }
 
 label {
