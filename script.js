@@ -1603,6 +1603,95 @@ function updateDashboard() {
     }
 }
 
+// v7.6.3: Restored missing helper functions
+function sumCategoryFishers(category) {
+    if (!state.entries) return 0;
+    return state.entries
+        .filter(e => e.source === category && e.status !== 'cancelled')
+        .reduce((sum, e) => sum + e.fishers, 0);
+}
+
+function sumCategoryObservers(category) {
+    if (!state.entries) return 0;
+    return state.entries
+        .filter(e => e.source === category && e.status !== 'cancelled')
+        .reduce((sum, e) => sum + e.observers, 0);
+}
+
+function updateSplitUI(prefix, current, max, observers) {
+    const currEl = document.getElementById(`curr-${prefix}`);
+    const maxEl = document.getElementById(`max-${prefix}`);
+    const obsEl = document.getElementById(`${prefix}-observers`);
+    const progEl = document.getElementById(`prog-${prefix}`);
+
+    if (currEl) currEl.textContent = current;
+    if (maxEl) maxEl.textContent = max;
+    if (obsEl) obsEl.textContent = observers;
+    
+    if (progEl) {
+        const percent = max > 0 ? Math.min(100, (current / max) * 100) : 0;
+        progEl.style.width = `${percent}%`;
+    }
+}
+
+function renderBreakdownStats() {
+    const validEntries = state.entries.filter(e => e.status !== 'cancelled');
+    const ageCount = {};
+    const genderCount = { 'male': 0, 'female': 0, 'other': 0 };
+    const regionCount = {};
+
+    validEntries.forEach(e => {
+        e.participants.forEach(p => {
+            if (p.age) ageCount[p.age] = (ageCount[p.age] || 0) + 1;
+            if (p.gender) genderCount[p.gender] = (genderCount[p.gender] || 0) + 1;
+            if (p.region) regionCount[p.region] = (regionCount[p.region] || 0) + 1;
+        });
+    });
+
+    // Render Age
+    const ageList = document.getElementById('age-breakdown-list');
+    if (ageList) {
+        ageList.innerHTML = Object.entries(ageCount)
+            .sort((a,b) => {
+                const order = Object.keys(ageLabels);
+                return order.indexOf(a[0]) - order.indexOf(b[0]);
+            })
+            .map(([age, count]) => `
+                <div class="stats-item">
+                    <span class="stats-label">${ageLabels[age] || age}</span>
+                    <span class="stats-count">${count}名</span>
+                </div>
+            `).join('') || '<div class="text-muted small">データなし</div>';
+    }
+
+    // Render Genders
+    const genderList = document.getElementById('gender-breakdown-list');
+    if (genderList) {
+        genderList.innerHTML = Object.entries(genderCount)
+            .filter(([_, count]) => count > 0)
+            .map(([key, count]) => `
+                <div class="stats-item">
+                    <span class="stats-label">${genderLabels[key] || key}</span>
+                    <span class="stats-count">${count}名</span>
+                </div>
+            `).join('') || '<div class="text-muted small">データなし</div>';
+    }
+
+    // Render Regions
+    const regionList = document.getElementById('region-breakdown-list');
+    if (regionList) {
+        regionList.innerHTML = Object.entries(regionCount)
+            .sort((a,b) => b[1] - a[1])
+            .slice(0, 15)
+            .map(([reg, count]) => `
+                <div class="stats-item">
+                    <span class="stats-label">${reg}</span>
+                    <span class="stats-count">${count}名</span>
+                </div>
+            `).join('') || '<div class="text-muted small">データなし</div>';
+    }
+}
+
 // v7.3.0: Public Statistics Rendering (Security Optimized)
 window.renderPublicStats = function() {
     const validEntries = state.entries.filter(e => e.status !== 'cancelled');
