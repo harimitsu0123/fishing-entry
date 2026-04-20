@@ -41,7 +41,7 @@ const genderLabels = {
     "other": "その他"
 };
 
-const tshirtSizes = ['150', 'S', 'M', 'L', 'XL', '3L', '4L', '5L'];
+const tshirtSizes = ['140', '150', 'S', 'M', 'L', 'XL（2L）', '2XL（3L）', '3XL（4L）', '4XL（5L）'];
 
 /// Admin Registration Helper
 window.startAdminRegistration = function (source) {
@@ -68,7 +68,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.5.0: UI REFLECTION & POLISH");
+        console.log("BORIJIN APP v7.8.0: NAVIGATION & LIST IMPROVEMENTS");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -279,6 +279,7 @@ function finalizeLoad() {
     };
 
     checkTimeframe();
+    migrateTshirtSizes(); // v7.7.0: Data migration for new labels
     updateDashboard();
     updateReceptionList();
     updateSourceAvailability();
@@ -294,6 +295,33 @@ function finalizeLoad() {
     setTimeout(checkPendingRegistration, 500);
 }
 
+// v7.7.0: Automatically update existing entries to new T-shirt labels
+function migrateTshirtSizes() {
+    let changed = false;
+    const mapping = {
+        'XL': 'XL（2L）',
+        '3L': '2XL（3L）',
+        '4L': '3XL（4L）',
+        '5L': '4XL（5L）'
+    };
+
+    state.entries.forEach(entry => {
+        entry.participants.forEach(p => {
+            if (mapping[p.tshirtSize]) {
+                p.tshirtSize = mapping[p.tshirtSize];
+                changed = true;
+            }
+        });
+    });
+
+    if (changed) {
+        console.log("BORIJIN APP: T-shirt labels migrated.");
+        state.lastUpdated = Date.now();
+        localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+        saveData(); // Sync to cloud
+    }
+}
+
 function generateSpecialUrls() {
     const baseUrl = window.location.href.split('?')[0];
     
@@ -302,10 +330,11 @@ function generateSpecialUrls() {
         if (el) el.value = url;
     };
 
-    setVal('url-stats', `${baseUrl}?view=stats`);
-    setVal('url-mintsuri', `${baseUrl}?view=mintsuri`);
-    setVal('url-harimitsu-proxy', `${baseUrl}?src=harimitsu`);
-    setVal('url-suiho-proxy', `${baseUrl}?src=suiho`);
+    setVal('url-ippan-reg', `${baseUrl}`);
+    setVal('url-mintsuri-reg', `${baseUrl}?src=mintsuri`);
+    setVal('url-harimitsu-reg', `${baseUrl}?src=harimitsu`);
+    setVal('url-suiho-reg', `${baseUrl}?src=suiho`);
+    setVal('url-mintsuri-admin', `${baseUrl}?view=mintsuri`);
 }
 
 window.copyShareUrl = function(inputId) {
@@ -723,6 +752,15 @@ function switchView(btnElement, targetId) {
     currentViewId = targetId;
     sessionStorage.setItem('currentViewId', targetId);
 
+    // v7.7.1: Sync URL parameter with current view to prevent "trapped" views on refresh
+    const url = new URL(window.location.href);
+    if (targetId === 'registration-view') {
+        url.searchParams.delete('view');
+    } else {
+        url.searchParams.set('view', targetId);
+    }
+    window.history.replaceState({}, '', url);
+
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
 
@@ -983,7 +1021,7 @@ function addParticipantRow(data = null, shouldFocus = true) {
             </div>
             <div class="form-group" style="flex: 1; min-width: 140px;">
                 <label>地域 <span class="required">*</span></label>
-                <input type="text" class="p-region" required value="${data && data.region ? data.region : ''}" placeholder="例: 大阪市">
+                <input type="text" class="p-region" required value="${data && data.region ? data.region : ''}" placeholder="例: 姫路市まで">
             </div>
             <div class="form-group" style="flex: 1; min-width: 100px;">
                 <label>Tシャツ <span class="required">*</span></label>
@@ -1572,8 +1610,12 @@ function updateDashboard() {
             // Search / Filter logic
             const matchesEntrySearch = e.id.toLowerCase().includes(searchTerm) || e.groupName.toLowerCase().includes(searchTerm) || e.representative.toLowerCase().includes(searchTerm);
             const pNames = e.participants.map(p => p.name).join(', ');
+            const pRegions = e.participants.map(p => p.region || "").join(', ');
+            
             const matchesParticipantSearch = pNames.toLowerCase().includes(searchTerm);
-            if (!matchesEntrySearch && !matchesParticipantSearch) return;
+            const matchesRegionSearch = pRegions.toLowerCase().includes(searchTerm);
+
+            if (!matchesEntrySearch && !matchesParticipantSearch && !matchesRegionSearch) return;
 
             if (dashboardFilter !== 'all' && e.source !== dashboardFilter) return;
 
@@ -1588,7 +1630,7 @@ function updateDashboard() {
             const getGenderMark = (p) => p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
             
             const pSummary = `
-                <div style="font-weight:700;">${rep.name} <span style="font-weight:normal; opacity:0.7;">${getGenderMark(rep)}</span></div>
+                <div style="font-weight:700;">${rep.name}${rep.nickname ? ` <span style="font-weight:normal; font-size:0.8rem; color:var(--primary-color)">(${rep.nickname})</span>` : ''} <span style="font-weight:normal; opacity:0.7;">${getGenderMark(rep)}</span></div>
                 <div style="font-size: 0.75rem; color: #64748b; white-space:normal; overflow:visible; max-width:100%;">
                     ${e.participants.slice(1).map(p => `${p.name}${getGenderMark(p)}`).join(', ')}
                 </div>
@@ -1715,6 +1757,28 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
                 </div>
             `).join('') || '<div class="text-muted small">データなし</div>';
     }
+
+    // v7.7.0: Render T-shirt Sizes (Total for orders)
+    const tshirtList = document.getElementById(prefix + 'tshirt-breakdown-list');
+    if (tshirtList) {
+        const tshirtCount = {};
+        tshirtSizes.forEach(s => tshirtCount[s] = 0);
+        
+        validEntries.forEach(e => {
+            e.participants.forEach(p => {
+                if (p.tshirtSize) tshirtCount[p.tshirtSize] = (tshirtCount[p.tshirtSize] || 0) + 1;
+            });
+        });
+
+        tshirtList.innerHTML = Object.entries(tshirtCount)
+            .filter(([_, count]) => count > 0 || prefix === '') // Show all in global, only non-zero in prefix views if needed
+            .map(([size, count]) => `
+                <div class="stats-item">
+                    <span class="stats-label">${size}</span>
+                    <span class="stats-count">${count}枚</span>
+                </div>
+            `).join('') || '<div class="text-muted small">データなし</div>';
+    }
 }
 
 // v7.3.0: Public Statistics Rendering (Security Optimized)
@@ -1787,11 +1851,12 @@ window.renderMintsuriCoordinatorView = function() {
 
     list.innerHTML = mintsuriEntries.slice().reverse().map(e => {
         const regTime = e.timestamp ? new Date(e.timestamp).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--:--';
+        const repInfo = e.participants[0] || { name: e.representative, nickname: '' };
         return `
         <tr>
             <td><span class="id-badge">${e.id}</span></td>
             <td><strong>${e.groupName}</strong></td>
-            <td>${e.representative}</td>
+            <td>${e.representative}${repInfo.nickname ? ` <small>(${repInfo.nickname})</small>` : ''}</td>
             <td>${e.fishers} / ${e.observers}</td>
             <td><small>${regTime}</small></td>
         </tr>
@@ -2079,75 +2144,7 @@ function updateSplitUI(prefix, current, max, observers) {
     if (progEl) progEl.style.width = pct + '%';
 }
 
-function renderBreakdownStats() {
-    const ageCount = {};
-    const regionCount = {};
-    const genderCount = {};
 
-    // Initialize ages
-    Object.keys(ageLabels).forEach(key => ageCount[key] = 0);
-    Object.keys(genderLabels).forEach(key => genderCount[key] = 0);
-
-    state.entries.forEach(e => {
-        if (e.status === 'cancelled') return;
-        e.participants.forEach(p => {
-            // Ages - count everyone
-            if (ageCount[p.age] !== undefined) {
-                ageCount[p.age]++;
-            }
-            // Genders
-            if (genderCount[p.gender] !== undefined) {
-                genderCount[p.gender]++;
-            }
-            // Regions - count by group representative location (or each participant if preferred)
-            // Let's count per participant since the request was "region counts"
-            if (p.region) {
-                const reg = p.region.trim();
-                regionCount[reg] = (regionCount[reg] || 0) + 1;
-            }
-        });
-    });
-
-    // Render Ages
-    const ageList = document.getElementById('age-breakdown-list');
-    if (ageList) {
-        ageList.innerHTML = Object.entries(ageCount)
-            .filter(([_, count]) => count > 0)
-            .sort((a, b) => b[1] - a[1])
-            .map(([key, count]) => `
-                <div class="stats-item">
-                    <span class="stats-label">${ageLabels[key]}</span>
-                    <span class="stats-count">${count}名</span>
-                </div>
-            `).join('') || '<div class="text-muted small">データなし</div>';
-    }
-
-    // Render Genders
-    const genderList = document.getElementById('gender-breakdown-list');
-    if (genderList) {
-        genderList.innerHTML = Object.entries(genderCount)
-            .filter(([_, count]) => count > 0)
-            .sort((a, b) => b[1] - a[1])
-            .map(([key, count]) => `
-                <div class="stats-item">
-                    <span class="stats-label">${genderLabels[key] || key}</span>
-                    <span class="stats-count">${count}名</span>
-                </div>
-            `).join('') || '<div class="text-muted small">データなし</div>';
-    }
-    const regionList = document.getElementById('region-breakdown-list');
-    if (regionList) {
-        regionList.innerHTML = Object.entries(regionCount)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 15) // Top 15
-            .map(([reg, count]) => `
-                <div class="stats-item">
-                    <span class="stats-label">${reg}</span>
-                    <span class="stats-count">${count}名</span>
-                </div>
-            `).join('') || '<div class="text-muted small">データなし</div>';
-    }
-}
 
 window.requestEdit = function (id) {
     const btn = document.querySelector('.nav-btn[data-target="registration-view"]');

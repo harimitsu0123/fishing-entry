@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=7.7.0">
+    <link rel="stylesheet" href="style.css?v=7.8.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -357,7 +357,7 @@
                             </div>
                         </div>
                         <div class="search-box mb-3">
-                            <input type="text" id="dashboard-search" placeholder="番号、グループ名、代表者名で検索...">
+                            <input type="text" id="dashboard-search" placeholder="番号、グループ名、代表者、地域、参加者名で検索...">
                         </div>
                         <div class="filter-group mb-4">
                             <button class="filter-btn active" data-filter="all">すべて</button>
@@ -615,9 +615,16 @@
                                     <!-- Dynamic content -->
                                 </div>
                             </div>
-                            <div class="breakdown-card">
+                             <div class="breakdown-card">
                                 <div class="section-title">地域別 集計</div>
                                 <div id="region-breakdown-list" class="stats-list">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+                            <!-- v7.7.0: T-shirt Size Analysis -->
+                            <div class="breakdown-card">
+                                <div class="section-title">Tシャツサイズ 集計</div>
+                                <div id="tshirt-breakdown-list" class="stats-list">
                                     <!-- Dynamic content -->
                                 </div>
                             </div>
@@ -775,9 +782,13 @@
                             <div class="section-title">性別</div>
                             <div id="mintsuri-gender-breakdown-list" class="stats-list"></div>
                         </div>
-                        <div class="breakdown-card">
+                         <div class="breakdown-card">
                             <div class="section-title">地域別</div>
                             <div id="mintsuri-region-breakdown-list" class="stats-list"></div>
+                        </div>
+                        <div class="breakdown-card">
+                            <div class="section-title">Tシャツサイズ</div>
+                            <div id="mintsuri-tshirt-breakdown-list" class="stats-list"></div>
                         </div>
                     </div>
                 </div>
@@ -840,7 +851,7 @@
         <div class="container"
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" style="cursor: default;">&copy; 2026 釣り大会 実行委員会</p>
-            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.7.0</span>
+            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.8.0</span>
         </div>
     </footer>
 
@@ -852,7 +863,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=7.7.0"></script>
+    <script src="script.js?v=7.8.0"></script>
 </body>
 
 </html>
