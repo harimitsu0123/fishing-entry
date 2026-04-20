@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=7.5.0">
+    <link rel="stylesheet" href="style.css?v=7.5.1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -35,7 +35,6 @@
             <div id="registration-card" class="card">
                 <div class="card-header">
                     <h2>受付フォーム</h2>
-                    <button id="show-edit-login" class="btn-text admin-only hidden">既存登録の変更</button>
                 </div>
 
                 <div id="registration-status" class="alert hidden"></div>
@@ -47,7 +46,7 @@
                     <div class="alert alert-info py-2 mb-4" 
                          style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; background: #eef7ff; border: 1px solid #cce5ff; border-radius: 8px;">
                         <span>既に登録済みで内容を修正したい方はこちら</span>
-                        <button type="button" class="btn-outline btn-small" onclick="document.getElementById('show-edit-login').click()"
+                        <button type="button" class="btn-outline btn-small" onclick="revealEditAuth()"
                                 style="white-space: nowrap; font-weight: bold; padding: 0.4rem 0.8rem; height: auto; border-color: var(--primary-color); color: var(--primary-color);">修正・変更</button>
                     </div>
 
@@ -711,7 +710,7 @@
         <div class="container"
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" style="cursor: default;">&copy; 2026 釣り大会 実行委員会</p>
-            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.5.0</span>
+            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.5.1</span>
         </div>
     </footer>
 
@@ -723,7 +722,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=7.5.0"></script>
+    <script src="script.js?v=7.5.1"></script>
 </body>
 
 </html>

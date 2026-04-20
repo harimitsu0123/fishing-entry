@@ -529,12 +529,14 @@ function initApp() {
     });
 
     // Auth logic
-    safeAddListener('show-edit-login', 'click', () => {
+    window.revealEditAuth = function () {
         const form = document.getElementById('registration-form');
         const auth = document.getElementById('edit-auth-section');
         if (form) form.classList.add('hidden');
         if (auth) auth.classList.remove('hidden');
-    });
+    };
+
+    safeAddListener('show-edit-login', 'click', revealEditAuth);
     safeAddListener('hide-edit-login', 'click', () => {
         const form = document.getElementById('registration-form');
         const auth = document.getElementById('edit-auth-section');
