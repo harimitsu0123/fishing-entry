@@ -2441,14 +2441,17 @@ function generateAdminQRCode() {
     urlDisplay.textContent = baseUrl;
     document.getElementById('public-share-url').value = baseUrl;
 
-    // Populate Specialized URLs
-    const mintsuriUrl = `${baseUrl}?src=mintsuri`;
-    const harimitsuUrl = `${baseUrl}?src=harimitsu`;
-    const suihoUrl = `${baseUrl}?src=suiho`;
+    // v7.6.5: Populate Specialized URL Tiles
+    const setUrl = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+    };
 
-    if (document.getElementById('url-mintsuri')) document.getElementById('url-mintsuri').value = mintsuriUrl;
-    if (document.getElementById('url-harimitsu')) document.getElementById('url-harimitsu').value = harimitsuUrl;
-    if (document.getElementById('url-suiho')) document.getElementById('url-suiho').value = suihoUrl;
+    setUrl('url-ippan-reg', baseUrl);
+    setUrl('url-mintsuri-reg', `${baseUrl}?src=mintsuri`);
+    setUrl('url-harimitsu-reg', `${baseUrl}?src=harimitsu`);
+    setUrl('url-suiho-reg', `${baseUrl}?src=suiho`);
+    setUrl('url-mintsuri-admin', `${baseUrl}?view=mintsuri`);
 
     if (isLocal) {
         container.innerHTML = `
