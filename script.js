@@ -34,6 +34,12 @@ const ageLabels = {
     "60s": "60代", "70s": "70代", "80s": "80歳以上"
 };
 
+const genderLabels = {
+    "male": "男性",
+    "female": "女性",
+    "other": "その他"
+};
+
 const tshirtSizes = ['150', 'S', 'M', 'L', 'XL', '3L', '4L', '5L'];
 
 /// Admin Registration Helper
@@ -61,7 +67,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.3.3: DENSITY & MARGIN OPTIMIZATION");
+        console.log("BORIJIN APP v7.5.0: UI REFLECTION & POLISH");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -120,23 +126,26 @@ async function loadData() {
             const cloudData = await response.json();
             if (cloudData && cloudData.entries) {
                 const localData = localStorage.getItem('fishing_app_v3_data');
-                if (localData) {
+                // v7.3.3: New device or default state check. 
+                // If local has no entries, trust Cloud completely.
+                const hasLocalEntries = localData && JSON.parse(localData).entries && JSON.parse(localData).entries.length > 0;
+                
+                if (hasLocalEntries) {
                     const parsedLocal = JSON.parse(localData);
-                    // v6.5: ID + lastModified単位での高度マージ
                     state = mergeData(parsedLocal, cloudData);
                     console.log('Cloud sync: data merged');
                     
                     localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
-                    // もしクラウドよりローカルが新しければ（マージによって新しくなれば）同期
                     if (state.lastUpdated > cloudData.lastUpdated) {
                         syncToCloud();
                     }
                 } else {
+                    // New PC or empty local: Trust Cloud as absolute truth
+                    console.log('Cloud sync: New device or empty local detected. Using Cloud data.');
                     state = cloudData;
+                    localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
                 }
-
-
-                console.log('Cloud sync: data loaded');
+                
                 updateSyncStatus('success');
                 finalizeLoad();
                 return;
@@ -181,54 +190,59 @@ async function loadData() {
  * v6.5 高度マージロジック: ID単位 + 個別タイムスタンプ(lastModified)で比較
  */
 function mergeData(local, cloud) {
+    // 常にクラウドを最新の状態のベースとする
     const merged = { ...cloud }; 
     const localMap = new Map(local.entries.map(e => [e.id, e]));
     const cloudMap = new Map(cloud.entries.map(e => [e.id, e]));
 
-    // 1. ローカル固有、またはローカルの方が新しいデータをマージ
+    // --- 1. ローカル固有（未同期）のデータをマージ ---
     local.entries.forEach(lEntry => {
+        const isServerId = /^[AMSH]-\d{3}$/.test(lEntry.id);
+        
         if (!cloudMap.has(lEntry.id)) {
-            // v7.2: サーバー発行済みIDを持ち、かつクラウドの最終更新の方が新しい場合、
-            // それは「サーバーで削除された」とみなし、マージ（復活）させない。
-            const isServerId = /^[AMSH]-\d{3}$/.test(lEntry.id);
+            // サーバー発行済みIDなのにクラウドに存在しない場合
             if (isServerId) {
-                const lTime = lEntry._ts || new Date(lEntry.lastModified || lEntry.timestamp || 0).getTime();
-                if (cloud.lastUpdated > lTime) {
-                    console.log(`[Sync] ${lEntry.id} is missing from server (deleted). Skipping.`);
-                    return;
+                // クラウドの最終更新の方が新しければ、クラウド側で「削除」されたとみなす
+                if (cloud.lastUpdated > (lEntry._ts || 0)) {
+                    console.log(`[Sync] ${lEntry.id} was deleted on Cloud. Removing locally.`);
+                    return; 
                 }
             }
+            // まだサーバーに送っていない新規データ、または削除判定にならなかったものは保持
             merged.entries.push(lEntry);
-            merged.lastUpdated = Date.now();
         } else {
+            // 両方にある場合: 更新日時(lastModified)が新しい方を採用
             const cEntry = cloudMap.get(lEntry.id);
             const lTime = new Date(lEntry.lastModified || lEntry.timestamp || 0).getTime();
             const cTime = new Date(cEntry.lastModified || cEntry.timestamp || 0).getTime();
 
-            // ローカルの方が更新が新しい場合、そのエントリーを差し替える
             if (lTime > cTime) {
                 const idx = merged.entries.findIndex(e => e.id === lEntry.id);
-                if (idx !== -1) {
-                    merged.entries[idx] = lEntry;
-                    merged.lastUpdated = Date.now();
-                }
+                if (idx !== -1) merged.entries[idx] = lEntry;
             }
         }
     });
 
-    merged.settings = { ...local.settings, ...cloud.settings };
+    // --- 2. 設定のマージ: クラウド側の設定を常に優先するが、クラウド側が空またはデフォルトの場合に備えて慎重にマージ ---
+    // v7.4.0: クラウドの最終更新日時がローカルより古い場合は、ローカル側の最新設定を保持する
+    const isCloudNewer = (cloud.lastUpdated || 0) > (local.lastUpdated || 0);
+    if (isCloudNewer && cloud.settings && Object.keys(cloud.settings).length > 0) {
+        merged.settings = { ...local.settings, ...cloud.settings };
+    } else {
+        merged.settings = { ...cloud.settings, ...local.settings };
+    }
+    
+    // 重複排除とソート
     const uniqueEntries = Array.from(new Map(merged.entries.map(e => [e.id, e])).values());
     merged.entries = uniqueEntries.sort((a, b) => {
         const timeA = new Date(a.timestamp || 0).getTime();
         const timeB = new Date(b.timestamp || 0).getTime();
-        // Fallback to ID if timestamps are equal
         if (timeA === timeB) {
             if (a.id && b.id) return a.id.localeCompare(b.id);
             return 0;
         }
         return timeA - timeB;
     });
-
 
     return merged;
 }
@@ -302,14 +316,28 @@ async function checkPendingRegistration() {
 
         if (match) {
             console.log("Match found! Restoring success screen.", match);
+            
+            // v7.4.0: Add "Clear Cache" option to the toast/recovery check
+            showToast('前回の登録（送信中）が見つかりました。', 'info');
+            
             localStorage.removeItem('fishing_app_pending_reg');
             showResult(match);
-            showToast('前回の登録が確認できました✨', 'success');
         }
     } catch (e) {
         console.warn("Pending check failed:", e);
     }
 }
+
+/**
+ * v7.4.0: 送信待ちデータの消去（手動）
+ */
+window.clearPendingRegistration = function() {
+    if (confirm('送信中の一時データを消去しますか？（すでに送信が完了している場合は影響ありません）')) {
+        localStorage.removeItem('fishing_app_pending_reg');
+        showToast('一時データを消去しました', 'success');
+        resetForm();
+    }
+};
 
 /**
  * v7.0: サーバーから最新データのみを確実に取得する（マージなしの最新確認用）
@@ -659,13 +687,7 @@ function switchView(btnElement, targetId) {
     targetView.classList.add('active');
 
     // Reset Title based on view
-    if (targetId === 'dashboard-view') {
-        document.getElementById('app-title').textContent = "管理者ダッシュボード";
-    } else if (targetId === 'reception-view') {
-        document.getElementById('app-title').textContent = "当日受付管理";
-    } else {
-        updateAppTitle();
-    }
+    updateAppTitle();
 
     if (targetId === 'registration-view') {
         const adminActions = document.getElementById('admin-extra-actions');
@@ -778,8 +800,8 @@ function checkTimeframe() {
 
 
     if (state.settings.startTime && now < new Date(state.settings.startTime)) {
-        title.textContent = "受付開始前です";
-        desc.textContent = `${new Date(state.settings.startTime).toLocaleString('ja-JP')} から受付を開始します。`;
+        title.textContent = `${state.settings.competitionName || "釣り大会"} 開始前`;
+        desc.textContent = `${new Date(state.settings.startTime).toLocaleString('ja-JP')} から受付を開始します。しばらくお待ちください。`;
         overlay.classList.remove('hidden');
     } else if (state.settings.deadline && now > new Date(state.settings.deadline)) {
         title.textContent = "受付終了しました";
@@ -881,6 +903,13 @@ function addParticipantRow(data = null, shouldFocus = true) {
                 <label>お名前 <span class="required">*</span></label>
                 <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="${index === 0 ? '例: 山田 太郎 (代表者)' : '例: 山田 太郎'}">
             </div>
+            <div class="form-group" style="flex: 1; min-width: 100px;">
+                <label>性別 <span class="required">*</span></label>
+                <select class="p-gender" required>
+                    <option value="" disabled ${!data ? 'selected' : ''}>選択...</option>
+                    ${Object.entries(genderLabels).map(([val, label]) => `<option value="${val}" ${data && data.gender === val ? 'selected' : ''}>${label}</option>`).join('')}
+                </select>
+            </div>
         </div>
         <div class="form-row">
             <div class="form-group" style="flex: 1; min-width: 140px;">
@@ -947,6 +976,7 @@ function showConfirmation() {
         nickname: row.querySelector('.p-nick').value,
         region: row.querySelector('.p-region').value,
         age: row.querySelector('.p-age').value,
+        gender: row.querySelector('.p-gender').value,
         tshirtSize: row.querySelector('.p-tshirt').value
     }));
 
@@ -1018,7 +1048,8 @@ function showConfirmation() {
     participants.forEach((p, idx) => {
         const li = document.createElement('li');
         const typeLabel = p.type === 'fisher' ? '【釣り】' : '【見学】';
-        li.textContent = `${idx + 1}. ${typeLabel} ${p.name} [${p.tshirtSize}]` + (p.nickname ? ` (${p.nickname})` : '');
+        const genderLabel = genderLabels[p.gender] || p.gender;
+        li.textContent = `${idx + 1}. ${typeLabel} ${p.name} / ${genderLabel} [${p.tshirtSize}]` + (p.nickname ? ` (${p.nickname})` : '');
         summaryList.appendChild(li);
     });
 
@@ -1059,6 +1090,7 @@ async function handleRegistration() {
         nickname: row.querySelector('.p-nick').value,
         region: row.querySelector('.p-region').value,
         age: row.querySelector('.p-age').value,
+        gender: row.querySelector('.p-gender').value,
         tshirtSize: row.querySelector('.p-tshirt').value
     }));
 
@@ -1329,7 +1361,7 @@ function showResult(entry) {
     document.getElementById('result-group').textContent = entry.groupName;
     document.getElementById('result-fishers').textContent = entry.fishers;
     document.getElementById('result-source').textContent = entry.source;
-    document.getElementById('app-title').textContent = "受付完了";
+    document.getElementById('app-title').textContent = `${entry.source} 受付完了！`;
 
     // Populate Recovery Backup Details (v6.3)
     document.getElementById('res-rep-name').textContent = entry.representative;
@@ -1338,9 +1370,10 @@ function showResult(entry) {
     
     const pList = document.getElementById('res-participant-list');
     if (pList) {
-        pList.innerHTML = entry.participants.map(p => 
-            `<li>${p.name} (${p.type === 'fisher' ? '釣り' : '見学'})</li>`
-        ).join('');
+        pList.innerHTML = entry.participants.map(p => {
+            const genderMark = p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
+            return `<li>${p.name} ${genderMark} (${p.type === 'fisher' ? '釣り' : '見学'})</li>`;
+        }).join('');
     }
 
     // Screenshot Optimization: Hide the top registration card frame to save space
@@ -1352,14 +1385,26 @@ function showResult(entry) {
 }
 
 function resetForm() {
-    document.getElementById('registration-form').reset();
+    const form = document.getElementById('registration-form');
+    if (form) form.reset();
+    
     document.getElementById('edit-entry-id').value = "";
+    
+    // Explicitly clear key fields for browser compatibility
+    ['group-name', 'representative-name', 'rep-phone', 'rep-email', 'rep-email-confirm', 'edit-password'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+    });
+
     // Reset radio selection
     const defaultRadio = document.querySelector('input[name="reg-source"][value="一般"]');
     if (defaultRadio) defaultRadio.checked = true;
 
-    document.getElementById('participant-list').innerHTML = '';
-    addParticipantRow(null, false);
+    const list = document.getElementById('participant-list');
+    if (list) {
+        list.innerHTML = '';
+        addParticipantRow(null, false);
+    }
 
     // Restore the registration card frame
     const regCard = document.getElementById('registration-card');
@@ -1370,15 +1415,20 @@ function resetForm() {
     document.getElementById('registration-result').classList.add('hidden');
     document.getElementById('edit-auth-section').classList.add('hidden');
     document.getElementById('registration-status').classList.add('hidden');
-    document.getElementById('app-title').textContent = state.settings.competitionName;
+    
+    updateAppTitle();
     document.getElementById('submit-registration').textContent = "この内容で登録する";
-    document.getElementById('cancel-edit').classList.add('hidden');
+    
+    const cancelEditBtn = document.getElementById('cancel-edit');
+    if (cancelEditBtn) cancelEditBtn.classList.add('hidden');
+    
     isAdminAuthAction = false;
+    localStorage.removeItem('fishing_app_pending_reg'); // Force clear any pending flags on reset
 
     // Remove temp admin options if any
     document.querySelectorAll('.temp-option').forEach(el => el.remove());
     updateSourceAvailability();
-    setTimeout(() => window.scrollTo(0, 0), 50); // Delayed to ensure focus scroll is countered
+    setTimeout(() => window.scrollTo(0, 0), 50); 
 }
 
 function showStatus(msg, type, noScroll = false) {
@@ -1465,10 +1515,12 @@ function updateDashboard() {
             const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 無効' : '⏳ 待機';
 
             const rep = e.participants[0] || { name: e.representative };
+            const getGenderMark = (p) => p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
+            
             const pSummary = `
-                <div style="font-weight:700;">${rep.name}</div>
+                <div style="font-weight:700;">${rep.name} <span style="font-weight:normal; opacity:0.7;">${getGenderMark(rep)}</span></div>
                 <div style="font-size: 0.75rem; color: #64748b; white-space:normal; overflow:visible; max-width:100%;">
-                    ${e.participants.slice(1).map(p => p.name).join(', ')}
+                    ${e.participants.slice(1).map(p => `${p.name}${getGenderMark(p)}`).join(', ')}
                 </div>
             `;
 
@@ -1722,7 +1774,7 @@ function renderReceptionDesk() {
                             <span class="p-badge ${typeClass}">${typeLabel}</span>
                             ${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}
                         </span>
-                        <span class="p-meta">${p.region} | ${ageLabels[p.age] || p.age} | [${p.tshirtSize || '不明'}]</span>
+                        <span class="p-meta">${p.region} | ${genderLabels[p.gender] || ''} | ${ageLabels[p.age] || p.age} | [${p.tshirtSize || '不明'}]</span>
                     </div>
                     <div class="p-status-actions">
                         <button class="btn-status in ${p.status === 'checked-in' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'checked-in')">受付</button>
@@ -1836,9 +1888,11 @@ function updateSplitUI(prefix, current, max, observers) {
 function renderBreakdownStats() {
     const ageCount = {};
     const regionCount = {};
+    const genderCount = {};
 
     // Initialize ages
     Object.keys(ageLabels).forEach(key => ageCount[key] = 0);
+    Object.keys(genderLabels).forEach(key => genderCount[key] = 0);
 
     state.entries.forEach(e => {
         if (e.status === 'cancelled') return;
@@ -1846,6 +1900,10 @@ function renderBreakdownStats() {
             // Ages - count everyone
             if (ageCount[p.age] !== undefined) {
                 ageCount[p.age]++;
+            }
+            // Genders
+            if (genderCount[p.gender] !== undefined) {
+                genderCount[p.gender]++;
             }
             // Regions - count by group representative location (or each participant if preferred)
             // Let's count per participant since the request was "region counts"
@@ -1870,7 +1928,19 @@ function renderBreakdownStats() {
             `).join('') || '<div class="text-muted small">データなし</div>';
     }
 
-    // Render Regions
+    // Render Genders
+    const genderList = document.getElementById('gender-breakdown-list');
+    if (genderList) {
+        genderList.innerHTML = Object.entries(genderCount)
+            .filter(([_, count]) => count > 0)
+            .sort((a, b) => b[1] - a[1])
+            .map(([key, count]) => `
+                <div class="stats-item">
+                    <span class="stats-label">${genderLabels[key] || key}</span>
+                    <span class="stats-count">${count}名</span>
+                </div>
+            `).join('') || '<div class="text-muted small">データなし</div>';
+    }
     const regionList = document.getElementById('region-breakdown-list');
     if (regionList) {
         regionList.innerHTML = Object.entries(regionCount)
@@ -1970,9 +2040,18 @@ window.triggerSettingsSave = function () {
 
 function updateAppTitle() {
     const titleEl = document.getElementById('app-title');
+    const competitionName = state.settings.competitionName || "釣り大会 受付";
+    
     if (titleEl) {
-        titleEl.textContent = state.settings.competitionName || "釣り大会 受付";
+        if (currentViewId === 'dashboard-view') {
+            titleEl.textContent = `管理者: ${competitionName}`;
+        } else if (currentViewId === 'reception-view') {
+            titleEl.textContent = `当日受付: ${competitionName}`;
+        } else {
+            titleEl.textContent = competitionName;
+        }
     }
+    document.title = competitionName;
 }
 
 function handleSettingsUpdate(e) {
@@ -2055,7 +2134,7 @@ function exportGroupsCSV() {
 
 function exportParticipantsCSV() {
     if (state.entries.length === 0) return alert('データがありません');
-    const headers = ['受付番号', '区分', 'グループ名', '代表者名', '参加区分', '参加者名', 'ニックネーム', 'Tシャツ', '地域', '年代', '登録時間'];
+    const headers = ['受付番号', '区分', 'グループ名', '代表者名', '参加区分', '参加者名', '性別', 'ニックネーム', 'Tシャツ', '地域', '年代', '登録時間'];
     const rows = [];
     state.entries.forEach(e => {
         e.participants.forEach(p => {
@@ -2067,6 +2146,7 @@ function exportParticipantsCSV() {
                 e.representative,
                 partType,
                 p.name,
+                genderLabels[p.gender] || p.gender || "",
                 p.nickname,
                 p.tshirtSize || "",
                 p.region,

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=7.3.3">
+    <link rel="stylesheet" href="style.css?v=7.5.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -40,7 +40,7 @@
 
                 <div id="registration-status" class="alert hidden"></div>
 
-                <form id="registration-form">
+                <form id="registration-form" autocomplete="off">
                     <input type="hidden" id="edit-entry-id" value="">
 
                     <!-- v7.2.1: Modification Link for Users -->
@@ -80,11 +80,11 @@
                             <input type="text" id="representative-name" required placeholder="例：山田 太郎">
                         </div>
                         <div class="form-row">
-                            <div class="form-group" style="flex: 1.8;">
+                            <div class="form-group" style="flex: 1.5;">
                                 <label for="rep-phone">電話番号 <span class="required">(※必須)</span></label>
                                 <input type="tel" id="rep-phone" required placeholder="090-0000-0000">
                             </div>
-                            <div class="form-group" style="flex: 0.7;">
+                            <div class="form-group" style="flex: 1.0;">
                                 <label for="edit-password">編集用パスワード <span class="required">(※必須)</span></label>
                                 <input type="text" id="edit-password" required minlength="4"
                                     placeholder="例：fish2025">
@@ -551,6 +551,12 @@
                                 </div>
                             </div>
                             <div class="breakdown-card">
+                                <div class="section-title">性別 集計</div>
+                                <div id="gender-breakdown-list" class="stats-list">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+                            <div class="breakdown-card">
                                 <div class="section-title">地域別 集計</div>
                                 <div id="region-breakdown-list" class="stats-list">
                                     <!-- Dynamic content -->
@@ -705,7 +711,7 @@
         <div class="container"
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" style="cursor: default;">&copy; 2026 釣り大会 実行委員会</p>
-            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.2.8</span>
+            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.5.0</span>
         </div>
     </footer>
 
@@ -717,7 +723,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=7.2.5"></script>
+    <script src="script.js?v=7.5.0"></script>
 </body>
 
 </html>
