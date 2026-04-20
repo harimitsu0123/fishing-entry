@@ -1536,3 +1536,27 @@ table {
     color: var(--text-color);
     line-height: 1.6;
 }
+
+/* Coordinator Table Style (v7.6.0) */
+.mintsuri-table {
+    min-width: 600px;
+}
+
+.mintsuri-table th {
+    background: #f8fafc;
+    padding: 1rem;
+    text-align: left;
+    font-size: 0.85rem;
+    color: #475569;
+    border-bottom: 2px solid #e1e8ed;
+}
+
+.mintsuri-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.95rem;
+}
+
+.mintsuri-table tr:hover {
+    background: #fdfdfd;
+}

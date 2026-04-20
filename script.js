@@ -695,6 +695,9 @@ function switchView(btnElement, targetId) {
         const adminActions = document.getElementById('admin-extra-actions');
         if (adminActions) adminActions.classList.add('hidden');
         
+        // Ensure app title is restored to tournament name from settings
+        updateAppTitle();
+
         // v7.1.1: Always ensure a fresh form if not editing
         const editId = document.getElementById('edit-entry-id').value;
         if (!editId) {
@@ -704,10 +707,16 @@ function switchView(btnElement, targetId) {
     }
     if (targetId === 'dashboard-view') {
         updateDashboard();
-        switchAdminTab(currentAdminTab); // Use stored tab instead of hardcoding 'tab-list'
+        switchAdminTab(currentAdminTab); 
     }
     if (targetId === 'reception-view') {
         updateReceptionList();
+    }
+    if (targetId === 'public-stats-view') {
+        renderPublicStats();
+    }
+    if (targetId === 'mintsuri-coordinator-view') {
+        renderMintsuriCoordinatorView();
     }
 
     // v6.6: Dynamic Width Control
@@ -1363,7 +1372,10 @@ function showResult(entry) {
     document.getElementById('result-group').textContent = entry.groupName;
     document.getElementById('result-fishers').textContent = entry.fishers;
     document.getElementById('result-source').textContent = entry.source;
-    document.getElementById('app-title').textContent = `${entry.source} 受付完了！`;
+    
+    // v7.6.0: Remove app-title update to avoid 'Done' duplication on mobile.
+    // Keep app-title as the Tournament Name.
+    updateAppTitle();
 
     // Populate Recovery Backup Details (v6.3)
     document.getElementById('res-rep-name').textContent = entry.representative;
@@ -1554,10 +1566,6 @@ function updateDashboard() {
 }
 
 // v7.3.0: Public Statistics Rendering (Security Optimized)
-function renderPublicStats() {
-    const container = document.getElementById('public-stats-container');
-    if (!container) return;
-
     const validEntries = state.entries.filter(e => e.status !== 'cancelled');
     
     const categories = [
@@ -1567,58 +1575,83 @@ function renderPublicStats() {
         { id: 'harimitsu', name: 'ハリミツ', source: 'ハリミツ', capacity: state.settings.capacityHarimitsu, color: 'harimitsu' }
     ];
 
-    let html = `<div class="public-stats-grid">`;
-
-    categories.forEach(cat => {
-        const catEntries = validEntries.filter(e => e.source === cat.source);
-        const count = catEntries.reduce((sum, e) => sum + e.fishers, 0);
-        const remaining = Math.max(0, cat.capacity - count);
+    const gridHtml = categories.map(cat => {
+        const count = validEntries.filter(e => e.source === cat.source).reduce((sum, e) => sum + e.fishers, 0);
         const progress = Math.min(100, (count / cat.capacity) * 100);
-        const statusText = remaining === 0 ? '満員' : `あと ${remaining} 名`;
-
-        html += `
-            <div class="public-stat-card bg-light border-top-${cat.color}">
+        const statusText = count >= cat.capacity ? '満員' : `あと ${cat.capacity - count} 名`;
+        return `
+            <div class="public-stat-card border-top-${cat.color}">
                 <div class="public-stat-label">
                     <span>${cat.name}</span>
                     <span class="badge ${count >= cat.capacity ? 'badge-danger' : 'badge-success'}">${statusText}</span>
                 </div>
                 <div class="public-stat-main">
                     <span class="public-stat-value">${count}</span>
-                    <span class="public-stat-unit">名</span>
+                    <span class="public-stat-unit">/ ${cat.capacity} 名</span>
                 </div>
-                <div class="public-progress-container">
-                    <div class="public-progress bg-${cat.color}" style="width: ${progress}%"></div>
-                </div>
-                <div class="public-stat-capacity mt-3">
-                    <span>定員: ${cat.capacity} 名</span>
-                    <span>充足率: <strong>${Math.round(progress)}%</strong></span>
-                </div>
-            </div>
-        `;
-    });
+                <div class="public-progress-container"><div class="public-progress bg-${cat.color}" style="width: ${progress}%"></div></div>
+            </div>`;
+    }).join('');
 
-    html += `</div>`;
+    const splitContainer = document.getElementById('category-split-container');
+    if (splitContainer) splitContainer.innerHTML = `<div class="public-stats-grid">${gridHtml}</div>`;
     
-    // Total Summary
-    const totalCount = validEntries.reduce((sum, e) => sum + e.fishers, 0);
-    const totalCapacity = state.settings.capacityGeneral + state.settings.capacityMintsuri + state.settings.capacitySuiho + state.settings.capacityHarimitsu;
+    // Summary Cards (Same as Dashboard style for premium look)
+    const groups = validEntries.length;
+    const fishers = validEntries.reduce((s, e) => s + e.fishers, 0);
+    const observers = validEntries.reduce((s, e) => s + e.observers, 0);
     
-    html += `
-        <div class="card mt-4" style="background:#2c3e50; color:white; border:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <div style="font-size:0.9rem; opacity:0.8;">全てのカテゴリー 合計</div>
-                    <div style="font-size:2.5rem; font-weight:900;">${totalCount} <small style="font-size:1rem; opacity:0.8;">/ ${totalCapacity} 名</small></div>
-                </div>
-                <div style="text-align:right;">
-                    <div style="font-size:0.8rem; opacity:0.7;">最終更新: ${new Date().toLocaleTimeString()}</div>
-                    <div style="font-size:1.2rem; font-weight:700; color:#3498db;">${totalCapacity - totalCount} 名 空きあり</div>
-                </div>
-            </div>
-        </div>
-    `;
+    const summaryContainer = document.getElementById('stats-summary-container');
+    if (summaryContainer) {
+        summaryContainer.innerHTML = `
+            <div class="stats-summary-grid mb-4">
+                <div class="summary-card"><div class="summary-label">総登録グループ</div><div class="summary-value">${groups} <small>組</small></div></div>
+                <div class="summary-card"><div class="summary-label">釣り参加者合計</div><div class="summary-value">${fishers} <small>/ 250</small></div></div>
+                <div class="summary-card"><div class="summary-label">見学者合計</div><div class="summary-value">${observers} <small>名</small></div></div>
+                <div class="summary-card"><div class="summary-label">最終更新</div><div class="summary-value" style="font-size:1.2rem;">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div>
+            </div>`;
+    }
+}
 
-    container.innerHTML = html;
+window.renderMintsuriCoordinatorView = function() {
+    const list = document.getElementById('mintsuri-coordinator-list');
+    const summary = document.getElementById('mintsuri-stats-summary');
+    if (!list) return;
+
+    const mintsuriEntries = state.entries.filter(e => e.source === 'みん釣り' && e.status !== 'cancelled');
+    const totalFishers = mintsuriEntries.reduce((s, e) => s + e.fishers, 0);
+    const totalObservers = mintsuriEntries.reduce((s, e) => s + e.observers, 0);
+
+    if (summary) {
+        summary.innerHTML = `
+            <div class="stats-summary-grid">
+                <div class="summary-card"><div class="summary-label">みん釣り 合計組数</div><div class="summary-value">${mintsuriEntries.length} <small>組</small></div></div>
+                <div class="summary-card"><div class="summary-label">みん釣り 釣り人数</div><div class="summary-value">${totalFishers} <small>/ ${state.settings.capacityMintsuri}</small></div></div>
+                <div class="summary-card"><div class="summary-label">見学人数</div><div class="summary-value">${totalObservers} <small>名</small></div></div>
+                <div class="summary-card"><div class="summary-label">充足率</div><div class="summary-value">${Math.round((totalFishers/state.settings.capacityMintsuri)*100)}%</div></div>
+            </div>`;
+    }
+
+    list.innerHTML = mintsuriEntries.slice().reverse().map(e => `
+        <tr>
+            <td><span class="id-badge">${e.id}</span></td>
+            <td><strong>${e.groupName}</strong></td>
+            <td>${e.representative}</td>
+            <td>${e.fishers} / ${e.observers}</td>
+            <td><small>${new Date(e.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small></td>
+        </tr>
+    `).join('') || '<tr><td colspan="5" style="text-align:center; padding:2rem;">まだ登録はありません</td></tr>';
+}
+
+window.exportMintsuriCSV = function() {
+    const mintsuriEntries = state.entries.filter(e => e.source === 'みん釣り' && e.status !== 'cancelled');
+    if (mintsuriEntries.length === 0) return alert('データがありません');
+
+    const headers = ['受付番号', 'グループ名', '代表者名', '電話番号', 'メール', '釣り人数', '見学人数', '登録時間'];
+    const rows = mintsuriEntries.map(e => [
+        e.id, e.groupName, e.representative, e.phone, e.email, e.fishers, e.observers, formatDateForCSV(e.timestamp)
+    ]);
+    downloadCSV("mintsuri_export", headers, rows);
 }
 
 // Global Stats Rendering (v7.3.0 Global Scope)
@@ -2497,8 +2530,11 @@ function checkUrlParams() {
 
     // v7.3.0: Handle Public Stats View
     if (view === 'stats') {
-        switchView('public-stats-view');
-        // Initial fetch will trigger render
+        switchView(null, 'public-stats-view');
+        return;
+    }
+    if (view === 'mintsuri') {
+        switchView(null, 'mintsuri-coordinator-view');
         return;
     }
 
