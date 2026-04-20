@@ -12,6 +12,7 @@ let state = {
         capacityObservers: 100,
         startTime: "",
         deadline: "",
+        capacityTotal: 250,
         adminPassword: "admin"
     },
     lastUpdated: 0 // Unix timestamp for sync merging
@@ -205,14 +206,16 @@ function mergeData(local, cloud) {
         
         if (!cloudMap.has(lEntry.id)) {
             // サーバー発行済みIDなのにクラウドに存在しない場合
+            // サーバー発行済みIDなのにクラウドに存在しない場合
             if (isServerId) {
-                // クラウドの最終更新の方が新しければ、クラウド側で「削除」されたとみなす
+                // クラウドの最終更新の方が新しければ、クラウド側で「本当の削除」があったとみなす
                 if (cloud.lastUpdated > (lEntry._ts || 0)) {
-                    console.log(`[Sync] ${lEntry.id} was deleted on Cloud. Removing locally.`);
+                    console.log(`[Sync] ${lEntry.id} was intentionally deleted on Cloud at ${new Date(cloud.lastUpdated).toLocaleString()}. Discarding local.`);
                     return; 
                 }
             }
-            // まだサーバーに送っていない新規データ、または削除判定にならなかったものは保持
+            // 新規データ、または削除確定でないものは維持
+            console.log(`[Sync] Keeping local entry ${lEntry.id} which is missing on cloud.`);
             merged.entries.push(lEntry);
         } else {
             // 両方にある場合: 更新日時(lastModified)が新しい方を採用
@@ -263,6 +266,7 @@ function finalizeLoad() {
             capacitySuiho: 50,
             capacityHarimitsu: 50,
             capacityObservers: 100,
+            capacityTotal: 250,
             startTime: "",
             deadline: "",
             adminPassword: "admin",
@@ -917,6 +921,9 @@ function syncSettingsUI() {
     updateIfInactive('registration-start', state.settings.startTime);
     updateIfInactive('registration-deadline', state.settings.deadline);
     updateIfInactive('admin-password-set', state.settings.adminPassword);
+    if (document.getElementById('cap-total')) {
+        document.getElementById('cap-total').value = state.settings.capacityTotal || 250;
+    }
 
     updateCapacityTotal();
     updateAppTitle();
@@ -1074,12 +1081,12 @@ function showConfirmation() {
         return;
     }
 
-    // Aggregate Capacity Check (Total 250)
+    // Aggregate Capacity Check
     const totalFishers = state.entries
         .filter(en => en.id !== editId && en.status !== 'cancelled')
         .reduce((sum, en) => sum + en.fishers, 0);
 
-    if (totalFishers + fisherCount > 250) {
+    if (totalFishers + fisherCount > state.settings.capacityTotal) {
         showStatus("大変申し訳ありません。大会全体の定員に達したため、受付を終了いたしました。", "error");
         return;
     }
@@ -1162,7 +1169,7 @@ async function handleRegistration() {
     else if (source === '水宝') capacityLimit = state.settings.capacitySuiho;
     else if (source === 'ハリミツ') capacityLimit = state.settings.capacityHarimitsu;
 
-    if (currentCategoryFishers + fisherCount > capacityLimit || totalNow + fisherCount > 250) {
+    if (currentCategoryFishers + fisherCount > capacityLimit || totalNow + fisherCount > state.settings.capacityTotal) {
         showStatus("定員エラー：登録直前に定員に達しました。内容を確認し、再度お試しください。", "error");
         return;
     }
@@ -1745,7 +1752,7 @@ window.renderPublicStats = function() {
         summaryContainer.innerHTML = `
             <div class="stats-summary-grid mb-4">
                 <div class="summary-card"><div class="summary-label">総登録グループ</div><div class="summary-value">${groups} <small>組</small></div></div>
-                <div class="summary-card"><div class="summary-label">釣り参加者合計</div><div class="summary-value">${fishers} <small>/ 250</small></div></div>
+                <div class="summary-card"><div class="summary-label">釣り参加者合計</div><div class="summary-value">${fishers} <small>/ ${state.settings.capacityTotal}</small></div></div>
                 <div class="summary-card"><div class="summary-label">見学者合計</div><div class="summary-value">${observers} <small>名</small></div></div>
                 <div class="summary-card"><div class="summary-label">最終更新</div><div class="summary-value" style="font-size:1.2rem;">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div>
             </div>`;
@@ -1812,7 +1819,7 @@ function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent)
             </div>
             <div class="summary-card">
                 <div class="summary-label">釣り参加者合計</div>
-                <div class="summary-value"><span id="current-fishers">${fishers}</span> <small>/ 250</small></div>
+                <div class="summary-value"><span id="current-fishers">${fishers}</span> <small>/ ${state.settings.capacityTotal}</small></div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">見学者合計</div>
@@ -2242,6 +2249,11 @@ function handleSettingsUpdate(e) {
     state.settings.capacitySuiho = parseInt(document.getElementById('cap-suiho').value) || 0;
     state.settings.capacityHarimitsu = parseInt(document.getElementById('cap-harimitsu').value) || 0;
     state.settings.capacityObservers = parseInt(document.getElementById('capacity-observers').value) || 0;
+    
+    const capTotalEl = document.getElementById('cap-total');
+    if (capTotalEl) {
+        state.settings.capacityTotal = parseInt(capTotalEl.value) || 250;
+    }
     state.settings.startTime = document.getElementById('registration-start').value;
     state.settings.deadline = document.getElementById('registration-deadline').value;
     state.settings.adminPassword = document.getElementById('admin-password-set').value;
@@ -2267,11 +2279,13 @@ function updateCapacityTotal() {
 
     if (sumEl) {
         sumEl.textContent = total;
-        sumEl.style.color = total > 250 ? 'var(--error-color)' : 'var(--primary-color)';
+        sumEl.style.color = total > state.settings.capacityTotal ? 'var(--error-color)' : 'var(--primary-color)';
     }
     if (warnEl) {
-        warnEl.classList.toggle('hidden', total <= 250);
+        warnEl.classList.toggle('hidden', total <= state.settings.capacityTotal);
     }
+    const displayTotalEl = document.getElementById('display-cap-total');
+    if (displayTotalEl) displayTotalEl.textContent = state.settings.capacityTotal;
 }
 
 window.confirmReset = async function () {
@@ -2514,7 +2528,7 @@ function showToast(message, type = 'success') {
 // --- Test Data Generator ---
 window.generateBulkTestData = function () {
     const totalCurrent = state.entries.reduce((s, e) => s + e.fishers, 0);
-    if (totalCurrent >= 240) {
+    if (totalCurrent >= state.settings.capacityTotal - 10) {
         showToast('すでに定員に近いため、これ以上生成できません。', 'error');
         return;
     }
@@ -2533,7 +2547,7 @@ window.generateBulkTestData = function () {
     // Loop for 10 entries
     for (let i = 0; i < 10; i++) {
         const totalNow = state.entries.reduce((s, e) => s + e.fishers, 0);
-        if (totalNow >= 245) break;
+        if (totalNow >= state.settings.capacityTotal - 5) break;
 
 
         // Pick a source that still has room
@@ -2559,7 +2573,7 @@ window.generateBulkTestData = function () {
 
         const categoryCurrent = sumCategoryFishers(source);
         const categoryRoom = categoryLimit - categoryCurrent;
-        const totalRoom = 240 - totalNow;
+        const totalRoom = (state.settings.capacityTotal - 10) - totalNow;
         const maxRoom = Math.min(categoryRoom, totalRoom, 4); // Max 4 per team
 
         if (maxRoom <= 0) continue;
@@ -2647,7 +2661,7 @@ function updateSourceAvailability() {
         if (!label) return;
 
         // Full if category limit is reached OR total 250 limit is reached
-        const isFull = (limit > 0 && current >= limit) || totalFishers >= 250;
+        const isFull = (limit > 0 && current >= limit) || totalFishers >= state.settings.capacityTotal;
 
         // Bypassed if admin is editing
         const isDisabled = isFull && !isAdminAuthAction;
