@@ -68,7 +68,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.8.3: UI DENSITY OPTIMIZATION (ANALYSIS)");
+        console.log("BORIJIN APP v7.8.4: T-SHIRT MIGRATION HOTFIX");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -298,24 +298,32 @@ function finalizeLoad() {
 // v7.7.0: Automatically update existing entries to new T-shirt labels
 function migrateTshirtSizes() {
     let changed = false;
+    // v7.8.4: Expanded mapping to cover common variants and prevent "140" fallback
     const mapping = {
+        '2L': 'XL（2L）',
+        'LL': 'XL（2L）',
         'XL': 'XL（2L）',
         '3L': '2XL（3L）',
+        '2XL': '2XL（3L）',
         '4L': '3XL（4L）',
-        '5L': '4XL（5L）'
+        '3XL': '3XL（4L）',
+        '5L': '4XL（5L）',
+        '4XL': '4XL（5L）'
     };
 
     state.entries.forEach(entry => {
         entry.participants.forEach(p => {
-            if (mapping[p.tshirtSize]) {
-                p.tshirtSize = mapping[p.tshirtSize];
+            if (!p.tshirtSize) return;
+            const normalized = p.tshirtSize.toString().toUpperCase().trim();
+            if (mapping[normalized]) {
+                p.tshirtSize = mapping[normalized];
                 changed = true;
             }
         });
     });
 
     if (changed) {
-        console.log("BORIJIN APP: T-shirt labels migrated.");
+        console.log("BORIJIN APP: T-shirt labels migrated with enhanced mapping.");
         state.lastUpdated = Date.now();
         localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
         saveData(); // Sync to cloud
@@ -1031,7 +1039,15 @@ function addParticipantRow(data = null, shouldFocus = true) {
             <div class="form-group" style="flex: 1; min-width: 100px;">
                 <label>Tシャツ <span class="required">*</span></label>
                 <select class="p-tshirt" required>
-                    ${tshirtSizes.map(size => `<option value="${size}" ${data && data.tshirtSize === size ? 'selected' : ''}>${size}</option>`).join('')}
+                    ${(() => {
+                        // v7.8.4: Safety logic to prevent resetting unrecognized sizes to "140"
+                        const currentSize = data ? data.tshirtSize : '';
+                        let options = [...tshirtSizes];
+                        if (currentSize && !options.includes(currentSize)) {
+                            options.push(currentSize); // Keep legacy size to avoid data loss
+                        }
+                        return options.map(size => `<option value="${size}" ${currentSize === size ? 'selected' : ''}>${size}</option>`).join('');
+                    })()}
                 </select>
             </div>
         </div>
