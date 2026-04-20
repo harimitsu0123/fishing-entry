@@ -18,7 +18,7 @@ let state = {
     lastUpdated: 0 // Unix timestamp for sync merging
 };
 
-let isAdminAuth = sessionStorage.getItem('isAdminAuth') === 'true'; // Persistent session
+let isAdminAuth = localStorage.getItem('isAdminAuth') === 'true'; // Persistent across sessions (localStorage)
 let currentViewId = sessionStorage.getItem('currentViewId') || 'registration-view'; // Persistent view
 let currentAdminTab = sessionStorage.getItem('currentAdminTab') || 'tab-list'; // Persistent tab
 let dashboardFilter = 'all';
@@ -68,7 +68,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.8.1: NAVIGATION RECOVERY & FIXES");
+        console.log("BORIJIN APP v7.8.2: AUTH PERSISTENCE & NAVIGATION FIXES");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -698,7 +698,7 @@ function initApp() {
                 const pw = prompt("管理者パスワードを入力してください");
                 if (pw === state.settings.adminPassword || pw === 'admin') {
                     isAdminAuth = true;
-                    sessionStorage.setItem('isAdminAuth', 'true');
+                    localStorage.setItem('isAdminAuth', 'true');
                     document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
                     showToast('✨ 管理者ログイン完了', 'success');
                     currentAdminTab = 'tab-list';
@@ -928,7 +928,7 @@ function handleAdminLogin() {
     const pw = document.getElementById('global-admin-password').value.trim();
     if (pw === state.settings.adminPassword || pw === 'admin') {
         isAdminAuth = true;
-        sessionStorage.setItem('isAdminAuth', 'true'); // Persist
+        localStorage.setItem('isAdminAuth', 'true'); // Persist
         document.getElementById('admin-auth-modal').classList.add('hidden');
 
         // Reveal admin elements globally
