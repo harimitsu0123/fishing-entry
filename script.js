@@ -1802,10 +1802,12 @@ function updateDashboard() {
             // ... (Search / Filter logic stays same)
             const matchesEntrySearch = e.id.toLowerCase().includes(searchTerm) || e.groupName.toLowerCase().includes(searchTerm) || e.representative.toLowerCase().includes(searchTerm);
             
-            const pNames = e.participants.map(p => p.name).join(' ');
-            const pRegions = e.participants.map(p => p.region || "").join(' ');
-            const pTshirts = e.participants.map(p => p.tshirtSize || "").join(' ');
-            const pGenders = e.participants.map(p => genderLabels[p.gender] || "").join(' ');
+            // v8.1.41: Safety Guard for missing participants
+            const pArray = e.participants || [];
+            const pNames = pArray.map(p => p.name).join(' ');
+            const pRegions = pArray.map(p => p.region || "").join(' ');
+            const pTshirts = pArray.map(p => p.tshirtSize || "").join(' ');
+            const pGenders = pArray.map(p => genderLabels[p.gender] || "").join(' ');
             
             const combinedParticipantInfo = (pNames + " " + pRegions + " " + pTshirts + " " + pGenders).toLowerCase();
             const matchesParticipantSearch = combinedParticipantInfo.includes(searchTerm);
@@ -1821,7 +1823,7 @@ function updateDashboard() {
             const badgeMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
             const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 無効' : '⏳ 待機';
 
-            const rep = e.participants[0] || { name: e.representative };
+            const rep = (e.participants && e.participants[0]) || { name: e.representative };
             const getGenderMark = (p) => p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
             
             const pSummary = `
@@ -1835,10 +1837,10 @@ function updateDashboard() {
 
             const regTime = e.timestamp ? new Date(e.timestamp).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--:--';
 
-            // v8.0.4: Calculate Group Total Points and Ikesu Names
+            // v8.1.41: Safety Guard for ikesu and catch data
             let groupPoints = 0;
             const ikesuNames = new Set();
-            e.participants.forEach(p => {
+            (e.participants || []).forEach(p => {
                 const pA = parseInt(p.catchA || 0);
                 const pB = parseInt(p.catchB || 0);
                 groupPoints += (pA * 2) + pB;
@@ -2142,7 +2144,7 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
     const regionCount = {};
 
     validEntries.forEach(e => {
-        e.participants.forEach(p => {
+        (e.participants || []).forEach(p => {
             if (p.age) ageCount[p.age] = (ageCount[p.age] || 0) + 1;
             if (p.gender) genderCount[p.gender] = (genderCount[p.gender] || 0) + 1;
             if (p.region) regionCount[p.region] = (regionCount[p.region] || 0) + 1;
@@ -2362,17 +2364,20 @@ function renderGenericCoordinatorView(sourceName, prefix) {
     list.innerHTML = sourceEntries.slice().reverse()
         .filter(e => {
             if (!searchTerm) return true;
-            const pNames = e.participants.map(p => p.name).join(' ');
+            // v8.1.41: Safety Guard
+            const pArray = e.participants || [];
+            const pNames = pArray.map(p => p.name).join(' ');
             const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames}`.toLowerCase();
             return combined.includes(searchTerm);
         })
         .map(e => {
             const regTime = e.timestamp ? new Date(e.timestamp).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--:--';
+            const repInfo = (e.participants && e.participants[0]) || { name: e.representative, nickname: '' };
             return `
             <tr>
                 <td><span class="id-badge">${e.id}</span></td>
                 <td><strong>${e.groupName}</strong></td>
-                <td>${e.representative}</td>
+                <td>${e.representative}${repInfo.nickname ? ` <small>(${repInfo.nickname})</small>` : ''}</td>
                 <td>${e.fishers} / ${e.observers}</td>
                 <td><small>${regTime}</small></td>
             </tr>
