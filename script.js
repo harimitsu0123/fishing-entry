@@ -84,7 +84,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.23: HIDE GENERAL LABEL");
+        console.log("BORIJIN APP v8.1.24: VIEW PERSISTENCE & CATEGORY LOCK FIX");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1666,6 +1666,10 @@ function resetForm() {
 
     // Remove temp admin options if any
     document.querySelectorAll('.temp-option').forEach(el => el.remove());
+    // v8.1.24: Clear specialized window state
+    const selector = document.getElementById('main-source-selector');
+    if (selector) selector.classList.remove('special-window');
+
     updateSourceAvailability();
     setTimeout(() => window.scrollTo(0, 0), 50); 
 }
@@ -3269,9 +3273,21 @@ function updateSourceAvailability() {
                     radio.disabled = true;
                     if (label) label.classList.add('hidden');
                 } else {
-                    // Check if this source is being forced/locked by injectSpecialSource (v8.1.18)
+                    // v8.1.24: Check if this source is being forced/locked by injectSpecialSource
                     const isForced = label.classList.contains('forced-source');
-                    if (!isForced) {
+                    const isSpecialWindow = document.getElementById('main-source-selector')?.classList.contains('special-window');
+
+                    if (isSpecialWindow) {
+                        // If it's a special window (e.g. Mintsuri-only), DON'T unhide others
+                        if (isForced) {
+                            radio.disabled = false;
+                            label.classList.remove('hidden');
+                        } else {
+                            label.classList.add('hidden');
+                            radio.disabled = true;
+                        }
+                    } else if (!isForced) {
+                        // Non-special window (General or Admin): unhide allowed items
                         radio.disabled = false;
                         if (label) label.classList.remove('hidden');
                     }
@@ -3372,9 +3388,10 @@ function checkUrlParams() {
     const id = params.get('id');
     const src = params.get('src');
 
-    if (view && document.getElementById(view + '-view')) {
+    // v8.1.24 Fix: Use 'view' directly as the ID (already contains '-view')
+    if (view && document.getElementById(view)) {
         // Validation: Only admins can see dashboard/reception via URL
-        if ((view === 'dashboard' || view === 'reception') && !isAdminAuth) {
+        if ((view === 'dashboard-view' || view === 'reception-view' || view === 'settings-view') && !isAdminAuth) {
             console.warn("Blocked deep-link to admin view without auth");
             return;
         }
@@ -3383,13 +3400,13 @@ function checkUrlParams() {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         
         // Activate target view
-        const targetView = document.getElementById(view + '-view');
+        const targetView = document.getElementById(view);
         if (targetView) {
             targetView.classList.add('active');
             
             // Handle wide layout for admin views
             const container = document.querySelector('.container');
-            if (view === 'dashboard' || view === 'reception') {
+            if (view.includes('dashboard') || view.includes('reception')) {
                 if (container) container.classList.add('view-wide');
             } else {
                 if (container) container.classList.remove('view-wide');
@@ -3426,6 +3443,9 @@ function injectSpecialSource(sourceName) {
     const selector = document.getElementById('main-source-selector');
     const selectorGroup = document.getElementById('source-selector-group');
     if (!selector) return;
+
+    // v8.1.24: Mark as special window to prevent updateSourceAvailability from unhiding others
+    selector.classList.add('special-window');
 
     // v8.1.23: Hide selector entirely if it's 'General' (unless admin)
     if (sourceName === '一般' && !isAdminAuth) {
