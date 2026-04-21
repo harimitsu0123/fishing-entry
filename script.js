@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.7: STABILIZED");
+        console.log("BORIJIN APP v8.1.8: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -687,6 +687,7 @@ function initApp() {
     });
 
     if (isAdminAuth) {
+        document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
         switchAdminTab(currentAdminTab);
     }
 
@@ -3334,7 +3335,7 @@ window.commitLeaderResultsSave = async function() {
     }
 };
 
-/* --- SECURE ADMIN ACCESS v8.1.7 --- */
+/* --- SECURE ADMIN ACCESS v8.1.8 --- */
 let clickCount = 0;
 let lastClickTime = 0;
 window.handleSecureClick = function(e) {
