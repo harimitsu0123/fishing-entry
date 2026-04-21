@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.2: STABILIZED");
+        console.log("BORIJIN APP v8.1.3: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1650,18 +1650,32 @@ function updateDashboard() {
         updateSplitUI('suiho', fishersSuiho, state.settings.capacitySuiho, observersSuiho);
         updateSplitUI('harimitsu', fishersHarimitsu, state.settings.capacityHarimitsu, observersHarimitsu);
 
-        // v7.3: Individual special URLs
-        ['mintsuri', 'harimitsu', 'stats'].forEach(key => {
-            const el = document.getElementById(`url-${key}`);
-            if (el) {
-                const baseUrl = window.location.href.split('?')[0];
-                if (key === 'stats') {
-                    el.value = `${baseUrl}?view=stats`;
-                } else {
-                    el.value = `${baseUrl}?src=${encodeURIComponent(key)}`;
-                }
-            }
+        // v7.3 & v8.1.3: Update Share URLs in Dashboard Settings
+        const baseUrl = window.location.href.split('?')[0].split('#')[0];
+        
+        // Main Share URL
+        const mainUrlEl = document.getElementById('public-share-url');
+        if (mainUrlEl) mainUrlEl.value = baseUrl;
+
+        // Specific Source Registry URLs (v8.1.3 ID Alignment)
+        const sourceMap = {
+            'ippan-reg': '一般',
+            'mintsuri-reg': 'みん釣り',
+            'harimitsu-reg': 'ハリミツ',
+            'suiho-reg': '水宝'
+        };
+        Object.entries(sourceMap).forEach(([idSuffix, srcValue]) => {
+            const el = document.getElementById(`url-${idSuffix}`);
+            if (el) el.value = `${baseUrl}?src=${encodeURIComponent(srcValue)}`;
         });
+
+        // Leader Entry URL
+        const leaderEl = document.getElementById('url-leader-input');
+        if (leaderEl) leaderEl.value = `${baseUrl}?view=leader-entry-view`;
+
+        // Legacy/Misc
+        const statsEl = document.getElementById('url-stats');
+        if (statsEl) statsEl.value = `${baseUrl}?view=stats`;
 
         // Dashboard List Rendering (Fixed & Cleaned v7.3.0)
         const list = document.getElementById('entry-list');
@@ -1749,7 +1763,7 @@ function updateDashboard() {
 }
 
 /**
- * --- v8.0.0 & v8.1.2: FIXED DASHBOARD NAVIGATION ---
+ * --- v8.0.0 & v8.1.3: FIXED DASHBOARD NAVIGATION ---
  * Core function to handle admin sub-tab switching
  */
 function switchAdminTab(tabId) {
@@ -2988,7 +3002,7 @@ function updateSourceAvailability() {
     }
 }
 
-/* --- UI HELPERS & CONSTANTS RESTORED v8.1.2 --- */
+/* --- UI HELPERS & CONSTANTS RESTORED v8.1.3 --- */
 
 
 
@@ -3041,7 +3055,7 @@ function generateAdminQRCode() {
     });
 }
 
-/* --- SECURE ADMIN ACCESS v8.1.2 --- */
+/* --- SECURE ADMIN ACCESS v8.1.3 --- */
 let clickCount = 0;
 let lastClickTime = 0;
 window.handleSecureClick = function(e) {
