@@ -3383,7 +3383,7 @@ function updateSourceAvailability() {
                     const isForced = label.classList.contains('forced-source');
 
                     if (isSpecialWindow) {
-                        // If it's a special window (e.g. Mintsuri-only), DON'T unhide others
+                        // v8.1.36: If it's a special window, DON'T unhide others (including General)
                         if (isForced) {
                             radio.disabled = false;
                             label.classList.remove('hidden');
@@ -3391,8 +3391,8 @@ function updateSourceAvailability() {
                             label.classList.add('hidden');
                             radio.disabled = true;
                         }
-                    } else if (!isForced) {
-                        // Non-special window (General or Admin): unhide allowed items
+                    } else if (!isAdminAuthAction && !isAdminAuth) {
+                        // Standard unhide logic
                         radio.disabled = false;
                         if (label) label.classList.remove('hidden');
                     }
@@ -3604,7 +3604,7 @@ function injectSpecialSource(sourceName) {
         selector.appendChild(label);
         target = label.querySelector('input');
     } else {
-        target.checked = true;
+        target.checked = true; // Force check (v8.1.36)
         target.disabled = false;
         const label = target.closest('.source-option');
         label.classList.remove('hidden'); // Show target
@@ -3614,8 +3614,20 @@ function injectSpecialSource(sourceName) {
         
         // Ensure parent group is visible
         if (selectorGroup) selectorGroup.classList.remove('hidden');
+    }
 
-        // v8.1.33: Re-styling handled by classes
+    // Trigger change event to update UI/capacity states
+    if (target) {
+        target.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    
+    // v8.1.36: Explicitly ensure "一般" is hidden in ANY specialized window
+    if (sourceName !== '一般') {
+        const ippanRadio = selector.querySelector('input[value="一般"]');
+        if (ippanRadio) {
+            ippanRadio.disabled = true;
+            ippanRadio.closest('.source-option')?.classList.add('hidden');
+        }
     }
     
     console.log(`Special view applied for: ${sourceName}`);

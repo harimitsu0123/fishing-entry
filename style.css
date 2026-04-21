@@ -1663,18 +1663,18 @@ th {
 .sync-status-indicator {
     position: fixed;
     right: 1rem;
-    bottom: 3.5rem; /* Increased from 2.5rem to avoid overlap with version tag (v8.1.35) */
-    background: rgba(255, 255, 255, 0.9);
-    padding: 0.4rem 0.8rem;
+    top: 80px; /* Moved to top-right to avoid version string overlap (v8.1.36) */
+    background: rgba(255, 255, 255, 0.95);
+    padding: 0.5rem 1rem;
     border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: bold;
+    font-size: 0.8rem;
+    font-weight: 800;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    gap: 0.6rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     z-index: 5001;
-    border: 1px solid #e2e8f0;
+    border: 2px solid var(--primary-color);
 }
 
 .sync-dot {
