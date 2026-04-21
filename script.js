@@ -80,7 +80,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.17: CATEGORY FIX & CAPACITY SYNC");
+        console.log("BORIJIN APP v8.1.18: CATEGORY VISIBILITY & CAPACITY SYNC");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -3217,7 +3217,7 @@ function updateSourceAvailability() {
         const fishersSuiho = sumCategoryFishers('水宝');
         const fishersHarimitsu = sumCategoryFishers('ハリミツ');
         
-        // v8.1.17: Filter out cancelled for global capacity check
+        // v8.1.18: Filter out cancelled for global capacity check
         const totalNow = state.entries.filter(e => e.status !== 'cancelled').reduce((sum, en) => sum + en.fishers, 0);
 
         const updateRadio = (val, current, max) => {
@@ -3231,8 +3231,12 @@ function updateSourceAvailability() {
                     radio.disabled = true;
                     if (label) label.classList.add('hidden');
                 } else {
-                    radio.disabled = false;
-                    if (label) label.classList.remove('hidden');
+                    // Check if this source is being forced/locked by injectSpecialSource (v8.1.18)
+                    const isForced = label.classList.contains('forced-source');
+                    if (!isForced) {
+                        radio.disabled = false;
+                        if (label) label.classList.remove('hidden');
+                    }
                 }
             }
         };
@@ -3355,7 +3359,7 @@ function checkUrlParams() {
         }
     }
     
-    // v8.1.17: Handle specialized category source
+    // v8.1.18: Handle specialized category source
     if (src) {
         const validSources = {
             'mintsuri': 'みん釣り',
@@ -3376,7 +3380,7 @@ function checkUrlParams() {
 }
 
 /**
- * v8.1.17: Re-implemented category URL injection helper
+ * v8.1.18: Updated category URL injection helper (Locked but visible UI)
  */
 function injectSpecialSource(sourceName) {
     const selector = document.getElementById('main-source-selector');
@@ -3385,18 +3389,19 @@ function injectSpecialSource(sourceName) {
     // Reset visibility of all options first
     selector.querySelectorAll('.source-option').forEach(opt => {
         opt.classList.add('hidden');
+        opt.classList.remove('forced-source');
         opt.querySelector('input').disabled = true;
     });
 
     // Find our specific target radio
     let target = selector.querySelector(`input[name="reg-source"][value="${sourceName}"]`);
     
-    // If not found (like special admin-only sources), we may need to create it
     if (!target) {
+        // Create specialized radio if missing
         const badgeClassMap = { '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu', 'みん釣り': 'badge-mintsuri' };
         const badgeClass = badgeClassMap[sourceName] || 'badge-ippan';
         const label = document.createElement('label');
-        label.className = 'source-option admin-only temp-option';
+        label.className = 'source-option forced-source';
         label.innerHTML = `
             <input type="radio" name="reg-source" value="${sourceName}" checked required>
             <span class="source-label">
@@ -3409,10 +3414,18 @@ function injectSpecialSource(sourceName) {
     } else {
         target.checked = true;
         target.disabled = false;
-        target.closest('.source-option').classList.remove('hidden');
+        const label = target.closest('.source-option');
+        label.classList.remove('hidden');
+        label.classList.add('forced-source');
+        
+        // Change text to emphasize it's a fixed window
+        const labelText = label.querySelector('.source-label');
+        if (labelText && !labelText.innerHTML.includes('専用窓口')) {
+             labelText.innerHTML += ' (専用窓口)';
+        }
     }
 
-    // Hide the group selector itself if we want one-category-only feel? 
-    // Usually keep it but only with 1 option.
+    // Lock other inputs in the selector to prevent switching back if UI updates
+    console.log(`Locked view for source: ${sourceName}`);
 }
 

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=8.1.17">
+    <link rel="stylesheet" href="style.css?v=8.1.18">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -336,7 +336,7 @@
                                 </div>
                             </div>
                             <!-- Harimitsu -->
-                            <div class="split-card admin-only hidden harimitsu">
+                            <div class="split-card harimitsu">
                                 <div class="split-header">
                                     <span class="badge badge-harimitsu">ハリミツ</span>
                                     <span class="split-value"><span id="curr-harimitsu">0</span> / <span
@@ -366,7 +366,7 @@
                             <button class="filter-btn" data-filter="一般">一般</button>
                             <button class="filter-btn" data-filter="みん釣り">みん釣り</button>
                             <button class="filter-btn" data-filter="水宝">水宝</button>
-                            <button class="filter-btn admin-only" data-filter="ハリミツ">ハリミツ</button>
+                            <button class="filter-btn" data-filter="ハリミツ">ハリミツ</button>
                         </div>
                         <div class="table-container">
                             <table id="entry-table">
@@ -999,7 +999,7 @@
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" onclick="handleSecureClick(event)">&copy; 2026 釣り大会 実行委員会</p>
             <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;"
-            >v8.1.17</span>
+            >v8.1.18</span>
         </div>
     </footer>
 
@@ -1011,7 +1011,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=8.1.17"></script>
+    <script src="script.js?v=8.1.18"></script>
 </body>
 
 </html>
