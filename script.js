@@ -3451,8 +3451,8 @@ function checkUrlParams() {
             const targetView = viewAliases[view] || view;
 
             if (document.getElementById(targetView)) {
-                // Security Check
-                const adminViews = ['dashboard-view', 'reception-view', 'settings-view', 'mintsuri-coordinator-view', 'harimitsu-coordinator-view', 'suiho-coordinator-view'];
+                // Security Check: Only protect core management views. Coordinator views are accessible via shared URL.
+                const adminViews = ['dashboard-view', 'reception-view', 'settings-view'];
                 if (adminViews.includes(targetView) && !isAdminAuth) {
                     console.log("BORIJIN: Redirecting to admin login for protected view:", targetView);
                     showAdminLogin(targetView);
