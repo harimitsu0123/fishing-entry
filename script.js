@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.0.9: STABILIZED");
+        console.log("BORIJIN APP v8.1.0: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -136,6 +136,7 @@ function restoreUIState() {
 }
 
 async function loadData() {
+    initToast();
     // 1. Try to load from Cloud (GAS) first for synchronization
     updateSyncStatus('syncing');
     try {
@@ -2986,3 +2987,20 @@ function generateAdminQRCode() {
         correctLevel: QRCode.CorrectLevel.H
     });
 }
+
+/* --- SECURE ADMIN ACCESS v8.1.0 --- */
+let clickCount = 0;
+let lastClickTime = 0;
+window.handleSecureClick = function(e) {
+    const now = Date.now();
+    if (now - lastClickTime < 500) {
+        clickCount++;
+    } else {
+        clickCount = 1;
+    }
+    lastClickTime = now;
+    if (clickCount >= 5) {
+        clickCount = 0;
+        showAdminLogin();
+    }
+};
