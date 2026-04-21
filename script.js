@@ -84,7 +84,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.24: VIEW PERSISTENCE & CATEGORY LOCK FIX");
+        console.log("BORIJIN APP v8.1.25: HARD LOCK SPECIALIZED BUTTONS");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -106,7 +106,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // If persistent login is true, reveal admin parts
         if (isAdminAuth) {
-            document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+            const params = new URLSearchParams(window.location.search);
+            const srcParam = params.get('src');
+            
+            document.querySelectorAll('.admin-only').forEach(el => {
+                // v8.1.25: If a specialized source is active (e.g. ?src=harimitsu), 
+                // do NOT unhide other admin-only categories in the form.
+                if (srcParam && el.closest('#main-source-selector')) {
+                    return; 
+                }
+                el.classList.remove('hidden');
+            });
         }
         restoreUIState();
 
@@ -3422,8 +3432,9 @@ function checkUrlParams() {
             'suiho': '水宝',
             'general': '一般'
         };
-        if (validSources[src]) {
-            injectSpecialSource(validSources[src]);
+        const decodedSrc = validSources[src.toLowerCase()];
+        if (decodedSrc) {
+            injectSpecialSource(decodedSrc);
             // Ensure we are in registration view ONLY IF no other view was explicitly requested (v8.1.20)
             if (!view) {
                 switchView(null, 'registration-view'); 
