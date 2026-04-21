@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.0: STABILIZED");
+        console.log("BORIJIN APP v8.1.1: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -754,36 +754,7 @@ function initApp() {
         if (el) el.addEventListener('input', updateCapacityTotal);
     });
 
-    // Admin Reveal (5-Tap on Footer Copyright) - v5.7 Simplified
-    const footerReveal = document.getElementById('footer-reveal');
-    let tapCount = 0;
-    let tapTimer;
 
-    if (footerReveal) {
-        footerReveal.addEventListener('click', (e) => {
-            tapCount++;
-            clearTimeout(tapTimer);
-
-            if (tapCount >= 5) {
-                tapCount = 0;
-                const pw = prompt("管理者パスワードを入力してください");
-                if (pw === state.settings.adminPassword || pw === 'admin') {
-                    isAdminAuth = true;
-                    localStorage.setItem('isAdminAuth', 'true');
-                    document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                    showToast('✨ 管理者ログイン完了', 'success');
-                    currentAdminTab = 'tab-list';
-                    switchView(null, 'dashboard-view');
-                } else if (pw !== null) {
-                    showToast('パスワードが違います', 'error');
-                }
-            } else {
-                tapTimer = setTimeout(() => { tapCount = 0; }, 3000); // 3s window for 5 taps
-            }
-        });
-        // Block context menu
-        footerReveal.addEventListener('contextmenu', (e) => e.preventDefault());
-    }
 
     // --- NEW: Cancel Edit functionality ---
     const cancelEditBtn = document.getElementById('cancel-edit-btn');
@@ -940,6 +911,7 @@ function updateAdminToolbar() {
             if (btn.id === 'admin-logout') {
                 btn.addEventListener('click', () => {
                     isAdminAuth = false;
+                    localStorage.removeItem('isAdminAuth');
                     sessionStorage.removeItem('isAdminAuth');
                     location.reload();
                 });
@@ -2934,10 +2906,9 @@ function updateSourceAvailability() {
     }
 }
 
-/* --- UI HELPERS & CONSTANTS RESTORED v8.0.9 --- */
+/* --- UI HELPERS & CONSTANTS RESTORED v8.1.1 --- */
 
-const genderLabels = { 'male': '男性', 'female': '女性', 'other': 'その他' };
-const ageLabels = { 'age1': '10代以下', 'age2': '20代', 'age3': '30代', 'age4': '40代', 'age5': '50代', 'age6': '60代以上' };
+
 
 function safeAddListener(id, event, callback) {
     const el = document.getElementById(id);
@@ -2988,17 +2959,18 @@ function generateAdminQRCode() {
     });
 }
 
-/* --- SECURE ADMIN ACCESS v8.1.0 --- */
+/* --- SECURE ADMIN ACCESS v8.1.1 --- */
 let clickCount = 0;
 let lastClickTime = 0;
 window.handleSecureClick = function(e) {
     const now = Date.now();
-    if (now - lastClickTime < 500) {
+    if (now - lastClickTime < 800) {
         clickCount++;
     } else {
         clickCount = 1;
     }
     lastClickTime = now;
+    console.log(`Admin tap registered: ${clickCount}/5`); // Debug log
     if (clickCount >= 5) {
         clickCount = 0;
         showAdminLogin();
