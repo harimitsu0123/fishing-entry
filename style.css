@@ -1065,7 +1065,7 @@ textarea:focus {
 
 /* Table Styles - Optimized for Density (v7.9.3) */
 th, td {
-    padding: 0.35rem 0.5rem; /* Tightened row spacing for density */
+    padding: 0.2rem 0.5rem; /* Further tightened for v8.1.43 */
     text-align: left;
     border-bottom: 1px solid #e1e8ed;
     overflow: visible; /* Prevent badge clipping in cells (v8.1.35) */
