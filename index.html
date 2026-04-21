@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=7.9.3">
+    <link rel="stylesheet" href="style.css?v=7.9.4">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -699,12 +699,16 @@
                     <!-- Search & List Column -->
                     <div class="reception-sidebar">
                         <div class="search-box mb-2">
-                            <input type="text" id="reception-search" placeholder="受付番号・名前で検索...">
+                            <input type="text" id="reception-search" placeholder="受付番号・代表者・同行者・Tシャツで検索...">
                         </div>
-                        <div class="flex-between mb-2">
-                            <label class="toggle-control">
-                                <input type="checkbox" id="show-completed-toggle" checked>
-                                <span class="control-label">受付済みも表示</span>
+                        <div class="filter-controls mb-2" style="display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                            <div class="btn-group" style="display: flex; gap: 2px; background: #e2e8f0; padding: 2px; border-radius: 6px;">
+                                <button id="sort-reception-id" class="btn-toolbar active" onclick="setReceptionSort('id')" style="padding: 2px 8px; font-size: 0.75rem; border: none; border-radius: 4px; cursor: pointer;">ID順</button>
+                                <button id="sort-reception-source" class="btn-toolbar" onclick="setReceptionSort('source')" style="padding: 2px 8px; font-size: 0.75rem; border: none; border-radius: 4px; cursor: pointer;">区分順</button>
+                            </div>
+                            <label class="toggle-control" style="font-size: 0.8rem; cursor: pointer;">
+                                <input type="checkbox" id="show-completed-toggle">
+                                <span class="control-label">受付済みを表示</span>
                             </label>
                         </div>
                         <div class="reception-group-list" id="reception-group-list">
@@ -868,7 +872,7 @@
         <div class="container"
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" style="cursor: default;">&copy; 2026 釣り大会 実行委員会</p>
-            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.9.3</span>
+            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.9.4</span>
         </div>
     </footer>
 

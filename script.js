@@ -1,6 +1,5 @@
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyGmFH8-GXlWes9GHH-uELyT1NQNDAcK3JatxOSw331-Wd928ZHP9xKAcQFnnekHNLy/exec";
 
-// State Management
 let state = {
     entries: [],
     deletedIds: [], // v7.9.3: Tracking local hard-deletions
@@ -14,7 +13,18 @@ let state = {
         startTime: "",
         deadline: "",
         capacityTotal: 250,
-        adminPassword: "admin"
+        adminPassword: "admin",
+        // v7.9.3: Pre-populated Ikesu List (36 ponds)
+        ikesuList: [
+            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `小${i+1}`, capacity: 6 })),
+            { id: 'small-7', name: '小7', capacity: 6 },
+            { id: 'small-7n', name: '小7北', capacity: 6 },
+            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `小${i+8}`, capacity: 6 })),
+            ...Array.from({length: 10}, (_, i) => ({ id: `med-${i+1}`, name: `中${i+1}`, capacity: 8 })),
+            ...Array.from({length: 3}, (_, i) => ({ id: `large-${i+1}`, name: `大${i+1}`, capacity: 12 })),
+            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `でっぱり${i+1}`, capacity: 12 })),
+            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `南${i+1}`, capacity: 12 }))
+        ]
     },
     lastUpdated: 0 // Unix timestamp for sync merging
 };
@@ -69,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.9.3: REMOVE DUPLICATE SUMMARY");
+        console.log("BORIJIN APP v7.9.4: REMOVE DUPLICATE SUMMARY");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -142,6 +152,20 @@ async function loadData() {
                     state.deletedIds = parsedLocal.deletedIds || [];
                     state = mergeData(parsedLocal, cloudData);
                     console.log('Cloud sync: data merged');
+                    
+                    // v7.9.3: Ensure ikesuList is present even in merged state
+                    if (!state.settings.ikesuList || state.settings.ikesuList.length === 0) {
+                        state.settings.ikesuList = [
+                            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `小${i+1}`, capacity: 6 })),
+                            { id: 'small-7', name: '小7', capacity: 6 },
+                            { id: 'small-7n', name: '小7北', capacity: 6 },
+                            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `小${i+8}`, capacity: 6 })),
+                            ...Array.from({length: 10}, (_, i) => ({ id: `med-${i+1}`, name: `中${i+1}`, capacity: 8 })),
+                            ...Array.from({length: 3}, (_, i) => ({ id: `large-${i+1}`, name: `大${i+1}`, capacity: 12 })),
+                            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `でっぱり${i+1}`, capacity: 12 })),
+                            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `南${i+1}`, capacity: 12 }))
+                        ];
+                    }
                     
                     localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
                     if (state.lastUpdated > cloudData.lastUpdated) {
@@ -1680,19 +1704,19 @@ function updateDashboard() {
             const regTime = e.timestamp ? new Date(e.timestamp).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--:--';
 
             tr.innerHTML = `
-                <td><span class="id-badge">${e.id}</span></td>
-                <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}">${e.source}</span></td>
-                <td><div style="font-weight:800; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}">${e.groupName}</div></td>
+                <td><span class="id-badge" style="white-space:nowrap;">${e.id}</span></td>
+                <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}" style="white-space:nowrap;">${e.source}</span></td>
+                <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}">${e.groupName}</div></td>
                 <td>${pSummary}</td>
-                <td><small>${e.fishers}/${e.observers}</small></td>
-                <td><span style="font-size:0.75rem; font-weight:700;">${statusLabel}</span></td>
-                <td><small>${regTime}</small></td>
+                <td><small style="white-space:nowrap;">${e.fishers}/${e.observers}</small></td>
+                <td><span style="font-size:0.75rem; font-weight:700; white-space:nowrap;">${statusLabel}</span></td>
+                <td><small style="white-space:nowrap;">${regTime}</small></td>
                 <td>
-                    <div style="display:flex; gap:0.2rem; flex-wrap: wrap; width: 110px;">
-                        <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">確認</button>
-                        <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">修正</button>
-                        <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">受付</button>
-                        <button class="btn-outline btn-small btn-delete" onclick="requestDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">削除</button>
+                    <div style="display:flex; gap:0.2rem; flex-wrap: nowrap; width: auto; align-items:center;">
+                        <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
+                        <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
+                        <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
+                        <button class="btn-outline btn-small btn-delete" onclick="requestDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">削除</button>
                     </div>
                 </td>
             `;
@@ -2033,6 +2057,15 @@ async function testEmailFeature() {
 
 // --- Reception View Logic ---
 
+let activeReceptionSort = 'id'; // 'id' or 'source'
+window.setReceptionSort = function(mode) {
+    activeReceptionSort = mode;
+    document.querySelectorAll('.btn-toolbar').forEach(btn => {
+        btn.classList.toggle('active', btn.id === `sort-reception-${mode}`);
+    });
+    updateReceptionList();
+};
+
 function updateReceptionList() {
     const list = document.getElementById('reception-group-list');
     const searchTerm = document.getElementById('reception-search').value.toLowerCase();
@@ -2047,18 +2080,25 @@ function updateReceptionList() {
         return { ...e, isCompleted, finishedCount, totalCount };
     });
 
-    // Sort: isCompleted false first, then by ID or timestamp
+    // Sort: isCompleted false first, then logic
     processedEntries.sort((a, b) => {
         if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
-        return b.id.localeCompare(a.id); // Reverse ID sort (newest roughly first)
+        
+        if (activeReceptionSort === 'source') {
+            if (a.source !== b.source) return a.source.localeCompare(b.source);
+        }
+        
+        // Natural Sort for ID (A-1, A-10, etc.)
+        return a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' });
     });
 
     processedEntries.forEach(e => {
-        // Search Filter (v7.8.7 Expanded)
+        // Search Filter (v7.9.3 Expanded for all member names)
         const pNames = e.participants.map(p => p.name).join(' ');
+        const pNicks = e.participants.map(p => p.nickname || "").join(' ');
         const pTshirts = e.participants.map(p => p.tshirtSize || "").join(' ');
         const pGenders = e.participants.map(p => genderLabels[p.gender] || "").join(' ');
-        const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pTshirts} ${pGenders}`.toLowerCase();
+        const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks} ${pTshirts} ${pGenders}`.toLowerCase();
         
         if (searchTerm && !combined.includes(searchTerm)) return;
 
@@ -2167,13 +2207,20 @@ window.updateParticipantStatus = function (entryId, pIdx, status) {
     const entry = state.entries.find(e => e.id === entryId);
     if (!entry) return;
 
-    entry.participants[pIdx].status = status;
+    const currentStatus = entry.participants[pIdx].status;
+    const isTogglingOff = currentStatus === status;
+    
+    // v7.9.3: Toggle logic - if already active, revert to pending
+    const newStatus = isTogglingOff ? 'pending' : status;
+    entry.participants[pIdx].status = newStatus;
 
     // Sync group-level flags (for backward compatibility and stats)
     syncGroupStatusFromParticipants(entry);
 
-    const statusLabel = status === 'checked-in' ? '受付済' : status === 'absent' ? '欠席' : '未受付';
-    showToast(`${entry.participants[pIdx].name} 様を「${statusLabel}」に更新しました`, 'info');
+    if (!isTogglingOff) {
+        const statusLabel = status === 'checked-in' ? '受付済' : status === 'absent' ? '欠席' : '未受付';
+        showToast(`${entry.participants[pIdx].name} 様を「${statusLabel}」に更新しました`, 'info');
+    }
 
     entry.lastModified = new Date().toLocaleString('ja-JP');
     saveData();
@@ -2707,6 +2754,17 @@ function initToast() {
 
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    // v7.9.3: Prevent stacking duplicate notifications
+    const existing = Array.from(container.querySelectorAll('.toast'));
+    const isDuplicate = existing.some(t => t.innerText.includes(message));
+    if (isDuplicate) {
+        // Find the oldest one and remove it to "refresh" the notice
+        const old = existing.find(t => t.innerText.includes(message));
+        if (old) old.remove();
+    }
+
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
 
