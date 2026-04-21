@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.6: STABILIZED");
+        console.log("BORIJIN APP v8.1.7: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1679,7 +1679,7 @@ function updateDashboard() {
         updateSplitUI('suiho', fishersSuiho, state.settings.capacitySuiho, observersSuiho);
         updateSplitUI('harimitsu', fishersHarimitsu, state.settings.capacityHarimitsu, observersHarimitsu);
 
-        // v7.3 & v8.1.6: Update Share URLs in Dashboard Settings (User Requirements Match)
+        // v7.3 & v8.1.7: Update Share URLs in Dashboard Settings (User Requirements Match)
         const baseUrl = window.location.href.split('?')[0].split('#')[0];
         
         // 1. Main Public URL
@@ -1794,7 +1794,7 @@ function updateDashboard() {
 }
 
 /**
- * --- v8.0.0 & v8.1.6: FIXED DASHBOARD NAVIGATION ---
+ * --- v8.0.0 & v8.1.7: FIXED DASHBOARD NAVIGATION ---
  * Core function to handle admin sub-tab switching
  */
 function switchAdminTab(tabId) {
@@ -2972,29 +2972,101 @@ window.confirmReset = async function () {
 };
 
 window.exportGroupsCSV = function() {
-    const headers = ['受付番号', '区分', 'グループ名', '代表者名', '電話番号', 'メール', '釣り人数', '見学人数', '登録時間'];
-    const rows = state.entries.map(e => [e.id, e.source, e.groupName, e.representative, e.phone, e.email, e.fishers, e.observers, formatDate(e.timestamp)]);
-    downloadCSV("groups", headers, rows);
-};
+/**
+ * v8.1.7: Restored QR generation (fixing container ID mismatch)
+ */
+function generateAdminQRCode() {
+    const container = document.getElementById('admin-qr-code-container');
+    if (!container) return;
+    container.innerHTML = "";
+    if (typeof QRCode === 'undefined') {
+        container.innerHTML = "<p style='font-size:0.8rem; color:var(--text-muted);'>QRコードライブラリ読み込み中...</p>";
+        return;
+    }
+    const baseUrl = window.location.href.split('?')[0].split('#')[0];
+    const url = baseUrl; // Standard public URL
+    new QRCode(container, {
+        text: url,
+        width: 128,
+        height: 128,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+}
 
-window.exportParticipantsCSV = function() {
-    const headers = ['受付番号', '区分', 'グループ名', '代表者名', '参加区分', '参加者名', '性別', 'ニックネーム', 'Tシャツ', '地域', '年代', '登録時間'];
+function openShareUrl(id) {
+    const el = document.getElementById(id);
+    if (el && el.value) {
+        window.open(el.value, '_blank');
+    }
+}
+
+function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+}
+
+function handleCheckStatus() {
+    const searchVal = prompt("お名前（代表者）を入力してください。");
+    if (!searchVal) return;
+    
+    dashboardFilter = 'all';
+    const matches = state.entries.filter(e => e.representative.includes(searchVal));
+    if (matches.length > 0) {
+        alert(`${matches.length} 件見つかりました。最新の番号は ${matches[0].id} です。`);
+        location.reload();
+    } else {
+        alert("見つかりませんでした。もう一度試すか、事務局へお問い合わせください。");
+    }
+}
+
+async function exportGroupsCSV() {
+    const headers = ["ID", "区分", "グループ名", "代表者", "電話番号", "人数(釣り)", "人数(見学)", "ステータス", "日時"];
+    const rows = state.entries.map(e => [
+        e.id, 
+        e.source, 
+        `"${e.groupName}"`, 
+        `"${e.representative}"`, 
+        `'${e.phone}`, 
+        e.fishers, 
+        e.observers, 
+        e.status, 
+        e.timestamp
+    ]);
+    downloadCSV("groups_export.csv", headers, rows);
+}
+
+async function exportParticipantsCSV() {
+    const headers = ["ID", "区分", "グループ名", "氏名", "ニックネーム", "性別", "年代", "地域", "区分(釣/見)", "サイズ", "ステータス"];
     const rows = [];
     state.entries.forEach(e => {
-        e.participants.forEach(p => {
-            rows.push([e.id, e.source, e.groupName, e.representative, p.type==='observer'?'見学':'釣り', p.name, genderLabels[p.gender]||"", p.nickname, p.tshirtSize, p.region, ageLabels[p.age], formatDate(e.timestamp)]);
+        (e.participants || []).forEach(p => {
+            rows.push([
+                e.id,
+                e.source,
+                `"${e.groupName}"`,
+                `"${p.name}"`,
+                `"${p.nickname || ''}"`,
+                p.gender,
+                p.age,
+                `"${p.region || ''}"`,
+                p.type === 'fisher' ? '釣り' : '見学',
+                p.tshirtSize,
+                e.status
+            ]);
         });
     });
-    downloadCSV("participants", headers, rows);
-};
+    downloadCSV("participants_export.csv", headers, rows);
+}
 
-function downloadCSV(name, headers, rows) {
-    let csv = "\uFEFF" + headers.join(",") + "\n";
-    rows.forEach(row => csv += row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",") + "\n");
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+function downloadCSV(filename, headers, rows) {
+    const csvContent = "\uFEFF" + [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `fishing_${name}.csv`;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
     link.click();
 }
 
@@ -3125,16 +3197,19 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+/**
+ * v8.1.7: Restored QR generation (fixing container ID mismatch)
+ */
 function generateAdminQRCode() {
-    const container = document.getElementById('admin-qr-container');
+    const container = document.getElementById('admin-qr-code-container');
     if (!container) return;
     container.innerHTML = "";
     if (typeof QRCode === 'undefined') {
         container.innerHTML = "<p style='font-size:0.8rem; color:var(--text-muted);'>QRコードライブラリ読み込み中...</p>";
         return;
     }
-    const baseUrl = window.location.href.split('?')[0];
-    const url = `${baseUrl}?view=stats`;
+    const baseUrl = window.location.href.split('?')[0].split('#')[0];
+    const url = baseUrl; // Standard public URL
     new QRCode(container, {
         text: url,
         width: 128,
@@ -3145,7 +3220,121 @@ function generateAdminQRCode() {
     });
 }
 
-/* --- SECURE ADMIN ACCESS v8.1.6 --- */
+function openShareUrl(id) {
+    const el = document.getElementById(id);
+    if (el && el.value) {
+        window.open(el.value, '_blank');
+    }
+}
+
+function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+}
+
+function handleCheckStatus() {
+    const searchVal = prompt("お名前（代表者）を入力してください。");
+    if (!searchVal) return;
+    
+    dashboardFilter = 'all';
+    const matches = state.entries.filter(e => e.representative.includes(searchVal));
+    if (matches.length > 0) {
+        alert(`${matches.length} 件見つかりました。最新の番号は ${matches[0].id} です。`);
+        location.reload();
+    } else {
+        alert("見つかりませんでした。もう一度試すか、事務局へお問い合わせください。");
+    }
+}
+
+function renderRankings() {
+    const list = document.getElementById('ranking-list');
+    if (!list) return;
+    list.innerHTML = '';
+    const sorted = [...state.entries]
+        .filter(e => e.status !== 'cancelled')
+        .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
+    if (sorted.length === 0) {
+        list.innerHTML = '<li class="p-4 text-center text-muted">データがありません</li>';
+        return;
+    }
+    sorted.forEach((e, i) => {
+        const li = document.createElement('li');
+        li.className = 'list-item-modern';
+        li.innerHTML = `
+            <div class="rank-badge">${i + 1}</div>
+            <div style="flex:1">
+                <div style="font-weight:bold">${e.groupName}</div>
+                <div style="font-size:0.8rem; color:#666">${e.representative}</div>
+            </div>
+            <div style="font-size:1.2rem; font-weight:900; color:var(--primary-color)">
+                ${e.totalScore || 0} <small style="font-size:0.8rem">pt</small>
+            </div>`;
+        list.appendChild(li);
+    });
+}
+
+function renderLeaderEntryForm() {
+    const container = document.getElementById('leader-entry-form-container');
+    if (!container) return;
+    container.innerHTML = '<p class="text-center p-4">読み込み中...</p>';
+    const searchHtml = `
+        <div class="form-group">
+            <label>入力するチームを選択</label>
+            <select id="leader-group-select" class="form-control" style="font-size:1.1rem; padding:0.8rem;">
+                <option value="">-- チームを選択してください --</option>
+                ${state.entries
+                    .filter(e => e.status !== 'cancelled')
+                    .sort((a,b) => a.groupName.localeCompare(b.groupName, 'ja'))
+                    .map(e => `<option value="${e.id}">${e.groupName} (${e.representative})</option>`).join('')}
+            </select>
+        </div>
+        <div id="leader-score-input-area" class="hidden mt-4"></div>`;
+    container.innerHTML = searchHtml;
+    document.getElementById('leader-group-select').addEventListener('change', (e) => {
+        const id = e.target.value;
+        const area = document.getElementById('leader-score-input-area');
+        if (!id) { area.classList.add('hidden'); return; }
+        const entry = state.entries.find(en => en.id === id);
+        area.innerHTML = `
+            <div class="card p-3 mb-3" style="background:#f8f9ff">
+                <h4>${entry.groupName}</h4>
+                <p class="small text-muted">ID: ${entry.id} / 代表者: ${entry.representative}</p>
+                <div class="form-group mt-3">
+                    <label style="font-weight:bold">釣果ポイント (合計)</label>
+                    <input type="number" id="leader-point-input" class="form-control" 
+                           style="font-size:2rem; font-weight:900; text-align:center;" 
+                           value="${entry.totalScore || 0}" min="0">
+                </div>
+            </div>
+            <button class="btn-primary w-100 p-3" style="font-size:1.2rem" onclick="window.commitLeaderResultsSave()">
+                確定して保存
+            </button>`;
+        area.classList.remove('hidden');
+    });
+}
+
+window.backToLeaderEdit = function() { switchView(null, 'leader-entry-view'); };
+
+window.commitLeaderResultsSave = async function() {
+    const id = document.getElementById('leader-group-select')?.value;
+    const score = parseInt(document.getElementById('leader-point-input')?.value || 0);
+    if (!id) { alert("チームを選択してください。"); return; }
+    const entry = state.entries.find(e => e.id === id);
+    if (!entry) return;
+    if (!confirm(`${entry.groupName} の得点を ${score} pt で登録しますか？`)) return;
+    entry.totalScore = score;
+    entry.lastModified = new Date().toLocaleString('ja-JP');
+    showToast("保存中...", "info");
+    const success = await syncToCloud();
+    if (success) {
+        showToast("✅ 保存完了しました", "success");
+        renderLeaderEntryForm();
+    } else {
+        showToast("❌ 同期に失敗しました", "error");
+    }
+};
+
+/* --- SECURE ADMIN ACCESS v8.1.7 --- */
 let clickCount = 0;
 let lastClickTime = 0;
 window.handleSecureClick = function(e) {
