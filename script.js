@@ -1728,7 +1728,7 @@ function updateDashboard() {
         if (leaderEl) leaderEl.value = `${baseUrl}?view=leader-entry`;
 
         const mintsuriAdminEl = document.getElementById('url-mintsuri-admin');
-        if (mintsuriAdminEl) mintsuriAdminEl.value = `${baseUrl}?view=mintsuri`;
+        if (mintsuriAdminEl) mintsuriAdminEl.value = `${baseUrl}?view=mintsuri-coordinator-view`;
 
         const statsUrlEl = document.getElementById('url-stats');
         if (statsUrlEl) statsUrlEl.value = `${baseUrl}?view=stats`;
