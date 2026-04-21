@@ -1663,18 +1663,18 @@ th {
 .sync-status-indicator {
     position: fixed;
     right: 1rem;
-    top: 80px; /* Moved to top-right to avoid version string overlap (v8.1.36) */
+    bottom: 1rem; /* Moved back to bottom area (v8.1.37) */
     background: rgba(255, 255, 255, 0.95);
     padding: 0.5rem 1rem;
-    border-radius: 20px;
+    border-radius: 24px;
     font-size: 0.8rem;
     font-weight: 800;
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.12);
     z-index: 5001;
-    border: 2px solid var(--primary-color);
+    border: 1px solid var(--primary-color);
 }
 
 .sync-dot {
