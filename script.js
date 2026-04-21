@@ -3,6 +3,7 @@ const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyGmFH8-GXlWes9
 // State Management
 let state = {
     entries: [],
+    deletedIds: [], // v7.9.3: Tracking local hard-deletions
     settings: {
         competitionName: "第1回 釣り大会",
         capacityGeneral: 100,
@@ -68,7 +69,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.9.0: DASHBOARD & RECEPTION REPAIRS");
+        console.log("BORIJIN APP v7.9.3: REMOVE DUPLICATE SUMMARY");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -137,6 +138,8 @@ async function loadData() {
                 
                 if (hasLocalEntries) {
                     const parsedLocal = JSON.parse(localData);
+                    // Ensure deletedIds is carried over if present
+                    state.deletedIds = parsedLocal.deletedIds || [];
                     state = mergeData(parsedLocal, cloudData);
                     console.log('Cloud sync: data merged');
                     
@@ -148,6 +151,7 @@ async function loadData() {
                     // New PC or empty local: Trust Cloud as absolute truth
                     console.log('Cloud sync: New device or empty local detected. Using Cloud data.');
                     state = cloudData;
+                    state.deletedIds = state.deletedIds || [];
                     localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
                 }
                 
@@ -239,8 +243,10 @@ function mergeData(local, cloud) {
         merged.settings = { ...cloud.settings, ...local.settings };
     }
     
-    // 重複排除とソート
-    const uniqueEntries = Array.from(new Map(merged.entries.map(e => [e.id, e])).values());
+    // --- 3. 重複排除、削除済みフィルタ、ソート ---
+    const uniqueEntries = Array.from(new Map(merged.entries.map(e => [e.id, e])).values())
+        .filter(e => !state.deletedIds.includes(e.id));
+        
     merged.entries = uniqueEntries.sort((a, b) => {
         const timeA = new Date(a.timestamp || 0).getTime();
         const timeB = new Date(b.timestamp || 0).getTime();
@@ -511,6 +517,11 @@ async function syncToCloud() {
         });
         clearTimeout(timeoutId);
         console.log('Cloud sync: data saved');
+        
+        // v7.9.3: Clear deletion log after successful cloud update
+        state.deletedIds = [];
+        localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+        
         localStorage.removeItem('fishing_sync_pending');
         updateSyncStatus('success');
     } catch (e) {
@@ -1656,10 +1667,13 @@ function updateDashboard() {
             const rep = e.participants[0] || { name: e.representative };
             const getGenderMark = (p) => p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
             
+            // v7.9.3: Single-line participant summary to prevent 2-line wraps
             const pSummary = `
-                <div style="font-weight:700;">${rep.name}${rep.nickname ? ` <span style="font-weight:normal; font-size:0.8rem; color:var(--primary-color)">(${rep.nickname})</span>` : ''} <span style="font-weight:normal; opacity:0.7;">${getGenderMark(rep)}</span></div>
-                <div style="font-size: 0.75rem; color: #64748b; white-space:normal; overflow:visible; max-width:100%;">
-                    ${e.participants.slice(1).map(p => `${p.name}${getGenderMark(p)}`).join(', ')}
+                <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:400px; font-size:0.95rem;">
+                    <strong style="font-weight:800; color:var(--text-color);">${rep.name}</strong>${rep.nickname ? `<small>(${rep.nickname})</small>` : ''}${getGenderMark(rep)}
+                    <span style="color:#64748b; font-size:0.8rem; margin-left:4px;">
+                        ${e.participants.length > 1 ? `+ ${e.participants.slice(1).map(p => p.name).join(', ')}` : ''}
+                    </span>
                 </div>
             `;
 
@@ -1674,15 +1688,11 @@ function updateDashboard() {
                 <td><span style="font-size:0.75rem; font-weight:700;">${statusLabel}</span></td>
                 <td><small>${regTime}</small></td>
                 <td>
-                    <div style="display:flex; gap:0.25rem; flex-direction: column;">
-                        <div style="display:flex; gap:0.25rem;">
-                            <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')">確認</button>
-                            <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')">修正</button>
-                        </div>
-                        <div style="display:flex; gap:0.25rem;">
-                            <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''}>受付</button>
-                            <button class="btn-outline btn-small btn-delete" onclick="requestDeleteEntry('${e.id}')">削除</button>
-                        </div>
+                    <div style="display:flex; gap:0.2rem; flex-wrap: wrap; width: 110px;">
+                        <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">確認</button>
+                        <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">修正</button>
+                        <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">受付</button>
+                        <button class="btn-outline btn-small btn-delete" onclick="requestDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">削除</button>
                     </div>
                 </td>
             `;
@@ -1972,7 +1982,6 @@ window.exportMintsuriCSV = function() {
 // Global Stats Rendering (v7.3.0 Global Scope)
 function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent) {
     const containers = [
-        document.getElementById('global-stats-summary'),
         document.getElementById('global-stats-summary-top')
     ].filter(el => el);
 
@@ -2068,8 +2077,11 @@ function updateReceptionList() {
                 <span class="badge ${badgeClass}" style="font-size:0.7rem; padding:0.1rem 0.4rem;">${e.source}</span>
             </div>
             <div class="item-meta" style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:1rem; color:#636e72;">${e.representative}</span>
-                <span style="font-size:0.9rem; font-weight:700; color: #0984e3;">${e.isCompleted ? '✅ 受付済' : `確認: ${e.finishedCount} / ${e.totalCount}`}</span>
+                <div style="font-size:1rem; color:#636e72;">${e.representative}</div>
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <span style="font-size:0.9rem; font-weight:700; color: #0984e3;">${e.isCompleted ? '✅ 受付済' : `${e.finishedCount}/${e.totalCount}`}</span>
+                    ${!e.isCompleted ? `<button onclick="event.stopPropagation(); updateGroupStatus('${e.id}', 'checked-in')" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: var(--primary-color); border: none; border-radius: 4px; color: white; cursor: pointer;">全員受付</button>` : ''}
+                </div>
             </div>
         `;
         list.appendChild(item);
@@ -2369,6 +2381,10 @@ window.requestDeleteEntry = function(id) {
     if (!entry) return;
 
     if (confirm(`【警告】\n「${entry.groupName}」様のデータを完全に削除しますか？\nこの操作は取り消せません。\n(テストデータの削除などに使用してください)`)) {
+        // v7.9.3: Add to deletion log to prevent ghost reappearance during sync
+        if (!state.deletedIds.includes(id)) {
+            state.deletedIds.push(id);
+        }
         state.entries = state.entries.filter(e => e.id !== id);
         state.lastUpdated = Date.now();
         saveData();

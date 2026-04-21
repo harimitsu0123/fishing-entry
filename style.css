@@ -907,18 +907,86 @@ textarea:focus {
     }
 }
 
+/* Reception View Layout (v7.9.3 Fix) */
+.reception-container {
+    display: flex;
+    gap: 1.5rem;
+    height: calc(100vh - 200px);
+    overflow: hidden;
+}
+
 .reception-sidebar {
-    border-right: 1px solid #eee;
-    padding-right: 1.5rem;
+    width: 350px;
+    background: #f8fafc;
+    border-right: 1px solid #e1e8ed;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    border-radius: 8px;
 }
 
 .reception-group-list {
-    max-height: calc(100vh - 250px);
+    flex: 1;
     overflow-y: auto;
+    padding-right: 0.5rem;
 }
 
+.reception-desk {
+    flex: 1;
+    background: #fff;
+    border-radius: 16px;
+    padding: 0; /* Let inner desk-header/content handle padding */
+    border: 1px solid #e1e8ed;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+@media (max-width: 900px) {
+    .reception-container {
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+    }
+    .reception-sidebar {
+        width: 100%;
+        height: 400px;
+    }
+    .reception-desk {
+        width: 100%;
+        min-height: 500px;
+    }
+}
+
+.reception-group-item {
+    padding: 1rem;
+    border-bottom: 1px solid #e1e8ed;
+    cursor: pointer;
+    border-radius: 12px;
+    margin-bottom: 0.6rem;
+    background: white;
+    border: 1px solid #e1e8ed;
+    transition: all 0.2s;
+}
+.reception-group-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+.reception-group-item.active {
+    background: #eff6ff;
+    border-color: var(--primary-color);
+    border-left: 5px solid var(--primary-color);
+}
+.reception-group-item.completed {
+    background: #f0fdf4;
+    border-color: #10b981;
+    opacity: 0.8;
+}
+
+/* Table Styles - Optimized for Density (v7.9.3) */
 th, td {
-    padding: 0.4rem 0.6rem; /* Tightened row spacing */
+    padding: 0.35rem 0.5rem; /* Tightened row spacing for density */
     text-align: left;
     border-bottom: 1px solid #e1e8ed;
 }
@@ -927,32 +995,12 @@ th {
     background-color: #f8fafc;
     font-weight: 800;
     color: #475569;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     position: sticky;
     top: 0;
     z-index: 10;
-}
-
-.reception-group-item {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #eee;
-    cursor: pointer;
-    border-radius: 8px;
-    margin-bottom: 0.4rem;
-}
-
-.reception-group-item.active {
-    background: #e7f3ff;
-    border-left: 4px solid var(--primary-color);
-}
-
-.reception-desk {
-    background: #fff;
-    border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid #eee;
 }
 
 /* Ikesu Assignment UI */
