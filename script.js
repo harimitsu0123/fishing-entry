@@ -394,33 +394,6 @@ function generateSpecialUrls() {
     setVal('url-suiho-admin', `${baseUrl}?view=suiho`);
 }
 
-window.copyShareUrl = function(inputId) {
-    const el = document.getElementById(inputId);
-    if (!el) return;
-    
-    el.select();
-    el.setSelectionRange(0, 99999); // Mobile
-    
-    try {
-        navigator.clipboard.writeText(el.value).then(() => {
-            showToast('📋 クリップボードにコピーしました', 'success');
-        }).catch(() => {
-            // Fallback for older browsers or non-https
-            document.execCommand('copy');
-            showToast('📋 コピーしました（ブラウザ機能）', 'success');
-        });
-    } catch (err) {
-        showToast('コピーに失敗しました', 'error');
-    }
-}
-
-window.openShareUrl = function(inputId) {
-    const el = document.getElementById(inputId);
-    if (el && el.value) {
-        // v8.1.33: Navigate in current tab for better state transition
-        window.location.href = el.value;
-    }
-}
 
 /**
  * v7.0: 送信中データの二重登録チェック & 復旧ロジック
@@ -651,39 +624,6 @@ function initApp() {
     // v8.1.39: Critical Fix for entries flashing - Reset filter if it's set to hidden 'ippan'
     if (dashboardFilter === '一般') {
         dashboardFilter = 'all';
-    }
-
-    // v8.1.44: Consolidated URL-based Category Selection via injectSpecialSource
-    if (srcParam) {
-        const srcMap = { 'ippan': '一般', 'mintsuri': 'みん釣り', 'harimitsu': 'ハリミツ', 'suiho': '水宝' };
-        const mappedVal = srcMap[srcParam];
-        if (mappedVal) {
-            injectSpecialSource(mappedVal);
-            console.log("URL Source Auto-Selection (via inject):", mappedVal);
-        }
-    }
-
-    // v8.1.6: View Parameter Handling (mintsuri, leader-entry, etc)
-    if (viewParam === 'mintsuri') {
-        switchView(null, 'mintsuri-coordinator-view');
-        renderMintsuriCoordinatorView();
-        return; 
-    } else if (viewParam === 'leader-entry') {
-        switchView(null, 'leader-entry-view');
-        renderLeaderEntryForm();
-        return;
-    } else if (viewParam === 'stats') {
-        switchView(null, 'public-stats-view');
-        return;
-    }
-
-    try {
-        const shareUrlEl = document.getElementById('public-share-url');
-        if (shareUrlEl) {
-            shareUrlEl.value = window.location.href.split('#')[0].split('?')[0];
-        }
-    } catch (e) {
-        console.warn("Share URL initialization skipped:", e);
     }
 
     // Navigation
@@ -3490,69 +3430,31 @@ window.handleSecureClick = function(e) {
 /**
  * v8.1.15: Restore missing URL parameter helper to resolve startup error
  */
-function checkUrlParams() {
-    const params = new URLSearchParams(window.location.search);
-    const view = params.get('view');
-    const id = params.get('id');
-    const src = params.get('src');
+    // v8.1.45: Unified URL Parameter Handler
+    if (src || view) {
+        console.log("BORIJIN: Handling deep-link parameters:", { src, view });
+        
+        // 1. Handle Source (Primary Context)
+        if (src) {
+            const validSources = { 'mintsuri': 'みん釣り', 'harimitsu': 'ハリミツ', 'suiho': '水宝', 'general': '一般' };
+            const decodedSrc = validSources[src.toLowerCase()];
+            if (decodedSrc) injectSpecialSource(decodedSrc);
+        }
 
-    // v8.1.24 Fix: Use 'view' directly as the ID (already contains '-view')
-    if (view && document.getElementById(view)) {
-        // Validation: Only admins can see dashboard/reception via URL
-        if ((view === 'dashboard-view' || view === 'reception-view' || view === 'settings-view' || view === 'mintsuri-coordinator-view' || view === 'harimitsu-coordinator-view' || view === 'suiho-coordinator-view') && !isAdminAuth) {
-            console.warn("Blocked deep-link to admin view without auth");
-            return;
-        }
-        
-        // v8.1.35 specialized routing (alias for cleaner URLs)
-        if (view === 'mintsuri') {
-            switchView(null, 'mintsuri-coordinator-view');
-            renderMintsuriCoordinatorView();
-            return;
-        }
-        if (view === 'harimitsu') {
-            switchView(null, 'harimitsu-coordinator-view');
-            renderHarimitsuCoordinatorView();
-            return;
-        }
-        if (view === 'suiho') {
-            switchView(null, 'suiho-coordinator-view');
-            renderSuihoCoordinatorView();
-            return;
-        }
-        
-        // Hide all views first
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        
-        // Activate target view
-        const targetView = document.getElementById(view);
-        if (targetView) {
-            targetView.classList.add('active');
-            
-            // Handle wide layout for admin views
-            const container = document.querySelector('.container');
-            if (view.includes('dashboard') || view.includes('reception')) {
-                if (container) container.classList.add('view-wide');
-            } else {
-                if (container) container.classList.remove('view-wide');
-            }
-        }
-    }
-    
-    // v8.1.18: Handle specialized category source
-    if (src) {
-        const validSources = {
-            'mintsuri': 'みん釣り',
-            'harimitsu': 'ハリミツ',
-            'suiho': '水宝',
-            'general': '一般'
-        };
-        const decodedSrc = validSources[src.toLowerCase()];
-        if (decodedSrc) {
-            injectSpecialSource(decodedSrc);
-            // Ensure we are in registration view ONLY IF no other view was explicitly requested (v8.1.20)
-            if (!view) {
-                switchView(null, 'registration-view'); 
+        // 2. Handle View (Navigation)
+        if (view) {
+            // Mapping for aliases
+            const viewAliases = { 'mintsuri': 'mintsuri-coordinator-view', 'harimitsu': 'harimitsu-coordinator-view', 'suiho': 'suiho-coordinator-view' };
+            const targetView = viewAliases[view] || view;
+
+            if (document.getElementById(targetView)) {
+                // Security Check
+                const adminViews = ['dashboard-view', 'reception-view', 'settings-view', 'mintsuri-coordinator-view', 'harimitsu-coordinator-view', 'suiho-coordinator-view'];
+                if (adminViews.includes(targetView) && !isAdminAuth) {
+                    console.warn("BORIJIN: Blocked deep-link to admin view without auth");
+                } else {
+                    switchView(null, targetView);
+                }
             }
         }
     }
