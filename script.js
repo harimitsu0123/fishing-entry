@@ -3427,6 +3427,12 @@ window.handleSecureClick = function(e) {
 /**
  * v8.1.15: Restore missing URL parameter helper to resolve startup error
  */
+function checkUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view');
+    const id = params.get('id');
+    const src = params.get('src');
+
     // v8.1.45: Unified URL Parameter Handler
     if (src || view) {
         console.log("BORIJIN: Handling deep-link parameters:", { src, view });
