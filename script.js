@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.0.5: LEADER FORM SECURED");
+        console.log("BORIJIN APP v8.0.6: LEADER FORM SECURED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -2459,788 +2459,7 @@ function syncGroupStatusFromParticipants(entry) {
     }
 }
 
-
-function sumCategoryFishers(category) {
-    return state.entries.filter(e => e.source === category && e.status !== 'cancelled').reduce((s, e) => s + e.fishers, 0);
-}
-
-function sumCategoryObservers(category) {
-    return state.entries.filter(e => e.source === category && e.status !== 'cancelled').reduce((s, e) => s + e.observers, 0);
-}
-
-function updateSplitUI(prefix, current, max, observers) {
-    const currEl = document.getElementById(`curr-${prefix}`);
-    const maxEl = document.getElementById(`max-${prefix}`);
-    const obsEl = document.getElementById(`${prefix}-observers`);
-
-    if (currEl) {
-        currEl.textContent = current;
-        currEl.style.color = (max > 0 && current > max) ? 'var(--error-color)' : '';
-        currEl.style.fontWeight = (max > 0 && current > max) ? 'bold' : '';
-    }
-    if (maxEl) maxEl.textContent = max;
-    if (obsEl) obsEl.textContent = observers || 0;
-
-    const pct = max > 0 ? Math.min(100, (current / max) * 100) : 0;
-    const progEl = document.getElementById(`prog-${prefix}`);
-    if (progEl) progEl.style.width = pct + '%';
-}
-
-
-
-window.requestEdit = function (id) {
-    const btn = document.querySelector('.nav-btn[data-target="registration-view"]');
-    btn.click();
-    document.getElementById('show-edit-login').click();
-    document.getElementById('auth-entry-id').value = id;
-};
-
-window.requestAdminEdit = function (id) {
-    const entry = state.entries.find(e => e.id === id);
-    if (!entry) return;
-
-    // First switch view, then fill form
-    switchView(null, 'registration-view');
-
-    isAdminAuthAction = true; // Set flag BEFORE filling form
-    fillFormForEdit(entry);
-    // Overwrite title for Admin context
-    document.getElementById('app-title').innerHTML = `<span class="badge badge-ippan" style="background:#e67e22">管理者修正</span> 管理番号: ${entry.id}`;
-};
-
-window.cancelEntry = function (id) {
-    const entry = state.entries.find(e => e.id === id);
-    if (!entry) return;
-
-    if (entry.status === 'cancelled') {
-        if (confirm(`受付番号「${id}」を元の状態に復元しますか？`)) {
-            entry.status = 'pending';
-            entry.lastModified = new Date().toLocaleString('ja-JP');
-            saveData();
-            updateDashboard();
-            showToast(`受付番号 「${id}」 を復元しました`, 'success');
-        }
-    } else {
-        if (confirm(`本当に受付番号「${id}」をキャンセル（辞退扱い）にしますか？\n消去はされず、記録として残ります。`)) {
-            entry.status = 'cancelled';
-            entry.lastModified = new Date().toLocaleString('ja-JP');
-            saveData();
-            updateDashboard();
-            showToast(`受付番号 「${id}」 をキャンセルしました`, 'success');
-        }
-    }
-};
-
-window.copyShareUrl = function (id = 'public-share-url') {
-    const urlInput = document.getElementById(id);
-    if (!urlInput) return;
-    urlInput.select();
-    document.execCommand('copy');
-    showToast('コピーしました！', 'success');
-};
-
-window.resendEmail = async function (id) {
-    const entry = state.entries.find(e => e.id === id);
-    if (!entry) return;
-
-    if (confirm(`${entry.groupName} 様へ受付完了メールを再送しますか？\n送信先: ${entry.email}`)) {
-        await sendEmailViaGAS(entry);
-        showToast('再送リクエストを送信しました', 'info');
-    }
-};
-
-window.quickCheckIn = function(id) {
-    const entry = state.entries.find(e => e.id === id);
-    if (!entry) return;
-    
-    if (entry.status === 'checked-in') {
-        if (confirm('既に受付済みです。未受付に戻しますか？')) {
-            updateGroupStatus(id, 'pending');
-        }
-    } else {
-        updateGroupStatus(id, 'checked-in');
-        showToast(`${entry.groupName} 様の受付を完了しました`, 'success');
-    }
-};
-
-window.showEntryDetails = function(id) {
-    const entry = state.entries.find(e => e.id === id);
-    if (!entry) return;
-
-    const modal = document.getElementById('detail-modal');
-    const body = document.getElementById('detail-modal-body');
-    
-    body.innerHTML = `
-        <div class="confirm-box" style="margin-bottom: 1.5rem; background: #f8fafc;">
-            <p><strong>受付区分:</strong> <span class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}">${entry.source}</span></p>
-            <p><strong>グループ名:</strong> ${entry.groupName}</p>
-            <p><strong>代表者氏名:</strong> ${entry.representative}</p>
-            <p><strong>電話番号:</strong> ${entry.phone}</p>
-            <p><strong>メールアドレス:</strong> ${entry.email}</p>
-            <p><strong>登録日時:</strong> ${formatDate(entry.timestamp)}</p>
-            <p><strong>最終更新:</strong> ${entry.lastModified || '-'}</p>
-        </div>
-        
-        <h3 style="font-size: 1rem; margin-bottom: 0.8rem; border-bottom: 1px solid #eee; padding-bottom: 0.4rem;">参加者一覧 (${entry.participants.length}名)</h3>
-        <div class="participant-check-list">
-            ${entry.participants.map((p, idx) => `
-                <div class="participant-check-row" style="padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: 700;">
-                            <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}">${p.type === 'fisher' ? '釣り' : '見学'}</span>
-                            ${p.name} <small>(${p.nickname || 'ニックネーム無'})</small>
-                        </div>
-                        <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">
-                            ${p.region || '地域不明'} | ${genderLabels[p.gender] || '-'} | ${ageLabels[p.age] || '-'} | Tシャツ: [${p.tshirtSize || '不明'}]
-                        </div>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
-
-    modal.classList.remove('hidden');
-};
-
-window.closeDetailModal = function() {
-    document.getElementById('detail-modal').classList.add('hidden');
-};
-
-window.requestDeleteEntry = function(id) {
-    console.log('Requesting delete for ID:', id);
-    const entry = state.entries.find(e => e.id === id);
-    if (!entry) {
-        console.error('Delete failed: Entry not found for ID', id);
-        return;
-    }
-
-    if (confirm(`【警告】\n「${entry.groupName}」様のデータを完全に削除しますか？\nこの操作は取り消せません。\n(テストデータの削除などに使用してください)`)) {
-        console.log('Confirmed delete for:', id);
-        // v7.9.3: Add to deletion log to prevent ghost reappearance during sync
-        if (!state.deletedIds) state.deletedIds = [];
-        if (!state.deletedIds.includes(id)) {
-            state.deletedIds.push(id);
-        }
-        state.entries = state.entries.filter(e => e.id !== id);
-        state.lastUpdated = Date.now();
-        saveData();
-        showToast('データを完全に削除しました', 'success');
-        
-        // Refresh views
-        if (typeof updateDashboard === 'function') updateDashboard();
-        if (typeof updateReceptionList === 'function') updateReceptionList();
-        
-        // If we are in reception view, clear the desk
-        if (activeReceptionEntryId === id) {
-            activeReceptionEntryId = null;
-            if (typeof renderReceptionDesk === 'function') renderReceptionDesk();
-        }
-    }
-};
-
-window.jumpToReception = function (id) {
-    const toolbar = document.getElementById('admin-toolbar');
-    if (toolbar) {
-        const btn = toolbar.querySelector('.btn-toolbar[data-target="reception-view"]');
-        if (btn) btn.click();
-    } else {
-        switchView(null, 'reception-view');
-    }
-    selectReceptionEntry(id);
-};
-
-window.openReceptionModal = function (id) {
-    window.jumpToReception(id);
-};
-
-function closeReceptionModal() {
-    const modal = document.getElementById('reception-modal');
-    if (modal) modal.classList.add('hidden');
-    currentReceptionId = null;
-}
-
-
-// Settings
-window.triggerSettingsSave = function () {
-    handleSettingsUpdate({ preventDefault: () => { } });
-};
-
-function updateAppTitle() {
-    const titleEl = document.getElementById('app-title');
-    const competitionName = state.settings.competitionName || "釣り大会 受付";
-    
-    if (titleEl) {
-        if (currentViewId === 'dashboard-view') {
-            titleEl.textContent = `管理者: ${competitionName}`;
-        } else if (currentViewId === 'reception-view') {
-            titleEl.textContent = `当日受付: ${competitionName}`;
-        } else {
-            titleEl.textContent = competitionName;
-        }
-    }
-    document.title = competitionName;
-}
-
-function handleSettingsUpdate(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    state.settings.competitionName = document.getElementById('competition-name').value;
-    state.settings.capacityGeneral = parseInt(document.getElementById('cap-ippan').value) || 0;
-    state.settings.capacityMintsuri = parseInt(document.getElementById('cap-mintsuri').value) || 0;
-    state.settings.capacitySuiho = parseInt(document.getElementById('cap-suiho').value) || 0;
-    state.settings.capacityHarimitsu = parseInt(document.getElementById('cap-harimitsu').value) || 0;
-    state.settings.capacityObservers = parseInt(document.getElementById('capacity-observers').value) || 0;
-    
-    const capTotalEl = document.getElementById('cap-total');
-    if (capTotalEl) {
-        state.settings.capacityTotal = parseInt(capTotalEl.value) || 250;
-    }
-    state.settings.startTime = document.getElementById('registration-start').value;
-    state.settings.deadline = document.getElementById('registration-deadline').value;
-    state.settings.adminPassword = document.getElementById('admin-password-set').value;
-
-    saveData();
-
-    syncSettingsUI();
-    updateDashboard();
-    checkTimeframe(); // Instant refresh of lock screen status
-    updateAppTitle();
-    showToast('大会設定をすべて保存しました', 'success');
-}
-
-function updateCapacityTotal() {
-    const ippan = parseInt(document.getElementById('cap-ippan').value) || 0;
-    const mintsuri = parseInt(document.getElementById('cap-mintsuri').value) || 0;
-    const suiho = parseInt(document.getElementById('cap-suiho').value) || 0;
-    const harimitsu = parseInt(document.getElementById('cap-harimitsu').value) || 0;
-
-    const total = ippan + mintsuri + suiho + harimitsu;
-    const sumEl = document.getElementById('capacity-total-summary');
-    const warnEl = document.getElementById('capacity-warning-msg');
-
-    if (sumEl) {
-        sumEl.textContent = total;
-        sumEl.style.color = total > state.settings.capacityTotal ? 'var(--error-color)' : 'var(--primary-color)';
-    }
-    if (warnEl) {
-        warnEl.classList.toggle('hidden', total <= state.settings.capacityTotal);
-    }
-    const displayTotalEl = document.getElementById('display-cap-total');
-    if (displayTotalEl) displayTotalEl.textContent = state.settings.capacityTotal;
-}
-
-window.confirmReset = async function () {
-    if (confirm('全ての名簿データを削除します。本当によろしいですか？（設定内容は維持されます）')) {
-        state.entries = [];
-        state.lastUpdated = Date.now();
-
-        showToast('リセット中...', 'info');
-
-        try {
-            // v6.8.1: Bypass saveData's "Fetch-First & Merge" logic to force-clear cloud
-            await syncToCloud();
-            localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
-            location.reload();
-        } catch (e) {
-            console.error('Reset failed:', e);
-            showToast('クラウドの消去に失敗しました。', 'error');
-            setTimeout(() => location.reload(), 2000);
-        }
-    }
-};
-
-// Exports
-function exportGroupsCSV() {
-    if (state.entries.length === 0) return alert('データがありません');
-    const headers = ['受付番号', '区分', 'グループ名', '代表者名', '電話番号', 'メール', '釣り人数', '見学人数', '登録時間'];
-    const rows = state.entries.map(e => [
-        e.id,
-        e.source,
-        e.groupName,
-        e.representative,
-        e.phone,
-        e.email,
-        e.fishers,
-        e.observers,
-        formatDateForCSV(e.timestamp)
-    ]);
-    downloadCSV("groups", headers, rows);
-}
-
-function exportParticipantsCSV() {
-    if (state.entries.length === 0) return alert('データがありません');
-    const headers = ['受付番号', '区分', 'グループ名', '代表者名', '参加区分', '参加者名', '性別', 'ニックネーム', 'Tシャツ', '地域', '年代', '登録時間'];
-    const rows = [];
-    state.entries.forEach(e => {
-        e.participants.forEach(p => {
-            const partType = p.type === 'observer' ? '見学' : '釣り';
-            rows.push([
-                e.id,
-                e.source,
-                e.groupName,
-                e.representative,
-                partType,
-                p.name,
-                genderLabels[p.gender] || p.gender || "",
-                p.nickname,
-                p.tshirtSize || "",
-                p.region,
-                ageLabels[p.age] || p.age,
-                formatDateForCSV(e.timestamp)
-            ]);
-        });
-    });
-    downloadCSV("participants", headers, rows);
-}
-
-function downloadCSV(name, headers, rows) {
-    let csv = "\uFEFF" + headers.join(",") + "\n";
-    rows.forEach(row => csv += row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",") + "\n");
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const dateStr = new Date().toLocaleDateString('ja-JP').replace(/\//g, '');
-    link.href = URL.createObjectURL(blob);
-    link.download = `fishing_${name}_${dateStr}.csv`;
-    link.click();
-    showToast(`${name} CSVを出力しました`, 'info');
-}
-
-function formatDateForCSV(dateStr) {
-    if (!dateStr) return "";
-    try {
-        // Remove 000Z and other ISO noise if present, or just use the string if it's already JST
-        return dateStr.split('.')[0].replace('T', ' ').replace('Z', '');
-    } catch (e) {
-        return dateStr;
-    }
-}
-
-// Bulk Email
-function updateBulkMailCount() {
-    const el = document.getElementById('bulk-mail-recipient-count');
-    if (!el) return;
-    const uniqueEmails = new Set(state.entries.map(e => e.email.toLowerCase().trim()).filter(e => e));
-    el.textContent = uniqueEmails.size;
-}
-
-async function handleBulkEmailSend() {
-    const subject = document.getElementById('bulk-mail-subject').value.trim();
-    const body = document.getElementById('bulk-mail-body').value.trim();
-    const uniqueEmails = Array.from(new Set(state.entries.map(e => e.email.toLowerCase().trim()).filter(e => e)));
-
-    if (uniqueEmails.length === 0) {
-        showToast('送信対象のメールアドレスがありません', 'error');
-        return;
-    }
-    if (!subject || !body) {
-        showToast('件名と本文を入力してください', 'error');
-        return;
-    }
-
-    if (!confirm(`${uniqueEmails.length} 名の代表者へ一斉送信します。よろしいですか？`)) {
-        return;
-    }
-
-    try {
-        const payload = {
-            type: 'bulk',
-            subject: subject,
-            message: body,
-            recipients: uniqueEmails,
-            timestamp: new Date().toLocaleString('ja-JP')
-        };
-
-        const btn = document.getElementById('btn-send-bulk-mail');
-        btn.disabled = true;
-        btn.textContent = '送信中...';
-
-        await fetch(GAS_WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(payload)
-        });
-
-        showToast('一括送信リクエストを送信しました', 'success');
-        document.getElementById('bulk-mail-subject').value = '';
-        document.getElementById('bulk-mail-body').value = '';
-    } catch (error) {
-        console.error('Bulk email error:', error);
-        showToast('送信中にエラーが発生しました', 'error');
-    } finally {
-        const btn = document.getElementById('btn-send-bulk-mail');
-        btn.disabled = false;
-        btn.textContent = '送信する（一括送信）';
-    }
-}
-
-// Admin Tab Switching
-function switchAdminTab(tabId) {
-    currentAdminTab = tabId; // Remember tab
-    sessionStorage.setItem('currentAdminTab', tabId);
-
-    document.querySelectorAll('.admin-tab-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
-    });
-    document.querySelectorAll('.admin-tab-content').forEach(content => {
-        content.classList.toggle('active', content.id === tabId);
-    });
-
-    if (tabId === 'tab-settings' || tabId === 'tab-capacity') {
-        syncSettingsUI(); // Ensure settings fields are populated
-        generateAdminQRCode();
-    }
-    if (tabId === 'tab-ikesu') renderIkesuWorkspace();
-    if (tabId === 'tab-stats') renderBreakdownStats();
-    if (tabId === 'tab-rankings') renderRankings();
-    if (tabId === 'tab-print') renderIkesuPrintView();
-    if (tabId === 'tab-settings') {
-        const pInput = document.getElementById('ikesu-passcode');
-        if (pInput) pInput.value = ""; 
-    }
-
-    // Scroll to top
-    window.scrollTo(0, 0);
-}
-
-function generateAdminQRCode() {
-    const container = document.getElementById('admin-qr-code-container');
-    const urlDisplay = document.getElementById('admin-url-display');
-    if (!container) return;
-
-    // Use Public URL (Share URL). If local, fallback to GitHub Pages URL
-    let baseUrl = window.location.href.split('#')[0].split('?')[0];
-    const isLocal = baseUrl.startsWith('file://') || baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost');
-
-    if (isLocal) {
-        baseUrl = "https://harimitsu0123.github.io/fishing-entry/";
-    }
-
-    urlDisplay.textContent = baseUrl;
-    document.getElementById('public-share-url').value = baseUrl;
-
-    // v7.6.5: Populate Specialized URL Tiles
-    const setUrl = (id, val) => {
-        const el = document.getElementById(id);
-        if (el) el.value = val;
-    };
-
-    setUrl('url-ippan-reg', baseUrl);
-    setUrl('url-mintsuri-reg', `${baseUrl}?src=mintsuri`);
-    setUrl('url-harimitsu-reg', `${baseUrl}?src=harimitsu`);
-    setUrl('url-suiho-reg', `${baseUrl}?src=suiho`);
-    setUrl('url-leader-input', `${baseUrl}?view=leader-entry`);
-
-    if (isLocal) {
-        container.innerHTML = `
-            <div style="font-size: 0.7rem; color: #2ecc71; line-height: 1.2; margin-bottom: 5px;">
-                ✅ 公開版のQRを表示中 (v8.0.3)
-            </div>
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(baseUrl)}" alt="Registration QR code" style="max-width: 100%; height: auto;" onload="this.parentElement.style.background='white'">
-        `;
-        return;
-    }
-
-    // Generate QR using QRServer API
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(baseUrl)}`;
-
-    container.innerHTML = `
-        <img src="${qrUrl}" alt="Registration QR code" style="max-width: 100%; height: auto;" onload="this.parentElement.style.background='white'">
-    `;
-}
-
-
-// --- Toast System ---
-function initToast() {
-    // Placeholder if any dynamic setup is needed
-}
-
-function showToast(message, type = 'success') {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-
-    // v7.9.3: Prevent stacking duplicate notifications
-    const existing = Array.from(container.querySelectorAll('.toast'));
-    const isDuplicate = existing.some(t => t.innerText.includes(message));
-    if (isDuplicate) {
-        // Find the oldest one and remove it to "refresh" the notice
-        const old = existing.find(t => t.innerText.includes(message));
-        if (old) old.remove();
-    }
-
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-
-    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
-    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
-
-    container.appendChild(toast);
-
-    setTimeout(() => {
-        toast.classList.add('removing');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-// --- Test Data Generator ---
-window.generateBulkTestData = function () {
-    const totalCurrent = state.entries.reduce((s, e) => s + e.fishers, 0);
-    if (totalCurrent >= state.settings.capacityTotal - 10) {
-        showToast('すでに定員に近いため、これ以上生成できません。', 'error');
-        return;
-    }
-
-    if (!confirm('各枠の定員を守りつつ、10組分（最大40名程度）のテストデータを追加します。よろしいですか？')) return;
-
-    const sources = ['一般', 'みん釣り', '水宝', 'ハリミツ'];
-    const names = ['田中', '佐藤', '鈴木', '高橋', '渡辺', '伊藤', '山本', '中村', '小林', '加藤'];
-    const groups = ['チーム海', '釣りキチ同盟', '波止場会', '大漁祈願', 'フィッシングクラブ'];
-    const regions = ['大阪市', '堺市', '姫路市', '明石市', '神戸市', '西宮市'];
-    const ages = ['10s', '20s', '30s', '40s', '50s', '60s', '70s', '80s'];
-
-    let entriesAdded = 0;
-    let fishersAddedTotal = 0;
-
-    // Loop for 10 entries
-    for (let i = 0; i < 10; i++) {
-        const totalNow = state.entries.reduce((s, e) => s + e.fishers, 0);
-        if (totalNow >= state.settings.capacityTotal - 5) break;
-
-
-        // Pick a source that still has room
-        const availableSources = sources.filter(s => {
-            const current = sumCategoryFishers(s);
-            let limit = 0;
-            if (s === '一般') limit = state.settings.capacityGeneral;
-            else if (s === 'みん釣り') limit = state.settings.capacityMintsuri;
-            else if (s === '水宝') limit = state.settings.capacitySuiho;
-            else if (s === 'ハリミツ') limit = state.settings.capacityHarimitsu;
-            return current < limit;
-        });
-
-        if (availableSources.length === 0) break;
-        const source = availableSources[Math.floor(Math.random() * availableSources.length)];
-
-        // Calculate remaining room in this category
-        let categoryLimit = 0;
-        if (source === '一般') categoryLimit = state.settings.capacityGeneral;
-        else if (source === 'みん釣り') categoryLimit = state.settings.capacityMintsuri;
-        else if (source === '水宝') categoryLimit = state.settings.capacitySuiho;
-        else if (source === 'ハリミツ') categoryLimit = state.settings.capacityHarimitsu;
-
-        const categoryCurrent = sumCategoryFishers(source);
-        const categoryRoom = categoryLimit - categoryCurrent;
-        const totalRoom = (state.settings.capacityTotal - 10) - totalNow;
-        const maxRoom = Math.min(categoryRoom, totalRoom, 4); // Max 4 per team
-
-        if (maxRoom <= 0) continue;
-
-        const numFishers = Math.max(1, Math.floor(Math.random() * maxRoom) + 1);
-        const numObservers = Math.floor(Math.random() * 3); // 0-2 observers
-        const groupName = groups[Math.floor(Math.random() * groups.length)] + (state.entries.length + 1);
-        const repName = names[Math.floor(Math.random() * names.length)] + (state.entries.length + 1);
-
-        const participants = [];
-        for (let j = 0; j < numFishers; j++) {
-            participants.push({
-                type: 'fisher',
-                name: repName + (j === 0 ? '' : 'の連れ' + j),
-                nickname: '',
-                region: regions[Math.floor(Math.random() * regions.length)],
-                age: ages[Math.floor(Math.random() * ages.length)],
-                status: 'pending'
-            });
-        }
-        for (let j = 0; j < numObservers; j++) {
-            participants.push({
-                type: 'observer',
-                name: repName + 'の見学' + (j + 1),
-                nickname: '',
-                region: regions[Math.floor(Math.random() * regions.length)],
-                age: ages[Math.floor(Math.random() * ages.length)],
-                status: 'pending'
-            });
-        }
-
-        const prefixMap = { '一般': 'A', 'みん釣り': 'M', '水宝': 'S', 'ハリミツ': 'H' };
-        const prefix = prefixMap[source] || 'A';
-        const samePrefixEntries = state.entries.filter(e => e.id.startsWith(prefix + '-'));
-        const nextNum = (samePrefixEntries.length > 0)
-            ? Math.max(...samePrefixEntries.map(e => parseInt(e.id.split('-')[1]))) + 1
-            : 1;
-
-        const entry = {
-            id: `${prefix}-${String(nextNum).padStart(3, '0')}`,
-            source: source,
-            groupName: groupName,
-            representative: repName,
-            phone: '090-0000-' + String(state.entries.length).padStart(4, '0'),
-            email: 'test' + state.entries.length + '@example.com',
-            password: 'pass',
-            participants: participants,
-            fishers: numFishers,
-            observers: numObservers,
-            status: 'pending',
-            checkedIn: false,
-            timestamp: new Date().toLocaleString('ja-JP')
-        };
-
-        state.entries.push(entry);
-        fishersAddedTotal += numFishers;
-        entriesAdded++;
-    }
-
-    saveData();
-
-
-    updateDashboard();
-    updateReceptionList();
-    showToast(`${entriesAdded}件（釣り人計 ${fishersAddedTotal}名）のテストデータを作成しました。合計 ${state.entries.reduce((s, e) => s + e.fishers, 0)}名となり、定員(250)まで残りわずかです。`, 'success');
-};
-
-function updateSourceAvailability() {
-    const selector = document.getElementById('main-source-selector');
-    if (!selector) return;
-
-    const radios = selector.querySelectorAll('input[name="reg-source"]');
-    const totalFishers = state.entries.reduce((sum, en) => sum + en.fishers, 0);
-
-    radios.forEach(radio => {
-        const source = radio.value;
-        const current = sumCategoryFishers(source);
-        let limit = 0;
-        if (source === '一般') limit = state.settings.capacityGeneral;
-        else if (source === 'みん釣り') limit = state.settings.capacityMintsuri;
-        else if (source === '水宝') limit = state.settings.capacitySuiho;
-        else if (source === 'ハリミツ') limit = state.settings.capacityHarimitsu;
-
-        const label = radio.closest('.source-option');
-        if (!label) return;
-
-        // Full if category limit is reached OR total 250 limit is reached
-        const isFull = (limit > 0 && current >= limit) || totalFishers >= state.settings.capacityTotal;
-
-        // Bypassed if admin is editing
-        const isDisabled = isFull && !isAdminAuthAction;
-
-        radio.disabled = isDisabled;
-        label.classList.toggle('is-full', isFull);
-        label.classList.toggle('disabled', isDisabled); // Optional style tag
-
-        // If current is disabled, uncheck it
-        if (isDisabled && radio.checked) {
-            radio.checked = false;
-        }
-    });
-
-    // Final fallback selection
-    const checked = selector.querySelector('input[name="reg-source"]:checked');
-    if (!checked) {
-        const available = selector.querySelector('input[name="reg-source"]:not(:disabled)');
-        if (available) available.checked = true;
-    }
-}
-
-function checkUrlParams() {
-    const params = new URLSearchParams(window.location.search);
-    const src = params.get('src');
-
-    const viewId = params.get('view');
-
-    // v7.8.1: Generic view restoration logic
-    if (viewId) {
-        const targetView = document.getElementById(viewId);
-        if (targetView && targetView.classList.contains('view')) {
-            switchView(null, viewId);
-            return;
-        }
-        
-        // Aliases for short/legacy URLs
-        if (viewId === 'stats') {
-            switchView(null, 'public-stats-view');
-            return;
-        }
-        if (viewId === 'mintsuri') {
-            switchView(null, 'mintsuri-coordinator-view');
-            return;
-        }
-    }
-
-    if (src) {
-        const validSources = {
-            'mintsuri': 'みん釣り',
-            'harimitsu': 'ハリミツ',
-            'suiho': '水宝'
-        };
-
-        if (validSources[src]) {
-            injectSpecialSource(validSources[src]);
-            // v7.2.2: Force top scroll for category links
-            setTimeout(() => window.scrollTo(0, 0), 100);
-        }
-    }
-
-    // v7.8.5: Listener for browser nav buttons (Back/Forward)
-    window.onpopstate = function(event) {
-        const params = new URLSearchParams(window.location.search);
-        const viewId = params.get('view') || 'registration-view';
-        console.log("BORIJIN APP: Popstate navigation to", viewId);
-        
-        // Restore view without adding to history (switch internal state)
-        const viewToSwitch = document.getElementById(viewId);
-        if (viewToSwitch && viewToSwitch.classList.contains('view')) {
-            currentViewId = viewId;
-            sessionStorage.setItem('currentViewId', viewId);
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            viewToSwitch.classList.add('active');
-            
-            // Sync nav buttons
-            document.querySelectorAll('.nav-btn').forEach(b => {
-                b.classList.toggle('active', b.dataset.target === viewId);
-            });
-
-            // Trigger specific view updates if needed
-            if (viewId === 'dashboard-view') updateDashboard();
-            if (viewId === 'mintsuri-coordinator-view') renderMintsuriCoordinatorView();
-        }
-    };
-}
-
-function injectSpecialSource(sourceName) {
-    const selector = document.getElementById('main-source-selector');
-    if (!selector) return;
-
-    // Clear existing
-    selector.innerHTML = '';
-
-    const badgeClassMap = {
-        'みん釣り': 'badge-mintsuri',
-        'ハリミツ': 'badge-harimitsu',
-        '水宝': 'badge-suiho'
-    };
-
-    const badgeClass = badgeClassMap[sourceName] || 'badge-ippan';
-    const label = document.createElement('label');
-    label.className = 'source-option';
-    label.innerHTML = `
-        <input type="radio" name="reg-source" value="${sourceName}" checked required>
-        <span class="source-label">
-            <span class="badge ${badgeClass}">${sourceName}</span>
-        </span>
-    `;
-    selector.appendChild(label);
-
-    // 特別URLの場合のみ受付区分欄を表示
-    const group = document.getElementById('source-selector-group');
-    if (group) group.classList.remove('hidden');
-
-    // Update availability logic for this new radio
-    updateSourceAvailability();
-}
-
-// ==========================================
-// IKESU ASSIGNMENT LOGIC (Drag & Drop, Modals)
-// ==========================================
-
+/* --- IKESU & LEADER FUNCTIONS RESTORED v8.0.6 --- */
 window.openIkesuModal = function (id = null) {
     document.getElementById('ikesu-modal').classList.remove('hidden');
     if (id) {
@@ -3250,6 +2469,8 @@ window.openIkesuModal = function (id = null) {
             document.getElementById('ikesu-edit-id').value = ikesu.id;
             document.getElementById('ikesu-name').value = ikesu.name;
             document.getElementById('ikesu-capacity').value = ikesu.capacity;
+            const passEl = document.getElementById('ikesu-passcode');
+            if (passEl) passEl.value = ikesu.passcode || "";
             return;
         }
     }
@@ -3257,6 +2478,8 @@ window.openIkesuModal = function (id = null) {
     document.getElementById('ikesu-edit-id').value = '';
     document.getElementById('ikesu-name').value = '';
     document.getElementById('ikesu-capacity').value = '15';
+    const passEl = document.getElementById('ikesu-passcode');
+    if (passEl) passEl.value = '';
 };
 
 window.closeIkesuModal = function () {
@@ -3267,6 +2490,8 @@ window.saveIkesu = function () {
     const id = document.getElementById('ikesu-edit-id').value;
     const name = document.getElementById('ikesu-name').value.trim();
     const capacity = parseInt(document.getElementById('ikesu-capacity').value, 10);
+    const passEl = document.getElementById('ikesu-passcode');
+    const passcode = passEl ? passEl.value.trim() : "";
 
     if (!name || isNaN(capacity) || capacity < 1) {
         alert("名前と定員（1以上）を正しく入力してください。");
@@ -3276,45 +2501,37 @@ window.saveIkesu = function () {
     if (!state.settings.ikesuList) state.settings.ikesuList = [];
 
     if (id) {
-        // Edit
         const ikesu = state.settings.ikesuList.find(i => i.id === id);
         if (ikesu) {
             ikesu.name = name;
             ikesu.capacity = capacity;
+            ikesu.passcode = passcode;
         }
     } else {
-        // Add
         state.settings.ikesuList.push({
             id: 'ikesu-' + Date.now(),
             name: name,
-            capacity: capacity
+            capacity: capacity,
+            passcode: passcode
         });
     }
 
     state.lastUpdated = Date.now();
     saveData();
-
-
     closeIkesuModal();
     renderIkesuWorkspace();
 };
 
 window.deleteIkesu = function (id) {
     if (!confirm('本当にこのイケスを削除しますか？\n割り当てられていた人は未割り当てに戻ります。')) return;
-
     state.settings.ikesuList = state.settings.ikesuList.filter(i => i.id !== id);
-
-    // Clear ikesuId for assigned participants
     state.entries.forEach(e => {
         e.participants.forEach(p => {
             if (p.ikesuId === id) p.ikesuId = null;
         });
     });
-
     state.lastUpdated = Date.now();
     saveData();
-
-
     renderIkesuWorkspace();
 };
 
@@ -3336,7 +2553,7 @@ window.dragPerson = function (ev, entryId, personIdx) {
     ev.dataTransfer.setData("type", "person");
     ev.dataTransfer.setData("id", entryId);
     ev.dataTransfer.setData("idx", personIdx);
-    ev.stopPropagation(); // Prevent group dragging if child dragged
+    ev.stopPropagation();
 };
 
 window.dropToUnassigned = function (ev) {
@@ -3353,32 +2570,23 @@ window.dropToIkesu = function (ev, ikesuId) {
 
 function processDrop(ev, ikesuId) {
     const type = ev.dataTransfer.getData("type");
-    const entryId = ev.dataTransfer.getData("id");
-
-    const entry = state.entries.find(e => e.id === entryId);
+    const id = ev.dataTransfer.getData("id");
+    const entry = state.entries.find(e => e.id === id);
     if (!entry) return;
 
     if (type === "group") {
-        // Move all participants of the group to the Target Ikesu
         entry.participants.forEach(p => p.ikesuId = ikesuId);
-    } else if (type === "person") {
-        const idx = parseInt(ev.dataTransfer.getData("idx"), 10);
-        if (entry.participants[idx]) {
-            entry.participants[idx].ikesuId = ikesuId;
-        }
+    } else {
+        const idx = parseInt(ev.dataTransfer.getData("idx"));
+        if (entry.participants[idx]) entry.participants[idx].ikesuId = ikesuId;
     }
-
-    entry.lastModified = new Date().toLocaleString('ja-JP');
     saveData();
-
     renderIkesuWorkspace();
 }
 
-window.toggleGroupExpand = function (targetId) {
-    const el = document.getElementById(`drag-parts-${targetId}`);
-    if (el) {
-        el.classList.toggle('expanded');
-    }
+window.toggleGroupExpand = function (id) {
+    const el = document.getElementById(`drag-parts-${id}`);
+    if (el) el.classList.toggle('expanded');
 };
 
 window.renderIkesuWorkspace = function () {
@@ -3389,306 +2597,165 @@ window.renderIkesuWorkspace = function () {
     unassignedList.innerHTML = '';
     ikesuGrid.innerHTML = '';
 
-    if (!state.settings.ikesuList) state.settings.ikesuList = [];
-
     const assignedData = {};
-    state.settings.ikesuList.forEach(i => assignedData[i.id] = { ikesu: i, fishers: 0, observers: 0, items: [] });
+    if (!state.settings.ikesuList) state.settings.ikesuList = [];
+    state.settings.ikesuList.forEach(ik => assignedData[ik.id] = { ik, fishers: 0, observers: 0, items: [] });
 
-    const unassignedGroups = [];
+    const searchTerm = (document.getElementById('ikesu-search')?.value || "").toLowerCase().trim();
 
-    const searchTerm = document.getElementById('ikesu-search') ? document.getElementById('ikesu-search').value.toLowerCase().trim() : '';
+    state.entries.forEach(e => {
+        if (e.status === 'cancelled') return;
+        
+        const matchesSearch = !searchTerm || 
+            e.id.toLowerCase().includes(searchTerm) || 
+            e.groupName.toLowerCase().includes(searchTerm) ||
+            e.representative.toLowerCase().includes(searchTerm);
 
-    const validEntries = state.entries.filter(e => e.status !== 'cancelled');
-
-    validEntries.forEach(entry => {
-        const participantIkesus = entry.participants.map(p => p.ikesuId);
-        const allUnassigned = participantIkesus.every(id => !id);
-
-        if (allUnassigned) {
-            unassignedGroups.push(entry);
-        } else {
-            let hasUnassignedChild = false;
-            entry.participants.forEach((p, idx) => {
-                if (p.ikesuId && assignedData[p.ikesuId]) {
-                    assignedData[p.ikesuId].items.push({ entry, p, idx });
-                    if (p.type === 'fisher') assignedData[p.ikesuId].fishers++;
-                    else assignedData[p.ikesuId].observers++;
-                } else {
-                    hasUnassignedChild = true;
-                }
-            });
-            if (hasUnassignedChild) {
-                unassignedGroups.push(entry);
+        const unassignedParts = [];
+        e.participants.forEach((p, idx) => {
+            if (p.ikesuId && assignedData[p.ikesuId]) {
+                assignedData[p.ikesuId].items.push({ entry: e, p, idx });
+                if (p.type === 'fisher') assignedData[p.ikesuId].fishers++;
+                else assignedData[p.ikesuId].observers++;
+            } else {
+                unassignedParts.push({ p, idx });
             }
-        }
-    });
-
-    // -- 1. Render Unassigned Area --
-    let unassignedCount = 0;
-    unassignedGroups.forEach(entry => {
-        const unassignedParts = entry.participants.map((p, i) => ({ p, i })).filter(x => !x.p.ikesuId);
-        if (unassignedParts.length === 0) return;
-
-        if (searchTerm) {
-            const pNames = entry.participants.map(p => p.name).join(' ');
-            const pGenders = entry.participants.map(p => genderLabels[p.gender] || "").join(' ');
-            const pTshirts = entry.participants.map(p => p.tshirtSize || "").join(' ');
-            const combined = `${entry.id} ${entry.groupName} ${entry.representative} ${unassignedParts.length} ${pNames} ${pGenders} ${pTshirts}`.toLowerCase();
-            
-            if (!combined.includes(searchTerm)) return;
-        }
-
-        unassignedCount += unassignedParts.length;
-        const isFullGroup = unassignedParts.length === entry.participants.length;
-
-        let html = `
-        <div class="drag-item-group ${isFullGroup ? 'draggable' : ''}" 
-             ${isFullGroup ? `draggable="true" ondragstart="dragGroup(event, '${entry.id}')"` : ''}>
-            <div class="drag-item-header">
-                <div>
-                    <strong>[${entry.id}] ${entry.groupName}</strong>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">
-                        ${isFullGroup ? '全員' : '一部メンバー'} (${unassignedParts.length}名)
-                    </div>
-                </div>
-                <button class="btn-expand" onclick="toggleGroupExpand('${entry.id}')">∨ 展開</button>
-            </div>
-            <div class="drag-item-participants" id="drag-parts-${entry.id}">
-        `;
-
-        unassignedParts.forEach(item => {
-            const isFisher = item.p.type === 'fisher';
-            html += `
-                <div class="drag-item-person draggable" draggable="true" ondragstart="dragPerson(event, '${entry.id}', ${item.i})">
-                    <span>${item.p.name}</span>
-                    <span class="badge ${isFisher ? '' : 'badge-observer'}">${isFisher ? '釣り' : '見学'}</span>
-                </div>
-            `;
         });
 
-        html += `</div></div>`;
-        unassignedList.insertAdjacentHTML('beforeend', html);
+        if (unassignedParts.length > 0 && matchesSearch) {
+                   const isFull = unassignedParts.length === e.participants.length;
+                   let html = `
+                       <div class="drag-item-group ${isFull ? 'draggable' : ''}" 
+                            ${isFull ? `draggable="true" ondragstart="dragGroup(event, '${e.id}')"` : ''}>
+                           <div class="drag-item-header">
+                               <div><strong>[${e.id}] ${e.groupName}</strong></div>
+                               <button class="btn-expand" onclick="toggleGroupExpand('${e.id}')">∨</button>
+                           </div>
+                           <div class="drag-item-participants" id="drag-parts-${e.id}">
+                               ${unassignedParts.map(item => `
+                                   <div class="drag-item-person draggable" draggable="true" ondragstart="dragPerson(event, '${e.id}', ${item.idx})">
+                                       <span>${item.p.name}</span>
+                                       <span class="badge ${item.p.type==='fisher'?'':'badge-observer'}">${item.p.type==='fisher'?'釣り':'見学'}</span>
+                                   </div>
+                               `).join('')}
+                           </div>
+                       </div>
+                   `;
+                   unassignedList.insertAdjacentHTML('beforeend', html);
+        }
     });
 
-    const unassignSpan = document.getElementById('unassigned-count');
-    if (unassignSpan) unassignSpan.textContent = unassignedCount;
-
-    // -- 2. Render Ikesu Grid --
-    state.settings.ikesuList.forEach(ikesu => {
-        const data = assignedData[ikesu.id];
-        const isOver = data.fishers > ikesu.capacity;
-
+    state.settings.ikesuList.forEach(ik => {
+        const data = assignedData[ik.id];
+        const isOver = data.fishers > ik.capacity;
         const box = document.createElement('div');
-        box.className = 'ikesu-box drag-zone';
+        box.className = `ikesu-box drag-zone ${isOver ? 'over' : ''}`;
         box.ondragover = allowDrop;
         box.ondragleave = handleDragLeave;
-        box.ondrop = (ev) => dropToIkesu(ev, ikesu.id);
+        box.ondrop = (ev) => dropToIkesu(ev, ik.id);
 
-        let html = `
+        box.innerHTML = `
             <div class="ikesu-header">
-                <span class="ikesu-title">${ikesu.name}</span>
-                <div class="ikesu-actions">
-                    <button class="btn-text" style="font-size:1.1rem; color:var(--primary-color); padding: 5px;" onclick="window.openIkesuModal('${ikesu.id}')">✏️</button>
-                </div>
+                <span class="ikesu-title">${ik.name}</span>
+                <button class="btn-text" onclick="window.openIkesuModal('${ik.id}')">✏️</button>
             </div>
-            <div class="ikesu-capacity ${isOver ? 'over' : ''}">
-                <div style="font-weight: 800; font-size: 0.95rem;">釣り: ${data.fishers} / ${ikesu.capacity} 名</div>
-                <div style="color:var(--text-muted); font-size: 0.8rem; margin-top: 2px;">(見学者: ${data.observers}名)</div>
-            </div>
-            <div class="ikesu-drop-area mt-2">
-        `;
-
-        const groupedItems = {};
-        data.items.forEach(item => {
-            if (!groupedItems[item.entry.id]) groupedItems[item.entry.id] = { entry: item.entry, parts: [] };
-            groupedItems[item.entry.id].parts.push(item);
-        });
-
-        Object.values(groupedItems).forEach(group => {
-            const entry = group.entry;
-
-            if (searchTerm) {
-                const matchesGroup = entry.groupName.toLowerCase().includes(searchTerm) ||
-                    entry.representative.toLowerCase().includes(searchTerm) ||
-                    String(group.parts.length) === searchTerm;
-                const matchesAnyPerson = group.parts.some(x => x.p.name.toLowerCase().includes(searchTerm));
-                if (!matchesGroup && !matchesAnyPerson) return;
-            }
-
-            const isFullGroup = group.parts.length === entry.participants.length;
-            const expandId = `ikesu-${ikesu.id}-${entry.id}`;
-
-            html += `
-            <div class="drag-item-group ${isFullGroup ? 'draggable' : ''}" 
-                 ${isFullGroup ? `draggable="true" ondragstart="dragGroup(event, '${entry.id}')"` : ''}>
-                <div class="drag-item-header">
-                    <div style="font-size: 0.9rem;">
-                        <strong>[${entry.id}] ${entry.groupName}</strong>
-                    </div>
-                    <button class="btn-expand" onclick="toggleGroupExpand('${expandId}')">∨</button>
-                </div>
-                <div class="drag-item-participants" id="drag-parts-${expandId}">
-            `;
-
-            group.parts.forEach(item => {
-                const isFisher = item.p.type === 'fisher';
-                const isLeader = item.p.isLeader || false;
-                html += `
-                    <div class="drag-item-person draggable" draggable="true" ondragstart="dragPerson(event, '${entry.id}', ${item.idx})">
-                        <div style="display:flex; align-items:center; gap:4px; flex:1; overflow:hidden;">
-                            <button class="btn-leader-toggle ${isLeader ? 'active' : ''}" onclick="window.toggleLeader('${entry.id}', ${item.idx})" title="リーダーに指定">⭐</button>
-                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.p.name}</span>
+            <div class="ikesu-capacity">釣り: ${data.fishers}/${ik.capacity} (見学: ${data.observers})</div>
+            <div class="ikesu-drop-area">
+                ${Object.values(data.items.reduce((acc, item) => {
+                    if (!acc[item.entry.id]) acc[item.entry.id] = { entry: item.entry, parts: [] };
+                    acc[item.entry.id].parts.push(item);
+                    return acc;
+                }, {})).map(group => `
+                    <div class="drag-item-group">
+                        <div class="drag-item-header">
+                            <div style="font-size:0.85rem;"><strong>${group.entry.groupName}</strong></div>
                         </div>
-                        <span style="font-size: 0.7rem; color: var(--text-muted);">${isFisher ? '釣り' : '見学'}</span>
+                        <div class="drag-item-participants active">
+                            ${group.parts.map(m => `
+                                <div class="drag-item-person" draggable="true" ondragstart="dragPerson(event, '${group.entry.id}', ${m.idx})">
+                                    <div style="display:flex; align-items:center; gap:4px;">
+                                        <button class="btn-leader-toggle ${m.p.isLeader ? 'active' : ''}" onclick="window.toggleLeader('${group.entry.id}', ${m.idx})">⭐</button>
+                                        <span>${m.p.name}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
-                `;
-            });
-            html += `</div></div>`;
-        });
-
-        html += `</div>`;
-        box.innerHTML = html;
+                `).join('')}
+            </div>
+        `;
         ikesuGrid.appendChild(box);
     });
 };
 
-// 1. Leader Management & Auth (v8.0.3)
+/* --- Leader Entry Functions --- */
 window.resetLeaderAuth = function() {
     const ikId = document.getElementById('leader-ikesu-select').value;
     document.getElementById('leader-auth-section').classList.toggle('hidden', !ikId);
     document.getElementById('leader-step-2').classList.add('hidden');
     document.getElementById('leader-step-confirm').classList.add('hidden');
-    document.getElementById('leader-passcode-input').value = "";
 };
 
 window.verifyLeaderAuth = function() {
     const ikId = document.getElementById('leader-ikesu-select').value;
     const input = document.getElementById('leader-passcode-input').value;
-    const ikesu = state.settings.ikesuList.find(ik => ik.id === ikId);
-    
-    if (!ikesu) return;
-    if (input === ikesu.passcode) {
-        showToast('認証に成功しました', 'success');
+    const ikesu = state.settings.ikesuList?.find(ik => ik.id === ikId);
+    if (ikesu && (input === ikesu.passcode || input === state.settings.adminPassword)) {
+        showToast('認証成功', 'success');
         document.getElementById('leader-step-1').classList.add('hidden');
         document.getElementById('leader-step-2').classList.remove('hidden');
-        document.getElementById('selected-ikesu-name-display').textContent = ikesu.name;
         renderLeaderEntryTable();
     } else {
-        showToast('暗証番号が正しくありません', 'error');
+        showToast('暗証番号が違います', 'error');
     }
 };
 
 window.renderLeaderEntryTable = function() {
     const ikId = document.getElementById('leader-ikesu-select').value;
     const container = document.getElementById('leader-entry-table-container');
-    if (!ikId) return;
-
+    if (!container) return;
     const members = [];
     state.entries.forEach(e => {
         if (e.status === 'cancelled') return;
         e.participants.forEach((p, idx) => {
-            if (p.ikesuId === ikId && p.type === 'fisher') {
-                members.push({ p, entry: e, idx });
-            }
+            if (p.ikesuId === ikId && p.type === 'fisher') members.push({ p, entry: e, idx });
         });
     });
 
-    if (members.length === 0) {
-        container.innerHTML = '<p class="alert alert-warning">このイケスに釣り参加者が割り当てられていません</p>';
-        return;
-    }
-
-    let html = `
-        <table class="leader-table" style="width:100%; border-collapse: separate; border-spacing: 0 8px;">
-            <thead>
-                <tr style="font-size:0.8rem; color:#64748b; text-transform:uppercase;">
-                    <th>氏名 / グループ</th>
-                    <th style="text-align:center;">青物(2pt)</th>
-                    <th style="text-align:center;">鯛等(1pt)</th>
-                    <th style="text-align:center;">小計</th>
-                </tr>
-            </thead>
+    container.innerHTML = `
+        <table class="leader-table">
+            <thead><tr><th>氏名</th><th>青物(2pt)</th><th>鯛等(1pt)</th><th>小計</th></tr></thead>
             <tbody>
+                ${members.map(m => `
+                    <tr data-entry="${m.entry.id}" data-idx="${m.idx}">
+                        <td><strong>${m.p.name}</strong><br><small>${m.entry.groupName}</small></td>
+                        <td><input type="number" class="catch-a" value="${m.p.catchA || 0}" min="0" oninput="window.updateLeaderLiveTotals()"></td>
+                        <td><input type="number" class="catch-b" value="${m.p.catchB || 0}" min="0" oninput="window.updateLeaderLiveTotals()"></td>
+                        <td><span class="row-total">0</span>pt</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
     `;
-
-    members.forEach(m => {
-        const rowId = `row-${m.entry.id}-${m.idx}`;
-        const p = m.p;
-        html += `
-            <tr data-entry="${m.entry.id}" data-idx="${m.idx}" style="background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <td style="padding: 12px;">
-                    <div style="font-weight:900; font-size:1.1rem; color:var(--text-color);">${p.name} 様</div>
-                    <div style="font-size:0.75rem; color:#94a3b8; font-weight:600;">${m.entry.groupName} ${p.isLeader ? '⭐' : ''}</div>
-                </td>
-                <td style="text-align:center; padding: 12px;">
-                    <input type="number" class="input-catch catch-a" value="${p.catchA || 0}" min="0" 
-                           oninput="window.updateLeaderLiveTotals()" 
-                           style="width: 60px; font-size: 1.2rem; padding: 8px; text-align: center; border: 1px solid #e2e8f0; border-radius: 6px;">
-                </td>
-                <td style="text-align:center; padding: 12px;">
-                    <input type="number" class="input-catch catch-b" value="${p.catchB || 0}" min="0" 
-                           oninput="window.updateLeaderLiveTotals()"
-                           style="width: 60px; font-size: 1.2rem; padding: 8px; text-align: center; border: 1px solid #e2e8f0; border-radius: 6px;">
-                </td>
-                <td style="text-align:center; padding: 12px; font-weight:800; color:var(--primary-color);">
-                    <span class="row-total">0</span><small>pt</small>
-                </td>
-            </tr>
-        `;
-    });
-
-    html += `</tbody></table>`;
-    container.innerHTML = html;
     updateLeaderLiveTotals();
 };
 
 window.updateLeaderLiveTotals = function() {
-    const rows = document.querySelectorAll('.leader-table tbody tr');
     let teamTotal = 0;
-    
-    rows.forEach(row => {
-        const cA = parseInt(row.querySelector('.catch-a').value) || 0;
-        const cB = parseInt(row.querySelector('.catch-b').value) || 0;
-        const subtotal = (cA * 2) + cB;
-        row.querySelector('.row-total').textContent = subtotal;
-        teamTotal += subtotal;
+    document.querySelectorAll('.leader-table tbody tr').forEach(row => {
+        const a = parseInt(row.querySelector('.catch-a').value) || 0;
+        const b = parseInt(row.querySelector('.catch-b').value) || 0;
+        const sub = (a * 2) + b;
+        row.querySelector('.row-total').textContent = sub;
+        teamTotal += sub;
     });
-
     const display = document.getElementById('team-total-display');
-    if (display) display.innerHTML = `${teamTotal} <small style="font-size: 0.8rem;">pt</small>`;
+    if (display) display.innerHTML = teamTotal + ' <small>pt</small>';
 };
 
-// 3. Workflow Improvement
 window.requestLeaderResultsSave = function() {
-    const rows = document.querySelectorAll('.leader-table tbody tr');
-    const summaryList = document.getElementById('leader-confirm-summary');
-    let teamTotal = 0;
-    let html = "";
-
-    rows.forEach(row => {
-        const name = row.querySelector('strong, div').innerText;
-        const cA = parseInt(row.querySelector('.catch-a').value) || 0;
-        const cB = parseInt(row.querySelector('.catch-b').value) || 0;
-        const subtotal = (cA * 2) + cB;
-        teamTotal += subtotal;
-
-        html += `
-            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding: 8px 0;">
-                <div>
-                    <div style="font-weight: 700;">${name}</div>
-                    <div style="font-size: 0.75rem; color: #64748b;">青物: ${cA} / 鯛等: ${cB}</div>
-                </div>
-                <div style="font-weight: 900; color: var(--primary-color);">${subtotal} pt</div>
-            </div>
-        `;
-    });
-
-    summaryList.innerHTML = html;
-    document.getElementById('confirm-team-total').innerHTML = `${teamTotal} <small style="font-size: 1rem;">pt</small>`;
-    
     document.getElementById('leader-step-2').classList.add('hidden');
     document.getElementById('leader-step-confirm').classList.remove('hidden');
-    window.scrollTo(0,0);
 };
 
 window.backToLeaderEdit = function() {
@@ -3697,150 +2764,47 @@ window.backToLeaderEdit = function() {
 };
 
 window.commitLeaderResultsSave = function() {
-    const rows = document.querySelectorAll('.leader-table tbody tr');
-    rows.forEach(row => {
+    document.querySelectorAll('.leader-table tbody tr').forEach(row => {
         const eid = row.dataset.entry;
         const idx = parseInt(row.dataset.idx);
-        const cA = parseInt(row.querySelector('.catch-a').value) || 0;
-        const cB = parseInt(row.querySelector('.catch-b').value) || 0;
-
         const entry = state.entries.find(e => e.id === eid);
         if (entry && entry.participants[idx]) {
-            entry.participants[idx].catchA = cA;
-            entry.participants[idx].catchB = cB;
+            entry.participants[idx].catchA = parseInt(row.querySelector('.catch-a').value) || 0;
+            entry.participants[idx].catchB = parseInt(row.querySelector('.catch-b').value) || 0;
         }
     });
-
     saveData();
-    showToast("釣果を保存し、クラウドへ同期しました", "success");
-    
-    // v8.0.4: Global view updates
-    updateDashboard();
-    renderRankings();
-    
-    // Reset to start
-    document.getElementById('leader-step-confirm').classList.add('hidden');
-    document.getElementById('leader-step-1').classList.remove('hidden');
-    document.getElementById('leader-ikesu-select').value = "";
-    document.getElementById('leader-auth-section').classList.add('hidden');
-    
-    window.scrollTo(0, 0);
+    showToast('保存しました', 'success');
+    window.location.reload();
 };
 
-// 4. Print & Management Updates
 window.renderIkesuPrintView = function() {
     const container = document.getElementById('print-view-container');
-    if (!container || !state.settings.ikesuList) return;
-
+    if (!container) return;
     let html = "";
-    state.settings.ikesuList.forEach(ikesu => {
+    state.settings.ikesuList?.forEach(ik => {
         const members = [];
         state.entries.forEach(e => {
             if (e.status === 'cancelled') return;
-            e.participants.forEach((p, idx) => {
-                if (p.ikesuId === ikesu.id) {
-                    members.push({ p, entry: e, idx });
-                }
-            });
+            e.participants.forEach(p => { if(p.ikesuId === ik.id) members.push({p, e}); });
         });
-
         if (members.length === 0) return;
-
         html += `
-            <div class="print-ikesu-sheet" style="page-break-after: always; position: relative;">
-                <div class="print-header" style="border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:flex-end;">
-                    <div>
-                        <h2 style="margin:0; font-size: 1.8rem;">${ikesu.name} メンバー表</h2>
-                        <span style="font-size:0.9rem;">大会名称: ${state.settings.competitionName}</span>
-                    </div>
-                    <div style="text-align: right; border: 2px solid #000; padding: 8px 15px; border-radius: 8px;">
-                        <div style="font-size: 0.7rem; font-weight: 800; margin-bottom: 2px;">リーダー入力用 暗証番号</div>
-                        <div style="font-size: 1.8rem; font-weight: 900; letter-spacing: 0.2em; line-height: 1;">${ikesu.passcode}</div>
-                    </div>
-                </div>
-                <table class="print-table">
-                    <thead>
-                        <tr>
-                            <th style="width:15%">区分</th>
-                            <th style="width:25%">グループ名</th>
-                            <th style="width:30%">氏名</th>
-                            <th style="width:15%">釣り/見学</th>
-                            <th style="width:15%">役割</th>
-                        </tr>
-                    </thead>
+            <div class="print-ikesu-sheet" style="page-break-after: always; padding: 20px; border-bottom: 2px solid #333;">
+                <h2 style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>${ik.name} メンバー表</span>
+                    <span style="font-size:1rem; background:#eee; padding:5px 10px; border-radius:4px;">リーダー用 暗証番号: <strong>${ik.passcode}</strong></span>
+                </h2>
+                <table class="print-table" style="width:100%; border-collapse:collapse; margin-top:20px;">
+                    <thead><tr style="background:#f0f0f0;"><th>グループ</th><th>氏名</th><th>区分</th><th>備考</th></tr></thead>
                     <tbody>
-                        ${members.map(m => `
-                            <tr>
-                                <td>${m.entry.source}</td>
-                                <td>${m.entry.groupName}</td>
-                                <td style="font-weight:bold; font-size:1.1rem;">${m.p.name} 様</td>
-                                <td>${m.p.type === 'fisher' ? '釣り' : '見学'}</td>
-                                <td>${m.p.isLeader ? '<strong style="color:#000">★リーダー</strong>' : '--'}</td>
-                            </tr>
-                        `).join('')}
+                        ${members.map(m => `<tr><td>${m.e.groupName}</td><td>${m.p.name}</td><td>${m.p.type==='fisher'?'釣り':'見学'}</td><td>${m.p.isLeader?'★リーダー':''}</td></tr>`).join('')}
                     </tbody>
                 </table>
-                <div style="margin-top: 20px; padding: 15px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.85rem;">
-                    <strong>【リーダー様へ】</strong><br>
-                    釣果報告はこちらのQRコードまたはURLからアクセスし、右上の暗証番号を入力して報告してください。<br>
-                    <span style="font-size: 0.75rem;">※報告期限は競技終了後15分以内にお願いいたします。</span>
-                </div>
-                <div style="margin-top:1rem; font-size:0.8rem; text-align:right;">印刷日時: ${new Date().toLocaleString()}</div>
             </div>
         `;
     });
-    container.innerHTML = html || '<p>割り当て済みのメンバーがいません</p>';
+    container.innerHTML = html || "データなし";
 };
 
-window.toggleLeader = function(entryId, partIdx) {
-    const entry = state.entries.find(e => e.id === entryId);
-    if (!entry || !entry.participants[partIdx]) return;
-    
-    // Toggle
-    const current = !!entry.participants[partIdx].isLeader;
-    entry.participants[partIdx].isLeader = !current;
-    
-    saveData();
-    renderIkesuWorkspace();
-    showToast(`${entry.participants[partIdx].name} 様をリーダーに設定しました`, 'info');
-};
 
-window.exportParticipantsCSV = function() {
-    if (state.entries.length === 0) return alert('データがありません');
-    const headers = ['受付番号', '区分', 'グループ名', '代表者名', '電話番号', 'メール', 'イケス', '役割', '参加区分', '参加者名', '性別', '青物等(2pt)', 'マダイ等(1pt)', '合計点', 'Tシャツ', '地域', '年代', '登録時間'];
-    const rows = [];
-    state.entries.forEach(e => {
-        if (e.status === 'cancelled') return;
-        e.participants.forEach(p => {
-            const partType = p.type === 'observer' ? '見学' : '釣り';
-            const ikesu = state.settings.ikesuList.find(ik => ik.id === p.ikesuId);
-            const ikName = ikesu ? ikesu.name : "";
-            const leaderTag = p.isLeader ? "リーダー" : "";
-            const pA = parseInt(p.catchA || 0);
-            const pB = parseInt(p.catchB || 0);
-            const total = (pA * 2) + pB;
-
-            rows.push([
-                e.id,
-                e.source,
-                e.groupName,
-                e.representative,
-                e.phone || "",
-                e.email || "",
-                ikName,
-                leaderTag,
-                partType,
-                p.name,
-                genderLabels[p.gender] || p.gender || "",
-                pA,
-                pB,
-                total,
-                p.tshirtSize || "",
-                p.region,
-                ageLabels[p.age] || p.age,
-                formatDateForCSV(e.timestamp)
-            ]);
-        });
-    });
-    downloadCSV("participants_full", headers, rows);
-};
