@@ -80,7 +80,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.19: CATEGORY VISIBILITY & CAPACITY SYNC");
+        console.log("BORIJIN APP v8.1.20: CATEGORY BOX & DELETE FIX");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1818,6 +1818,7 @@ function updateDashboard() {
                         <button class="btn-outline btn-small btn-detail" onclick="window.showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
                         <button class="btn-outline btn-small" onclick="window.requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
                         <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="window.quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
+                        <button class="btn-outline btn-small" onclick="window.hardDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap; border-color: #ff7675; color: #ff7675;">削除</button>
                     </div>
                 </td>
             `;
@@ -3058,6 +3059,39 @@ function handleCheckStatus() {
     }
 }
 
+/**
+ * v8.1.20: Restore Hard Delete for Test Data Management
+ */
+window.hardDeleteEntry = async function (id) {
+    if (!isAdminAuth) return;
+    if (!confirm(`エントリー ${id} を完全に削除しますか？\n(送信後、サーバーからも完全に削除されます。テスト入力の整理に使用してください)`)) return;
+
+    try {
+        const idx = state.entries.findIndex(e => e.id === id);
+        if (idx === -1) {
+            showToast('エントリーが見つかりません', 'error');
+            return;
+        }
+
+        // v7.9.3 logic: Track for cloud deletion
+        if (!state.deletedIds) state.deletedIds = [];
+        state.deletedIds.push(id);
+
+        state.entries.splice(idx, 1);
+        showToast('エントリーを削除しました', 'success');
+
+        // Refresh UI
+        updateDashboard();
+        updateReceptionList();
+
+        // Immediate sync to server
+        await saveData();
+    } catch (err) {
+        console.error("Deletion failed:", err);
+        showToast('削除に失敗しました', 'error');
+    }
+};
+
 async function exportGroupsCSV() {
     const headers = ["ID", "区分", "グループ名", "代表者", "電話番号", "人数(釣り)", "人数(見学)", "ステータス", "日時"];
     const rows = state.entries.map(e => [
@@ -3369,8 +3403,10 @@ function checkUrlParams() {
         };
         if (validSources[src]) {
             injectSpecialSource(validSources[src]);
-            // Ensure we are in registration view
-            switchView(null, 'registration-view'); 
+            // Ensure we are in registration view ONLY IF no other view was explicitly requested (v8.1.20)
+            if (!view) {
+                switchView(null, 'registration-view'); 
+            }
         }
     }
 

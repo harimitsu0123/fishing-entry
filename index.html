@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=8.1.19">
+    <link rel="stylesheet" href="style.css?v=8.1.20">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -64,13 +64,31 @@
                     <div class="form-section-card">
                         <div class="form-row">
                             <!-- Specialized source selector -->
-                            <div class="form-group hidden" id="source-selector-group" style="margin-bottom: 1rem; width: 100%;">
+                            <div class="form-group" id="source-selector-group" style="margin-bottom: 1rem; width: 100%;">
                                 <label style="display:block; margin-bottom: 0.5rem; font-weight:700;">受付区分</label>
                                 <div class="source-selector" id="main-source-selector" style="display:flex; flex-wrap: wrap; gap: 0.5rem;">
                                     <label class="source-option" style="flex: 0 0 auto; min-width: 80px;">
                                         <input type="radio" name="reg-source" value="一般" checked required>
                                         <span class="source-label">
                                             <span class="badge badge-ippan">一般</span>
+                                        </span>
+                                    </label>
+                                    <label class="source-option admin-only hidden" style="flex: 0 0 auto; min-width: 80px;">
+                                        <input type="radio" name="reg-source" value="みん釣り">
+                                        <span class="source-label">
+                                            <span class="badge badge-mintsuri">みん釣り</span>
+                                        </span>
+                                    </label>
+                                    <label class="source-option admin-only hidden" style="flex: 0 0 auto; min-width: 80px;">
+                                        <input type="radio" name="reg-source" value="水宝">
+                                        <span class="source-label">
+                                            <span class="badge badge-suiho">水宝</span>
+                                        </span>
+                                    </label>
+                                    <label class="source-option admin-only hidden" style="flex: 0 0 auto; min-width: 80px;">
+                                        <input type="radio" name="reg-source" value="ハリミツ">
+                                        <span class="source-label">
+                                            <span class="badge badge-harimitsu">ハリミツ</span>
                                         </span>
                                     </label>
                                 </div>
@@ -999,7 +1017,7 @@
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" onclick="handleSecureClick(event)">&copy; 2026 釣り大会 実行委員会</p>
             <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;"
-            >v8.1.19</span>
+            >v8.1.20</span>
         </div>
     </footer>
 
@@ -1011,7 +1029,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=8.1.19"></script>
+    <script src="script.js?v=8.1.20"></script>
 </body>
 
 </html>
