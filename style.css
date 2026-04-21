@@ -1663,7 +1663,7 @@ th {
 .sync-status-indicator {
     position: fixed;
     right: 1rem;
-    bottom: 2.5rem; /* Just above the version tag */
+    bottom: 3.5rem; /* Increased from 2.5rem to avoid overlap with version tag (v8.1.35) */
     background: rgba(255, 255, 255, 0.9);
     padding: 0.4rem 0.8rem;
     border-radius: 20px;
