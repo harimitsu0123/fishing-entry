@@ -333,6 +333,9 @@ function finalizeLoad() {
     updateSourceAvailability();
     syncSettingsUI();
 
+    // v8.1.42: Ensure coordinator views also refresh automatically on sync
+    renderActiveCoordinatorView();
+
     // v7.6.1: Run URL parameter check AFTER loading is fully settled
     checkUrlParams();
 
@@ -638,6 +641,12 @@ function initApp() {
     const params = new URLSearchParams(window.location.search);
     const srcParam = params.get('src');
     const viewParam = params.get('view');
+
+    // v8.1.42: Explicitly clear all search boxes to prevent browser autofill/stale values
+    ['dashboard-search', 'mintsuri-search', 'harimitsu-search', 'suiho-search', 'reception-search'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
 
     // v8.1.39: Critical Fix for entries flashing - Reset filter if it's set to hidden 'ippan'
     if (dashboardFilter === '一般') {
@@ -2385,6 +2394,28 @@ function renderGenericCoordinatorView(sourceName, prefix) {
         }).join('') || '<tr><td colspan="5" style="text-align:center; padding:2rem;">該当する登録はありません</td></tr>';
 
     renderBreakdownStats(sourceName, `${prefix}-`);
+}
+
+/**
+ * v8.1.42: Detect and refresh whichever admin/coordinator view is currently active
+ */
+function renderActiveCoordinatorView() {
+    // 1. Dashboard
+    updateDashboard();
+    
+    // 2. Reception
+    updateReceptionList();
+
+    // 3. Coordinator Views
+    if (document.getElementById('mintsuri-coordinator-view')?.classList.contains('active')) {
+        renderMintsuriCoordinatorView();
+    }
+    if (document.getElementById('harimitsu-coordinator-view')?.classList.contains('active')) {
+        renderHarimitsuCoordinatorView();
+    }
+    if (document.getElementById('suiho-coordinator-view')?.classList.contains('active')) {
+        renderSuihoCoordinatorView();
+    }
 }
 
 window.exportMintsuriCSV = function() {

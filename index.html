@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=8.1.41">
+    <link rel="stylesheet" href="style.css?v=8.1.42">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -377,7 +377,7 @@
                             </div>
                         </div>
                         <div class="search-box mb-3">
-                            <input type="text" id="dashboard-search" placeholder="番号、グループ名、代表者、地域、参加者名で検索...">
+                            <input type="text" id="dashboard-search" autocomplete="off" placeholder="番号、グループ名、代表者、地域、参加者名で検索...">
                         </div>
                         <div class="filter-group mb-4">
                             <button class="filter-btn active" data-filter="all">すべて</button>
@@ -833,7 +833,7 @@
                      <!-- Mintsuri specific stats injected here -->
                 </div>
                 <div class="search-box mb-3">
-                    <input type="text" id="mintsuri-search" placeholder="受付番号、グループ、参加者名、性別、サイズで検索..." oninput="renderMintsuriCoordinatorView()">
+                    <input type="text" id="mintsuri-search" autocomplete="off" placeholder="受付番号、グループ、参加者名、性別、サイズで検索..." oninput="renderMintsuriCoordinatorView()">
                 </div>
                 <div class="table-container">
                     <table class="mintsuri-table">
@@ -890,7 +890,7 @@
                 </div>
                 <div id="harimitsu-stats-summary" class="mb-4"></div>
                 <div class="search-box mb-3">
-                    <input type="text" id="harimitsu-search" placeholder="検索..." oninput="renderHarimitsuCoordinatorView()">
+                    <input type="text" id="harimitsu-search" autocomplete="off" placeholder="検索..." oninput="renderHarimitsuCoordinatorView()">
                 </div>
                 <div class="table-container">
                     <table>
@@ -942,7 +942,7 @@
                 </div>
                 <div id="suiho-stats-summary" class="mb-4"></div>
                 <div class="search-box mb-3">
-                    <input type="text" id="suiho-search" placeholder="検索..." oninput="renderSuihoCoordinatorView()">
+                    <input type="text" id="suiho-search" autocomplete="off" placeholder="検索..." oninput="renderSuihoCoordinatorView()">
                 </div>
                 <div class="table-container">
                     <table>
@@ -1127,7 +1127,7 @@
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" onclick="handleSecureClick(event)">&copy; 2026 釣り大会 実行委員会</p>
             <span style="position: absolute; right: 15px; bottom: 85px; opacity: 0.7; font-size: 0.7rem; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 5px; border-radius: 4px;"
-            >v8.1.41</span>
+            >v8.1.42</span>
         </div>
     </footer>
 
@@ -1139,7 +1139,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=8.1.41"></script>
+    <script src="script.js?v=8.1.42"></script>
 </body>
 
 </html>
