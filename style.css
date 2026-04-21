@@ -1,20 +1,23 @@
 :root {
     --primary-color: #005bb5;
-    /* Enhanced contrast for 40+ */
     --secondary-color: #0088cc;
     --accent-color: #e67e22;
     --bg-color: #f4f7f9;
     --card-bg: #ffffff;
     --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    /* Softer, premium shadow */
     --text-color: #1a2a3a;
-    /* Darker for better legibility */
     --text-muted: #5a6a7a;
     --error-color: #d32f2f;
     --success-color: #2e7d32;
     --warning-color: #ed6c02;
     --border-color: #ced4da;
     --input-focus: #005bb5;
+    
+    /* Category Colors - Premium Palette (v8.0.4) */
+    --color-ippan: #0984e3;
+    --color-mintsuri: #6c5ce7;
+    --color-suiho: #00b894;
+    --color-harimitsu: #e17055;
 }
 
 .hidden {
@@ -1636,10 +1639,10 @@ th {
     box-shadow: 0 4px 12px rgba(0, 91, 181, 0.1) !important;
 }
 
-.badge-ippan { background-color: #0984e3 !important; color: white !important; }
-.badge-mintsuri { background-color: #6c5ce7 !important; color: white !important; }
-.badge-suiho { background-color: #00b894 !important; color: white !important; }
-.badge-harimitsu { background-color: #e17055 !important; color: white !important; }
+.badge-ippan { background: var(--color-ippan) !important; color: white !important; box-shadow: 0 2px 4px rgba(9, 132, 227, 0.2); }
+.badge-mintsuri { background: var(--color-mintsuri) !important; color: white !important; box-shadow: 0 2px 4px rgba(108, 92, 231, 0.2); }
+.badge-suiho { background: var(--color-suiho) !important; color: white !important; box-shadow: 0 2px 4px rgba(0, 184, 148, 0.2); }
+.badge-harimitsu { background: var(--color-harimitsu) !important; color: white !important; box-shadow: 0 2px 4px rgba(225, 112, 85, 0.2); }
 
 /* --- Global Sync Status Indicator (v7.3.2) --- */
 .sync-status-indicator {
@@ -1976,29 +1979,179 @@ table {
     outline: none;
 }
 
-/* Print Styles */
+/* Print Styles & Ranking Premium UI */
 @media print {
-    .navbar, .admin-tab-nav, .header-actions, .search-box, .filter-group, .footer, .btn-primary, .btn-outline {
+    /* Hide everything except what we want to print */
+    .navbar, .admin-tab-nav, .header-actions, .search-box, .filter-group, .footer, .btn-primary, .btn-outline, .admin-toolbar, .admin-extra-actions, .nav-btn, .special-urls {
         display: none !important;
     }
+    
+    .view, .admin-tab-content {
+        display: none !important;
+    }
+
+    /* Show only the active print target */
+    .admin-tab-content.active, .view.active {
+        display: block !important;
+    }
+
     .card {
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
     }
+    
     body {
         background: white !important;
+        padding: 0 !important;
     }
+    
     .container {
         max-width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
+        width: 100% !important;
     }
+    
     .print-ikesu-sheet {
         padding: 0 !important;
-        margin-bottom: 0 !important;
+        margin-bottom: 2cm !important;
+        page-break-after: always;
+    }
+
+    .ranking-grid-print {
+        display: block !important;
+    }
+
+    .ranking-card {
+        break-inside: avoid;
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+        background: white !important;
+    }
+    
+    .section-title {
+        background: #eee !important;
+        color: #000 !important;
+        border-left: 5px solid #000 !important;
     }
 }
+
+/* Premium Ranking UI */
+.ranking-panel {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.ranking-card {
+    background: #ffffff;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #eef2f6;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.ranking-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-color: var(--primary-color);
+}
+
+.ranking-rank {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #94a3b8;
+    min-width: 45px;
+    font-family: 'Outfit', sans-serif;
+    position: relative;
+    z-index: 2;
+}
+
+/* Podium Effects */
+.ranking-card.rank-1 { background: linear-gradient(to right, #fffdf5, #ffffff); border-left: 6px solid #f1c40f; }
+.ranking-card.rank-2 { background: linear-gradient(to right, #f8fafc, #ffffff); border-left: 6px solid #94a3b8; }
+.ranking-card.rank-3 { background: linear-gradient(to right, #fef9f6, #ffffff); border-left: 6px solid #e67e22; }
+
+.ranking-rank.top-1 { color: #f1c40f; font-size: 2.2rem; }
+.ranking-rank.top-2 { color: #64748b; font-size: 1.8rem; }
+.ranking-rank.top-3 { color: #d97706; font-size: 1.6rem; }
+
+.ranking-info {
+    flex: 1;
+    margin-left: 0.5rem;
+}
+
+.ranking-name {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.ranking-subtext {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.ranking-points {
+    text-align: right;
+    font-weight: 900;
+}
+
+.rank-val { font-size: 1.6rem; color: var(--primary-color); line-height: 1; }
+.rank-unit { font-size: 0.8rem; color: #94a3b8; margin-left: 2px; }
+
+/* Podium Layout for Print */
+.podium-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 1rem;
+    margin: 2rem 0;
+    padding-bottom: 1rem;
+}
+
+.podium-item {
+    text-align: center;
+    flex: 1;
+    max-width: 200px;
+}
+
+.podium-rank {
+    font-weight: 900;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.podium-box {
+    border-radius: 12px 12px 4px 4px;
+    padding: 1rem 0.5rem;
+    color: white;
+    font-weight: 800;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.podium-1 { background: #f1c40f; height: 140px; }
+.podium-2 { background: #94a3b8; height: 100px; }
+.podium-3 { background: #e67e22; height: 80px; }
 
 .print-ikesu-sheet {
     page-break-after: always;
@@ -2038,3 +2191,8 @@ table {
     filter: none;
     opacity: 1;
 }
+/* Split Card Theming */
+.split-card.ippan { border-top: 4px solid var(--color-ippan); }
+.split-card.mintsuri { border-top: 4px solid var(--color-mintsuri); }
+.split-card.suiho { border-top: 4px solid var(--color-suiho); }
+.split-card.harimitsu { border-top: 4px solid var(--color-harimitsu); }

@@ -1735,12 +1735,28 @@ function updateDashboard() {
 
             const regTime = e.timestamp ? new Date(e.timestamp).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--:--';
 
+            // v8.0.4: Calculate Group Total Points and Ikesu Names
+            let groupPoints = 0;
+            const ikesuNames = new Set();
+            e.participants.forEach(p => {
+                const pA = parseInt(p.catchA || 0);
+                const pB = parseInt(p.catchB || 0);
+                groupPoints += (pA * 2) + pB;
+                if (p.ikesuId) {
+                    const ik = state.settings.ikesuList.find(i => i.id === p.ikesuId);
+                    if (ik) ikesuNames.add(ik.name);
+                }
+            });
+            const ikesuDisplay = Array.from(ikesuNames).join(', ') || '-';
+
             tr.innerHTML = `
                 <td><span class="id-badge" style="white-space:nowrap;">${e.id}</span></td>
                 <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}" style="white-space:nowrap;">${e.source}</span></td>
                 <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}">${e.groupName}</div></td>
                 <td>${pSummary}</td>
                 <td><small style="white-space:nowrap;">${e.fishers} / ${e.observers}</small></td>
+                <td><small style="white-space:nowrap;">${ikesuDisplay}</small></td>
+                <td><div style="font-weight:900; color:var(--primary-color); text-align:center;">${groupPoints}</div></td>
                 <td><span style="font-size:0.75rem; font-weight:700; white-space:nowrap;">${statusLabel}</span></td>
                 <td><small style="white-space:nowrap;">${regTime}</small></td>
                 <td>
@@ -1800,8 +1816,14 @@ window.renderRankings = function() {
                 group: e.groupName, 
                 points, 
                 cA, 
-                cB 
+                cB,
+                ikesu: ""
             });
+            // Try to find ikesu
+            if (p.ikesuId) {
+                const ik = state.settings.ikesuList.find(i => i.id === p.ikesuId);
+                if (ik) individuals[individuals.length - 1].ikesu = ik.name;
+            }
         });
     });
 
@@ -1812,21 +1834,27 @@ window.renderRankings = function() {
         return b.cB - a.cB;
     });
 
-    indList.innerHTML = individuals.slice(0, 50).map((p, i) => `
-        <div class="ranking-card">
-            <div class="ranking-rank ${i < 3 ? 'top-' + (i+1) : ''}">${i + 1}</div>
-            <div class="ranking-info">
-                <div class="ranking-name">${p.name} <small style="color:#94a3b8; font-weight:400;">(${p.group})</small></div>
-                <div style="font-size:0.7rem; color:#64748b;">青物等: ${p.cA} / マダイ等: ${p.cB}</div>
+    indList.innerHTML = individuals.slice(0, 50).map((p, i) => {
+        const rankClass = i < 3 ? `rank-${i + 1}` : '';
+        const rankNumClass = i < 3 ? `top-${i + 1}` : '';
+        return `
+            <div class="ranking-card ${rankClass}">
+                <div class="ranking-rank ${rankNumClass}">${i + 1}</div>
+                <div class="ranking-info">
+                    <div class="ranking-name">${p.name}</div>
+                    <div class="ranking-subtext">${p.group} ${p.ikesu ? ` / ${p.ikesu}` : ''}</div>
+                    <div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">青物: ${p.cA} / 鯛等: ${p.cB}</div>
+                </div>
+                <div class="ranking-points">
+                    <span class="rank-val">${p.points}</span><span class="rank-unit">pt</span>
+                </div>
             </div>
-            <div class="ranking-points">${p.points} <small>pt</small></div>
-        </div>
-    `).join('') || '<p class="text-muted p-4">データがありません</p>';
+        `;
+    }).join('') || '<p class="text-muted p-4">データがありません</p>';
 
     // B. Ikesu Team Ranking
     if (!state.settings.ikesuList) return;
     
-    // Map assignments
     const ikResults = {};
     state.settings.ikesuList.forEach(ik => ikResults[ik.id] = { name: ik.name, totalPoints: 0, count: 0 });
     
@@ -1850,16 +1878,22 @@ window.renderRankings = function() {
 
     teamList.sort((a, b) => b.avg - a.avg);
 
-    ikList.innerHTML = teamList.map((r, i) => `
-        <div class="ranking-card">
-            <div class="ranking-rank ${i < 3 ? 'top-' + (i+1) : ''}">${i + 1}</div>
-            <div class="ranking-info">
-                <div class="ranking-name">${r.name}</div>
-                <div style="font-size:0.7rem; color:#64748b;">合計: ${r.total}pt / 人数: ${r.count}名</div>
+    ikList.innerHTML = teamList.map((r, i) => {
+        const rankClass = i < 3 ? `rank-${i + 1}` : '';
+        const rankNumClass = i < 3 ? `top-${i + 1}` : '';
+        return `
+            <div class="ranking-card ${rankClass}">
+                <div class="ranking-rank ${rankNumClass}">${i + 1}</div>
+                <div class="ranking-info">
+                    <div class="ranking-name">${r.name}</div>
+                    <div class="ranking-subtext">合計: ${r.total}pt / 参加: ${r.count}名</div>
+                </div>
+                <div class="ranking-points">
+                    <span class="rank-val">${r.avg}</span><span class="rank-unit">avg</span>
+                </div>
             </div>
-            <div class="ranking-points">${r.avg} <small>avg</small></div>
-        </div>
-    `).join('') || '<p class="text-muted p-4">データがありません</p>';
+        `;
+    }).join('') || '<p class="text-muted p-4">データがありません</p>';
 };
 
 // 3. Print View
@@ -1977,10 +2011,10 @@ window.renderLeaderEntryTable = function() {
                     <div style="font-size:0.75rem; color:#64748b;">${m.p.isLeader ? '⭐リーダー' : ''} [${m.entryId}]</div>
                 </td>
                 <td style="text-align:center;">
-                    <input type="number" class="input-catch catch-a" value="${m.p.catchA || 0}" min="0">
+                    <input type="number" class="input-catch catch-a" value="${m.p.catchA || 0}" min="0" oninput="window.updateLeaderLiveTotals()">
                 </td>
                 <td style="text-align:center;">
-                    <input type="number" class="input-catch catch-b" value="${m.p.catchB || 0}" min="0">
+                    <input type="number" class="input-catch catch-b" value="${m.p.catchB || 0}" min="0" oninput="window.updateLeaderLiveTotals()">
                 </td>
             </tr>
         `;
@@ -1989,27 +2023,12 @@ window.renderLeaderEntryTable = function() {
     html += `</tbody></table>`;
     container.innerHTML = html;
     actions.classList.remove('hidden');
+    
+    // v8.0.4: Trigger initial total calculation
+    setTimeout(() => window.updateLeaderLiveTotals(), 50);
 };
 
-window.saveLeaderResults = function() {
-    const rows = document.querySelectorAll('.leader-table tbody tr');
-    rows.forEach(row => {
-        const eid = row.dataset.entry;
-        const idx = parseInt(row.dataset.idx);
-        const cA = parseInt(row.querySelector('.catch-a').value) || 0;
-        const cB = parseInt(row.querySelector('.catch-b').value) || 0;
-
-        const entry = state.entries.find(e => e.id === eid);
-        if (entry && entry.participants[idx]) {
-            entry.participants[idx].catchA = cA;
-            entry.participants[idx].catchB = cB;
-        }
-    });
-
-    saveData();
-    showToast("釣果を保存し、クラウドへ同期しました", "success");
-    // Switch back or stay? Stay for convenience if there are many to input.
-};
+// Removed redundant window.saveLeaderResults (handled by window.commitLeaderResultsSave)
 
 // Update existing Export Participants CSV (Overwrite with enhanced logic)
 window.exportParticipantsCSV = function() {
@@ -3871,11 +3890,17 @@ window.commitLeaderResultsSave = function() {
     saveData();
     showToast("釣果を保存し、クラウドへ同期しました", "success");
     
+    // v8.0.4: Global view updates
+    updateDashboard();
+    renderRankings();
+    
     // Reset to start
     document.getElementById('leader-step-confirm').classList.add('hidden');
     document.getElementById('leader-step-1').classList.remove('hidden');
     document.getElementById('leader-ikesu-select').value = "";
     document.getElementById('leader-auth-section').classList.add('hidden');
+    
+    window.scrollTo(0, 0);
 };
 
 // 4. Print & Management Updates

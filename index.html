@@ -60,11 +60,11 @@
 
                     <div class="form-section-card">
                         <div class="form-row">
-                            <!-- Specialized source selector (hidden by default) -->
-                            <div class="form-group hidden" id="source-selector-group" style="margin-bottom: 0;">
-                                <label>受付区分</label>
-                                <div class="source-selector" id="main-source-selector">
-                                    <label class="source-option">
+                            <!-- Specialized source selector -->
+                            <div class="form-group hidden" id="source-selector-group" style="margin-bottom: 1rem; width: 100%;">
+                                <label style="display:block; margin-bottom: 0.5rem; font-weight:700;">受付区分</label>
+                                <div class="source-selector" id="main-source-selector" style="display:flex; flex-wrap: wrap; gap: 0.5rem;">
+                                    <label class="source-option" style="flex: 0 0 auto; min-width: 80px;">
                                         <input type="radio" name="reg-source" value="一般" checked required>
                                         <span class="source-label">
                                             <span class="badge badge-ippan">一般</span>
@@ -73,11 +73,10 @@
                                 </div>
                             </div>
 
-                            <div class="form-group" style="flex: 1.5;">
+                            <div class="form-group" style="flex: 1 1 100%;">
                                 <label for="group-name">グループ名 <span class="required">(※必須)</span></label>
-                                <input type="text" id="group-name" required placeholder="例：チーム・シーサイド">
-                                <small
-                                    style="display:block; font-weight:normal; font-size: 0.75rem; color: var(--primary-color);">※個人参加は「個人」または自分の名前</small>
+                                <input type="text" id="group-name" required placeholder="例：チーム・ゼブラ">
+                                <small style="display:block; font-weight:normal; font-size: 0.75rem; color: var(--primary-color);">※個人参加は「個人」または自分の名前</small>
                             </div>
                         </div>
 
@@ -246,19 +245,6 @@
             </nav>
 
             <div id="admin-tab-container">
-                <!-- Tab: Registration List (Default) -->
-                <div id="tab-list" class="admin-tab-content active">
-                    <!-- Global Stats Summary (Top) -->
-                    <div id="global-stats-summary-top" class="mb-4"></div>
-
-                    <!-- Status Stats Card -->
-                    <div class="card mb-4 mt-2">
-                        <h2>区分別 登録状況</h2>
-                        <div class="capacity-split-grid mt-4">
-                            <!-- Existing split cards... -->
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Tab: Ikesu Assignment -->
                 <div id="tab-ikesu" class="admin-tab-content">
@@ -311,7 +297,7 @@
                         <h2>区分別 登録状況</h2>
                         <div class="capacity-split-grid mt-4">
                             <!-- General -->
-                            <div class="split-card" style="border-top: 4px solid #0984e3;">
+                            <div class="split-card ippan">
                                 <div class="split-header">
                                     <span class="badge badge-ippan">一般</span>
                                     <span class="split-value"><span id="curr-ippan">0</span> / <span
@@ -319,11 +305,11 @@
                                 </div>
                                 <div class="split-details">見学者: <span id="ippan-observers">0</span>名</div>
                                 <div class="progress-bar">
-                                    <div id="prog-ippan" class="progress" style="background:#0984e3"></div>
+                                    <div id="prog-ippan" class="progress" style="background:var(--color-ippan)"></div>
                                 </div>
                             </div>
                             <!-- Mintsuri -->
-                            <div class="split-card" style="border-top: 4px solid #6c5ce7;">
+                            <div class="split-card mintsuri">
                                 <div class="split-header">
                                     <span class="badge badge-mintsuri">みん釣り</span>
                                     <span class="split-value"><span id="curr-mintsuri">0</span> / <span
@@ -331,11 +317,11 @@
                                 </div>
                                 <div class="split-details">見学者: <span id="mintsuri-observers">0</span>名</div>
                                 <div class="progress-bar">
-                                    <div id="prog-mintsuri" class="progress" style="background:#6c5ce7"></div>
+                                    <div id="prog-mintsuri" class="progress" style="background:var(--color-mintsuri)"></div>
                                 </div>
                             </div>
                             <!-- Suiho -->
-                            <div class="split-card" style="border-top: 4px solid #00b894;">
+                            <div class="split-card suiho">
                                 <div class="split-header">
                                     <span class="badge badge-suiho">水宝</span>
                                     <span class="split-value"><span id="curr-suiho">0</span> / <span
@@ -343,11 +329,11 @@
                                 </div>
                                 <div class="split-details">見学者: <span id="suiho-observers">0</span>名</div>
                                 <div class="progress-bar">
-                                    <div id="prog-suiho" class="progress" style="background:#00b894"></div>
+                                    <div id="prog-suiho" class="progress" style="background:var(--color-suiho)"></div>
                                 </div>
                             </div>
                             <!-- Harimitsu -->
-                            <div class="split-card admin-only hidden" style="border-top: 4px solid #e17055;">
+                            <div class="split-card admin-only hidden harimitsu">
                                 <div class="split-header">
                                     <span class="badge badge-harimitsu">ハリミツ</span>
                                     <span class="split-value"><span id="curr-harimitsu">0</span> / <span
@@ -355,7 +341,7 @@
                                 </div>
                                 <div class="split-details">見学者: <span id="harimitsu-observers">0</span>名</div>
                                 <div class="progress-bar">
-                                    <div id="prog-harimitsu" class="progress" style="background:#e17055"></div>
+                                    <div id="prog-harimitsu" class="progress" style="background:var(--color-harimitsu)"></div>
                                 </div>
                             </div>
                         </div>
@@ -389,6 +375,7 @@
                                         <th>氏名</th>
                                         <th>釣り/見学</th>
                                         <th>イケス</th>
+                                        <th>得点</th>
                                         <th>状態</th>
                                         <th>登録時間</th>
                                         <th>操作</th>
@@ -614,7 +601,7 @@
                                     <option value="水宝">水宝枠</option>
                                     <option value="ハリミツ">ハリミツ枠</option>
                                 </select>
-                                <script>console.log("BORIJIN APP v8.0.3: LEADER FORM SECURED");</script>
+                                <script>console.log("BORIJIN APP v8.0.4: LEADER FORM SECURED");</script>
                             </div>
                         </div>
                         <div class="breakdown-grid mt-4">
@@ -649,7 +636,10 @@
                 <div id="tab-rankings" class="admin-tab-content">
                     <div class="card">
                         <div class="card-header" style="flex-wrap: wrap; gap: 0.5rem;">
-                            <h2>釣果集計・ランキング</h2>
+                            <div style="display:flex; align-items:center; gap:0.5rem;">
+                                <h2>釣果集計・ランキング</h2>
+                                <button class="btn-primary btn-small" onclick="window.print()" style="padding:0.4rem 0.8rem; border-radius:30px;">📄 ランキングを印刷</button>
+                            </div>
                             <div style="display:flex; gap:0.5rem;">
                                 <button class="btn-outline btn-small" onclick="switchView(null, 'leader-entry-view'); renderLeaderEntryForm();">リーダー入力画面を開く</button>
                                 <button class="btn-outline btn-small" onclick="renderRankings()">情報を更新</button>
@@ -934,7 +924,6 @@
             <div class="card">
                 <div class="card-header">
                     <h2>釣果記録フォーム（リーダー用）</h2>
-                    <button class="btn-text" onclick="switchView('dashboard-view')">× 戻る</button>
                 </div>
                 
                 <div id="leader-step-1">
@@ -1006,7 +995,7 @@
         <div class="container"
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" style="cursor: default;">&copy; 2026 釣り大会 実行委員会</p>
-            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v8.0.3</span>
+            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v8.0.4</span>
         </div>
     </footer>
 
@@ -1018,7 +1007,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=8.0.3"></script>
+    <script src="script.js?v=8.0.4"></script>
 </body>
 
 </html>
