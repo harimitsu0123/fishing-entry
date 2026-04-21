@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.3: STABILIZED");
+        console.log("BORIJIN APP v8.1.4: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -636,8 +636,23 @@ function formatDate(dateStr) {
 function initApp() {
     initToast(); // Add toast container helper if needed
 
-    // Set Public Share URL
-    const shareUrlEl = document.getElementById('public-share-url');
+    const params = new URLSearchParams(window.location.search);
+    const srcParam = params.get('src');
+    const viewParam = params.get('view');
+
+    // v8.1.4: URL-based Category Selection
+    if (srcParam) {
+        const srcMap = { 'ippan': '一般', 'mintsuri': 'みん釣り', 'harimitsu': 'ハリミツ', 'suiho': '水宝' };
+        const mappedVal = srcMap[srcParam];
+        if (mappedVal) {
+            const radio = document.querySelector(`input[name="reg-source"][value="${mappedVal}"]`);
+            if (radio) {
+                radio.checked = true;
+                console.log("URL Source Auto-Selection:", mappedVal);
+            }
+        }
+    }
+
     if (shareUrlEl) {
         shareUrlEl.value = window.location.href.split('#')[0];
     }
@@ -1650,28 +1665,28 @@ function updateDashboard() {
         updateSplitUI('suiho', fishersSuiho, state.settings.capacitySuiho, observersSuiho);
         updateSplitUI('harimitsu', fishersHarimitsu, state.settings.capacityHarimitsu, observersHarimitsu);
 
-        // v7.3 & v8.1.3: Update Share URLs in Dashboard Settings
+        // v7.3 & v8.1.4: Update Share URLs in Dashboard Settings (Legacy Reverted)
         const baseUrl = window.location.href.split('?')[0].split('#')[0];
         
         // Main Share URL
         const mainUrlEl = document.getElementById('public-share-url');
         if (mainUrlEl) mainUrlEl.value = baseUrl;
 
-        // Specific Source Registry URLs (v8.1.3 ID Alignment)
+        // Specific Source Registry URLs (v8.1.4 Restored English Keys for consistency)
         const sourceMap = {
-            'ippan-reg': '一般',
-            'mintsuri-reg': 'みん釣り',
-            'harimitsu-reg': 'ハリミツ',
-            'suiho-reg': '水宝'
+            'ippan-reg': 'ippan',
+            'mintsuri-reg': 'mintsuri',
+            'harimitsu-reg': 'harimitsu',
+            'suiho-reg': 'suiho'
         };
-        Object.entries(sourceMap).forEach(([idSuffix, srcValue]) => {
+        Object.entries(sourceMap).forEach(([idSuffix, srcKey]) => {
             const el = document.getElementById(`url-${idSuffix}`);
-            if (el) el.value = `${baseUrl}?src=${encodeURIComponent(srcValue)}`;
+            if (el) el.value = `${baseUrl}?src=${srcKey}`;
         });
 
-        // Leader Entry URL
+        // Leader Entry URL (v8.1.4 Legacy param restored)
         const leaderEl = document.getElementById('url-leader-input');
-        if (leaderEl) leaderEl.value = `${baseUrl}?view=leader-entry-view`;
+        if (leaderEl) leaderEl.value = `${baseUrl}?view=leader-entry`;
 
         // Legacy/Misc
         const statsEl = document.getElementById('url-stats');
@@ -1763,7 +1778,7 @@ function updateDashboard() {
 }
 
 /**
- * --- v8.0.0 & v8.1.3: FIXED DASHBOARD NAVIGATION ---
+ * --- v8.0.0 & v8.1.4: FIXED DASHBOARD NAVIGATION ---
  * Core function to handle admin sub-tab switching
  */
 function switchAdminTab(tabId) {
@@ -3002,7 +3017,7 @@ function updateSourceAvailability() {
     }
 }
 
-/* --- UI HELPERS & CONSTANTS RESTORED v8.1.3 --- */
+/* --- UI HELPERS & CONSTANTS RESTORED v8.1.4 --- */
 
 
 
@@ -3055,7 +3070,7 @@ function generateAdminQRCode() {
     });
 }
 
-/* --- SECURE ADMIN ACCESS v8.1.3 --- */
+/* --- SECURE ADMIN ACCESS v8.1.4 --- */
 let clickCount = 0;
 let lastClickTime = 0;
 window.handleSecureClick = function(e) {
