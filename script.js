@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.9.8: SCROLL LOCK & LABEL FIX");
+        console.log("BORIJIN APP v7.9.9: GRID & FONT FIX");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
