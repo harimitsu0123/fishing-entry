@@ -80,7 +80,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.16: STABILIZED");
+        console.log("BORIJIN APP v8.1.17: CATEGORY FIX & CAPACITY SYNC");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -3216,12 +3216,18 @@ function updateSourceAvailability() {
         const fishersMintsuri = sumCategoryFishers('みん釣り');
         const fishersSuiho = sumCategoryFishers('水宝');
         const fishersHarimitsu = sumCategoryFishers('ハリミツ');
+        
+        // v8.1.17: Filter out cancelled for global capacity check
+        const totalNow = state.entries.filter(e => e.status !== 'cancelled').reduce((sum, en) => sum + en.fishers, 0);
 
         const updateRadio = (val, current, max) => {
             const radio = document.querySelector(`input[name="reg-source"][value="${val}"]`);
             if (radio) {
                 const label = radio.closest('label');
-                if (current >= max && !radio.checked && !isAdminAuthAction) {
+                // Block if Category Limit reached OR Global Limit reached
+                const isFull = (max > 0 && current >= max) || totalNow >= state.settings.capacityTotal;
+                
+                if (isFull && !radio.checked && !isAdminAuthAction) {
                     radio.disabled = true;
                     if (label) label.classList.add('hidden');
                 } else {
@@ -3322,6 +3328,7 @@ function checkUrlParams() {
     const params = new URLSearchParams(window.location.search);
     const view = params.get('view');
     const id = params.get('id');
+    const src = params.get('src');
 
     if (view && document.getElementById(view + '-view')) {
         // Validation: Only admins can see dashboard/reception via URL
@@ -3348,8 +3355,64 @@ function checkUrlParams() {
         }
     }
     
+    // v8.1.17: Handle specialized category source
+    if (src) {
+        const validSources = {
+            'mintsuri': 'みん釣り',
+            'harimitsu': 'ハリミツ',
+            'suiho': '水宝',
+            'general': '一般'
+        };
+        if (validSources[src]) {
+            injectSpecialSource(validSources[src]);
+            // Ensure we are in registration view
+            switchView(null, 'registration-view'); 
+        }
+    }
+
     if (id && document.getElementById('auth-entry-id')) {
         document.getElementById('auth-entry-id').value = id;
     }
+}
+
+/**
+ * v8.1.17: Re-implemented category URL injection helper
+ */
+function injectSpecialSource(sourceName) {
+    const selector = document.getElementById('main-source-selector');
+    if (!selector) return;
+
+    // Reset visibility of all options first
+    selector.querySelectorAll('.source-option').forEach(opt => {
+        opt.classList.add('hidden');
+        opt.querySelector('input').disabled = true;
+    });
+
+    // Find our specific target radio
+    let target = selector.querySelector(`input[name="reg-source"][value="${sourceName}"]`);
+    
+    // If not found (like special admin-only sources), we may need to create it
+    if (!target) {
+        const badgeClassMap = { '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu', 'みん釣り': 'badge-mintsuri' };
+        const badgeClass = badgeClassMap[sourceName] || 'badge-ippan';
+        const label = document.createElement('label');
+        label.className = 'source-option admin-only temp-option';
+        label.innerHTML = `
+            <input type="radio" name="reg-source" value="${sourceName}" checked required>
+            <span class="source-label">
+                <span class="badge ${badgeClass}">${sourceName}</span>
+                ${sourceName}専用窓口
+            </span>
+        `;
+        selector.appendChild(label);
+        target = label.querySelector('input');
+    } else {
+        target.checked = true;
+        target.disabled = false;
+        target.closest('.source-option').classList.remove('hidden');
+    }
+
+    // Hide the group selector itself if we want one-category-only feel? 
+    // Usually keep it but only with 1 option.
 }
 
