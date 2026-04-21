@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.0.6: LEADER FORM SECURED");
+        console.log("BORIJIN APP v8.0.7: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -2807,4 +2807,98 @@ window.renderIkesuPrintView = function() {
     container.innerHTML = html || "データなし";
 };
 
+/* --- SYSTEM STABILIZATION FUNCTIONS RESTORED v8.0.7 --- */
 
+function updateAppTitle() {
+    const titleEl = document.getElementById('app-title');
+    const competitionName = state.settings.competitionName || "釣り大会 受付";
+    if (titleEl) {
+        if (currentViewId === 'dashboard-view') titleEl.textContent = `管理者: ${competitionName}`;
+        else if (currentViewId === 'reception-view') titleEl.textContent = `当日受付: ${competitionName}`;
+        else titleEl.textContent = competitionName;
+    }
+    document.title = competitionName;
+}
+
+window.triggerSettingsSave = function () {
+    handleSettingsUpdate({ preventDefault: () => { } });
+};
+
+function handleSettingsUpdate(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    state.settings.competitionName = document.getElementById('competition-name').value;
+    state.settings.capacityGeneral = parseInt(document.getElementById('cap-ippan').value) || 0;
+    state.settings.capacityMintsuri = parseInt(document.getElementById('cap-mintsuri').value) || 0;
+    state.settings.capacitySuiho = parseInt(document.getElementById('cap-suiho').value) || 0;
+    state.settings.capacityHarimitsu = parseInt(document.getElementById('cap-harimitsu').value) || 0;
+    state.settings.capacityObservers = parseInt(document.getElementById('capacity-observers').value) || 0;
+    const capTotalEl = document.getElementById('cap-total');
+    if (capTotalEl) state.settings.capacityTotal = parseInt(capTotalEl.value) || 250;
+    state.settings.startTime = document.getElementById('registration-start').value;
+    state.settings.deadline = document.getElementById('registration-deadline').value;
+    state.settings.adminPassword = document.getElementById('admin-password-set').value;
+    saveData();
+    syncSettingsUI();
+    updateDashboard();
+    checkTimeframe();
+    updateAppTitle();
+    showToast('大会設定をすべて保存しました', 'success');
+}
+
+window.updateCapacityTotal = function() {
+    const ippan = parseInt(document.getElementById('cap-ippan').value) || 0;
+    const mintsuri = parseInt(document.getElementById('cap-mintsuri').value) || 0;
+    const suiho = parseInt(document.getElementById('cap-suiho').value) || 0;
+    const harimitsu = parseInt(document.getElementById('cap-harimitsu').value) || 0;
+    const total = ippan + mintsuri + suiho + harimitsu;
+    const sumEl = document.getElementById('capacity-total-summary');
+    if (sumEl) sumEl.textContent = total;
+};
+
+window.confirmReset = async function () {
+    if (confirm('全ての名簿データを削除します。本当によろしいですか？')) {
+        state.entries = [];
+        state.lastUpdated = Date.now();
+        showToast('リセット中...', 'info');
+        try {
+            await syncToCloud();
+            localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+            location.reload();
+        } catch (e) {
+            console.error('Reset failed:', e);
+            location.reload();
+        }
+    }
+};
+
+window.exportGroupsCSV = function() {
+    const headers = ['受付番号', '区分', 'グループ名', '代表者名', '電話番号', 'メール', '釣り人数', '見学人数', '登録時間'];
+    const rows = state.entries.map(e => [e.id, e.source, e.groupName, e.representative, e.phone, e.email, e.fishers, e.observers, formatDate(e.timestamp)]);
+    downloadCSV("groups", headers, rows);
+};
+
+window.exportParticipantsCSV = function() {
+    const headers = ['受付番号', '区分', 'グループ名', '代表者名', '参加区分', '参加者名', '性別', 'ニックネーム', 'Tシャツ', '地域', '年代', '登録時間'];
+    const rows = [];
+    state.entries.forEach(e => {
+        e.participants.forEach(p => {
+            rows.push([e.id, e.source, e.groupName, e.representative, p.type==='observer'?'見学':'釣り', p.name, genderLabels[p.gender]||"", p.nickname, p.tshirtSize, p.region, ageLabels[p.age], formatDate(e.timestamp)]);
+        });
+    });
+    downloadCSV("participants", headers, rows);
+};
+
+function downloadCSV(name, headers, rows) {
+    let csv = "\uFEFF" + headers.join(",") + "\n";
+    rows.forEach(row => csv += row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",") + "\n");
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `fishing_${name}.csv`;
+    link.click();
+}
+
+function updateBulkMailCount() {
+    const el = document.getElementById('bulk-mail-recipient-count');
+    if (el) el.textContent = new Set(state.entries.map(e => e.email.toLowerCase().trim()).filter(e => e)).size;
+}
