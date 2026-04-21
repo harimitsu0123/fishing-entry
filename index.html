@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=7.9.6">
+    <link rel="stylesheet" href="style.css?v=7.9.8">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -372,7 +372,7 @@
                                         <th>区分</th>
                                         <th>グループ</th>
                                         <th>氏名</th>
-                                        <th>種別</th>
+                                        <th>釣り/見学</th>
                                         <th>詳細</th>
                                         <th>登録時間</th>
                                         <th>操作</th>
@@ -837,9 +837,10 @@
                     <label for="ikesu-capacity">定員（釣り人数） <span class="required">*</span></label>
                     <input type="number" id="ikesu-capacity" placeholder="例：15" min="1">
                 </div>
-                <div class="form-actions mt-4">
-                    <button id="save-ikesu" class="btn-primary" onclick="saveIkesu()">保存</button>
-                    <button class="btn-secondary" onclick="closeIkesuModal()">キャンセル</button>
+                <div class="form-actions mt-4" style="display: flex; gap: 0.5rem;">
+                    <button id="save-ikesu" class="btn-primary" onclick="window.saveIkesu()" style="flex: 2;">保存</button>
+                    <button id="delete-ikesu-btn" class="btn-outline hidden" onclick="window.deleteIkesuFromModal()" style="flex: 1; border-color: var(--error-color); color: var(--error-color);">削除</button>
+                    <button class="btn-secondary" onclick="window.closeIkesuModal()" style="flex: 1;">閉じる</button>
                 </div>
             </div>
         </div>
@@ -872,7 +873,7 @@
         <div class="container"
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" style="cursor: default;">&copy; 2026 釣り大会 実行委員会</p>
-            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.9.6</span>
+            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.9.8</span>
         </div>
     </footer>
 
@@ -884,7 +885,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=7.9.3"></script>
+    <script src="script.js?v=7.9.8"></script>
 </body>
 
 </html>

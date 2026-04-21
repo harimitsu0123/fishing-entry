@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.9.6: REMOVE DUPLICATE SUMMARY");
+        console.log("BORIJIN APP v7.9.8: SCROLL LOCK & LABEL FIX");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1679,10 +1679,13 @@ function updateDashboard() {
         // Dashboard List Rendering (Fixed & Cleaned v7.3.0)
         const list = document.getElementById('entry-list');
         const searchTerm = document.getElementById('dashboard-search').value.toLowerCase();
+        
+        // v7.9.8: Save scroll position before update
+        const scrollPos = window.scrollY;
         list.innerHTML = '';
 
         state.entries.slice().reverse().forEach(e => {
-            // Search / Filter logic (v7.8.7 Expanded)
+            // ... (Search / Filter logic stays same)
             const matchesEntrySearch = e.id.toLowerCase().includes(searchTerm) || e.groupName.toLowerCase().includes(searchTerm) || e.representative.toLowerCase().includes(searchTerm);
             
             const pNames = e.participants.map(p => p.name).join(' ');
@@ -1690,7 +1693,6 @@ function updateDashboard() {
             const pTshirts = e.participants.map(p => p.tshirtSize || "").join(' ');
             const pGenders = e.participants.map(p => genderLabels[p.gender] || "").join(' ');
             
-            // Full text search across all relevant fields
             const combinedParticipantInfo = (pNames + " " + pRegions + " " + pTshirts + " " + pGenders).toLowerCase();
             const matchesParticipantSearch = combinedParticipantInfo.includes(searchTerm);
 
@@ -1708,7 +1710,6 @@ function updateDashboard() {
             const rep = e.participants[0] || { name: e.representative };
             const getGenderMark = (p) => p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
             
-            // v7.9.3: Single-line participant summary to prevent 2-line wraps
             const pSummary = `
                 <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:400px; font-size:0.95rem;">
                     <strong style="font-weight:800; color:var(--text-color);">${rep.name}</strong>${rep.nickname ? `<small>(${rep.nickname})</small>` : ''}${getGenderMark(rep)}
@@ -1725,7 +1726,7 @@ function updateDashboard() {
                 <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}" style="white-space:nowrap;">${e.source}</span></td>
                 <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}">${e.groupName}</div></td>
                 <td>${pSummary}</td>
-                <td><small style="white-space:nowrap;">${e.fishers}/${e.observers}</small></td>
+                <td><small style="white-space:nowrap;">${e.fishers} / ${e.observers}</small></td>
                 <td><span style="font-size:0.75rem; font-weight:700; white-space:nowrap;">${statusLabel}</span></td>
                 <td><small style="white-space:nowrap;">${regTime}</small></td>
                 <td>
@@ -1733,12 +1734,14 @@ function updateDashboard() {
                         <button class="btn-outline btn-small btn-detail" onclick="window.showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
                         <button class="btn-outline btn-small" onclick="window.requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
                         <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="window.quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
-                        <button class="btn-outline btn-small btn-delete" onclick="window.requestDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">削除</button>
                     </div>
                 </td>
             `;
             list.appendChild(tr);
         });
+
+        // v7.9.8: Restore scroll position
+        window.scrollTo(0, scrollPos);
 
         renderIkesuWorkspace();
     } catch (e) {
@@ -2211,11 +2214,7 @@ function renderReceptionDesk() {
             }).join('')}
         </div>
 
-        <div class="desk-footer" style="padding: 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; border-radius: 0 -0 8px 8px; gap: 1rem;">
-            <div style="display: flex; gap: 0.5rem; flex: 1;">
-                <button class="btn-outline btn-delete" onclick="window.requestDeleteEntry('${entry.id}')" style="padding: 0.8rem 1.2rem; color: #ef4444; border-color: #ef4444;">この組を完全削除</button>
-                <p style="font-size: 0.8rem; color: #64748b; line-height: 1.2;">※「削除」は名簿から消去します。<br>間違えて登録した際などに使用してください。</p>
-            </div>
+        <div class="desk-footer" style="padding: 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; align-items: center; border-radius: 0 -0 8px 8px; gap: 1rem;">
             <button class="btn-primary btn-large" onclick="window.updateGroupStatus('${entry.id}', 'checked-in')" style="padding: 1rem 2rem; font-size: 1.2rem; white-space: nowrap;">全員まとめて受付</button>
         </div>
     `;
@@ -2431,10 +2430,6 @@ window.showEntryDetails = function(id) {
                     </div>
                 </div>
             `).join('')}
-        </div>
-        
-        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #eee; display: flex; justify-content: flex-end;">
-            <button class="btn-outline btn-delete" onclick="window.requestDeleteEntry('${entry.id}'); window.closeDetailModal();" style="padding: 0.5rem 1rem; font-size: 0.85rem; color: #ef4444; border-color: #ef4444;">このデータを完全に削除</button>
         </div>
     `;
 
@@ -3322,14 +3317,12 @@ window.renderIkesuWorkspace = function () {
             <div class="ikesu-header">
                 <span class="ikesu-title">${ikesu.name}</span>
                 <div class="ikesu-actions">
-                    <button class="btn-text" style="font-size:0.75rem; color:#666;" onclick="openIkesuModal('${ikesu.id}')">✏️</button>
-                    <button class="btn-text" style="font-size:0.75rem; color:var(--error-color);" onclick="deleteIkesu('${ikesu.id}')">🗑️</button>
+                    <button class="btn-text" style="font-size:1.1rem; color:var(--primary-color); padding: 5px;" onclick="window.openIkesuModal('${ikesu.id}')">✏️</button>
                 </div>
             </div>
             <div class="ikesu-capacity ${isOver ? 'over' : ''}">
-                釣り: ${data.fishers} / ${ikesu.capacity} 名
-                <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.3.3</span>
-                <span style="color:var(--text-muted); font-weight:normal; margin-left: 0.5rem;">(見学: ${data.observers})</span>
+                <div style="font-weight: 800; font-size: 0.95rem;">釣り: ${data.fishers} / ${ikesu.capacity} 名</div>
+                <div style="color:var(--text-muted); font-size: 0.8rem; margin-top: 2px;">(見学者: ${data.observers}名)</div>
             </div>
             <div class="ikesu-drop-area mt-2">
         `;

@@ -610,24 +610,41 @@ textarea:focus {
 .split-card:nth-child(4) { border-top-color: #e17055; }
 
 
-.split-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+.ikesu-box {
+    background: white;
+    border: 2px solid #e1e8ed;
+    border-radius: 14px;
+    padding: 0.75rem;
+    min-height: 120px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
 }
 
+.ikesu-box:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 10px 15px -3px rgba(0, 91, 181, 0.1);
+}
 
-
-.split-header {
+.ikesu-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    flex-wrap: nowrap;
 }
 
-.split-value {
-    font-size: 1.2rem;
-    font-weight: 800;
+.ikesu-title {
+    font-size: 1.4rem;
+    font-weight: 900;
     color: var(--text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
 }
 
 .split-details {
@@ -701,8 +718,15 @@ textarea:focus {
 /* --- Public Stats Dashboard (v7.3) --- */
 .public-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(2, 1fr); /* Force 2x2 on mobile */
+    gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+    .public-stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
 }
 
 .public-stat-card {
@@ -1013,17 +1037,47 @@ th {
 
 .ikesu-box {
     background: white;
-    border: 2px dashed #ccc;
-    border-radius: 8px;
+    border: 2px solid #e1e8ed;
+    border-radius: 14px;
     padding: 0.75rem;
-    min-height: 150px;
+    min-height: 125px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     display: flex;
     flex-direction: column;
+}
+
+.ikesu-box:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 10px 15px -3px rgba(0, 119, 190, 0.1);
+}
+
+.ikesu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #f1f5f9;
+    flex-wrap: nowrap;
+}
+
+.ikesu-title {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
 }
 
 .ikesu-box.drag-over {
     background: #e7f3ff;
     border-color: var(--primary-color);
+    transform: scale(1.02);
 }
 
 .drag-item-group {
@@ -1331,21 +1385,41 @@ th {
 }
 
 /* --- Registration Confirmation Styles --- */
-.confirm-box {
-    background: #f8fbff;
-    border: 1px solid #d1e3f8;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin: 1rem 0;
+.conf.ikesu-box {
+    background: white;
+    border: 2px solid #e1e8ed;
+    border-radius: 14px;
+    padding: 0.75rem;
+    min-height: 120px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
 }
 
-.confirm-box p {
-    margin-bottom: 0.8rem;
+.ikesu-box:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 10px 15px -3px rgba(0, 91, 181, 0.1);
+}
+
+.ikesu-header {
     display: flex;
     justify-content: space-between;
-    align-items: center; /* Improved alignment */
-    border-bottom: 1px dashed #e1e8ed;
-    padding-bottom: 0.4rem;
+    align-items: center;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    flex-wrap: nowrap;
+}
+
+.ikesu-title {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
 }
 
 .confirm-box p:last-child {
