@@ -80,7 +80,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.15: STABILIZED");
+        console.log("BORIJIN APP v8.1.16: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
