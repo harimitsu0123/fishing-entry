@@ -200,7 +200,8 @@ async function loadData() {
         } else {
             console.warn('Cloud load failed, falling back to local:', e);
         }
-        updateSyncStatus('error');
+        // v8.1.14: Initial startup error should be silent to avoid alarming the user before local fallback loads
+        updateSyncStatus('error-silent');
     }
 
     // 2. Fallback to LocalStorage
@@ -734,7 +735,11 @@ function initApp() {
     // Admin Auth Logic
     safeAddListener('verify-admin', 'click', handleAdminLogin);
     safeAddListener('global-admin-password', 'keydown', (e) => {
-        if (e.key === 'Enter') handleAdminLogin();
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            handleAdminLogin();
+        }
     });
     safeAddListener('cancel-admin', 'click', () => {
         const modal = document.getElementById('admin-auth-modal');
@@ -1006,9 +1011,13 @@ function checkTimeframe() {
 // Admin Auth
 function showAdminLogin(targetView) {
     pendingView = targetView;
-    document.getElementById('global-admin-password').value = '';
-    document.getElementById('admin-auth-error').classList.add('hidden');
+    const pwInput = document.getElementById('global-admin-password');
+    const errDiv = document.getElementById('admin-auth-error');
+    if (pwInput) pwInput.value = '';
+    if (errDiv) errDiv.classList.add('hidden');
+    
     document.getElementById('admin-auth-modal').classList.remove('hidden');
+    if (pwInput) setTimeout(() => pwInput.focus(), 100);
 }
 
 function handleAdminLogin() {
