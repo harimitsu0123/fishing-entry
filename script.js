@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.4: STABILIZED");
+        console.log("BORIJIN APP v8.1.5: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1778,7 +1778,7 @@ function updateDashboard() {
 }
 
 /**
- * --- v8.0.0 & v8.1.4: FIXED DASHBOARD NAVIGATION ---
+ * --- v8.0.0 & v8.1.5: FIXED DASHBOARD NAVIGATION ---
  * Core function to handle admin sub-tab switching
  */
 function switchAdminTab(tabId) {
@@ -3017,7 +3017,66 @@ function updateSourceAvailability() {
     }
 }
 
-/* --- UI HELPERS & CONSTANTS RESTORED v8.1.4 --- */
+/**
+ * Handles bulk email sending to all group representatives (v7.5 & v8.1.5)
+ */
+async function handleBulkEmailSend() {
+    const subject = document.getElementById('bulk-mail-subject').value.trim();
+    const body = document.getElementById('bulk-mail-body').value.trim();
+
+    if (!subject || !body) {
+        alert("件名と本文を入力してください。");
+        return;
+    }
+
+    const recipients = Array.from(new Set(state.entries
+        .filter(e => e.status !== 'cancelled' && e.email)
+        .map(e => e.email.toLowerCase().trim())
+    ));
+
+    if (recipients.length === 0) {
+        alert("送信対象となる有効なメールアドレスが見つかりませんでした。");
+        return;
+    }
+
+    if (!confirm(`${recipients.length} 名の代表者へ一斉メールを送信しますか？\nこの操作は元に戻せません。`)) {
+        return;
+    }
+
+    const btn = document.getElementById('btn-send-bulk-mail');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '送信中...';
+
+    try {
+        const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'bulk_email',
+                subject: subject,
+                body: body,
+                recipients: recipients
+            })
+        });
+
+        const result = await response.json();
+        if (result.status === 'success') {
+            showToast('✅ 一斉メールを送信しました', 'success');
+            document.getElementById('bulk-mail-subject').value = '';
+            document.getElementById('bulk-mail-body').value = '';
+        } else {
+            throw new Error(result.message || '送信エラー');
+        }
+    } catch (error) {
+        console.error("Bulk email error:", error);
+        showToast('❌ メールの送信に失敗しました', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
+
+/* --- UI HELPERS & CONSTANTS RESTORED v8.1.5 --- */
 
 
 
@@ -3070,7 +3129,7 @@ function generateAdminQRCode() {
     });
 }
 
-/* --- SECURE ADMIN ACCESS v8.1.4 --- */
+/* --- SECURE ADMIN ACCESS v8.1.5 --- */
 let clickCount = 0;
 let lastClickTime = 0;
 window.handleSecureClick = function(e) {
