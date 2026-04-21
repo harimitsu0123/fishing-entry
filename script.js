@@ -80,7 +80,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.20: CATEGORY BOX & DELETE FIX");
+        console.log("BORIJIN APP v8.1.21: LOCKED CATEGORY UI");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -3422,11 +3422,12 @@ function injectSpecialSource(sourceName) {
     const selector = document.getElementById('main-source-selector');
     if (!selector) return;
 
-    // Reset visibility of all options first
+    // v8.1.21: Make them visible but unselectable (locked)
     selector.querySelectorAll('.source-option').forEach(opt => {
-        opt.classList.add('hidden');
+        const input = opt.querySelector('input');
+        opt.classList.remove('hidden'); // Ensure visible
         opt.classList.remove('forced-source');
-        opt.querySelector('input').disabled = true;
+        input.disabled = true; // Block selection
     });
 
     // Find our specific target radio
@@ -3442,26 +3443,25 @@ function injectSpecialSource(sourceName) {
             <input type="radio" name="reg-source" value="${sourceName}" checked required>
             <span class="source-label">
                 <span class="badge ${badgeClass}">${sourceName}</span>
-                ${sourceName}専用窓口
+                (専用窓口)
             </span>
         `;
         selector.appendChild(label);
         target = label.querySelector('input');
     } else {
         target.checked = true;
-        target.disabled = false;
+        target.disabled = false; // Enabled so it can be submitted
         const label = target.closest('.source-option');
-        label.classList.remove('hidden');
         label.classList.add('forced-source');
         
-        // Change text to emphasize it's a fixed window
+        // Re-styling for 'locked' look
         const labelText = label.querySelector('.source-label');
         if (labelText && !labelText.innerHTML.includes('専用窓口')) {
-             labelText.innerHTML += ' (専用窓口)';
+             labelText.innerHTML += ' (専用)';
         }
     }
-
-    // Lock other inputs in the selector to prevent switching back if UI updates
-    console.log(`Locked view for source: ${sourceName}`);
+    
+    // Smooth scroll check
+    console.log(`Locked UI for: ${sourceName}`);
 }
 
