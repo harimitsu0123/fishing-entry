@@ -84,41 +84,20 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.25: HARD LOCK SPECIALIZED BUTTONS");
+        console.log("BORIJIN APP v8.1.34: STABILIZED INITIALIZATION & SYNC");
 
-        // v6.5: Start Background Auto-Sync if Admin
+        // v8.1.30: Priority 1 - Restore UI State immediately
+        restoreUIState();
+
+        // v8.1.30: Priority 2 - Load data
+        loadData().catch(e => console.error("BORIJIN APP: loadData background error", e));
+
+        // v8.1.30: Priority 3 - Register event listeners and initial UI components
+        initApp();
+
         if (isAdminAuth) {
             startAutoSync();
         }
-
-
-        // --- STEP 1: UI INITIALIZATION (CRITICAL) ---
-        // Ensure the registration form has at least one participant row 
-        // immediately so the user sees something even if loading is slow.
-        resetForm();
-        console.log("BORIJIN APP: Initial resetForm() called.");
-
-        // --- STEP 2: LOAD DATA (ASYNC) ---
-        loadData().catch(e => console.error("BORIJIN APP: loadData background error", e));
-
-        // --- STEP 3: APP LISTENERS & STATE ---
-        initApp();
-
-        // If persistent login is true, reveal admin parts
-        if (isAdminAuth) {
-            const params = new URLSearchParams(window.location.search);
-            const srcParam = params.get('src');
-            
-            document.querySelectorAll('.admin-only').forEach(el => {
-                // v8.1.25: If a specialized source is active (e.g. ?src=harimitsu), 
-                // do NOT unhide other admin-only categories in the form.
-                if (srcParam && el.closest('#main-source-selector')) {
-                    return; 
-                }
-                el.classList.remove('hidden');
-            });
-        }
-        restoreUIState();
 
         console.log("BORIJIN APP: Initialization Sequence Finished successfully.");
     } catch (e) {
@@ -139,7 +118,8 @@ function restoreUIState() {
         return;
     }
 
-    if (viewParam) return;
+    // v8.1.31: If 'view' or 'src' exists in URL, do NOT restore from session
+    if (viewParam || params.get('src')) return;
 
     if (currentViewId && currentViewId !== 'registration-view') {
         const lastBtn = document.querySelector(`.nav-btn[data-target="${currentViewId}"]`);
@@ -402,11 +382,13 @@ function generateSpecialUrls() {
         if (el) el.value = url;
     };
 
-    setVal('url-ippan-reg', `${baseUrl}`);
+    setVal('url-ippan-reg', `${baseUrl}?src=general`);
     setVal('url-mintsuri-reg', `${baseUrl}?src=mintsuri`);
     setVal('url-harimitsu-reg', `${baseUrl}?src=harimitsu`);
     setVal('url-suiho-reg', `${baseUrl}?src=suiho`);
     setVal('url-mintsuri-admin', `${baseUrl}?view=mintsuri`);
+    setVal('url-harimitsu-admin', `${baseUrl}?view=harimitsu`);
+    setVal('url-suiho-admin', `${baseUrl}?view=suiho`);
 }
 
 window.copyShareUrl = function(inputId) {
@@ -432,7 +414,8 @@ window.copyShareUrl = function(inputId) {
 window.openShareUrl = function(inputId) {
     const el = document.getElementById(inputId);
     if (el && el.value) {
-        window.open(el.value, '_blank');
+        // v8.1.33: Navigate in current tab for better state transition
+        window.location.href = el.value;
     }
 }
 
@@ -572,7 +555,7 @@ async function syncToCloud() {
 
         await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
-            mode: 'no-cors',
+            mode: 'cors', // v8.1.30: Use CORS for consistency with submit
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(payload),
             signal: controller.signal
@@ -708,7 +691,13 @@ function initApp() {
     });
 
     if (isAdminAuth) {
-        document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+        const params = new URLSearchParams(window.location.search);
+        const srcParam = params.get('src');
+        document.querySelectorAll('.admin-only').forEach(el => {
+            // v8.1.26: Skip categories if in special window
+            if (srcParam && el.closest('#main-source-selector')) return;
+            el.classList.remove('hidden');
+        });
         switchAdminTab(currentAdminTab);
     }
 
@@ -930,11 +919,29 @@ function switchView(btnElement, targetId) {
     }
 
     // Toggle admin visibility based on state
+    // Toggle admin visibility based on state
     const adminElements = document.querySelectorAll('.admin-only');
+    const params = new URLSearchParams(window.location.search);
+    const srcParam = params.get('src');
+
     adminElements.forEach(el => {
-        if (isAdminAuth) el.classList.remove('hidden');
-        else el.classList.add('hidden');
+        if (isAdminAuth) {
+            el.classList.remove('hidden');
+        } else {
+            el.classList.add('hidden');
+        }
     });
+
+    // v8.1.33: Stricter Category Visibility in Special Windows
+    if (srcParam) {
+        document.querySelectorAll('#main-source-selector .source-option').forEach(el => {
+            if (el.classList.contains('forced-source')) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        });
+    }
 
     // Handle body class for toolbar space (v4.6)
     document.body.className = document.body.className.replace(/view-\S+/g, '').trim();
@@ -1051,7 +1058,20 @@ function handleAdminLogin() {
         document.getElementById('admin-auth-modal').classList.add('hidden');
 
         // Reveal admin elements globally
-        document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+        const params = new URLSearchParams(window.location.search);
+        const srcParam = params.get('src');
+        document.querySelectorAll('.admin-only').forEach(el => {
+            el.classList.remove('hidden');
+        });
+
+        // v8.1.33: Re-apply source restriction if in special window
+        if (srcParam) {
+            document.querySelectorAll('#main-source-selector .source-option').forEach(el => {
+                if (!el.classList.contains('forced-source')) {
+                    el.classList.add('hidden');
+                }
+            });
+        }
 
         // Always go to dashboard-view / tab-list unless it's a specific pending view that isn't dashboard
         currentAdminTab = 'tab-list';
@@ -2333,15 +2353,86 @@ window.renderMintsuriCoordinatorView = function() {
     renderBreakdownStats('みん釣り', 'mintsuri-');
 }
 
+window.renderHarimitsuCoordinatorView = function() {
+    renderGenericCoordinatorView('ハリミツ', 'harimitsu');
+};
+
+window.renderSuihoCoordinatorView = function() {
+    renderGenericCoordinatorView('水宝', 'suiho');
+};
+
+/**
+ * v8.1.35: Generalized coordinator view renderer
+ */
+function renderGenericCoordinatorView(sourceName, prefix) {
+    const list = document.getElementById(`${prefix}-coordinator-list`);
+    const summary = document.getElementById(`${prefix}-stats-summary`);
+    if (!list) return;
+
+    const sourceEntries = state.entries.filter(e => e.source === sourceName && e.status !== 'cancelled');
+    const totalFishers = sourceEntries.reduce((s, e) => s + e.fishers, 0);
+    const totalObservers = sourceEntries.reduce((s, e) => s + e.observers, 0);
+    
+    // Get capacity from settings
+    const capacityKey = sourceName === 'ハリミツ' ? 'capacityHarimitsu' : 'capacitySuiho';
+    const capacity = state.settings[capacityKey] || 0;
+
+    if (summary) {
+        summary.innerHTML = `
+            <div class="stats-summary-grid">
+                <div class="summary-card"><div class="summary-label">${sourceName} 合計組数</div><div class="summary-value">${sourceEntries.length} <small>組</small></div></div>
+                <div class="summary-card"><div class="summary-label">${sourceName} 釣り人数</div><div class="summary-value">${totalFishers} <small>/ ${capacity}</small></div></div>
+                <div class="summary-card"><div class="summary-label">見学人数</div><div class="summary-value">${totalObservers} <small>名</small></div></div>
+                <div class="summary-card"><div class="summary-label">充足率</div><div class="summary-value">${capacity > 0 ? Math.round((totalFishers/capacity)*100) : 0}%</div></div>
+            </div>`;
+    }
+
+    const searchTerm = (document.getElementById(`${prefix}-search`)?.value || "").toLowerCase();
+
+    list.innerHTML = sourceEntries.slice().reverse()
+        .filter(e => {
+            if (!searchTerm) return true;
+            const pNames = e.participants.map(p => p.name).join(' ');
+            const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames}`.toLowerCase();
+            return combined.includes(searchTerm);
+        })
+        .map(e => {
+            const regTime = e.timestamp ? new Date(e.timestamp).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--:--';
+            return `
+            <tr>
+                <td><span class="id-badge">${e.id}</span></td>
+                <td><strong>${e.groupName}</strong></td>
+                <td>${e.representative}</td>
+                <td>${e.fishers} / ${e.observers}</td>
+                <td><small>${regTime}</small></td>
+            </tr>
+        `;
+        }).join('') || '<tr><td colspan="5" style="text-align:center; padding:2rem;">該当する登録はありません</td></tr>';
+
+    renderBreakdownStats(sourceName, `${prefix}-`);
+}
+
 window.exportMintsuriCSV = function() {
-    const mintsuriEntries = state.entries.filter(e => e.source === 'みん釣り' && e.status !== 'cancelled');
-    if (mintsuriEntries.length === 0) return alert('データがありません');
+    exportGenericCSV('みん釣り', 'mintsuri_export');
+}
+
+window.exportHarimitsuCSV = function() {
+    exportGenericCSV('ハリミツ', 'harimitsu_export');
+}
+
+window.exportSuihoCSV = function() {
+    exportGenericCSV('水宝', 'suiho_export');
+}
+
+function exportGenericCSV(sourceName, fileName) {
+    const targetEntries = state.entries.filter(e => e.source === sourceName && e.status !== 'cancelled');
+    if (targetEntries.length === 0) return alert('データがありません');
 
     const headers = ['受付番号', 'グループ名', '代表者名', '電話番号', 'メール', '釣り人数', '見学人数', '登録時間'];
-    const rows = mintsuriEntries.map(e => [
+    const rows = targetEntries.map(e => [
         e.id, e.groupName, e.representative, e.phone, e.email, e.fishers, e.observers, formatDateForCSV(e.timestamp)
     ]);
-    downloadCSV("mintsuri_export", headers, rows);
+    downloadCSV(fileName, headers, rows);
 }
 
 // Global Stats Rendering (v7.3.0 Global Scope)
@@ -3277,15 +3368,19 @@ function updateSourceAvailability() {
             if (radio) {
                 const label = radio.closest('label');
                 // Block if Category Limit reached OR Global Limit reached
-                const isFull = (max > 0 && current >= max) || totalNow >= state.settings.capacityTotal;
+                // v8.1.30: Priority check - If Category is FULL but Admin is logged in, 
+                // allow the choice ONLY if we ARE NOT in a "Special Window" (forced source).
+                // If it's a forced source, we MUST keep it hidden/disabled for non-forced.
                 
-                if (isFull && !radio.checked && !isAdminAuthAction) {
+                const isSpecialWindow = document.getElementById('main-source-selector')?.classList.contains('special-window');
+                const isFull = (max > 0 && current >= max) || totalNow >= state.settings.capacityTotal;
+
+                if (isFull && !radio.checked && !isAdminAuthAction && !isAdminAuth) {
                     radio.disabled = true;
                     if (label) label.classList.add('hidden');
                 } else {
                     // v8.1.24: Check if this source is being forced/locked by injectSpecialSource
                     const isForced = label.classList.contains('forced-source');
-                    const isSpecialWindow = document.getElementById('main-source-selector')?.classList.contains('special-window');
 
                     if (isSpecialWindow) {
                         // If it's a special window (e.g. Mintsuri-only), DON'T unhide others
@@ -3401,8 +3496,25 @@ function checkUrlParams() {
     // v8.1.24 Fix: Use 'view' directly as the ID (already contains '-view')
     if (view && document.getElementById(view)) {
         // Validation: Only admins can see dashboard/reception via URL
-        if ((view === 'dashboard-view' || view === 'reception-view' || view === 'settings-view') && !isAdminAuth) {
+        if ((view === 'dashboard-view' || view === 'reception-view' || view === 'settings-view' || view === 'mintsuri-coordinator-view' || view === 'harimitsu-coordinator-view' || view === 'suiho-coordinator-view') && !isAdminAuth) {
             console.warn("Blocked deep-link to admin view without auth");
+            return;
+        }
+        
+        // v8.1.35 specialized routing (alias for cleaner URLs)
+        if (view === 'mintsuri') {
+            switchView(null, 'mintsuri-coordinator-view');
+            renderMintsuriCoordinatorView();
+            return;
+        }
+        if (view === 'harimitsu') {
+            switchView(null, 'harimitsu-coordinator-view');
+            renderHarimitsuCoordinatorView();
+            return;
+        }
+        if (view === 'suiho') {
+            switchView(null, 'suiho-coordinator-view');
+            renderSuihoCoordinatorView();
             return;
         }
         
@@ -3487,7 +3599,6 @@ function injectSpecialSource(sourceName) {
             <input type="radio" name="reg-source" value="${sourceName}" checked required>
             <span class="source-label">
                 <span class="badge ${badgeClass}">${sourceName}</span>
-                (専用窓口)
             </span>
         `;
         selector.appendChild(label);
@@ -3497,13 +3608,14 @@ function injectSpecialSource(sourceName) {
         target.disabled = false;
         const label = target.closest('.source-option');
         label.classList.remove('hidden'); // Show target
+        // v8.1.26: Remove admin-only mark so regular users see the label/text
+        label.classList.remove('admin-only'); 
         label.classList.add('forced-source');
         
-        // Re-styling for 'locked' look
-        const labelText = label.querySelector('.source-label');
-        if (labelText && !labelText.innerHTML.includes('専用')) {
-             labelText.innerHTML += ' (専用)';
-        }
+        // Ensure parent group is visible
+        if (selectorGroup) selectorGroup.classList.remove('hidden');
+
+        // v8.1.33: Re-styling handled by classes
     }
     
     console.log(`Special view applied for: ${sourceName}`);

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=8.1.25">
+    <link rel="stylesheet" href="style.css?v=8.1.35">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -67,25 +67,25 @@
                             <div class="form-group hidden" id="source-selector-group" style="margin-bottom: 1rem; width: 100%;">
                                 <label style="display:block; margin-bottom: 0.5rem; font-weight:700;">受付区分</label>
                                 <div class="source-selector" id="main-source-selector" style="display:flex; flex-wrap: wrap; gap: 0.5rem;">
-                                    <label class="source-option" style="flex: 0 0 auto; min-width: 80px;">
+                                    <label class="source-option" style="flex: 0 0 auto; min-width: 100px;">
                                         <input type="radio" name="reg-source" value="一般" checked required>
                                         <span class="source-label">
                                             <span class="badge badge-ippan">一般</span>
                                         </span>
                                     </label>
-                                    <label class="source-option admin-only hidden" style="flex: 0 0 auto; min-width: 80px;">
+                                    <label class="source-option admin-only hidden" style="flex: 0 0 auto; min-width: 100px;">
                                         <input type="radio" name="reg-source" value="みん釣り">
                                         <span class="source-label">
                                             <span class="badge badge-mintsuri">みん釣り</span>
                                         </span>
                                     </label>
-                                    <label class="source-option admin-only hidden" style="flex: 0 0 auto; min-width: 80px;">
+                                    <label class="source-option admin-only hidden" style="flex: 0 0 auto; min-width: 100px;">
                                         <input type="radio" name="reg-source" value="水宝">
                                         <span class="source-label">
                                             <span class="badge badge-suiho">水宝</span>
                                         </span>
                                     </label>
-                                    <label class="source-option admin-only hidden" style="flex: 0 0 auto; min-width: 80px;">
+                                    <label class="source-option admin-only hidden" style="flex: 0 0 auto; min-width: 100px;">
                                         <input type="radio" name="reg-source" value="ハリミツ">
                                         <span class="source-label">
                                             <span class="badge badge-harimitsu">ハリミツ</span>
@@ -509,6 +509,41 @@
                                 </div>
                             </div>
 
+                                <div class="url-tile">
+                                    <div class="url-tile-header">
+                                        <span class="url-tile-title">みん釣り 管理用</span>
+                                        <span class="badge badge-mintsuri">みん釣り</span>
+                                    </div>
+                                    <div class="url-tile-body">
+                                        <input type="text" id="url-mintsuri-admin" readonly class="form-control" placeholder="自動生成中...">
+                                        <button class="btn-primary btn-copy-wide" onclick="copyShareUrl('url-mintsuri-admin')">コピー</button>
+                                        <button class="btn-open-link" onclick="openShareUrl('url-mintsuri-admin')">開く</button>
+                                    </div>
+                                </div>
+                                <div class="url-tile">
+                                    <div class="url-tile-header">
+                                        <span class="url-tile-title">ハリミツ 管理用</span>
+                                        <span class="badge badge-harimitsu">ハリミツ</span>
+                                    </div>
+                                    <div class="url-tile-body">
+                                        <input type="text" id="url-harimitsu-admin" readonly class="form-control" placeholder="自動生成中...">
+                                        <button class="btn-primary btn-copy-wide" onclick="copyShareUrl('url-harimitsu-admin')">コピー</button>
+                                        <button class="btn-open-link" onclick="openShareUrl('url-harimitsu-admin')">開く</button>
+                                    </div>
+                                </div>
+                                <div class="url-tile">
+                                    <div class="url-tile-header">
+                                        <span class="url-tile-title">水宝 管理用</span>
+                                        <span class="badge badge-suiho">水宝</span>
+                                    </div>
+                                    <div class="url-tile-body">
+                                        <input type="text" id="url-suiho-admin" readonly class="form-control" placeholder="自動生成中...">
+                                        <button class="btn-primary btn-copy-wide" onclick="copyShareUrl('url-suiho-admin')">コピー</button>
+                                        <button class="btn-open-link" onclick="openShareUrl('url-suiho-admin')">開く</button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Group B: Aggregation -->
                             <div class="url-section-title">集計・名簿管理</div>
                             <div class="url-grid">
@@ -622,7 +657,6 @@
                                     <option value="水宝">水宝枠</option>
                                     <option value="ハリミツ">ハリミツ枠</option>
                                 </select>
-                                <script>console.log("BORIJIN APP v8.1.16: STABILIZED"); console.log("/* --- SECURE ADMIN ACCESS v8.1.14 --- */ LEADER FORM SECURED");</script>
                             </div>
                         </div>
                         <div class="breakdown-grid mt-4">
@@ -874,6 +908,110 @@
                 </div>
             </div>
         </section>
+
+        <!-- Harimitsu Coordinator View (v8.1.35) -->
+        <section id="harimitsu-coordinator-view" class="view">
+            <div class="card">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>ハリミツ 登録状況</h2>
+                    <button class="btn-outline" onclick="exportHarimitsuCSV()">CSVを出力 (Excel用)</button>
+                </div>
+                <div id="harimitsu-stats-summary" class="mb-4"></div>
+                <div class="search-box mb-3">
+                    <input type="text" id="harimitsu-search" placeholder="検索..." oninput="renderHarimitsuCoordinatorView()">
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>受付番号</th>
+                                <th>グループ名</th>
+                                <th>代表者名</th>
+                                <th>釣り/見学</th>
+                                <th>登録時間</th>
+                            </tr>
+                        </thead>
+                        <tbody id="harimitsu-coordinator-list"></tbody>
+                    </table>
+                </div>
+                <div class="mt-5" style="border-top: 2px solid #e1e8ed; padding-top: 2rem;">
+                    <h3 style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 1.5rem;">📊 ハリミツ枠 分析データ</h3>
+                    <div class="breakdown-grid">
+                        <div class="breakdown-card">
+                            <div class="section-title">年代別</div>
+                            <div id="harimitsu-age-breakdown-list" class="stats-list"></div>
+                        </div>
+                        <div class="breakdown-card">
+                            <div class="section-title">性別</div>
+                            <div id="harimitsu-gender-breakdown-list" class="stats-list"></div>
+                        </div>
+                         <div class="breakdown-card">
+                            <div class="section-title">地域別</div>
+                            <div id="harimitsu-region-breakdown-list" class="stats-list"></div>
+                        </div>
+                        <div class="breakdown-card">
+                            <div class="section-title">Tシャツサイズ</div>
+                            <div id="harimitsu-tshirt-breakdown-list" class="stats-list"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions mt-4" style="border-top: 1px solid #eee; padding-top: 1rem; opacity: 0.5;">
+                    <p class="small text-muted text-center">※この画面はハリミツ担当者専用です</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Suiho Coordinator View (v8.1.35) -->
+        <section id="suiho-coordinator-view" class="view">
+            <div class="card">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>水宝 登録状況</h2>
+                    <button class="btn-outline" onclick="exportSuihoCSV()">CSVを出力 (Excel用)</button>
+                </div>
+                <div id="suiho-stats-summary" class="mb-4"></div>
+                <div class="search-box mb-3">
+                    <input type="text" id="suiho-search" placeholder="検索..." oninput="renderSuihoCoordinatorView()">
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>受付番号</th>
+                                <th>グループ名</th>
+                                <th>代表者名</th>
+                                <th>釣り/見学</th>
+                                <th>登録時間</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suiho-coordinator-list"></tbody>
+                    </table>
+                </div>
+                <div class="mt-5" style="border-top: 2px solid #e1e8ed; padding-top: 2rem;">
+                    <h3 style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 1.5rem;">📊 水宝枠 分析データ</h3>
+                    <div class="breakdown-grid">
+                        <div class="breakdown-card">
+                            <div class="section-title">年代別</div>
+                            <div id="suiho-age-breakdown-list" class="stats-list"></div>
+                        </div>
+                        <div class="breakdown-card">
+                            <div class="section-title">性別</div>
+                            <div id="suiho-gender-breakdown-list" class="stats-list"></div>
+                        </div>
+                         <div class="breakdown-card">
+                            <div class="section-title">地域別</div>
+                            <div id="suiho-region-breakdown-list" class="stats-list"></div>
+                        </div>
+                        <div class="breakdown-card">
+                            <div class="section-title">Tシャツサイズ</div>
+                            <div id="suiho-tshirt-breakdown-list" class="stats-list"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions mt-4" style="border-top: 1px solid #eee; padding-top: 1rem; opacity: 0.5;">
+                    <p class="small text-muted text-center">※この画面は水宝担当者専用です</p>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Entry Detail Modal (Check View) -->
@@ -1017,7 +1155,7 @@
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" onclick="handleSecureClick(event)">&copy; 2026 釣り大会 実行委員会</p>
             <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;"
-            >v8.1.25</span>
+            >v8.1.35</span>
         </div>
     </footer>
 
@@ -1029,7 +1167,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=8.1.25"></script>
+    <script src="script.js?v=8.1.35"></script>
 </body>
 
 </html>
