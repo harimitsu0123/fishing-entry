@@ -639,6 +639,11 @@ function initApp() {
     const srcParam = params.get('src');
     const viewParam = params.get('view');
 
+    // v8.1.39: Critical Fix for entries flashing - Reset filter if it's set to hidden 'ippan'
+    if (dashboardFilter === '一般') {
+        dashboardFilter = 'all';
+    }
+
     // v8.1.4: URL-based Category Selection
     if (srcParam) {
         const srcMap = { 'ippan': '一般', 'mintsuri': 'みん釣り', 'harimitsu': 'ハリミツ', 'suiho': '水宝' };
@@ -756,7 +761,10 @@ function initApp() {
     // Dashboard Search & Filters
     const dashSearch = document.getElementById('dashboard-search');
     if (dashSearch) {
-        dashSearch.addEventListener('input', updateDashboard);
+        dashSearch.addEventListener('input', () => {
+             // v8.1.39: Safety wrap
+             updateDashboard();
+        });
     }
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -2306,52 +2314,8 @@ window.renderPublicStats = function() {
 }
 
 window.renderMintsuriCoordinatorView = function() {
-    const list = document.getElementById('mintsuri-coordinator-list');
-    const summary = document.getElementById('mintsuri-stats-summary');
-    if (!list) return;
-
-    const mintsuriEntries = state.entries.filter(e => e.source === 'みん釣り' && e.status !== 'cancelled');
-    const totalFishers = mintsuriEntries.reduce((s, e) => s + e.fishers, 0);
-    const totalObservers = mintsuriEntries.reduce((s, e) => s + e.observers, 0);
-
-    if (summary) {
-        summary.innerHTML = `
-            <div class="stats-summary-grid">
-                <div class="summary-card"><div class="summary-label">みん釣り 合計組数</div><div class="summary-value">${mintsuriEntries.length} <small>組</small></div></div>
-                <div class="summary-card"><div class="summary-label">みん釣り 釣り人数</div><div class="summary-value">${totalFishers} <small>/ ${state.settings.capacityMintsuri}</small></div></div>
-                <div class="summary-card"><div class="summary-label">見学人数</div><div class="summary-value">${totalObservers} <small>名</small></div></div>
-                <div class="summary-card"><div class="summary-label">充足率</div><div class="summary-value">${Math.round((totalFishers/state.settings.capacityMintsuri)*100)}%</div></div>
-            </div>`;
-    }
-
-    const searchTerm = (document.getElementById('mintsuri-search')?.value || "").toLowerCase();
-
-    list.innerHTML = mintsuriEntries.slice().reverse()
-        .filter(e => {
-            if (!searchTerm) return true;
-            const pNames = e.participants.map(p => p.name).join(' ');
-            const pGenders = e.participants.map(p => genderLabels[p.gender] || "").join(' ');
-            const pTshirts = e.participants.map(p => p.tshirtSize || "").join(' ');
-            const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pGenders} ${pTshirts}`.toLowerCase();
-            return combined.includes(searchTerm);
-        })
-        .map(e => {
-            const regTime = e.timestamp ? new Date(e.timestamp).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--:--';
-            const repInfo = e.participants[0] || { name: e.representative, nickname: '' };
-            return `
-            <tr>
-                <td><span class="id-badge">${e.id}</span></td>
-                <td><strong>${e.groupName}</strong></td>
-                <td>${e.representative}${repInfo.nickname ? ` <small>(${repInfo.nickname})</small>` : ''}</td>
-                <td>${e.fishers} / ${e.observers}</td>
-                <td><small>${regTime}</small></td>
-            </tr>
-        `;
-        }).join('') || '<tr><td colspan="5" style="text-align:center; padding:2rem;">該当する登録はありません</td></tr>';
-
-    // v7.6.6: Also render breakdown for Mintsuri view
-    renderBreakdownStats('みん釣り', 'mintsuri-');
-}
+    renderGenericCoordinatorView('みん釣り', 'mintsuri');
+};
 
 window.renderHarimitsuCoordinatorView = function() {
     renderGenericCoordinatorView('ハリミツ', 'harimitsu');
@@ -2373,8 +2337,14 @@ function renderGenericCoordinatorView(sourceName, prefix) {
     const totalFishers = sourceEntries.reduce((s, e) => s + e.fishers, 0);
     const totalObservers = sourceEntries.reduce((s, e) => s + e.observers, 0);
     
-    // Get capacity from settings
-    const capacityKey = sourceName === 'ハリミツ' ? 'capacityHarimitsu' : 'capacitySuiho';
+    // v8.1.39: Fixed capacity key mapping
+    const capacityKeyMap = {
+        'みん釣り': 'capacityMintsuri',
+        'ハリミツ': 'capacityHarimitsu',
+        '水宝': 'capacitySuiho',
+        '一般': 'capacityGeneral'
+    };
+    const capacityKey = capacityKeyMap[sourceName];
     const capacity = state.settings[capacityKey] || 0;
 
     if (summary) {

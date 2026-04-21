@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=8.1.38">
+    <link rel="stylesheet" href="style.css?v=8.1.39">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -513,28 +513,7 @@
                                         <button class="btn-open-link" onclick="openShareUrl('url-mintsuri-admin')">開く</button>
                                     </div>
                                 </div>
-                                <div class="url-tile">
-                                    <div class="url-tile-header">
-                                        <span class="url-tile-title">ハリミツ 管理用</span>
-                                        <span class="badge badge-harimitsu">ハリミツ</span>
-                                    </div>
-                                    <div class="url-tile-body">
-                                        <input type="text" id="url-harimitsu-admin" readonly class="form-control" placeholder="自動生成中...">
-                                        <button class="btn-primary btn-copy-wide" onclick="copyShareUrl('url-harimitsu-admin')">コピー</button>
-                                        <button class="btn-open-link" onclick="openShareUrl('url-harimitsu-admin')">開く</button>
-                                    </div>
-                                </div>
-                                <div class="url-tile">
-                                    <div class="url-tile-header">
-                                        <span class="url-tile-title">水宝 管理用</span>
-                                        <span class="badge badge-suiho">水宝</span>
-                                    </div>
-                                    <div class="url-tile-body">
-                                        <input type="text" id="url-suiho-admin" readonly class="form-control" placeholder="自動生成中...">
-                                        <button class="btn-primary btn-copy-wide" onclick="copyShareUrl('url-suiho-admin')">コピー</button>
-                                        <button class="btn-open-link" onclick="openShareUrl('url-suiho-admin')">開く</button>
-                                    </div>
-                                </div>
+                                <!-- Harimitsu/Suiho Admin links removed as requested (v8.1.39) -->
                             </div>
 
                             <!-- Group B: Aggregation -->
@@ -1147,8 +1126,8 @@
         <div class="container"
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" onclick="handleSecureClick(event)">&copy; 2026 釣り大会 実行委員会</p>
-            <span style="position: absolute; left: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;"
-            >v8.1.38</span>
+            <span style="position: absolute; right: 15px; bottom: 85px; opacity: 0.7; font-size: 0.7rem; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 5px; border-radius: 4px;"
+            >v8.1.39</span>
         </div>
     </footer>
 
@@ -1160,7 +1139,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=8.1.38"></script>
+    <script src="script.js?v=8.1.39"></script>
 </body>
 
 </html>
