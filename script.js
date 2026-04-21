@@ -622,9 +622,6 @@ function initApp() {
     });
 
     // v8.1.39: Critical Fix for entries flashing - Reset filter if it's set to hidden 'ippan'
-    if (dashboardFilter === '一般') {
-        dashboardFilter = 'all';
-    }
 
     // Navigation
     document.querySelectorAll('.nav-btn').forEach(btn => {

@@ -855,6 +855,7 @@ textarea:focus {
 }
 
 .bg-ippan { background: #0984e3 !important; }
+.border-top-ippan { border-top: 6px solid #0984e3 !important; }
 .bg-mintsuri { background: #6c5ce7 !important; }
 .bg-suiho { background: #00b894 !important; }
 .bg-harimitsu { background: #e17055 !important; }
