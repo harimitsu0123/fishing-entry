@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.5: STABILIZED");
+        console.log("BORIJIN APP v8.1.6: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -653,8 +653,22 @@ function initApp() {
         }
     }
 
+    // v8.1.6: View Parameter Handling (mintsuri, leader-entry, etc)
+    if (viewParam === 'mintsuri') {
+        switchView(null, 'mintsuri-coordinator-view');
+        renderMintsuriCoordinatorView();
+        return; 
+    } else if (viewParam === 'leader-entry') {
+        switchView(null, 'leader-entry-view');
+        renderLeaderEntryForm();
+        return;
+    } else if (viewParam === 'stats') {
+        switchView(null, 'public-stats-view');
+        return;
+    }
+
     if (shareUrlEl) {
-        shareUrlEl.value = window.location.href.split('#')[0];
+        shareUrlEl.value = window.location.href.split('#')[0].split('?')[0];
     }
 
     // Navigation
@@ -1665,14 +1679,14 @@ function updateDashboard() {
         updateSplitUI('suiho', fishersSuiho, state.settings.capacitySuiho, observersSuiho);
         updateSplitUI('harimitsu', fishersHarimitsu, state.settings.capacityHarimitsu, observersHarimitsu);
 
-        // v7.3 & v8.1.4: Update Share URLs in Dashboard Settings (Legacy Reverted)
+        // v7.3 & v8.1.6: Update Share URLs in Dashboard Settings (User Requirements Match)
         const baseUrl = window.location.href.split('?')[0].split('#')[0];
         
-        // Main Share URL
+        // 1. Main Public URL
         const mainUrlEl = document.getElementById('public-share-url');
         if (mainUrlEl) mainUrlEl.value = baseUrl;
 
-        // Specific Source Registry URLs (v8.1.4 Restored English Keys for consistency)
+        // 2. Registry Links (src param)
         const sourceMap = {
             'ippan-reg': 'ippan',
             'mintsuri-reg': 'mintsuri',
@@ -1681,16 +1695,18 @@ function updateDashboard() {
         };
         Object.entries(sourceMap).forEach(([idSuffix, srcKey]) => {
             const el = document.getElementById(`url-${idSuffix}`);
-            if (el) el.value = `${baseUrl}?src=${srcKey}`;
+            if (el) el.value = `${baseUrl}${srcKey === 'ippan' ? '' : `?src=${srcKey}`}`;
         });
 
-        // Leader Entry URL (v8.1.4 Legacy param restored)
+        // 3. Coordinator & Entry Tools (view param)
         const leaderEl = document.getElementById('url-leader-input');
         if (leaderEl) leaderEl.value = `${baseUrl}?view=leader-entry`;
 
-        // Legacy/Misc
-        const statsEl = document.getElementById('url-stats');
-        if (statsEl) statsEl.value = `${baseUrl}?view=stats`;
+        const mintsuriAdminEl = document.getElementById('url-mintsuri-admin');
+        if (mintsuriAdminEl) mintsuriAdminEl.value = `${baseUrl}?view=mintsuri`;
+
+        const statsUrlEl = document.getElementById('url-stats');
+        if (statsUrlEl) statsUrlEl.value = `${baseUrl}?view=stats`;
 
         // Dashboard List Rendering (Fixed & Cleaned v7.3.0)
         const list = document.getElementById('entry-list');
@@ -1778,7 +1794,7 @@ function updateDashboard() {
 }
 
 /**
- * --- v8.0.0 & v8.1.5: FIXED DASHBOARD NAVIGATION ---
+ * --- v8.0.0 & v8.1.6: FIXED DASHBOARD NAVIGATION ---
  * Core function to handle admin sub-tab switching
  */
 function switchAdminTab(tabId) {
@@ -3076,7 +3092,7 @@ async function handleBulkEmailSend() {
     }
 }
 
-/* --- UI HELPERS & CONSTANTS RESTORED v8.1.5 --- */
+/* --- UI HELPERS & CONSTANTS RESTORED v8.1.6 --- */
 
 
 
@@ -3129,7 +3145,7 @@ function generateAdminQRCode() {
     });
 }
 
-/* --- SECURE ADMIN ACCESS v8.1.5 --- */
+/* --- SECURE ADMIN ACCESS v8.1.6 --- */
 let clickCount = 0;
 let lastClickTime = 0;
 window.handleSecureClick = function(e) {
