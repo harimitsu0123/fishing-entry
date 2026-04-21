@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=8.1.37">
+    <link rel="stylesheet" href="style.css?v=8.1.38">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -317,8 +317,8 @@
                     <div class="card mb-4 mt-2">
                         <h2>区分別 登録状況</h2>
                         <div class="capacity-split-grid mt-4">
-                            <!-- General -->
-                            <div class="split-card ippan">
+                            <!-- General (Hidden v8.1.38) -->
+                            <div class="split-card ippan hidden">
                                 <div class="split-header">
                                     <span class="badge badge-ippan">一般</span>
                                     <span class="split-value"><span id="curr-ippan">0</span> / <span
@@ -381,7 +381,7 @@
                         </div>
                         <div class="filter-group mb-4">
                             <button class="filter-btn active" data-filter="all">すべて</button>
-                            <button class="filter-btn" data-filter="一般">一般</button>
+                            <!-- General Hidden (v8.1.38) -->
                             <button class="filter-btn" data-filter="みん釣り">みん釣り</button>
                             <button class="filter-btn" data-filter="水宝">水宝</button>
                             <button class="filter-btn" data-filter="ハリミツ">ハリミツ</button>
@@ -460,20 +460,10 @@
                             <h3 style="font-size: 1rem; color: var(--text-dark); margin-bottom: 0.5rem;">🔗 専用URL一覧 (コピー用)</h3>
                             <p class="text-muted small mb-4">担当者や一般の方へ共有するためのURLです。</p>
 
-                             <!-- Group A: Registration Forms -->
-                            <div class="url-section-title">受付フォーム用 (一般・窓口)</div>
+                            <!-- Group A: Registration Forms -->
+                            <div class="url-section-title">受付フォーム用 (窓口用)</div>
                             <div class="url-grid">
-                                <div class="url-tile">
-                                    <div class="url-tile-header">
-                                        <span class="url-tile-title">一般 (公開用)</span>
-                                        <span class="badge badge-ippan">一般</span>
-                                    </div>
-                                    <div class="url-tile-body">
-                                        <input type="text" id="url-ippan-reg" readonly class="form-control" placeholder="自動生成中...">
-                                        <button class="btn-primary btn-copy-wide" onclick="copyShareUrl('url-ippan-reg')">コピー</button>
-                                        <button class="btn-open-link" onclick="openShareUrl('url-ippan-reg')">開く</button>
-                                    </div>
-                                </div>
+                                <!-- General Registration Hidden (v8.1.38) -->
                                 <div class="url-tile">
                                     <div class="url-tile-header">
                                         <span class="url-tile-title">みん釣り 窓口用</span>
@@ -1158,7 +1148,7 @@
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" onclick="handleSecureClick(event)">&copy; 2026 釣り大会 実行委員会</p>
             <span style="position: absolute; left: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;"
-            >v8.1.37</span>
+            >v8.1.38</span>
         </div>
     </footer>
 
@@ -1170,7 +1160,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=8.1.37"></script>
+    <script src="script.js?v=8.1.38"></script>
 </body>
 
 </html>
