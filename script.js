@@ -3454,7 +3454,8 @@ function checkUrlParams() {
                 // Security Check
                 const adminViews = ['dashboard-view', 'reception-view', 'settings-view', 'mintsuri-coordinator-view', 'harimitsu-coordinator-view', 'suiho-coordinator-view'];
                 if (adminViews.includes(targetView) && !isAdminAuth) {
-                    console.warn("BORIJIN: Blocked deep-link to admin view without auth");
+                    console.log("BORIJIN: Redirecting to admin login for protected view:", targetView);
+                    showAdminLogin(targetView);
                 } else {
                     switchView(null, targetView);
                 }
