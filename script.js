@@ -80,7 +80,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.12: STABILIZED");
+        console.log("BORIJIN APP v8.1.15: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -3314,4 +3314,42 @@ window.handleSecureClick = function(e) {
         showAdminLogin();
     }
 };
+
+/**
+ * v8.1.15: Restore missing URL parameter helper to resolve startup error
+ */
+function checkUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view');
+    const id = params.get('id');
+
+    if (view && document.getElementById(view + '-view')) {
+        // Validation: Only admins can see dashboard/reception via URL
+        if ((view === 'dashboard' || view === 'reception') && !isAdminAuth) {
+            console.warn("Blocked deep-link to admin view without auth");
+            return;
+        }
+        
+        // Hide all views first
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        
+        // Activate target view
+        const targetView = document.getElementById(view + '-view');
+        if (targetView) {
+            targetView.classList.add('active');
+            
+            // Handle wide layout for admin views
+            const container = document.querySelector('.container');
+            if (view === 'dashboard' || view === 'reception') {
+                if (container) container.classList.add('view-wide');
+            } else {
+                if (container) container.classList.remove('view-wide');
+            }
+        }
+    }
+    
+    if (id && document.getElementById('auth-entry-id')) {
+        document.getElementById('auth-entry-id').value = id;
+    }
+}
 
