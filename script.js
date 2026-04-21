@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.0.7: STABILIZED");
+        console.log("BORIJIN APP v8.0.8: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -2901,4 +2901,34 @@ function downloadCSV(name, headers, rows) {
 function updateBulkMailCount() {
     const el = document.getElementById('bulk-mail-recipient-count');
     if (el) el.textContent = new Set(state.entries.map(e => e.email.toLowerCase().trim()).filter(e => e)).size;
+}
+
+function updateSourceAvailability() {
+    try {
+        const fishersIppan = sumCategoryFishers('一般');
+        const fishersMintsuri = sumCategoryFishers('みん釣り');
+        const fishersSuiho = sumCategoryFishers('水宝');
+        const fishersHarimitsu = sumCategoryFishers('ハリミツ');
+
+        const updateRadio = (val, current, max) => {
+            const radio = document.querySelector(`input[name="reg-source"][value="${val}"]`);
+            if (radio) {
+                const label = radio.closest('label');
+                if (current >= max && !radio.checked && !isAdminAuthAction) {
+                    radio.disabled = true;
+                    if (label) label.classList.add('disabled');
+                } else {
+                    radio.disabled = false;
+                    if (label) label.classList.remove('disabled');
+                }
+            }
+        };
+
+        updateRadio('一般', fishersIppan, state.settings.capacityGeneral);
+        updateRadio('みん釣り', fishersMintsuri, state.settings.capacityMintsuri);
+        updateRadio('水宝', fishersSuiho, state.settings.capacitySuiho);
+        updateRadio('ハリミツ', fishersHarimitsu, state.settings.capacityHarimitsu);
+    } catch (e) {
+        console.warn("Source availability check skipped:", e);
+    }
 }
