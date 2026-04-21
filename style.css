@@ -1994,6 +1994,10 @@ table {
         margin: 0 !important;
         padding: 0 !important;
     }
+    .print-ikesu-sheet {
+        padding: 0 !important;
+        margin-bottom: 0 !important;
+    }
 }
 
 .print-ikesu-sheet {

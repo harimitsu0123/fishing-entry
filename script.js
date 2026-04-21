@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.0.1: NAVIGATION FIX");
+        console.log("BORIJIN APP v8.0.3: LEADER FORM SECURED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -205,6 +205,12 @@ async function loadData() {
     const savedData = localStorage.getItem('fishing_app_v3_data');
     if (savedData) {
         state = JSON.parse(savedData);
+        state.settings.ikesuList.forEach(ik => {
+            if (!ik.passcode) {
+                ik.passcode = Math.floor(1000 + Math.random() * 9000).toString();
+            }
+        });
+        localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
         // ★ ローカルデータを読み込むが、クラウドへは勝手に送らない（上書き防止）
         console.log('Loaded from local storage (no automatic sync)');
     } else {
@@ -3044,6 +3050,10 @@ function switchAdminTab(tabId) {
     if (tabId === 'tab-stats') renderBreakdownStats();
     if (tabId === 'tab-rankings') renderRankings();
     if (tabId === 'tab-print') renderIkesuPrintView();
+    if (tabId === 'tab-settings') {
+        const pInput = document.getElementById('ikesu-passcode');
+        if (pInput) pInput.value = ""; 
+    }
 
     // Scroll to top
     window.scrollTo(0, 0);
@@ -3080,8 +3090,7 @@ function generateAdminQRCode() {
     if (isLocal) {
         container.innerHTML = `
             <div style="font-size: 0.7rem; color: #2ecc71; line-height: 1.2; margin-bottom: 5px;">
-                ✅ 公開版のQRを表示中<br>
-                (ローカル環境)
+                ✅ 公開版のQRを表示中 (v8.0.3)
             </div>
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(baseUrl)}" alt="Registration QR code" style="max-width: 100%; height: auto;" onload="this.parentElement.style.background='white'">
         `;
@@ -3700,101 +3709,176 @@ window.renderIkesuWorkspace = function () {
     });
 };
 
-// --- v8.0.0 Extension Logic (v8.0.1 Restore) ---
+// 1. Leader Management & Auth (v8.0.3)
+window.resetLeaderAuth = function() {
+    const ikId = document.getElementById('leader-ikesu-select').value;
+    document.getElementById('leader-auth-section').classList.toggle('hidden', !ikId);
+    document.getElementById('leader-step-2').classList.add('hidden');
+    document.getElementById('leader-step-confirm').classList.add('hidden');
+    document.getElementById('leader-passcode-input').value = "";
+};
 
-// 1. Leader Management
-window.toggleLeader = function(entryId, partIdx) {
-    const entry = state.entries.find(e => e.id === entryId);
-    if (!entry || !entry.participants[partIdx]) return;
+window.verifyLeaderAuth = function() {
+    const ikId = document.getElementById('leader-ikesu-select').value;
+    const input = document.getElementById('leader-passcode-input').value;
+    const ikesu = state.settings.ikesuList.find(ik => ik.id === ikId);
     
-    // Toggle
-    const current = !!entry.participants[partIdx].isLeader;
-    entry.participants[partIdx].isLeader = !current;
+    if (!ikesu) return;
+    if (input === ikesu.passcode) {
+        showToast('認証に成功しました', 'success');
+        document.getElementById('leader-step-1').classList.add('hidden');
+        document.getElementById('leader-step-2').classList.remove('hidden');
+        document.getElementById('selected-ikesu-name-display').textContent = ikesu.name;
+        renderLeaderEntryTable();
+    } else {
+        showToast('暗証番号が正しくありません', 'error');
+    }
+};
+
+window.renderLeaderEntryTable = function() {
+    const ikId = document.getElementById('leader-ikesu-select').value;
+    const container = document.getElementById('leader-entry-table-container');
+    if (!ikId) return;
+
+    const members = [];
+    state.entries.forEach(e => {
+        if (e.status === 'cancelled') return;
+        e.participants.forEach((p, idx) => {
+            if (p.ikesuId === ikId && p.type === 'fisher') {
+                members.push({ p, entry: e, idx });
+            }
+        });
+    });
+
+    if (members.length === 0) {
+        container.innerHTML = '<p class="alert alert-warning">このイケスに釣り参加者が割り当てられていません</p>';
+        return;
+    }
+
+    let html = `
+        <table class="leader-table" style="width:100%; border-collapse: separate; border-spacing: 0 8px;">
+            <thead>
+                <tr style="font-size:0.8rem; color:#64748b; text-transform:uppercase;">
+                    <th>氏名 / グループ</th>
+                    <th style="text-align:center;">青物(2pt)</th>
+                    <th style="text-align:center;">鯛等(1pt)</th>
+                    <th style="text-align:center;">小計</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    members.forEach(m => {
+        const rowId = `row-${m.entry.id}-${m.idx}`;
+        const p = m.p;
+        html += `
+            <tr data-entry="${m.entry.id}" data-idx="${m.idx}" style="background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <td style="padding: 12px;">
+                    <div style="font-weight:900; font-size:1.1rem; color:var(--text-color);">${p.name} 様</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; font-weight:600;">${m.entry.groupName} ${p.isLeader ? '⭐' : ''}</div>
+                </td>
+                <td style="text-align:center; padding: 12px;">
+                    <input type="number" class="input-catch catch-a" value="${p.catchA || 0}" min="0" 
+                           oninput="window.updateLeaderLiveTotals()" 
+                           style="width: 60px; font-size: 1.2rem; padding: 8px; text-align: center; border: 1px solid #e2e8f0; border-radius: 6px;">
+                </td>
+                <td style="text-align:center; padding: 12px;">
+                    <input type="number" class="input-catch catch-b" value="${p.catchB || 0}" min="0" 
+                           oninput="window.updateLeaderLiveTotals()"
+                           style="width: 60px; font-size: 1.2rem; padding: 8px; text-align: center; border: 1px solid #e2e8f0; border-radius: 6px;">
+                </td>
+                <td style="text-align:center; padding: 12px; font-weight:800; color:var(--primary-color);">
+                    <span class="row-total">0</span><small>pt</small>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+    updateLeaderLiveTotals();
+};
+
+window.updateLeaderLiveTotals = function() {
+    const rows = document.querySelectorAll('.leader-table tbody tr');
+    let teamTotal = 0;
     
+    rows.forEach(row => {
+        const cA = parseInt(row.querySelector('.catch-a').value) || 0;
+        const cB = parseInt(row.querySelector('.catch-b').value) || 0;
+        const subtotal = (cA * 2) + cB;
+        row.querySelector('.row-total').textContent = subtotal;
+        teamTotal += subtotal;
+    });
+
+    const display = document.getElementById('team-total-display');
+    if (display) display.innerHTML = `${teamTotal} <small style="font-size: 0.8rem;">pt</small>`;
+};
+
+// 3. Workflow Improvement
+window.requestLeaderResultsSave = function() {
+    const rows = document.querySelectorAll('.leader-table tbody tr');
+    const summaryList = document.getElementById('leader-confirm-summary');
+    let teamTotal = 0;
+    let html = "";
+
+    rows.forEach(row => {
+        const name = row.querySelector('strong, div').innerText;
+        const cA = parseInt(row.querySelector('.catch-a').value) || 0;
+        const cB = parseInt(row.querySelector('.catch-b').value) || 0;
+        const subtotal = (cA * 2) + cB;
+        teamTotal += subtotal;
+
+        html += `
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding: 8px 0;">
+                <div>
+                    <div style="font-weight: 700;">${name}</div>
+                    <div style="font-size: 0.75rem; color: #64748b;">青物: ${cA} / 鯛等: ${cB}</div>
+                </div>
+                <div style="font-weight: 900; color: var(--primary-color);">${subtotal} pt</div>
+            </div>
+        `;
+    });
+
+    summaryList.innerHTML = html;
+    document.getElementById('confirm-team-total').innerHTML = `${teamTotal} <small style="font-size: 1rem;">pt</small>`;
+    
+    document.getElementById('leader-step-2').classList.add('hidden');
+    document.getElementById('leader-step-confirm').classList.remove('hidden');
+    window.scrollTo(0,0);
+};
+
+window.backToLeaderEdit = function() {
+    document.getElementById('leader-step-confirm').classList.add('hidden');
+    document.getElementById('leader-step-2').classList.remove('hidden');
+};
+
+window.commitLeaderResultsSave = function() {
+    const rows = document.querySelectorAll('.leader-table tbody tr');
+    rows.forEach(row => {
+        const eid = row.dataset.entry;
+        const idx = parseInt(row.dataset.idx);
+        const cA = parseInt(row.querySelector('.catch-a').value) || 0;
+        const cB = parseInt(row.querySelector('.catch-b').value) || 0;
+
+        const entry = state.entries.find(e => e.id === eid);
+        if (entry && entry.participants[idx]) {
+            entry.participants[idx].catchA = cA;
+            entry.participants[idx].catchB = cB;
+        }
+    });
+
     saveData();
-    renderIkesuWorkspace();
-    showToast(`${entry.participants[partIdx].name} 様をリーダーに設定しました`, 'info');
-};
-
-// 2. Tournament Rankings
-window.renderRankings = function() {
-    const indList = document.getElementById('ranking-individual-list');
-    const ikList = document.getElementById('ranking-ikesu-list');
-    if (!indList || !ikList) return;
-
-    // A. Individual Ranking Data
-    let individuals = [];
-    state.entries.forEach(e => {
-        if (e.status === 'cancelled') return;
-        e.participants.forEach(p => {
-            if (p.type === 'observer') return;
-            const cA = parseInt(p.catchA || 0);
-            const cB = parseInt(p.catchB || 0);
-            const points = (cA * 2) + (cB * 1);
-            individuals.push({ 
-                name: p.name, 
-                group: e.groupName, 
-                points, 
-                cA, 
-                cB 
-            });
-        });
-    });
-
-    individuals.sort((a, b) => {
-        if (b.points !== a.points) return b.points - a.points;
-        if (b.cA !== a.cA) return b.cA - a.cA;
-        return b.cB - a.cB;
-    });
-
-    indList.innerHTML = individuals.slice(0, 50).map((p, i) => `
-        <div class="ranking-card">
-            <div class="ranking-rank ${i < 3 ? 'top-' + (i+1) : ''}">${i + 1}</div>
-            <div class="ranking-info">
-                <div class="ranking-name">${p.name} <small style="color:#94a3b8; font-weight:400;">(${p.group})</small></div>
-                <div style="font-size:0.7rem; color:#64748b;">青物等: ${p.cA} / マダイ等: ${p.cB}</div>
-            </div>
-            <div class="ranking-points">${p.points} <small>pt</small></div>
-        </div>
-    `).join('') || '<p class="text-muted p-4">データがありません</p>';
-
-    if (!state.settings.ikesuList) return;
-    const ikResults = {};
-    state.settings.ikesuList.forEach(ik => ikResults[ik.id] = { name: ik.name, totalPoints: 0, count: 0 });
+    showToast("釣果を保存し、クラウドへ同期しました", "success");
     
-    state.entries.forEach(e => {
-        if (e.status === 'cancelled') return;
-        e.participants.forEach(p => {
-            if (p.type === 'observer' || !p.ikesuId || !ikResults[p.ikesuId]) return;
-            const cA = parseInt(p.catchA || 0);
-            const cB = parseInt(p.catchB || 0);
-            ikResults[p.ikesuId].totalPoints += (cA * 2) + (cB * 1);
-            ikResults[p.ikesuId].count++;
-        });
-    });
-
-    let teamList = Object.values(ikResults).filter(r => r.count > 0).map(r => ({
-        name: r.name,
-        avg: (r.totalPoints / r.count).toFixed(2),
-        total: r.totalPoints,
-        count: r.count
-    }));
-
-    teamList.sort((a, b) => b.avg - a.avg);
-
-    ikList.innerHTML = teamList.map((r, i) => `
-        <div class="ranking-card">
-            <div class="ranking-rank ${i < 3 ? 'top-' + (i+1) : ''}">${i + 1}</div>
-            <div class="ranking-info">
-                <div class="ranking-name">${r.name}</div>
-                <div style="font-size:0.7rem; color:#64748b;">合計: ${r.total}pt / 人数: ${r.count}名</div>
-            </div>
-            <div class="ranking-points">${r.avg} <small>avg</small></div>
-        </div>
-    `).join('') || '<p class="text-muted p-4">データがありません</p>';
+    // Reset to start
+    document.getElementById('leader-step-confirm').classList.add('hidden');
+    document.getElementById('leader-step-1').classList.remove('hidden');
+    document.getElementById('leader-ikesu-select').value = "";
+    document.getElementById('leader-auth-section').classList.add('hidden');
 };
 
-// 3. Print View
+// 4. Print & Management Updates
 window.renderIkesuPrintView = function() {
     const container = document.getElementById('print-view-container');
     if (!container || !state.settings.ikesuList) return;
@@ -3814,10 +3898,16 @@ window.renderIkesuPrintView = function() {
         if (members.length === 0) return;
 
         html += `
-            <div class="print-ikesu-sheet">
-                <div class="print-header">
-                    <h2 style="margin:0;">${ikesu.name} メンバー表</h2>
-                    <span style="font-size:0.9rem;">大会名称: ${state.settings.competitionName}</span>
+            <div class="print-ikesu-sheet" style="page-break-after: always; position: relative;">
+                <div class="print-header" style="border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div>
+                        <h2 style="margin:0; font-size: 1.8rem;">${ikesu.name} メンバー表</h2>
+                        <span style="font-size:0.9rem;">大会名称: ${state.settings.competitionName}</span>
+                    </div>
+                    <div style="text-align: right; border: 2px solid #000; padding: 8px 15px; border-radius: 8px;">
+                        <div style="font-size: 0.7rem; font-weight: 800; margin-bottom: 2px;">リーダー入力用 暗証番号</div>
+                        <div style="font-size: 1.8rem; font-weight: 900; letter-spacing: 0.2em; line-height: 1;">${ikesu.passcode}</div>
+                    </div>
                 </div>
                 <table class="print-table">
                     <thead>
@@ -3836,11 +3926,16 @@ window.renderIkesuPrintView = function() {
                                 <td>${m.entry.groupName}</td>
                                 <td style="font-weight:bold; font-size:1.1rem;">${m.p.name} 様</td>
                                 <td>${m.p.type === 'fisher' ? '釣り' : '見学'}</td>
-                                <td>${m.p.isLeader ? '<strong style="color:var(--primary-color)">★リーダー</strong>' : '--'}</td>
+                                <td>${m.p.isLeader ? '<strong style="color:#000">★リーダー</strong>' : '--'}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
+                <div style="margin-top: 20px; padding: 15px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.85rem;">
+                    <strong>【リーダー様へ】</strong><br>
+                    釣果報告はこちらのQRコードまたはURLからアクセスし、右上の暗証番号を入力して報告してください。<br>
+                    <span style="font-size: 0.75rem;">※報告期限は競技終了後15分以内にお願いいたします。</span>
+                </div>
                 <div style="margin-top:1rem; font-size:0.8rem; text-align:right;">印刷日時: ${new Date().toLocaleString()}</div>
             </div>
         `;
@@ -3848,96 +3943,17 @@ window.renderIkesuPrintView = function() {
     container.innerHTML = html || '<p>割り当て済みのメンバーがいません</p>';
 };
 
-// 4. Leader Result Entry
-window.renderLeaderEntryForm = function() {
-    const select = document.getElementById('leader-ikesu-select');
-    if (!select || !state.settings.ikesuList) return;
-
-    const currentVal = select.value;
-    select.innerHTML = '<option value="">-- 選択してください --</option>' + 
-        state.settings.ikesuList.map(ik => `<option value="${ik.id}">${ik.name}</option>`).join('');
-    select.value = currentVal;
+window.toggleLeader = function(entryId, partIdx) {
+    const entry = state.entries.find(e => e.id === entryId);
+    if (!entry || !entry.participants[partIdx]) return;
     
-    if (currentVal) renderLeaderEntryTable();
-};
-
-window.renderLeaderEntryTable = function() {
-    const ikId = document.getElementById('leader-ikesu-select').value;
-    const container = document.getElementById('leader-entry-table-container');
-    const actions = document.getElementById('leader-save-actions');
-    if (!ikId) {
-        container.innerHTML = "";
-        actions.classList.add('hidden');
-        return;
-    }
-
-    const members = [];
-    state.entries.forEach(e => {
-        if (e.status === 'cancelled') return;
-        e.participants.forEach((p, idx) => {
-            if (p.ikesuId === ikId && p.type === 'fisher') {
-                members.push({ p, entryId: e.id, idx });
-            }
-        });
-    });
-
-    if (members.length === 0) {
-        container.innerHTML = '<p class="alert alert-warning">このイケスに釣り参加者が割り当てられていません</p>';
-        actions.classList.add('hidden');
-        return;
-    }
-
-    let html = `
-        <table class="leader-table">
-            <thead>
-                <tr>
-                    <th>氏名 / グループ</th>
-                    <th style="text-align:center;">青物・クエ等<br><small>(2pt)</small></th>
-                    <th style="text-align:center;">マダイ・他<br><small>(1pt)</small></th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-
-    members.forEach(m => {
-        html += `
-            <tr data-entry="${m.entryId}" data-idx="${m.idx}">
-                <td>
-                    <div style="font-weight:800;">${m.p.name} 様</div>
-                    <div style="font-size:0.75rem; color:#64748b;">${m.p.isLeader ? '⭐リーダー' : ''} [${m.entryId}]</div>
-                </td>
-                <td style="text-align:center;">
-                    <input type="number" class="input-catch catch-a" value="${m.p.catchA || 0}" min="0">
-                </td>
-                <td style="text-align:center;">
-                    <input type="number" class="input-catch catch-b" value="${m.p.catchB || 0}" min="0">
-                </td>
-            </tr>
-        `;
-    });
-
-    html += `</tbody></table>`;
-    container.innerHTML = html;
-    actions.classList.remove('hidden');
-};
-
-window.saveLeaderResults = function() {
-    const rows = document.querySelectorAll('.leader-table tbody tr');
-    rows.forEach(row => {
-        const eid = row.dataset.entry;
-        const idx = parseInt(row.dataset.idx);
-        const cA = parseInt(row.querySelector('.catch-a').value) || 0;
-        const cB = parseInt(row.querySelector('.catch-b').value) || 0;
-
-        const entry = state.entries.find(e => e.id === eid);
-        if (entry && entry.participants[idx]) {
-            entry.participants[idx].catchA = cA;
-            entry.participants[idx].catchB = cB;
-        }
-    });
-
+    // Toggle
+    const current = !!entry.participants[partIdx].isLeader;
+    entry.participants[partIdx].isLeader = !current;
+    
     saveData();
-    showToast("釣果を保存し、クラウドへ同期しました", "success");
+    renderIkesuWorkspace();
+    showToast(`${entry.participants[partIdx].name} 様をリーダーに設定しました`, 'info');
 };
 
 window.exportParticipantsCSV = function() {
