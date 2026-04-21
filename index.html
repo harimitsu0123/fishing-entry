@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=7.8.7">
+    <link rel="stylesheet" href="style.css?v=7.9.1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -288,8 +288,8 @@
 
                 <!-- Tab: Registration List -->
                 <div id="tab-list" class="admin-tab-content">
-                    <!-- Global Stats Summary (v5.1 Grid) -->
-                    <div id="global-stats-summary" class="mb-4"></div>
+                    <!-- Global Stats Summary (Top) -->
+                    <div id="global-stats-summary-top" class="mb-4"></div>
 
                     <!-- Status Stats Card -->
                     <div class="card mb-4 mt-2">
@@ -803,6 +803,22 @@
         </section>
     </main>
 
+    <!-- Entry Detail Modal (Check View) -->
+    <div id="detail-modal" class="modal hidden">
+        <div class="card modal-content" style="max-width: 600px; width: 95%;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 id="detail-modal-title">登録詳細の確認</h2>
+                <button type="button" class="btn-icon" onclick="closeDetailModal()" style="font-size: 1.2rem; color: #64748b;">✕</button>
+            </div>
+            <div id="detail-modal-body" style="max-height: 70vh; overflow-y: auto; padding-right: 5px;">
+                <!-- Content injected by JS -->
+            </div>
+            <div class="form-actions mt-4">
+                <button type="button" class="btn-secondary w-100" onclick="closeDetailModal()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Ikesu Settings Modal -->
     <div id="ikesu-modal" class="modal hidden">
         <div class="modal-content card">
@@ -854,7 +870,7 @@
         <div class="container"
             style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
             <p id="footer-reveal" style="cursor: default;">&copy; 2026 釣り大会 実行委員会</p>
-            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.8.7</span>
+            <span style="position: absolute; right: 10px; bottom: 5px; opacity: 0.5; font-size: 0.6rem;">v7.9.1</span>
         </div>
     </footer>
 
@@ -866,7 +882,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=7.8.7"></script>
+    <script src="script.js?v=7.9.1"></script>
 </body>
 
 </html>

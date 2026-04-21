@@ -68,7 +68,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.8.7: EXPANDED SEARCH (GENDER/TSHIRT)");
+        console.log("BORIJIN APP v7.9.0: DASHBOARD & RECEPTION REPAIRS");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1461,7 +1461,6 @@ function fillFormForEdit(entry) {
                     <input type="radio" name="reg-source" value="${source}" required>
                     <span class="source-label">
                         <span class="badge ${badgeClass}">${source}</span>
-                        ${source}枠として保存
                     </span>
                 `;
                 selector.appendChild(label);
@@ -1664,8 +1663,6 @@ function updateDashboard() {
                 </div>
             `;
 
-
-            // v7.6.6: Use uniform MM/DD HH:mm format
             const regTime = e.timestamp ? new Date(e.timestamp).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--:--';
 
             tr.innerHTML = `
@@ -1677,9 +1674,15 @@ function updateDashboard() {
                 <td><span style="font-size:0.75rem; font-weight:700;">${statusLabel}</span></td>
                 <td><small>${regTime}</small></td>
                 <td>
-                    <div style="display:flex; gap:0.3rem;">
-                        <button class="btn-check-in ${e.status !== 'pending' && e.status !== 'cancelled' ? 'active' : ''}" onclick="jumpToReception('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''}>受付</button>
-                        <button class="btn-text" onclick="requestAdminEdit('${e.id}')" style="font-size:0.7rem">修正</button>
+                    <div style="display:flex; gap:0.25rem; flex-direction: column;">
+                        <div style="display:flex; gap:0.25rem;">
+                            <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')">確認</button>
+                            <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')">修正</button>
+                        </div>
+                        <div style="display:flex; gap:0.25rem;">
+                            <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''}>受付</button>
+                            <button class="btn-outline btn-small btn-delete" onclick="requestDeleteEntry('${e.id}')">削除</button>
+                        </div>
                     </div>
                 </td>
             `;
@@ -1968,33 +1971,39 @@ window.exportMintsuriCSV = function() {
 
 // Global Stats Rendering (v7.3.0 Global Scope)
 function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent) {
-    const container = document.getElementById('global-stats-summary');
-    if (!container) return;
+    const containers = [
+        document.getElementById('global-stats-summary'),
+        document.getElementById('global-stats-summary-top')
+    ].filter(el => el);
 
-    container.innerHTML = `
+    if (containers.length === 0) return;
+
+    const html = `
         <div class="stats-summary-grid">
-            <div class="summary-card">
+            <div class="summary-card" style="border-top: 5px solid var(--primary-color);">
                 <div class="summary-label">釣り参加者合計</div>
-                <div class="summary-value"><span id="current-fishers">${fishers}</span> <small>/ ${state.settings.capacityTotal}</small></div>
+                <div class="summary-value"><span class="current-fishers">${fishers}</span> <small>/ ${state.settings.capacityTotal}</small></div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">総登録グループ</div>
-                <div class="summary-value" id="total-registrations">${groups} <small>組</small></div>
+                <div class="summary-value">${groups} <small>組</small></div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">見学者合計</div>
-                <div class="summary-value" id="current-observers">${observers} <small>名</small></div>
+                <div class="summary-value">${observers} <small>名</small></div>
             </div>
             <div class="summary-card" style="border-top: 5px solid #10b981;">
                 <div class="summary-label">当日受付状況</div>
                 <div class="summary-value" style="font-size: 1.1rem; line-height: 1.4;">
-                    <span style="color: var(--primary-color)">来場: <span id="checked-in-count">${checkedIn}</span></span> / 
-                    <span style="color: var(--error-color)">欠席: <span id="absent-count">${absent}</span></span>
+                    <span style="color: var(--primary-color)">来場: <span class="checked-in-count">${checkedIn}</span></span> / 
+                    <span style="color: var(--error-color)">欠席: <span class="absent-count">${absent}</span></span>
                 </div>
-                <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">全 <span id="total-groups-count">${groups}</span> 組</div>
+                <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">全 <span class="total-groups-count">${groups}</span> 組</div>
             </div>
         </div>
     `;
+
+    containers.forEach(c => { c.innerHTML = html; });
 }
 
 // Admin Debug Methods
@@ -2090,53 +2099,54 @@ function renderReceptionDesk() {
     }
 
     desk.innerHTML = `
-        <div class="desk-header">
-            <div class="desk-title-row">
-                <div class="desk-group-name">${entry.groupName}</div>
-                <div class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}">${entry.source}</div>
+        <div class="desk-header" style="background: #eef2ff; border-bottom: 2px solid var(--primary-color); padding: 1.5rem; border-radius: 8px 8px 0 0;">
+            <div class="desk-title-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div class="desk-group-name" style="font-size: 1.8rem; font-weight: 900; color: var(--primary-color);">${entry.groupName}</div>
+                <div class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}" style="font-size: 1.2rem; padding: 0.5rem 1rem;">${entry.source}</div>
             </div>
-            <div class="desk-meta">
-                ID: ${entry.id} | 代表者: ${entry.representative} | TEL: ${entry.phone}
+            <div class="desk-meta" style="font-size: 1rem; color: #475569; font-weight: 600;">
+                <span style="background: white; padding: 2px 8px; border-radius: 4px; border: 1px solid #cbd5e1;">ID: ${entry.id}</span>
+                <span style="margin-left: 1rem;">代表者: ${entry.representative}</span>
+                <span style="margin-left: 1rem;">TEL: ${entry.phone}</span>
             </div>
         </div>
 
-        <div class="participant-check-list">
-                <!-- Representative is always included first -->
-                <div class="participant-check-row ${entry.status === 'checked-in' ? 'checked-in' : ''} ${entry.status === 'absent' ? 'absent' : ''}" style="border-left: 4px solid var(--primary-color);">
-                    <div class="p-info">
-                        <span class="p-name">代表者: ${entry.representative}</span>
-                        <span class="p-meta">一括受付ステータス</span>
-                    </div>
-                    <div class="p-status-actions">
-                        <button class="btn-status in ${entry.status === 'checked-in' ? 'active' : ''}" onclick="updateGroupStatus('${entry.id}', 'checked-in')">受付</button>
-                        <button class="btn-status out ${entry.status === 'absent' ? 'active' : ''}" onclick="updateGroupStatus('${entry.id}', 'absent')">欠席</button>
-                    </div>
-                </div>
-
+        <div class="participant-check-list" style="padding: 1.5rem; background: white;">
+            <div class="section-title" style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; border-left-width: 4px;">参加メンバー個別の受付状況</div>
+            
             ${entry.participants.map((p, idx) => {
-        const typeClass = p.type === 'fisher' ? 'p-badge-fisher' : 'p-badge-observer';
-        const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
-        return `
-                <div class="participant-check-row ${p.status === 'checked-in' ? 'checked-in' : ''} ${p.status === 'absent' ? 'absent' : ''}">
-                    <div class="p-info">
-                        <span class="p-name">
-                            <span class="p-badge ${typeClass}">${typeLabel}</span>
-                            ${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}
-                        </span>
-                        <span class="p-meta">${p.region} | ${genderLabels[p.gender] || ''} | ${ageLabels[p.age] || p.age} | [${p.tshirtSize || '不明'}]</span>
+                const typeClass = p.type === 'fisher' ? 'p-badge-fisher' : 'p-badge-observer';
+                const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
+                const rowStatusClass = p.status === 'checked-in' ? 'checked-in' : (p.status === 'absent' ? 'absent' : '');
+                
+                return `
+                <div class="participant-check-row ${rowStatusClass}" style="margin-bottom: 12px; padding: 1rem; border-radius: 12px; border: 2px solid ${p.status === 'checked-in' ? '#10b981' : (p.status === 'absent' ? '#ef4444' : '#e2e8f0')}; display: flex; align-items: center; justify-content: space-between; background: ${p.status === 'checked-in' ? '#f0fdf4' : (p.status === 'absent' ? '#fef2f2' : 'white')}; transition: all 0.2s;">
+                    <div class="p-info" style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+                        <div style="font-size: 1.5rem; width: 40px; text-align: center;">${p.status === 'checked-in' ? '✅' : (p.status === 'absent' ? '❌' : '⬜')}</div>
+                        <div>
+                            <div class="p-name" style="font-size: 1.25rem; font-weight: 800; color: #1e293b;">
+                                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}" style="margin-right: 8px;">${typeLabel}</span>
+                                ${p.name} <small style="font-weight: normal; color: #64748b;">(${p.nickname || 'ニックネーム無'})</small>
+                            </div>
+                            <div class="p-meta" style="font-size: 0.9rem; color: #64748b; margin-top: 4px;">
+                                ${p.region || '地域不明'} | ${genderLabels[p.gender] || '-'} | ${ageLabels[p.age] || '-'} | Tシャツ: [<strong>${p.tshirtSize || '不明'}</strong>]
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-status-actions">
-                        <button class="btn-status in ${p.status === 'checked-in' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'checked-in')">受付</button>
-                        <button class="btn-status out ${p.status === 'absent' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'absent')">欠席</button>
-                        <button class="btn-status" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'pending')">ー</button>
+                    <div class="p-status-actions" style="display: flex; gap: 8px;">
+                        <button class="btn-status in ${p.status === 'checked-in' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'checked-in')" style="padding: 1rem 1.5rem; font-size: 1rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #10b981; background: ${p.status === 'checked-in' ? '#10b981' : 'white'}; color: ${p.status === 'checked-in' ? 'white' : '#10b981'}; min-width: 100px;">来場</button>
+                        <button class="btn-status out ${p.status === 'absent' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'absent')" style="padding: 1rem 1.5rem; font-size: 1rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #ef4444; background: ${p.status === 'absent' ? '#ef4444' : 'white'}; color: ${p.status === 'absent' ? 'white' : '#ef4444'}; min-width: 100px;">欠席</button>
                     </div>
                 </div>
                 `;
-    }).join('')}
+            }).join('')}
         </div>
 
-        <div class="desk-footer">
-            <button class="btn-primary btn-large" onclick="updateGroupStatus('${entry.id}', 'checked-in')">全員チェックイン</button>
+        <div class="desk-footer" style="padding: 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; border-radius: 0 0 8px 8px;">
+            <div>
+                <p style="font-size: 0.9rem; color: #64748b;">※個別に来場/欠席を選択してください。<br>「全員受付」ボタンは未選択の人をすべて来場にします。</p>
+            </div>
+            <button class="btn-primary btn-large" onclick="updateGroupStatus('${entry.id}', 'checked-in')" style="padding: 1.2rem 2.5rem; font-size: 1.4rem; box-shadow: 0 4px 12px rgba(0, 91, 181, 0.3);">全員まとめて受付</button>
         </div>
     `;
 }
@@ -2297,19 +2307,95 @@ window.resendEmail = async function (id) {
     }
 };
 
+window.quickCheckIn = function(id) {
+    const entry = state.entries.find(e => e.id === id);
+    if (!entry) return;
+    
+    if (entry.status === 'checked-in') {
+        if (confirm('既に受付済みです。未受付に戻しますか？')) {
+            updateGroupStatus(id, 'pending');
+        }
+    } else {
+        updateGroupStatus(id, 'checked-in');
+        showToast(`${entry.groupName} 様の受付を完了しました`, 'success');
+    }
+};
+
+window.showEntryDetails = function(id) {
+    const entry = state.entries.find(e => e.id === id);
+    if (!entry) return;
+
+    const modal = document.getElementById('detail-modal');
+    const body = document.getElementById('detail-modal-body');
+    
+    body.innerHTML = `
+        <div class="confirm-box" style="margin-bottom: 1.5rem; background: #f8fafc;">
+            <p><strong>受付区分:</strong> <span class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}">${entry.source}</span></p>
+            <p><strong>グループ名:</strong> ${entry.groupName}</p>
+            <p><strong>代表者氏名:</strong> ${entry.representative}</p>
+            <p><strong>電話番号:</strong> ${entry.phone}</p>
+            <p><strong>メールアドレス:</strong> ${entry.email}</p>
+            <p><strong>登録日時:</strong> ${formatDate(entry.timestamp)}</p>
+            <p><strong>最終更新:</strong> ${entry.lastModified || '-'}</p>
+        </div>
+        
+        <h3 style="font-size: 1rem; margin-bottom: 0.8rem; border-bottom: 1px solid #eee; padding-bottom: 0.4rem;">参加者一覧 (${entry.participants.length}名)</h3>
+        <div class="participant-check-list">
+            ${entry.participants.map((p, idx) => `
+                <div class="participant-check-row" style="padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 700;">
+                            <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}">${p.type === 'fisher' ? '釣り' : '見学'}</span>
+                            ${p.name} <small>(${p.nickname || 'ニックネーム無'})</small>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">
+                            ${p.region || '地域不明'} | ${genderLabels[p.gender] || '-'} | ${ageLabels[p.age] || '-'} | Tシャツ: [${p.tshirtSize || '不明'}]
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+
+    modal.classList.remove('hidden');
+};
+
+window.closeDetailModal = function() {
+    document.getElementById('detail-modal').classList.add('hidden');
+};
+
+window.requestDeleteEntry = function(id) {
+    const entry = state.entries.find(e => e.id === id);
+    if (!entry) return;
+
+    if (confirm(`【警告】\n「${entry.groupName}」様のデータを完全に削除しますか？\nこの操作は取り消せません。\n(テストデータの削除などに使用してください)`)) {
+        state.entries = state.entries.filter(e => e.id !== id);
+        state.lastUpdated = Date.now();
+        saveData();
+        showToast('データを完全に削除しました', 'success');
+        updateDashboard();
+        updateReceptionList();
+    }
+};
+
 window.jumpToReception = function (id) {
-    const btn = document.querySelector('.nav-btn[data-target="reception-view"]');
-    if (btn) btn.click();
+    const toolbar = document.getElementById('admin-toolbar');
+    if (toolbar) {
+        const btn = toolbar.querySelector('.btn-toolbar[data-target="reception-view"]');
+        if (btn) btn.click();
+    } else {
+        switchView(null, 'reception-view');
+    }
     selectReceptionEntry(id);
 };
 
 window.openReceptionModal = function (id) {
-    // This is now handled by jumpToReception for a full-view experience
     window.jumpToReception(id);
 };
 
 function closeReceptionModal() {
-    document.getElementById('reception-modal').classList.add('hidden');
+    const modal = document.getElementById('reception-modal');
+    if (modal) modal.classList.add('hidden');
     currentReceptionId = null;
 }
 
