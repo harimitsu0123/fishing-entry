@@ -653,16 +653,13 @@ function initApp() {
         dashboardFilter = 'all';
     }
 
-    // v8.1.4: URL-based Category Selection
+    // v8.1.44: Consolidated URL-based Category Selection via injectSpecialSource
     if (srcParam) {
         const srcMap = { 'ippan': '一般', 'mintsuri': 'みん釣り', 'harimitsu': 'ハリミツ', 'suiho': '水宝' };
         const mappedVal = srcMap[srcParam];
         if (mappedVal) {
-            const radio = document.querySelector(`input[name="reg-source"][value="${mappedVal}"]`);
-            if (radio) {
-                radio.checked = true;
-                console.log("URL Source Auto-Selection:", mappedVal);
-            }
+            injectSpecialSource(mappedVal);
+            console.log("URL Source Auto-Selection (via inject):", mappedVal);
         }
     }
 
@@ -3639,3 +3636,27 @@ function injectSpecialSource(sourceName) {
     console.log(`Special view applied for: ${sourceName}`);
 }
 
+/**
+ * v8.1.44: Helper to open URLs in a new tab
+ */
+window.openShareUrl = function(inputId) {
+    const el = document.getElementById(inputId);
+    if (el && el.value) {
+        window.open(el.value, '_blank');
+    }
+};
+
+/**
+ * v8.1.44: Helper to copy URL to clipboard
+ */
+window.copyShareUrl = function(inputId) {
+    const el = document.getElementById(inputId);
+    if (el && el.value) {
+        navigator.clipboard.writeText(el.value).then(() => {
+            showToast('コピーしました', 'success');
+        }).catch(err => {
+            console.error('Copy failed:', err);
+            showToast('コピーに失敗しました', 'error');
+        });
+    }
+};
