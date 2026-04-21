@@ -36,6 +36,7 @@ let dashboardFilter = 'all';
 let currentReceptionId = null;
 let isAdminAuthAction = false; // Flag for admin-led edits
 let activeReceptionEntryId = null; // Currently selected in reception desk
+let pendingView = null; // v8.1.10: Global scoped to avoid ReferenceError
 
 // Age labels map - v4.8 Updated
 const ageLabels = {
@@ -79,7 +80,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.8: STABILIZED");
+        console.log("BORIJIN APP v8.1.10: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1050,6 +1051,11 @@ function syncSettingsUI() {
     updateIfInactive('registration-start', state.settings.startTime);
     updateIfInactive('registration-deadline', state.settings.deadline);
     updateIfInactive('admin-password-set', state.settings.adminPassword);
+    
+    // v8.1.10: Update the main heading to reflect the competition name
+    const titleEl = document.getElementById('app-title');
+    if (titleEl) titleEl.textContent = state.settings.competitionName || "釣り大会 受付";
+
     if (document.getElementById('cap-total')) {
         document.getElementById('cap-total').value = state.settings.capacityTotal || 250;
     }
@@ -2972,9 +2978,10 @@ window.confirmReset = async function () {
     }
 };
 
-window.exportGroupsCSV = function() {
+/* --- MANAGEMENT FUNCTIONS (RESTORED v8.1.9) --- */
+
 /**
- * v8.1.7: Restored QR generation (fixing container ID mismatch)
+ * v8.1.9: Restored QR generation (fixing container ID mismatch)
  */
 function generateAdminQRCode() {
     const container = document.getElementById('admin-qr-code-container');
@@ -3048,6 +3055,56 @@ async function exportParticipantsCSV() {
                 e.source,
                 `"${e.groupName}"`,
                 `"${p.name}"`,
+                `"${p.nickname || ''}"`,
+                p.gender,
+                p.age,
+                `"${p.region || ''}"`,
+                p.type === 'fisher' ? '釣り' : '見学',
+                p.tshirtSize,
+                e.status
+            ]);
+        });
+    });
+    downloadCSV("participants_export.csv", headers, rows);
+}
+
+function downloadCSV(filename, headers, rows) {
+    const csvContent = "\uFEFF" + [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function renderRankings() {
+    const list = document.getElementById('ranking-list');
+    if (!list) return;
+    list.innerHTML = '';
+    const sorted = [...state.entries]
+        .filter(e => e.status !== 'cancelled')
+        .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
+    if (sorted.length === 0) {
+        list.innerHTML = '<li class="p-4 text-center text-muted">データがありません</li>';
+        return;
+    }
+    sorted.forEach((e, i) => {
+        const li = document.createElement('li');
+        li.className = 'list-item-modern';
+        li.innerHTML = `
+            <div class="rank-badge">${i + 1}</div>
+            <div style="flex:1">
+                <div style="font-weight:bold">${e.groupName}</div>
+                <div style="font-size:0.8rem; color:#666">${e.representative}</div>
+            </div>
+            <div style="font-size:1.2rem; font-weight:900; color:var(--primary-color)">
+                ${e.totalScore || 0} <small style="font-size:0.8rem">pt</small>
+            </div>`;
+        list.appendChild(li);
+    });
+}
                 `"${p.nickname || ''}"`,
                 p.gender,
                 p.age,
@@ -3198,144 +3255,7 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-/**
- * v8.1.7: Restored QR generation (fixing container ID mismatch)
- */
-function generateAdminQRCode() {
-    const container = document.getElementById('admin-qr-code-container');
-    if (!container) return;
-    container.innerHTML = "";
-    if (typeof QRCode === 'undefined') {
-        container.innerHTML = "<p style='font-size:0.8rem; color:var(--text-muted);'>QRコードライブラリ読み込み中...</p>";
-        return;
-    }
-    const baseUrl = window.location.href.split('?')[0].split('#')[0];
-    const url = baseUrl; // Standard public URL
-    new QRCode(container, {
-        text: url,
-        width: 128,
-        height: 128,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-    });
-}
-
-function openShareUrl(id) {
-    const el = document.getElementById(id);
-    if (el && el.value) {
-        window.open(el.value, '_blank');
-    }
-}
-
-function setVal(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.value = val;
-}
-
-function handleCheckStatus() {
-    const searchVal = prompt("お名前（代表者）を入力してください。");
-    if (!searchVal) return;
-    
-    dashboardFilter = 'all';
-    const matches = state.entries.filter(e => e.representative.includes(searchVal));
-    if (matches.length > 0) {
-        alert(`${matches.length} 件見つかりました。最新の番号は ${matches[0].id} です。`);
-        location.reload();
-    } else {
-        alert("見つかりませんでした。もう一度試すか、事務局へお問い合わせください。");
-    }
-}
-
-function renderRankings() {
-    const list = document.getElementById('ranking-list');
-    if (!list) return;
-    list.innerHTML = '';
-    const sorted = [...state.entries]
-        .filter(e => e.status !== 'cancelled')
-        .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
-    if (sorted.length === 0) {
-        list.innerHTML = '<li class="p-4 text-center text-muted">データがありません</li>';
-        return;
-    }
-    sorted.forEach((e, i) => {
-        const li = document.createElement('li');
-        li.className = 'list-item-modern';
-        li.innerHTML = `
-            <div class="rank-badge">${i + 1}</div>
-            <div style="flex:1">
-                <div style="font-weight:bold">${e.groupName}</div>
-                <div style="font-size:0.8rem; color:#666">${e.representative}</div>
-            </div>
-            <div style="font-size:1.2rem; font-weight:900; color:var(--primary-color)">
-                ${e.totalScore || 0} <small style="font-size:0.8rem">pt</small>
-            </div>`;
-        list.appendChild(li);
-    });
-}
-
-function renderLeaderEntryForm() {
-    const container = document.getElementById('leader-entry-form-container');
-    if (!container) return;
-    container.innerHTML = '<p class="text-center p-4">読み込み中...</p>';
-    const searchHtml = `
-        <div class="form-group">
-            <label>入力するチームを選択</label>
-            <select id="leader-group-select" class="form-control" style="font-size:1.1rem; padding:0.8rem;">
-                <option value="">-- チームを選択してください --</option>
-                ${state.entries
-                    .filter(e => e.status !== 'cancelled')
-                    .sort((a,b) => a.groupName.localeCompare(b.groupName, 'ja'))
-                    .map(e => `<option value="${e.id}">${e.groupName} (${e.representative})</option>`).join('')}
-            </select>
-        </div>
-        <div id="leader-score-input-area" class="hidden mt-4"></div>`;
-    container.innerHTML = searchHtml;
-    document.getElementById('leader-group-select').addEventListener('change', (e) => {
-        const id = e.target.value;
-        const area = document.getElementById('leader-score-input-area');
-        if (!id) { area.classList.add('hidden'); return; }
-        const entry = state.entries.find(en => en.id === id);
-        area.innerHTML = `
-            <div class="card p-3 mb-3" style="background:#f8f9ff">
-                <h4>${entry.groupName}</h4>
-                <p class="small text-muted">ID: ${entry.id} / 代表者: ${entry.representative}</p>
-                <div class="form-group mt-3">
-                    <label style="font-weight:bold">釣果ポイント (合計)</label>
-                    <input type="number" id="leader-point-input" class="form-control" 
-                           style="font-size:2rem; font-weight:900; text-align:center;" 
-                           value="${entry.totalScore || 0}" min="0">
-                </div>
-            </div>
-            <button class="btn-primary w-100 p-3" style="font-size:1.2rem" onclick="window.commitLeaderResultsSave()">
-                確定して保存
-            </button>`;
-        area.classList.remove('hidden');
-    });
-}
-
-window.backToLeaderEdit = function() { switchView(null, 'leader-entry-view'); };
-
-window.commitLeaderResultsSave = async function() {
-    const id = document.getElementById('leader-group-select')?.value;
-    const score = parseInt(document.getElementById('leader-point-input')?.value || 0);
-    if (!id) { alert("チームを選択してください。"); return; }
-    const entry = state.entries.find(e => e.id === id);
-    if (!entry) return;
-    if (!confirm(`${entry.groupName} の得点を ${score} pt で登録しますか？`)) return;
-    entry.totalScore = score;
-    entry.lastModified = new Date().toLocaleString('ja-JP');
-    showToast("保存中...", "info");
-    const success = await syncToCloud();
-    if (success) {
-        showToast("✅ 保存完了しました", "success");
-        renderLeaderEntryForm();
-    } else {
-        showToast("❌ 同期に失敗しました", "error");
-    }
-};
-
-/* --- SECURE ADMIN ACCESS v8.1.8 --- */
+/* --- SECURE ADMIN ACCESS v8.1.10 --- */
 let clickCount = 0;
 let lastClickTime = 0;
 window.handleSecureClick = function(e) {
