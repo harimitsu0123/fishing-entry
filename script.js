@@ -80,7 +80,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.10: STABILIZED");
+        console.log("BORIJIN APP v8.1.12: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -728,6 +728,9 @@ function initApp() {
 
     // Admin Auth Logic
     safeAddListener('verify-admin', 'click', handleAdminLogin);
+    safeAddListener('global-admin-password', 'keydown', (e) => {
+        if (e.key === 'Enter') handleAdminLogin();
+    });
     safeAddListener('cancel-admin', 'click', () => {
         const modal = document.getElementById('admin-auth-modal');
         if (modal) modal.classList.add('hidden');
@@ -1004,7 +1007,16 @@ function showAdminLogin(targetView) {
 }
 
 function handleAdminLogin() {
-    const pw = document.getElementById('global-admin-password').value.trim();
+    const pwInput = document.getElementById('global-admin-password');
+    if (!pwInput) return;
+    const pw = pwInput.value.trim();
+    
+    console.log("Admin Login Attempt:", { 
+        inputLength: pw.length, 
+        isDefaultMatched: pw === 'admin',
+        isStateMatched: pw === state.settings.adminPassword 
+    });
+
     if (pw === state.settings.adminPassword || pw === 'admin') {
         isAdminAuth = true;
         localStorage.setItem('isAdminAuth', 'true'); // Persist
@@ -1027,8 +1039,12 @@ function handleAdminLogin() {
 
         // ★ admin-only要素の表示後にDOMが更新されてからスクロール
         setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+        showToast("管理者としてログインしました", "success");
     } else {
+        console.warn("Admin Auth Failed: Password mismatch.");
         document.getElementById('admin-auth-error').classList.remove('hidden');
+        pwInput.value = '';
+        pwInput.focus();
     }
 }
 
@@ -3267,7 +3283,7 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-/* --- SECURE ADMIN ACCESS v8.1.11 --- */
+/* --- SECURE ADMIN ACCESS --- */
 let clickCount = 0;
 let lastClickTime = 0;
 window.handleSecureClick = function(e) {
