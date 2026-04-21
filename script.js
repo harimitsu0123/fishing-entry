@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.9.10: FONT SIZE OPTIMIZATION");
+        console.log("BORIJIN APP v8.0.0: TOURNAMENT EXPANSION");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -114,9 +114,17 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function restoreUIState() {
-    // v7.6.1: If URL has a 'view' parameter, DON'T restore previous view
     const params = new URLSearchParams(window.location.search);
-    if (params.get('view')) return;
+    const viewParam = params.get('view');
+
+    // v8.0.0: Support ?view=leader-entry for shared LINE link
+    if (viewParam === 'leader-entry') {
+        switchView(null, 'leader-entry-view');
+        renderLeaderEntryForm();
+        return;
+    }
+
+    if (viewParam) return;
 
     if (currentViewId && currentViewId !== 'registration-view') {
         const lastBtn = document.querySelector(`.nav-btn[data-target="${currentViewId}"]`);
@@ -1741,13 +1749,322 @@ function updateDashboard() {
         });
 
         // v7.9.8: Restore scroll position
-        window.scrollTo(0, scrollPos);
-
         renderIkesuWorkspace();
     } catch (e) {
         console.error("Dashboard update failed:", e);
     }
 }
+
+// --- v8.0.0: Expansion Feature Logic ---
+
+// 1. Leader Management
+window.toggleLeader = function(entryId, partIdx) {
+    const entry = state.entries.find(e => e.id === entryId);
+    if (!entry || !entry.participants[partIdx]) return;
+    
+    // Toggle
+    const current = !!entry.participants[partIdx].isLeader;
+    
+    // Optional: Only one leader per ikesu? (User didn't specify, so keeping it simple: can have multiple or one)
+    // For now, let's allow multiple or user manually manages.
+    entry.participants[partIdx].isLeader = !current;
+    
+    saveData();
+    renderIkesuWorkspace();
+    showToast(`${entry.participants[partIdx].name} 様をリーダーに設定しました`, 'info');
+};
+
+// 2. Tournament Rankings
+window.renderRankings = function() {
+    const indList = document.getElementById('ranking-individual-list');
+    const ikList = document.getElementById('ranking-ikesu-list');
+    if (!indList || !ikList) return;
+
+    // A. Individual Ranking Data
+    let individuals = [];
+    state.entries.forEach(e => {
+        if (e.status === 'cancelled') return;
+        e.participants.forEach(p => {
+            if (p.type === 'observer') return;
+            const cA = parseInt(p.catchA || 0);
+            const cB = parseInt(p.catchB || 0);
+            const points = (cA * 2) + (cB * 1);
+            individuals.push({ 
+                name: p.name, 
+                group: e.groupName, 
+                points, 
+                cA, 
+                cB 
+            });
+        });
+    });
+
+    // Sort Individual: Points DESC -> CatchA DESC -> CatchB DESC
+    individuals.sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        if (b.cA !== a.cA) return b.cA - a.cA;
+        return b.cB - a.cB;
+    });
+
+    indList.innerHTML = individuals.slice(0, 50).map((p, i) => `
+        <div class="ranking-card">
+            <div class="ranking-rank ${i < 3 ? 'top-' + (i+1) : ''}">${i + 1}</div>
+            <div class="ranking-info">
+                <div class="ranking-name">${p.name} <small style="color:#94a3b8; font-weight:400;">(${p.group})</small></div>
+                <div style="font-size:0.7rem; color:#64748b;">青物等: ${p.cA} / マダイ等: ${p.cB}</div>
+            </div>
+            <div class="ranking-points">${p.points} <small>pt</small></div>
+        </div>
+    `).join('') || '<p class="text-muted p-4">データがありません</p>';
+
+    // B. Ikesu Team Ranking
+    if (!state.settings.ikesuList) return;
+    
+    // Map assignments
+    const ikResults = {};
+    state.settings.ikesuList.forEach(ik => ikResults[ik.id] = { name: ik.name, totalPoints: 0, count: 0 });
+    
+    state.entries.forEach(e => {
+        if (e.status === 'cancelled') return;
+        e.participants.forEach(p => {
+            if (p.type === 'observer' || !p.ikesuId || !ikResults[p.ikesuId]) return;
+            const cA = parseInt(p.catchA || 0);
+            const cB = parseInt(p.catchB || 0);
+            ikResults[p.ikesuId].totalPoints += (cA * 2) + (cB * 1);
+            ikResults[p.ikesuId].count++;
+        });
+    });
+
+    let teamList = Object.values(ikResults).filter(r => r.count > 0).map(r => ({
+        name: r.name,
+        avg: (r.totalPoints / r.count).toFixed(2),
+        total: r.totalPoints,
+        count: r.count
+    }));
+
+    teamList.sort((a, b) => b.avg - a.avg);
+
+    ikList.innerHTML = teamList.map((r, i) => `
+        <div class="ranking-card">
+            <div class="ranking-rank ${i < 3 ? 'top-' + (i+1) : ''}">${i + 1}</div>
+            <div class="ranking-info">
+                <div class="ranking-name">${r.name}</div>
+                <div style="font-size:0.7rem; color:#64748b;">合計: ${r.total}pt / 人数: ${r.count}名</div>
+            </div>
+            <div class="ranking-points">${r.avg} <small>avg</small></div>
+        </div>
+    `).join('') || '<p class="text-muted p-4">データがありません</p>';
+};
+
+// 3. Print View
+window.renderIkesuPrintView = function() {
+    const container = document.getElementById('print-view-container');
+    if (!container || !state.settings.ikesuList) return;
+
+    let html = "";
+    state.settings.ikesuList.forEach(ikesu => {
+        // Find assigned
+        const members = [];
+        state.entries.forEach(e => {
+            if (e.status === 'cancelled') return;
+            e.participants.forEach((p, idx) => {
+                if (p.ikesuId === ikesu.id) {
+                    members.push({ p, entry: e, idx });
+                }
+            });
+        });
+
+        if (members.length === 0) return;
+
+        html += `
+            <div class="print-ikesu-sheet">
+                <div class="print-header">
+                    <h2 style="margin:0;">${ikesu.name} メンバー表</h2>
+                    <span style="font-size:0.9rem;">大会名称: ${state.settings.competitionName}</span>
+                </div>
+                <table class="print-table">
+                    <thead>
+                        <tr>
+                            <th style="width:15%">区分</th>
+                            <th style="width:25%">グループ名</th>
+                            <th style="width:30%">氏名</th>
+                            <th style="width:15%">釣り/見学</th>
+                            <th style="width:15%">役割</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${members.map(m => `
+                            <tr>
+                                <td>${m.entry.source}</td>
+                                <td>${m.entry.groupName}</td>
+                                <td style="font-weight:bold; font-size:1.1rem;">${m.p.name} 様</td>
+                                <td>${m.p.type === 'fisher' ? '釣り' : '見学'}</td>
+                                <td>${m.p.isLeader ? '<strong style="color:var(--primary-color)">★リーダー</strong>' : '--'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div style="margin-top:1rem; font-size:0.8rem; text-align:right;">印刷日時: ${new Date().toLocaleString()}</div>
+            </div>
+        `;
+    });
+    container.innerHTML = html || '<p>割り当て済みのメンバーがいません</p>';
+};
+
+// 4. Leader Result Entry
+window.renderLeaderEntryForm = function() {
+    const select = document.getElementById('leader-ikesu-select');
+    if (!select || !state.settings.ikesuList) return;
+
+    // Populate select
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">-- 選択してください --</option>' + 
+        state.settings.ikesuList.map(ik => `<option value="${ik.id}">${ik.name}</option>`).join('');
+    select.value = currentVal;
+    
+    if (currentVal) renderLeaderEntryTable();
+};
+
+window.renderLeaderEntryTable = function() {
+    const ikId = document.getElementById('leader-ikesu-select').value;
+    const container = document.getElementById('leader-entry-table-container');
+    const actions = document.getElementById('leader-save-actions');
+    if (!ikId) {
+        container.innerHTML = "";
+        actions.classList.add('hidden');
+        return;
+    }
+
+    const members = [];
+    state.entries.forEach(e => {
+        if (e.status === 'cancelled') return;
+        e.participants.forEach((p, idx) => {
+            if (p.ikesuId === ikId && p.type === 'fisher') {
+                members.push({ p, entryId: e.id, idx });
+            }
+        });
+    });
+
+    if (members.length === 0) {
+        container.innerHTML = '<p class="alert alert-warning">このイケスに釣り参加者が割り当てられていません</p>';
+        actions.classList.add('hidden');
+        return;
+    }
+
+    let html = `
+        <table class="leader-table">
+            <thead>
+                <tr>
+                    <th>氏名 / グループ</th>
+                    <th style="text-align:center;">青物・クエ等<br><small>(2pt)</small></th>
+                    <th style="text-align:center;">マダイ・他<br><small>(1pt)</small></th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    members.forEach(m => {
+        html += `
+            <tr data-entry="${m.entryId}" data-idx="${m.idx}">
+                <td>
+                    <div style="font-weight:800;">${m.p.name} 様</div>
+                    <div style="font-size:0.75rem; color:#64748b;">${m.p.isLeader ? '⭐リーダー' : ''} [${m.entryId}]</div>
+                </td>
+                <td style="text-align:center;">
+                    <input type="number" class="input-catch catch-a" value="${m.p.catchA || 0}" min="0">
+                </td>
+                <td style="text-align:center;">
+                    <input type="number" class="input-catch catch-b" value="${m.p.catchB || 0}" min="0">
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+    actions.classList.remove('hidden');
+};
+
+window.saveLeaderResults = function() {
+    const rows = document.querySelectorAll('.leader-table tbody tr');
+    rows.forEach(row => {
+        const eid = row.dataset.entry;
+        const idx = parseInt(row.dataset.idx);
+        const cA = parseInt(row.querySelector('.catch-a').value) || 0;
+        const cB = parseInt(row.querySelector('.catch-b').value) || 0;
+
+        const entry = state.entries.find(e => e.id === eid);
+        if (entry && entry.participants[idx]) {
+            entry.participants[idx].catchA = cA;
+            entry.participants[idx].catchB = cB;
+        }
+    });
+
+    saveData();
+    showToast("釣果を保存し、クラウドへ同期しました", "success");
+    // Switch back or stay? Stay for convenience if there are many to input.
+};
+
+// Update existing Export Participants CSV (Overwrite with enhanced logic)
+window.exportParticipantsCSV = function() {
+    if (state.entries.length === 0) return alert('データがありません');
+    const headers = ['受付番号', '区分', 'グループ名', '代表者名', '電話番号', 'メール', 'イケス', '役割', '参加区分', '参加者名', '性別', '青物等(2pt)', 'マダイ等(1pt)', '合計点', 'Tシャツ', '地域', '年代', '登録時間'];
+    const rows = [];
+    state.entries.forEach(e => {
+        if (e.status === 'cancelled') return;
+        e.participants.forEach(p => {
+            const partType = p.type === 'observer' ? '見学' : '釣り';
+            const ikesu = state.settings.ikesuList.find(ik => ik.id === p.ikesuId);
+            const ikName = ikesu ? ikesu.name : "";
+            const leaderTag = p.isLeader ? "リーダー" : "";
+            const pA = parseInt(p.catchA || 0);
+            const pB = parseInt(p.catchB || 0);
+            const total = (pA * 2) + pB;
+
+            rows.push([
+                e.id,
+                e.source,
+                e.groupName,
+                e.representative,
+                e.phone || "",
+                e.email || "",
+                ikName,
+                leaderTag,
+                partType,
+                p.name,
+                genderLabels[p.gender] || p.gender || "",
+                pA,
+                pB,
+                total,
+                p.tshirtSize || "",
+                p.region,
+                ageLabels[p.age] || p.age,
+                formatDateForCSV(e.timestamp)
+            ]);
+        });
+    });
+    downloadCSV("participants_full", headers, rows);
+};
+
+// Hook up automated ranking trigger when switching to the tab
+const originalSwitchAdminTab = window.switchAdminTab;
+window.switchAdminTab = function(tabId) {
+    if (originalSwitchAdminTab) originalSwitchAdminTab(tabId);
+    if (tabId === 'tab-rankings') renderRankings();
+    if (tabId === 'tab-print') renderIkesuPrintView();
+};
+
+// Hook up leader entry form trigger
+const originalSwitchView = window.switchView;
+window.switchView = function(btnEl, viewId) {
+    if (originalSwitchView) originalSwitchView(btnEl, viewId);
+    if (viewId === 'leader-entry-view' || (currentViewId === 'dashboard-view' && currentAdminTab === 'tab-rankings')) {
+        // No specific trigger yet, but keeping structure
+    }
+};
+
+// Add nav listener for leader shortcut (Optional, but user said shared URL)
+// For now, let's add a button in the rankings tab to open this form or just use switchView.
 
 // v7.6.3: Restored missing helper functions
 function sumCategoryFishers(category) {
@@ -3361,9 +3678,13 @@ window.renderIkesuWorkspace = function () {
 
             group.parts.forEach(item => {
                 const isFisher = item.p.type === 'fisher';
+                const isLeader = item.p.isLeader || false;
                 html += `
                     <div class="drag-item-person draggable" draggable="true" ondragstart="dragPerson(event, '${entry.id}', ${item.idx})">
-                        <span>${item.p.name}</span>
+                        <div style="display:flex; align-items:center; gap:4px; flex:1; overflow:hidden;">
+                            <button class="btn-leader-toggle ${isLeader ? 'active' : ''}" onclick="window.toggleLeader('${entry.id}', ${item.idx})" title="リーダーに指定">⭐</button>
+                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.p.name}</span>
+                        </div>
                         <span style="font-size: 0.7rem; color: var(--text-muted);">${isFisher ? '釣り' : '見学'}</span>
                     </div>
                 `;
