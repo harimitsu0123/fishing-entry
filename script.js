@@ -76,11 +76,15 @@ window.startAdminRegistration = function (source) {
 
     // Smooth scroll to form start
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Ensure selector is visible for admin
+    const selectorGroup = document.getElementById('source-selector-group');
+    if (selectorGroup) selectorGroup.classList.remove('hidden');
 };
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.22: HIDE OTHERS IN SPECIAL SRC");
+        console.log("BORIJIN APP v8.1.23: HIDE GENERAL LABEL");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -3420,7 +3424,16 @@ function checkUrlParams() {
  */
 function injectSpecialSource(sourceName) {
     const selector = document.getElementById('main-source-selector');
+    const selectorGroup = document.getElementById('source-selector-group');
     if (!selector) return;
+
+    // v8.1.23: Hide selector entirely if it's 'General' (unless admin)
+    if (sourceName === '一般' && !isAdminAuth) {
+        if (selectorGroup) selectorGroup.classList.add('hidden');
+        console.log("General window: hiding selector");
+    } else {
+        if (selectorGroup) selectorGroup.classList.remove('hidden');
+    }
 
     // v8.1.22: Hide other categories in specialized view
     selector.querySelectorAll('.source-option').forEach(opt => {
