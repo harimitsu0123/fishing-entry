@@ -80,7 +80,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.21: LOCKED CATEGORY UI");
+        console.log("BORIJIN APP v8.1.22: HIDE OTHERS IN SPECIAL SRC");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -3422,12 +3422,12 @@ function injectSpecialSource(sourceName) {
     const selector = document.getElementById('main-source-selector');
     if (!selector) return;
 
-    // v8.1.21: Make them visible but unselectable (locked)
+    // v8.1.22: Hide other categories in specialized view
     selector.querySelectorAll('.source-option').forEach(opt => {
         const input = opt.querySelector('input');
-        opt.classList.remove('hidden'); // Ensure visible
+        opt.classList.add('hidden'); // Hide others
         opt.classList.remove('forced-source');
-        input.disabled = true; // Block selection
+        input.disabled = true;
     });
 
     // Find our specific target radio
@@ -3438,7 +3438,7 @@ function injectSpecialSource(sourceName) {
         const badgeClassMap = { '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu', 'みん釣り': 'badge-mintsuri' };
         const badgeClass = badgeClassMap[sourceName] || 'badge-ippan';
         const label = document.createElement('label');
-        label.className = 'source-option forced-source';
+        label.className = 'source-option forced-source'; // No hidden class here
         label.innerHTML = `
             <input type="radio" name="reg-source" value="${sourceName}" checked required>
             <span class="source-label">
@@ -3450,18 +3450,18 @@ function injectSpecialSource(sourceName) {
         target = label.querySelector('input');
     } else {
         target.checked = true;
-        target.disabled = false; // Enabled so it can be submitted
+        target.disabled = false;
         const label = target.closest('.source-option');
+        label.classList.remove('hidden'); // Show target
         label.classList.add('forced-source');
         
         // Re-styling for 'locked' look
         const labelText = label.querySelector('.source-label');
-        if (labelText && !labelText.innerHTML.includes('専用窓口')) {
+        if (labelText && !labelText.innerHTML.includes('専用')) {
              labelText.innerHTML += ' (専用)';
         }
     }
     
-    // Smooth scroll check
-    console.log(`Locked UI for: ${sourceName}`);
+    console.log(`Special view applied for: ${sourceName}`);
 }
 
