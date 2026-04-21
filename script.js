@@ -996,7 +996,6 @@ function checkTimeframe() {
 }
 
 // Admin Auth
-let pendingView = null;
 function showAdminLogin(targetView) {
     pendingView = targetView;
     document.getElementById('global-admin-password').value = '';
@@ -3105,29 +3104,77 @@ function renderRankings() {
         list.appendChild(li);
     });
 }
-                `"${p.nickname || ''}"`,
-                p.gender,
-                p.age,
-                `"${p.region || ''}"`,
-                p.type === 'fisher' ? '釣り' : '見学',
-                p.tshirtSize,
-                e.status
-            ]);
+
+/* --- LEADER ENTRY LOGIC --- */
+function renderLeaderEntryForm() {
+    const container = document.getElementById('leader-entry-form-container');
+    if (!container) return;
+    container.innerHTML = '<p class="text-center p-4">読み込み中...</p>';
+    const searchHtml = `
+        <div class="form-group">
+            <label>入力するチームを選択</label>
+            <select id="leader-group-select" class="form-control" style="font-size:1.1rem; padding:0.8rem;">
+                <option value="">-- チームを選択してください --</option>
+                ${state.entries
+                    .filter(e => e.status !== 'cancelled')
+                    .sort((a,b) => a.groupName.localeCompare(b.groupName, 'ja'))
+                    .map(e => `<option value="${e.id}">${e.groupName} (${e.representative})</option>`).join('')}
+            </select>
+        </div>
+        <div id="leader-score-input-area" class="hidden mt-4"></div>`;
+    container.innerHTML = searchHtml;
+
+    const selectEl = document.getElementById('leader-group-select');
+    if (selectEl) {
+        selectEl.addEventListener('change', (e) => {
+            const id = e.target.value;
+            const area = document.getElementById('leader-score-input-area');
+            if (!id) { area.classList.add('hidden'); return; }
+            const entry = state.entries.find(en => en.id === id);
+            area.innerHTML = `
+                <div class="card p-3 mb-3" style="background:#f8f9ff">
+                    <h4>${entry.groupName}</h4>
+                    <p class="small text-muted">ID: ${entry.id} / 代表者: ${entry.representative}</p>
+                    <div class="form-group mt-3">
+                        <label style="font-weight:bold">釣果ポイント (合計)</label>
+                        <input type="number" id="leader-point-input" class="form-control" 
+                               style="font-size:2rem; font-weight:900; text-align:center;" 
+                               value="${entry.totalScore || 0}" min="0">
+                    </div>
+                </div>
+                <button class="btn-primary w-100 p-3" style="font-size:1.2rem" onclick="window.commitLeaderResultsSave()">
+                    確定して保存
+                </button>`;
+            area.classList.remove('hidden');
         });
-    });
-    downloadCSV("participants_export.csv", headers, rows);
+    }
 }
 
-function downloadCSV(filename, headers, rows) {
-    const csvContent = "\uFEFF" + [headers, ...rows].map(e => e.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-}
+window.backToLeaderEdit = function() { switchView(null, 'leader-entry-view'); };
 
+window.commitLeaderResultsSave = async function() {
+    const id = document.getElementById('leader-group-select')?.value;
+    const scoreVal = document.getElementById('leader-point-input')?.value;
+    const score = parseInt(scoreVal || 0);
+
+    if (!id) { alert("チームを選択してください。"); return; }
+    const entry = state.entries.find(e => e.id === id);
+    if (!entry) return;
+    if (!confirm(`${entry.groupName} の得点を ${score} pt で登録しますか？`)) return;
+
+    entry.totalScore = score;
+    entry.lastModified = new Date().toLocaleString('ja-JP');
+    showToast("保存中...", "info");
+    const success = await syncToCloud();
+    if (success) {
+        showToast("✅ 保存完了しました", "success");
+        renderLeaderEntryForm();
+    } else {
+        showToast("❌ 同期に失敗しました", "error");
+    }
+};
+
+/* --- SYSTEM UTILITIES --- */
 function updateBulkMailCount() {
     const el = document.getElementById('bulk-mail-recipient-count');
     if (el) el.textContent = new Set(state.entries.map(e => e.email.toLowerCase().trim()).filter(e => e)).size;
@@ -3146,10 +3193,10 @@ function updateSourceAvailability() {
                 const label = radio.closest('label');
                 if (current >= max && !radio.checked && !isAdminAuthAction) {
                     radio.disabled = true;
-                    if (label) label.classList.add('disabled');
+                    if (label) label.classList.add('hidden');
                 } else {
                     radio.disabled = false;
-                    if (label) label.classList.remove('disabled');
+                    if (label) label.classList.remove('hidden');
                 }
             }
         };
@@ -3163,56 +3210,25 @@ function updateSourceAvailability() {
     }
 }
 
-/**
- * Handles bulk email sending to all group representatives (v7.5 & v8.1.5)
- */
 async function handleBulkEmailSend() {
     const subject = document.getElementById('bulk-mail-subject').value.trim();
     const body = document.getElementById('bulk-mail-body').value.trim();
-
-    if (!subject || !body) {
-        alert("件名と本文を入力してください。");
-        return;
-    }
-
-    const recipients = Array.from(new Set(state.entries
-        .filter(e => e.status !== 'cancelled' && e.email)
-        .map(e => e.email.toLowerCase().trim())
-    ));
-
-    if (recipients.length === 0) {
-        alert("送信対象となる有効なメールアドレスが見つかりませんでした。");
-        return;
-    }
-
-    if (!confirm(`${recipients.length} 名の代表者へ一斉メールを送信しますか？\nこの操作は元に戻せません。`)) {
-        return;
-    }
-
+    if (!subject || !body) { alert("件名と本文を入力してください。"); return; }
+    const recipients = Array.from(new Set(state.entries.filter(e => e.status !== 'cancelled' && e.email).map(e => e.email.toLowerCase().trim())));
+    if (recipients.length === 0) { alert("送信対象が見つかりません。"); return; }
+    if (!confirm(`${recipients.length} 名へ一斉メールを送信しますか？`)) return;
     const btn = document.getElementById('btn-send-bulk-mail');
     const originalText = btn.textContent;
     btn.disabled = true;
     btn.textContent = '送信中...';
-
     try {
-        const response = await fetch(GAS_WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'bulk_email',
-                subject: subject,
-                body: body,
-                recipients: recipients
-            })
-        });
-
+        const response = await fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'bulk_email', subject, body, recipients }) });
         const result = await response.json();
         if (result.status === 'success') {
             showToast('✅ 一斉メールを送信しました', 'success');
             document.getElementById('bulk-mail-subject').value = '';
             document.getElementById('bulk-mail-body').value = '';
-        } else {
-            throw new Error(result.message || '送信エラー');
-        }
+        } else { throw new Error(result.message || '送信エラー'); }
     } catch (error) {
         console.error("Bulk email error:", error);
         showToast('❌ メールの送信に失敗しました', 'error');
@@ -3221,10 +3237,6 @@ async function handleBulkEmailSend() {
         btn.textContent = originalText;
     }
 }
-
-/* --- UI HELPERS & CONSTANTS RESTORED v8.1.6 --- */
-
-
 
 function safeAddListener(id, event, callback) {
     const el = document.getElementById(id);
@@ -3255,7 +3267,7 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-/* --- SECURE ADMIN ACCESS v8.1.10 --- */
+/* --- SECURE ADMIN ACCESS v8.1.11 --- */
 let clickCount = 0;
 let lastClickTime = 0;
 window.handleSecureClick = function(e) {
@@ -3266,9 +3278,10 @@ window.handleSecureClick = function(e) {
         clickCount = 1;
     }
     lastClickTime = now;
-    console.log(`Admin tap registered: ${clickCount}/5`); // Debug log
+    console.log(`Admin tap registered: ${clickCount}/5`); 
     if (clickCount >= 5) {
         clickCount = 0;
         showAdminLogin();
     }
 };
+
