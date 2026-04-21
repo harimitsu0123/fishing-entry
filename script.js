@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v7.9.4: REMOVE DUPLICATE SUMMARY");
+        console.log("BORIJIN APP v7.9.6: REMOVE DUPLICATE SUMMARY");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -268,8 +268,15 @@ function mergeData(local, cloud) {
     }
     
     // --- 3. 重複排除、削除済みフィルタ、ソート ---
+    const allDeletedIds = [
+        ...(local.deletedIds || []),
+        ...(cloud.deletedIds || []),
+        ...(state.deletedIds || [])
+    ];
+    const uniqueDeletedIds = Array.from(new Set(allDeletedIds));
+
     const uniqueEntries = Array.from(new Map(merged.entries.map(e => [e.id, e])).values())
-        .filter(e => !state.deletedIds.includes(e.id));
+        .filter(e => !uniqueDeletedIds.includes(e.id));
         
     merged.entries = uniqueEntries.sort((a, b) => {
         const timeA = new Date(a.timestamp || 0).getTime();
@@ -542,8 +549,18 @@ async function syncToCloud() {
         clearTimeout(timeoutId);
         console.log('Cloud sync: data saved');
         
-        // v7.9.3: Clear deletion log after successful cloud update
-        state.deletedIds = [];
+        // v7.9.6: DO NOT clear deletedIds immediately here because of no-cors opaque success.
+        // The cloud data will naturally lose these entries if the save succeeded.
+        // We only clear IDs that are NO LONGER present in the cloud to keep the list small.
+        if (state.deletedIds) {
+            state.deletedIds = state.deletedIds.filter(id => {
+                // Keep the ID only if it MIGHT still be on the server.
+                // If the server doesn't have it anymore (sync worked), we can stop tracking it.
+                // But since we just saved, we'll keep tracking for a few more minutes or until next full refresh.
+                return true; 
+            });
+        }
+        
         localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
         
         localStorage.removeItem('fishing_sync_pending');
@@ -1713,10 +1730,10 @@ function updateDashboard() {
                 <td><small style="white-space:nowrap;">${regTime}</small></td>
                 <td>
                     <div style="display:flex; gap:0.2rem; flex-wrap: nowrap; width: auto; align-items:center;">
-                        <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
-                        <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
-                        <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
-                        <button class="btn-outline btn-small btn-delete" onclick="requestDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">削除</button>
+                        <button class="btn-outline btn-small btn-detail" onclick="window.showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
+                        <button class="btn-outline btn-small" onclick="window.requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
+                        <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="window.quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
+                        <button class="btn-outline btn-small btn-delete" onclick="window.requestDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">削除</button>
                     </div>
                 </td>
             `;
@@ -2194,11 +2211,12 @@ function renderReceptionDesk() {
             }).join('')}
         </div>
 
-        <div class="desk-footer" style="padding: 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; border-radius: 0 0 8px 8px;">
-            <div>
-                <p style="font-size: 0.9rem; color: #64748b;">※個別に来場/欠席を選択してください。<br>「全員受付」ボタンは未選択の人をすべて来場にします。</p>
+        <div class="desk-footer" style="padding: 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; border-radius: 0 -0 8px 8px; gap: 1rem;">
+            <div style="display: flex; gap: 0.5rem; flex: 1;">
+                <button class="btn-outline btn-delete" onclick="window.requestDeleteEntry('${entry.id}')" style="padding: 0.8rem 1.2rem; color: #ef4444; border-color: #ef4444;">この組を完全削除</button>
+                <p style="font-size: 0.8rem; color: #64748b; line-height: 1.2;">※「削除」は名簿から消去します。<br>間違えて登録した際などに使用してください。</p>
             </div>
-            <button class="btn-primary btn-large" onclick="updateGroupStatus('${entry.id}', 'checked-in')" style="padding: 1.2rem 2.5rem; font-size: 1.4rem; box-shadow: 0 4px 12px rgba(0, 91, 181, 0.3);">全員まとめて受付</button>
+            <button class="btn-primary btn-large" onclick="window.updateGroupStatus('${entry.id}', 'checked-in')" style="padding: 1rem 2rem; font-size: 1.2rem; white-space: nowrap;">全員まとめて受付</button>
         </div>
     `;
 }
@@ -2414,6 +2432,10 @@ window.showEntryDetails = function(id) {
                 </div>
             `).join('')}
         </div>
+        
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #eee; display: flex; justify-content: flex-end;">
+            <button class="btn-outline btn-delete" onclick="window.requestDeleteEntry('${entry.id}'); window.closeDetailModal();" style="padding: 0.5rem 1rem; font-size: 0.85rem; color: #ef4444; border-color: #ef4444;">このデータを完全に削除</button>
+        </div>
     `;
 
     modal.classList.remove('hidden');
@@ -2424,11 +2446,17 @@ window.closeDetailModal = function() {
 };
 
 window.requestDeleteEntry = function(id) {
+    console.log('Requesting delete for ID:', id);
     const entry = state.entries.find(e => e.id === id);
-    if (!entry) return;
+    if (!entry) {
+        console.error('Delete failed: Entry not found for ID', id);
+        return;
+    }
 
     if (confirm(`【警告】\n「${entry.groupName}」様のデータを完全に削除しますか？\nこの操作は取り消せません。\n(テストデータの削除などに使用してください)`)) {
+        console.log('Confirmed delete for:', id);
         // v7.9.3: Add to deletion log to prevent ghost reappearance during sync
+        if (!state.deletedIds) state.deletedIds = [];
         if (!state.deletedIds.includes(id)) {
             state.deletedIds.push(id);
         }
@@ -2436,8 +2464,16 @@ window.requestDeleteEntry = function(id) {
         state.lastUpdated = Date.now();
         saveData();
         showToast('データを完全に削除しました', 'success');
-        updateDashboard();
-        updateReceptionList();
+        
+        // Refresh views
+        if (typeof updateDashboard === 'function') updateDashboard();
+        if (typeof updateReceptionList === 'function') updateReceptionList();
+        
+        // If we are in reception view, clear the desk
+        if (activeReceptionEntryId === id) {
+            activeReceptionEntryId = null;
+            if (typeof renderReceptionDesk === 'function') renderReceptionDesk();
+        }
     }
 };
 
