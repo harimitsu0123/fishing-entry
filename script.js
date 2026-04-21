@@ -668,8 +668,13 @@ function initApp() {
         return;
     }
 
-    if (shareUrlEl) {
-        shareUrlEl.value = window.location.href.split('#')[0].split('?')[0];
+    try {
+        const shareUrlEl = document.getElementById('public-share-url');
+        if (shareUrlEl) {
+            shareUrlEl.value = window.location.href.split('#')[0].split('?')[0];
+        }
+    } catch (e) {
+        console.warn("Share URL initialization skipped:", e);
     }
 
     // Navigation
