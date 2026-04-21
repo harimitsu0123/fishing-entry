@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.0.8: STABILIZED");
+        console.log("BORIJIN APP v8.0.9: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -2931,4 +2931,58 @@ function updateSourceAvailability() {
     } catch (e) {
         console.warn("Source availability check skipped:", e);
     }
+}
+
+/* --- UI HELPERS & CONSTANTS RESTORED v8.0.9 --- */
+
+const genderLabels = { 'male': '男性', 'female': '女性', 'other': 'その他' };
+const ageLabels = { 'age1': '10代以下', 'age2': '20代', 'age3': '30代', 'age4': '40代', 'age5': '50代', 'age6': '60代以上' };
+
+function safeAddListener(id, event, callback) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(event, callback);
+}
+
+function initToast() {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+}
+
+function showToast(message, type = 'info') {
+    initToast();
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 500);
+    }, 3000);
+}
+
+function generateAdminQRCode() {
+    const container = document.getElementById('admin-qr-container');
+    if (!container) return;
+    container.innerHTML = "";
+    if (typeof QRCode === 'undefined') {
+        container.innerHTML = "<p style='font-size:0.8rem; color:var(--text-muted);'>QRコードライブラリ読み込み中...</p>";
+        return;
+    }
+    const baseUrl = window.location.href.split('?')[0];
+    const url = `${baseUrl}?view=stats`;
+    new QRCode(container, {
+        text: url,
+        width: 128,
+        height: 128,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
 }
