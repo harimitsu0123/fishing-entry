@@ -79,7 +79,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.1: STABILIZED");
+        console.log("BORIJIN APP v8.1.2: STABILIZED");
 
         // v6.5: Start Background Auto-Sync if Admin
         if (isAdminAuth) {
@@ -1748,6 +1748,94 @@ function updateDashboard() {
     }
 }
 
+/**
+ * --- v8.0.0 & v8.1.2: FIXED DASHBOARD NAVIGATION ---
+ * Core function to handle admin sub-tab switching
+ */
+function switchAdminTab(tabId) {
+    if (!tabId) return;
+    currentAdminTab = tabId;
+    sessionStorage.setItem('currentAdminTab', tabId);
+
+    // 1. Update Navigation Button States
+    document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+    });
+
+    // 2. Toggle Visibility of Tab Contents
+    document.querySelectorAll('.admin-tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === tabId);
+    });
+
+    // 3. Trigger Specific View Renderers (Ensure lazy loading)
+    if (tabId === 'tab-list') updateDashboard();
+    if (tabId === 'tab-ikesu') (typeof renderIkesuWorkspace === 'function') && renderIkesuWorkspace();
+    if (tabId === 'tab-rankings') (typeof renderRankings === 'function') && renderRankings();
+    if (tabId === 'tab-print') (typeof renderIkesuPrintView === 'function') && renderIkesuPrintView();
+    if (tabId === 'tab-stats') (typeof renderBreakdownStats === 'function') && renderBreakdownStats();
+}
+
+/**
+ * Renders the printable member list view organized by ikesu
+ */
+function renderIkesuPrintView() {
+    const container = document.getElementById('print-view-container');
+    if (!container) return;
+    
+    if (!state.settings.ikesuList || state.settings.ikesuList.length === 0) {
+        container.innerHTML = '<p class="text-muted p-4">イケスが設定されていません。</p>';
+        return;
+    }
+
+    let html = '';
+    state.settings.ikesuList.forEach(ik => {
+        const participants = [];
+        state.entries.forEach(e => {
+            if (e.status === 'cancelled') return;
+            e.participants.forEach(p => {
+                if (p.ikesuId === ik.id) {
+                    participants.push({ ...p, groupId: e.id, groupName: e.groupName });
+                }
+            });
+        });
+
+        html += `
+            <div class="print-page mb-8" style="background:white; padding:1.2rem; border:1px solid #eee; margin-bottom: 2rem; page-break-after: always;">
+                <h3 style="border-bottom: 2px solid #333; padding-bottom: 0.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between;">
+                    <span>${ik.name} メンバー表</span>
+                    <small style="font-size: 0.75rem; font-weight: normal;">定員: ${ik.capacity} / 現在: ${participants.length}名</small>
+                </h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                    <thead>
+                        <tr style="background: #f8fafc;">
+                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">No.</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">グループ名</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">氏名</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">性別</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">Tシャツ</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">備考</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${participants.length > 0 ? participants.map((p, idx) => `
+                            <tr>
+                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem; text-align: center;">${idx + 1}</td>
+                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem;">${p.groupName} <small>(${p.groupId})</small></td>
+                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem; font-weight: 700;">${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}</td>
+                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem; text-align: center;">${genderLabels[p.gender] || '-'}</td>
+                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem; text-align: center;">${p.tshirtSize || '-'}</td>
+                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem;">${p.type === 'observer' ? '【見学】' : ''}</td>
+                            </tr>
+                        `).join('') : '<tr><td colspan="6" style="border: 1px solid #cbd5e1; padding: 1.5rem; text-align: center;">(参加者なし)</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
 // --- v8.0.0: Expansion Feature Logic ---
 
 // 1. Leader Management
@@ -1868,13 +1956,7 @@ window.renderRankings = function() {
 };
 
 // 3. Print View
-// Hook up automated ranking trigger when switching to the tab
-const originalSwitchAdminTab = window.switchAdminTab;
-window.switchAdminTab = function(tabId) {
-    if (originalSwitchAdminTab) originalSwitchAdminTab(tabId);
-    if (tabId === 'tab-rankings') renderRankings();
-    if (tabId === 'tab-print') renderIkesuPrintView();
-};
+// (renderIkesuPrintView logic is now integrated into core switchAdminTab)
 
 // Hook up leader entry form trigger
 const originalSwitchView = window.switchView;
@@ -2906,7 +2988,7 @@ function updateSourceAvailability() {
     }
 }
 
-/* --- UI HELPERS & CONSTANTS RESTORED v8.1.1 --- */
+/* --- UI HELPERS & CONSTANTS RESTORED v8.1.2 --- */
 
 
 
@@ -2959,7 +3041,7 @@ function generateAdminQRCode() {
     });
 }
 
-/* --- SECURE ADMIN ACCESS v8.1.1 --- */
+/* --- SECURE ADMIN ACCESS v8.1.2 --- */
 let clickCount = 0;
 let lastClickTime = 0;
 window.handleSecureClick = function(e) {
