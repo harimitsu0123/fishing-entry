@@ -84,7 +84,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.49: STABILIZED INITIALIZATION & SYNC");
+        console.log("BORIJIN APP v8.1.52: STABILIZED INITIALIZATION & SYNC");
 
         // v8.1.30: Priority 1 - Restore UI State immediately
         restoreUIState();
@@ -831,7 +831,9 @@ function switchView(btnElement, targetId) {
 
     if (targetId === 'registration-view') {
         const adminActions = document.getElementById('admin-extra-actions');
-        if (adminActions) adminActions.classList.add('hidden');
+        if (adminActions && !isAdminAuthAction) {
+            adminActions.classList.add('hidden');
+        }
         
         // Ensure app title is restored to tournament name from settings
         updateAppTitle();
@@ -878,10 +880,24 @@ function switchView(btnElement, targetId) {
     adminElements.forEach(el => {
         if (isAdminAuth) {
             el.classList.remove('hidden');
+        } else if (isAdminAuthAction && targetId === 'registration-view') {
+            // v8.1.52: If we are in an admin-led edit, allow admin-only elements 
+            // WITHIN the registration view to be shown.
+            if (targetView.contains(el) || el === targetView) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
         } else {
             el.classList.add('hidden');
         }
     });
+
+    // v8.1.52: Special handling for admin actions inside registration view
+    if (targetId === 'registration-view' && isAdminAuthAction) {
+        const adminActions = document.getElementById('admin-extra-actions');
+        if (adminActions) adminActions.classList.remove('hidden');
+    }
 
     // v8.1.33: Stricter Category Visibility in Special Windows
     if (srcParam) {
@@ -1490,17 +1506,20 @@ function handleEditAuth() {
 }
 
 function fillFormForEdit(entry) {
-    document.getElementById('edit-entry-id').value = entry.id;
-    document.getElementById('group-name').value = entry.groupName;
-    document.getElementById('representative-name').value = entry.representative;
-    document.getElementById('rep-phone').value = entry.phone;
-    document.getElementById('rep-email').value = entry.email;
-    document.getElementById('rep-email-confirm').value = entry.email;
-    document.getElementById('edit-password').value = entry.password;
+    try {
+        document.getElementById('edit-entry-id').value = entry.id;
+        document.getElementById('group-name').value = entry.groupName;
+        document.getElementById('representative-name').value = entry.representative;
+        document.getElementById('rep-phone').value = entry.phone;
+        document.getElementById('rep-email').value = entry.email;
+        document.getElementById('rep-email-confirm').value = entry.email;
+        document.getElementById('edit-password').value = entry.password;
 
-    const list = document.getElementById('participant-list');
-    list.innerHTML = '';
-    entry.participants.forEach(p => addParticipantRow(p, false));
+        const list = document.getElementById('participant-list');
+        if (list) {
+            list.innerHTML = '';
+            entry.participants.forEach(p => addParticipantRow(p, false));
+        }
 
     // UI Adjustments for Edit Mode
     const cancelBtn = document.getElementById('cancel-edit-btn');
@@ -1563,11 +1582,15 @@ function fillFormForEdit(entry) {
     let sourceRadio = document.querySelector(`input[name="reg-source"][value="${entry.source}"]`);
     if (sourceRadio) sourceRadio.checked = true;
 
-    document.getElementById('edit-auth-section').classList.add('hidden');
-    document.getElementById('registration-form').classList.remove('hidden');
-    document.getElementById('app-title').textContent = "登録変更: " + entry.id;
-    document.getElementById('submit-registration').textContent = "変更を保存する";
-    document.getElementById('cancel-edit').classList.remove('hidden');
+        document.getElementById('edit-auth-section').classList.add('hidden');
+        document.getElementById('registration-form').classList.remove('hidden');
+        document.getElementById('app-title').textContent = "登録変更: " + entry.id;
+        document.getElementById('submit-registration').textContent = "変更を保存する";
+        document.getElementById('cancel-edit').classList.remove('hidden');
+    } catch (e) {
+        console.error("BORIJIN: fillFormForEdit failed:", e);
+        showToast("フォームの読み込みに失敗しました", "error");
+    }
 }
 
 function showResult(entry) {
@@ -3206,16 +3229,24 @@ window.closeDetailModal = function () {
  * v8.1.48: Request Admin-led Editing (Redirects to form)
  */
 window.requestAdminEdit = function (id) {
-    const entry = state.entries.find(e => e.id === id);
-    if (!entry) {
-        showToast('エントリーが見つかりません', 'error');
-        return;
+    try {
+        const entry = state.entries.find(e => e.id === id);
+        if (!entry) {
+            showToast('エントリーが見つかりません', 'error');
+            return;
+        }
+        isAdminAuthAction = true; // Flag to show admin controls in form
+        fillFormForEdit(entry);
+        switchView(null, 'registration-view');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Ensure title is specific
+        const titleEl = document.getElementById('app-title');
+        if (titleEl) titleEl.textContent = "登録変更: " + entry.id;
+    } catch (e) {
+        console.error("BORIJIN: requestAdminEdit failed:", e);
+        showToast("編集画面への遷移に失敗しました", "error");
     }
-    isAdminAuthAction = true; // Flag to show admin controls in form
-    fillFormForEdit(entry);
-    switchView(null, 'registration-view');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    updateAppTitle();
 };
 
 /**
