@@ -4,7 +4,7 @@ let state = {
     entries: [],
     deletedIds: [], // v7.9.3: Tracking local hard-deletions
     settings: {
-        competitionName: "第1回 釣り大会",
+        competitionName: "第1囁E釣り大企E,
         capacityGeneral: 100,
         capacityMintsuri: 100,
         capacitySuiho: 50,
@@ -16,14 +16,14 @@ let state = {
         adminPassword: "admin",
         // v7.9.3: Pre-populated Ikesu List (36 ponds)
         ikesuList: [
-            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `小${i+1}`, capacity: 6 })),
-            { id: 'small-7', name: '小7', capacity: 6 },
-            { id: 'small-7n', name: '小7北', capacity: 6 },
-            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `小${i+8}`, capacity: 6 })),
+            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `封E{i+1}`, capacity: 6 })),
+            { id: 'small-7', name: '封E', capacity: 6 },
+            { id: 'small-7n', name: '封E匁E, capacity: 6 },
+            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `封E{i+8}`, capacity: 6 })),
             ...Array.from({length: 10}, (_, i) => ({ id: `med-${i+1}`, name: `中${i+1}`, capacity: 8 })),
             ...Array.from({length: 3}, (_, i) => ({ id: `large-${i+1}`, name: `大${i+1}`, capacity: 12 })),
-            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `でっぱり${i+1}`, capacity: 12 })),
-            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `南${i+1}`, capacity: 12 }))
+            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `でっぱめE{i+1}`, capacity: 12 })),
+            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `十E{i+1}`, capacity: 12 }))
         ]
     },
     lastUpdated: 0 // Unix timestamp for sync merging
@@ -40,20 +40,20 @@ let pendingView = null; // v8.1.10: Global scoped to avoid ReferenceError
 
 // Age labels map - v4.8 Updated
 const ageLabels = {
-    "elementary": "小学生以下",
-    "middle_high": "中・高校生",
-    "19_20s": "19歳〜20代",
+    "elementary": "小学生以丁E,
+    "middle_high": "中・高校甁E,
+    "19_20s": "19歳、E0代",
     "30s": "30代", "40s": "40代", "50s": "50代",
-    "60s": "60代", "70s": "70代", "80s": "80歳以上"
+    "60s": "60代", "70s": "70代", "80s": "80歳以丁E
 };
 
 const genderLabels = {
     "male": "男性",
     "female": "女性",
-    "other": "その他"
+    "other": "そ�E仁E
 };
 
-const tshirtSizes = ['140', '150', 'S', 'M', 'L', 'XL（2L）', '2XL（3L）', '3XL（4L）', '4XL（5L）'];
+const tshirtSizes = ['140', '150', 'S', 'M', 'L', 'XL�E�EL�E�E, '2XL�E�EL�E�E, '3XL�E�EL�E�E, '4XL�E�EL�E�E];
 
 /// Admin Registration Helper
 window.startAdminRegistration = function (source) {
@@ -62,7 +62,7 @@ window.startAdminRegistration = function (source) {
 
     // Add temp radio for this admin source
     const selector = document.getElementById('main-source-selector');
-    const badgeClass = source === '水宝' ? 'badge-suiho' : 'badge-harimitsu';
+    const badgeClass = source === '水宁E ? 'badge-suiho' : 'badge-harimitsu';
     const label = document.createElement('label');
     label.className = 'source-option admin-only temp-option';
     label.innerHTML = `
@@ -84,7 +84,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.52: STABILIZED INITIALIZATION & SYNC");
+        console.log("BORIJIN APP v8.1.53: STABILIZED INITIALIZATION & SYNC");
 
         // v8.1.30: Priority 1 - Restore UI State immediately
         restoreUIState();
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
         console.error("BORIJIN APP: FATAL INITIALIZATION ERROR", e);
         // Alert the user so we know exactly why it's failing
-        alert("システム起動時にエラーが発生しました: " + e.message + "\n画面情報を再読み込みしてください。");
+        alert("シスチE��起動時にエラーが発生しました: " + e.message + "\n画面惁E��を�E読み込みしてください、E);
     }
 });
 
@@ -135,7 +135,7 @@ async function loadData() {
     // 1. Try to load from Cloud (GAS) first for synchronization
     updateSyncStatus('syncing');
     try {
-        // タイムアウト15秒を設定（通信環境への配慮）
+        // タイムアウチE5秒を設定（通信環墁E��の配�E�E�E
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
 
@@ -160,14 +160,14 @@ async function loadData() {
                     // v7.9.3: Ensure ikesuList is present even in merged state
                     if (!state.settings.ikesuList || state.settings.ikesuList.length === 0) {
                         state.settings.ikesuList = [
-                            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `小${i+1}`, capacity: 6 })),
-                            { id: 'small-7', name: '小7', capacity: 6 },
-                            { id: 'small-7n', name: '小7北', capacity: 6 },
-                            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `小${i+8}`, capacity: 6 })),
+                            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `封E{i+1}`, capacity: 6 })),
+                            { id: 'small-7', name: '封E', capacity: 6 },
+                            { id: 'small-7n', name: '封E匁E, capacity: 6 },
+                            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `封E{i+8}`, capacity: 6 })),
                             ...Array.from({length: 10}, (_, i) => ({ id: `med-${i+1}`, name: `中${i+1}`, capacity: 8 })),
                             ...Array.from({length: 3}, (_, i) => ({ id: `large-${i+1}`, name: `大${i+1}`, capacity: 12 })),
-                            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `でっぱり${i+1}`, capacity: 12 })),
-                            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `南${i+1}`, capacity: 12 }))
+                            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `でっぱめE{i+1}`, capacity: 12 })),
+                            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `十E{i+1}`, capacity: 12 }))
                         ];
                     }
                     
@@ -208,7 +208,7 @@ async function loadData() {
             }
         });
         localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
-        // ★ ローカルデータを読み込むが、クラウドへは勝手に送らない（上書き防止）
+        // ☁EローカルチE�Eタを読み込むが、クラウドへは勝手に送らなぁE��上書き防止�E�E
         console.log('Loaded from local storage (no automatic sync)');
     } else {
         // Migration from V2
@@ -231,33 +231,33 @@ async function loadData() {
 }
 
 /**
- * v6.5 高度マージロジック: ID単位 + 個別タイムスタンプ(lastModified)で比較
+ * v6.5 高度マ�EジロジチE��: ID単佁E+ 個別タイムスタンチElastModified)で比輁E
  */
 function mergeData(local, cloud) {
-    // 常にクラウドを最新の状態のベースとする
+    // 常にクラウドを最新の状態�Eベ�Eスとする
     const merged = { ...cloud }; 
     const localMap = new Map(local.entries.map(e => [e.id, e]));
     const cloudMap = new Map(cloud.entries.map(e => [e.id, e]));
 
-    // --- 1. ローカル固有（未同期）のデータをマージ ---
+    // --- 1. ローカル固有（未同期�E��EチE�Eタを�Eージ ---
     local.entries.forEach(lEntry => {
         const isServerId = /^[AMSH]-\d{3}$/.test(lEntry.id);
         
         if (!cloudMap.has(lEntry.id)) {
-            // サーバー発行済みIDなのにクラウドに存在しない場合
-            // サーバー発行済みIDなのにクラウドに存在しない場合
+            // サーバ�E発行済みIDなのにクラウドに存在しなぁE��吁E
+            // サーバ�E発行済みIDなのにクラウドに存在しなぁE��吁E
             if (isServerId) {
-                // クラウドの最終更新の方が新しければ、クラウド側で「本当の削除」があったとみなす
+                // クラウド�E最終更新の方が新しけれ�E、クラウド�Eで「本当�E削除」があったとみなぁE
                 if (cloud.lastUpdated > (lEntry._ts || 0)) {
                     console.log(`[Sync] ${lEntry.id} was intentionally deleted on Cloud at ${new Date(cloud.lastUpdated).toLocaleString()}. Discarding local.`);
                     return; 
                 }
             }
-            // 新規データ、または削除確定でないものは維持
+            // 新規データ、また�E削除確定でなぁE��のは維持E
             console.log(`[Sync] Keeping local entry ${lEntry.id} which is missing on cloud.`);
             merged.entries.push(lEntry);
         } else {
-            // 両方にある場合: 更新日時(lastModified)が新しい方を採用
+            // 両方にある場吁E 更新日晁ElastModified)が新しい方を採用
             const cEntry = cloudMap.get(lEntry.id);
             const lTime = new Date(lEntry.lastModified || lEntry.timestamp || 0).getTime();
             const cTime = new Date(cEntry.lastModified || cEntry.timestamp || 0).getTime();
@@ -269,8 +269,8 @@ function mergeData(local, cloud) {
         }
     });
 
-    // --- 2. 設定のマージ: クラウド側の設定を常に優先するが、クラウド側が空またはデフォルトの場合に備えて慎重にマージ ---
-    // v7.4.0: クラウドの最終更新日時がローカルより古い場合は、ローカル側の最新設定を保持する
+    // --- 2. 設定�Eマ�Eジ: クラウド�Eの設定を常に優先するが、クラウド�Eが空また�EチE��ォルト�E場合に備えて慎重にマ�Eジ ---
+    // v7.4.0: クラウド�E最終更新日時がローカルより古ぁE��合�E、ローカル側の最新設定を保持する
     const isCloudNewer = (cloud.lastUpdated || 0) > (local.lastUpdated || 0);
     if (isCloudNewer && cloud.settings && Object.keys(cloud.settings).length > 0) {
         merged.settings = { ...local.settings, ...cloud.settings };
@@ -278,7 +278,7 @@ function mergeData(local, cloud) {
         merged.settings = { ...cloud.settings, ...local.settings };
     }
     
-    // --- 3. 重複排除、削除済みフィルタ、ソート ---
+    // --- 3. 重褁E��除、削除済みフィルタ、ソーチE---
     const allDeletedIds = [
         ...(local.deletedIds || []),
         ...(cloud.deletedIds || []),
@@ -308,7 +308,7 @@ function finalizeLoad() {
     // Ensure settings are merged with defaults
     state.settings = {
         ...{
-            competitionName: "第1回 釣り大会",
+            competitionName: "第1囁E釣り大企E,
             capacityGeneral: 100,
             capacityMintsuri: 100,
             capacitySuiho: 50,
@@ -342,7 +342,7 @@ function finalizeLoad() {
     // v7.6.1: Initialize specialized URL display in Admin Tab
     generateSpecialUrls();
 
-    // v7.0: 自動復旧チェック（再読み込み時）
+    // v7.0: 自動復旧チェチE���E��E読み込み時！E
     setTimeout(checkPendingRegistration, 500);
 }
 
@@ -351,17 +351,17 @@ function migrateTshirtSizes() {
     let changed = false;
     // v7.8.6: Further expanded mapping to cover all potential variants
     const mapping = {
-        'LL': 'XL（2L）', '2L': 'XL（2L）', 'XL': 'XL（2L）', 'O': 'XL（2L）',
-        '3L': '2XL（3L）', '2XL': '2XL（3L）', 'XO': '2XL（3L）',
-        '4L': '3XL（4L）', '3XL': '3XL（4L）', '2XO': '3XL（4L）',
-        '5L': '4XL（5L）', '4XL': '4XL（5L）', '3XO': '4XL（5L）'
+        'LL': 'XL�E�EL�E�E, '2L': 'XL�E�EL�E�E, 'XL': 'XL�E�EL�E�E, 'O': 'XL�E�EL�E�E,
+        '3L': '2XL�E�EL�E�E, '2XL': '2XL�E�EL�E�E, 'XO': '2XL�E�EL�E�E,
+        '4L': '3XL�E�EL�E�E, '3XL': '3XL�E�EL�E�E, '2XO': '3XL�E�EL�E�E,
+        '5L': '4XL�E�EL�E�E, '4XL': '4XL�E�EL�E�E, '3XO': '4XL�E�EL�E�E
     };
 
     state.entries.forEach(entry => {
         entry.participants.forEach(p => {
             if (!p.tshirtSize) return;
             const normalized = p.tshirtSize.toString().toUpperCase().trim();
-            // Also handle if it's already partial match like "XL" -> "XL（2L）"
+            // Also handle if it's already partial match like "XL" -> "XL�E�EL�E�E
             if (mapping[normalized]) {
                 p.tshirtSize = mapping[normalized];
                 changed = true;
@@ -396,7 +396,7 @@ function generateSpecialUrls() {
 
 
 /**
- * v7.0: 送信中データの二重登録チェック & 復旧ロジック
+ * v7.0: 送信中チE�Eタの二重登録チェチE�� & 復旧ロジチE��
  */
 async function checkPendingRegistration() {
     const pendingJson = localStorage.getItem('fishing_app_pending_reg');
@@ -405,7 +405,7 @@ async function checkPendingRegistration() {
     try {
         const pending = JSON.parse(pendingJson);
         const now = Date.now();
-        // 1時間以上前の古いデータは無視
+        // 1時間以上前の古ぁE��ータは無要E
         if (now - (pending._ts || 0) > 3600000) {
             localStorage.removeItem('fishing_app_pending_reg');
             return;
@@ -413,7 +413,7 @@ async function checkPendingRegistration() {
 
         console.log("Pending registration found, checking list...", pending);
         
-        // 最新データを強制リロード（同期）
+        // 最新チE�Eタを強制リロード（同期！E
         await loadDataFromCloudOnly();
 
         const match = state.entries.find(e => 
@@ -427,7 +427,7 @@ async function checkPendingRegistration() {
             console.log("Match found! Restoring success screen.", match);
             
             // v7.4.0: Add "Clear Cache" option to the toast/recovery check
-            showToast('前回の登録（送信中）が見つかりました。', 'info');
+            showToast('前回の登録�E�送信中�E�が見つかりました、E, 'info');
             
             localStorage.removeItem('fishing_app_pending_reg');
             showResult(match);
@@ -438,10 +438,10 @@ async function checkPendingRegistration() {
 }
 
 /**
- * v7.4.0: 送信待ちデータの消去（手動）
+ * v7.4.0: 送信征E��チE�Eタの消去�E�手動！E
  */
 window.clearPendingRegistration = function() {
-    if (confirm('送信中の一時データを消去しますか？（すでに送信が完了している場合は影響ありません）')) {
+    if (confirm('送信中の一時データを消去しますか�E�（すでに送信が完亁E��てぁE��場合�E影響ありません�E�E)) {
         localStorage.removeItem('fishing_app_pending_reg');
         showToast('一時データを消去しました', 'success');
         resetForm();
@@ -449,7 +449,7 @@ window.clearPendingRegistration = function() {
 };
 
 /**
- * v7.0: サーバーから最新データのみを確実に取得する（マージなしの最新確認用）
+ * v7.0: サーバ�Eから最新チE�Eタのみを確実に取得する（�Eージなし�E最新確認用�E�E
  */
 async function loadDataFromCloudOnly() {
     try {
@@ -469,7 +469,7 @@ async function loadDataFromCloudOnly() {
 }
 
 /**
- * v7.0: 手動での状態確認（エラー画面のボタンから呼び出し）
+ * v7.0: 手動での状態確認（エラー画面のボタンから呼び出し！E
  */
 window.handleCheckStatus = async function() {
     const btn = document.querySelector('.btn-check-status');
@@ -480,12 +480,12 @@ window.handleCheckStatus = async function() {
     
     await checkPendingRegistration();
     
-    // 見つからなかった場合
+    // 見つからなかった場吁E
     const pendingJson = localStorage.getItem('fishing_app_pending_reg');
     if (pendingJson && btn) {
         btn.disabled = false;
-        btn.textContent = "登録状況を再確認する";
-        showToast('まだ登録が確認できません。もう一度お試しいただくか、再入力してください。', 'info');
+        btn.textContent = "登録状況を再確認すめE;
+        showToast('まだ登録が確認できません。もぁE��度お試しいただくか、�E入力してください、E, 'info');
     }
 };
 
@@ -493,7 +493,7 @@ async function saveData() {
     state.lastUpdated = Date.now();
     localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
     
-    // v6.5: 同期前に最新を一度取得してマージする「Fetch-First」方式
+    // v6.5: 同期前に最新を一度取得してマ�Eジする「Fetch-First」方弁E
     try {
         const response = await fetch(`${GAS_WEB_APP_URL}?action=get&_t=${Date.now()}`);
         if (response.ok) {
@@ -507,7 +507,7 @@ async function saveData() {
 }
 
 /** 
- * v6.5 自動同期サイクル (1分)
+ * v6.5 自動同期サイクル (1刁E
  */
 function startAutoSync() {
     if (window._autoSyncTimer) return;
@@ -575,17 +575,17 @@ function updateSyncStatus(type) {
         if (text) text.textContent = '同期中...';
         if (dot) { dot.className = 'sync-dot syncing'; }
     } else if (type === 'success') {
-        if (text) text.textContent = '🎉 同期完了';
+        if (text) text.textContent = '🎉 同期完亁E;
         if (dot) { dot.className = 'sync-dot success'; }
         setTimeout(() => { 
-            if (text) text.textContent = 'クラウド接続: 正常'; 
+            if (text) text.textContent = 'クラウド接綁E 正常'; 
             if (dot) { dot.className = 'sync-dot success'; }
         }, 2000);
     } else if (type === 'error') {
-        if (text) text.textContent = '同期失敗';
+        if (text) text.textContent = '同期失敁E;
         if (dot) { dot.className = 'sync-dot error'; }
     } else if (type === 'error-silent') {
-        if (text) text.textContent = 'クラウド接続: 正常'; // Keep optimistic if silent
+        if (text) text.textContent = 'クラウド接綁E 正常'; // Keep optimistic if silent
         if (dot) { dot.className = 'sync-dot success'; }
     }
 }
@@ -758,7 +758,7 @@ function initApp() {
     const cancelEditBtn = document.getElementById('cancel-edit-btn');
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener('click', () => {
-            if (confirm('修正を中止して戻りますか？（変更内容は保存されません）')) {
+            if (confirm('修正を中止して戻りますか�E�（変更冁E��は保存されません�E�E)) {
                 resetForm();
                 switchView(null, isAdminAuth ? 'dashboard-view' : 'registration-view');
                 isAdminAuthAction = false;
@@ -881,7 +881,7 @@ function switchView(btnElement, targetId) {
         if (isAdminAuth) {
             el.classList.remove('hidden');
         } else if (isAdminAuthAction && targetId === 'registration-view') {
-            // v8.1.52: If we are in an admin-led edit, allow admin-only elements 
+            // v8.1.53: If we are in an admin-led edit, allow admin-only elements 
             // WITHIN the registration view to be shown.
             if (targetView.contains(el) || el === targetView) {
                 el.classList.remove('hidden');
@@ -893,7 +893,7 @@ function switchView(btnElement, targetId) {
         }
     });
 
-    // v8.1.52: Special handling for admin actions inside registration view
+    // v8.1.53: Special handling for admin actions inside registration view
     if (targetId === 'registration-view' && isAdminAuthAction) {
         const adminActions = document.getElementById('admin-extra-actions');
         if (adminActions) adminActions.classList.remove('hidden');
@@ -931,10 +931,10 @@ function updateAdminToolbar() {
         toolbar.className = 'admin-toolbar';
         toolbar.innerHTML = `
             <div class="toolbar-content">
-                <button class="btn-toolbar active" data-target="registration-view">受付</button>
-                <button class="btn-toolbar" data-target="dashboard-view">管理</button>
+                <button class="btn-toolbar active" data-target="registration-view">受仁E/button>
+                <button class="btn-toolbar" data-target="dashboard-view">管琁E/button>
                 <button class="btn-toolbar" data-target="reception-view">当日</button>
-                <button class="btn-toolbar logout" id="admin-logout">ログアウト</button>
+                <button class="btn-toolbar logout" id="admin-logout">ログアウチE/button>
             </div>
         `;
         document.body.appendChild(toolbar);
@@ -984,12 +984,12 @@ function checkTimeframe() {
 
 
     if (state.settings.startTime && now < new Date(state.settings.startTime)) {
-        title.textContent = `${state.settings.competitionName || "釣り大会"} 開始前`;
-        desc.textContent = `${new Date(state.settings.startTime).toLocaleString('ja-JP')} から受付を開始します。しばらくお待ちください。`;
+        title.textContent = `${state.settings.competitionName || "釣り大企E} 開始前`;
+        desc.textContent = `${new Date(state.settings.startTime).toLocaleString('ja-JP')} から受付を開始します。しばらくお征E��ください。`;
         overlay.classList.remove('hidden');
     } else if (state.settings.deadline && now > new Date(state.settings.deadline)) {
-        title.textContent = "受付終了しました";
-        desc.textContent = "本大会の受付は終了いたしました。";
+        title.textContent = "受付終亁E��ました";
+        desc.textContent = "本大会�E受付�E終亁E��たしました、E;
         overlay.classList.remove('hidden');
     } else {
         overlay.classList.add('hidden');
@@ -1052,9 +1052,9 @@ function handleAdminLogin() {
         }
         pendingView = null;
 
-        // ★ admin-only要素の表示後にDOMが更新されてからスクロール
+        // ☁Eadmin-only要素の表示後にDOMが更新されてからスクロール
         setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
-        showToast("管理者としてログインしました", "success");
+        showToast("管琁E��E��してログインしました", "success");
     } else {
         console.warn("Admin Auth Failed: Password mismatch.");
         document.getElementById('admin-auth-error').classList.remove('hidden');
@@ -1084,7 +1084,7 @@ function syncSettingsUI() {
     
     // v8.1.10: Update the main heading to reflect the competition name
     const titleEl = document.getElementById('app-title');
-    if (titleEl) titleEl.textContent = state.settings.competitionName || "釣り大会 受付";
+    if (titleEl) titleEl.textContent = state.settings.competitionName || "釣り大企E受仁E;
 
     if (document.getElementById('cap-total')) {
         document.getElementById('cap-total').value = state.settings.capacityTotal || 250;
@@ -1110,24 +1110,24 @@ function addParticipantRow(data = null, shouldFocus = true) {
     row.dataset.index = index;
     row.innerHTML = `
         <div class="participant-label">
-            参加者 ${index + 1}${index === 0 ? ' <span class="label-rep">（代表者）</span>' : ''}
+            参加老E${index + 1}${index === 0 ? ' <span class="label-rep">�E�代表老E��E/span>' : ''}
         </div>
         <div class="form-row">
             <div class="form-group" style="flex: 1; min-width: 140px;">
-                <label>区分 <span class="required">*</span></label>
+                <label>区刁E<span class="required">*</span></label>
                 <select class="p-type" required>
                     <option value="fisher" ${data && data.type === 'fisher' ? 'selected' : ''}>釣りをする</option>
                     <option value="observer" ${data && data.type === 'observer' ? 'selected' : ''}>見学のみ</option>
                 </select>
             </div>
             <div class="form-group" style="flex: 2; min-width: 200px;">
-                <label>お名前 <span class="required">*</span></label>
-                <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="${index === 0 ? '例: 山田 太郎 (代表者)' : '例: 山田 太郎'}">
+                <label>お名剁E<span class="required">*</span></label>
+                <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="${index === 0 ? '侁E 山田 太郁E(代表老E' : '侁E 山田 太郁E}">
             </div>
             <div class="form-group" style="flex: 1; min-width: 100px;">
                 <label>性別 <span class="required">*</span></label>
                 <select class="p-gender" required>
-                    <option value="" disabled ${!data ? 'selected' : ''}>選択...</option>
+                    <option value="" disabled ${!data ? 'selected' : ''}>選抁E..</option>
                     ${Object.entries(genderLabels).map(([val, label]) => `<option value="${val}" ${data && data.gender === val ? 'selected' : ''}>${label}</option>`).join('')}
                 </select>
             </div>
@@ -1140,11 +1140,11 @@ function addParticipantRow(data = null, shouldFocus = true) {
                 </select>
             </div>
             <div class="form-group" style="flex: 1; min-width: 140px;">
-                <label>地域 <span class="required">*</span></label>
-                <input type="text" class="p-region" required value="${data && data.region ? data.region : ''}" placeholder="例: 姫路市まで">
+                <label>地埁E<span class="required">*</span></label>
+                <input type="text" class="p-region" required value="${data && data.region ? data.region : ''}" placeholder="侁E 姫路市まで">
             </div>
             <div class="form-group" style="flex: 1; min-width: 100px;">
-                <label>Tシャツ <span class="required">*</span></label>
+                <label>TシャチE<span class="required">*</span></label>
                 <select class="p-tshirt" required>
                     <option value="" disabled ${!data || !data.tshirtSize ? 'selected' : ''}>選択してください</option>
                     ${(() => {
@@ -1160,8 +1160,8 @@ function addParticipantRow(data = null, shouldFocus = true) {
             </div>
         </div>
         <div class="form-group">
-            <label>ニックネーム <span class="text-muted">(任意)</span></label>
-            <input type="text" class="p-nick" value="${data && data.nickname ? data.nickname : ''}" placeholder="名簿用の愛称（空欄可）">
+            <label>ニックネ�Eム <span class="text-muted">(任愁E</span></label>
+            <input type="text" class="p-nick" value="${data && data.nickname ? data.nickname : ''}" placeholder="名簿用の愛称�E�空欁E���E�E>
         </div>
         <div class="row-actions">
             <button type="button" class="btn-icon remove-p" title="削除">&times;</button>
@@ -1212,13 +1212,13 @@ function showConfirmation() {
 
     // Basic Validation Check (HTML5 Native)
     if (!document.getElementById('registration-form').reportValidity()) {
-        showStatus("入力内容に不備があります。赤枠の部分をご確認ください。", "error", true);
+        showStatus("入力�E容に不備があります。赤枠の部刁E��ご確認ください、E, "error", true);
         return;
     }
 
     // Minimum 1 participant validation
     if (participants.length === 0) {
-        showStatus("参加者を1名以上登録してください。", "error");
+        showStatus("参加老E��1名以上登録してください、E, "error");
         return;
     }
 
@@ -1229,7 +1229,7 @@ function showConfirmation() {
     const repEmailConfirm = document.getElementById('rep-email-confirm').value;
 
     if (repEmail !== repEmailConfirm) {
-        showStatus("メールアドレスが一致しません。もう一度ご確認ください。", "error");
+        showStatus("メールアドレスが一致しません。もぁE��度ご確認ください、E, "error");
         return;
     }
 
@@ -1246,12 +1246,12 @@ function showConfirmation() {
 
     let capacityLimit = 0;
     if (source === '一般') capacityLimit = state.settings.capacityGeneral;
-    else if (source === 'みん釣り') capacityLimit = state.settings.capacityMintsuri;
-    else if (source === '水宝') capacityLimit = state.settings.capacitySuiho;
+    else if (source === 'みん�EめE) capacityLimit = state.settings.capacityMintsuri;
+    else if (source === '水宁E) capacityLimit = state.settings.capacitySuiho;
     else if (source === 'ハリミツ') capacityLimit = state.settings.capacityHarimitsu;
 
     if (currentCategoryFishers + fisherCount > capacityLimit) {
-        showStatus(`大変申し訳ありません。この枠（${source}）は定員に達したため、現在受付を停止しております。`, "error");
+        showStatus(`大変申し訳ありません。この枠�E�E{source}�E��E定員に達したため、現在受付を停止しております。`, "error");
         return;
     }
 
@@ -1261,7 +1261,7 @@ function showConfirmation() {
         .reduce((sum, en) => sum + en.fishers, 0);
 
     if (totalFishers + fisherCount > state.settings.capacityTotal) {
-        showStatus("大変申し訳ありません。大会全体の定員に達したため、受付を終了いたしました。", "error");
+        showStatus("大変申し訳ありません。大会�E体�E定員に達したため、受付を終亁E��たしました、E, "error");
         return;
     }
 
@@ -1277,7 +1277,7 @@ function showConfirmation() {
     summaryList.innerHTML = '';
     participants.forEach((p, idx) => {
         const li = document.createElement('li');
-        const typeLabel = p.type === 'fisher' ? '【釣り】' : '【見学】';
+        const typeLabel = p.type === 'fisher' ? '【�Eり、E : '【見学、E;
         const genderLabel = genderLabels[p.gender] || p.gender;
         li.textContent = `${idx + 1}. ${typeLabel} ${p.name} / ${genderLabel} [${p.tshirtSize}]` + (p.nickname ? ` (${p.nickname})` : '');
         summaryList.appendChild(li);
@@ -1286,7 +1286,7 @@ function showConfirmation() {
     // Switch Views
     document.getElementById('registration-form').classList.add('hidden');
     document.getElementById('confirmation-section').classList.remove('hidden');
-    document.getElementById('app-title').textContent = "登録内容の確認";
+    document.getElementById('app-title').textContent = "登録冁E��の確誁E;
     window.scrollTo(0, 0);
 }
 
@@ -1302,11 +1302,11 @@ async function handleRegistration() {
     const now = new Date();
     if (!isAdminAuth) {
         if (state.settings.startTime && now < new Date(state.settings.startTime)) {
-            alert('受付開始前です。まだ申し込みはできません。');
+            alert('受付開始前です。まだ申し込みはできません、E);
             return;
         }
         if (state.settings.deadline && now > new Date(state.settings.deadline)) {
-            alert('受付は終了しました。');
+            alert('受付�E終亁E��ました、E);
             return;
         }
     }
@@ -1339,12 +1339,12 @@ async function handleRegistration() {
 
     let capacityLimit = 0;
     if (source === '一般') capacityLimit = state.settings.capacityGeneral;
-    else if (source === 'みん釣り') capacityLimit = state.settings.capacityMintsuri;
-    else if (source === '水宝') capacityLimit = state.settings.capacitySuiho;
+    else if (source === 'みん�EめE) capacityLimit = state.settings.capacityMintsuri;
+    else if (source === '水宁E) capacityLimit = state.settings.capacitySuiho;
     else if (source === 'ハリミツ') capacityLimit = state.settings.capacityHarimitsu;
 
     if (currentCategoryFishers + fisherCount > capacityLimit || totalNow + fisherCount > state.settings.capacityTotal) {
-        showStatus("定員エラー：登録直前に定員に達しました。内容を確認し、再度お試しください。", "error");
+        showStatus("定員エラー�E�登録直前に定員に達しました。�E容を確認し、�E度お試しください、E, "error");
         return;
     }
 
@@ -1370,9 +1370,9 @@ async function handleRegistration() {
     const submitBtn = document.getElementById('submit-registration');
     const originalBtnText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = "送信中... そのままお待ちください";
+    submitBtn.textContent = "送信中... そ�Eままお征E��ください";
 
-    // v7.0: 二重登録防止のため、送信開始時に内容を一時保存
+    // v7.0: 二重登録防止のため、E��信開始時に冁E��を一時保孁E
     try {
         entryData._ts = Date.now();
         localStorage.setItem('fishing_app_pending_reg', JSON.stringify(entryData));
@@ -1384,7 +1384,7 @@ async function handleRegistration() {
             entryData.id = editId;
             const idx = state.entries.findIndex(en => en.id === editId);
             state.entries[idx] = entryData;
-            showToast('登録内容を更新しました', 'success');
+            showToast('登録冁E��を更新しました', 'success');
             await saveData();
         } else {
             // v6.9: Robust Retry Loop for atomic submission
@@ -1407,7 +1407,7 @@ async function handleRegistration() {
                         state.entries.push(entryData);
                         localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
                         localStorage.removeItem('fishing_app_pending_reg'); // 成功したので一時データを削除
-                        showToast('登録が完了しました！', 'success');
+                        showToast('登録が完亁E��ました�E�E, 'success');
                         success = true;
                     } else {
                         throw new Error(result.message || "Unknown error");
@@ -1415,7 +1415,7 @@ async function handleRegistration() {
                 } catch (err) {
                     attempts++;
                     if (attempts >= 3) throw err;
-                    submitBtn.textContent = `混雑しています... 再試行中 (${attempts}/3)`;
+                    submitBtn.textContent = `混雑してぁE��ぁE.. 再試行中 (${attempts}/3)`;
                     // Exponential backoff: 1s, 2s, 4s... with random jitter
                     const waitTime = Math.pow(2, attempts) * 1000 + (Math.random() * 1000);
                     await new Promise(r => setTimeout(r, waitTime));
@@ -1424,7 +1424,7 @@ async function handleRegistration() {
         }
 
         updateDashboard();
-        showToast('送信中... 少々お待ちください', 'info');
+        showToast('送信中... 少、E��征E��ください', 'info');
         await sendEmailViaGAS(entryData);
 
         if (isAdminAuthAction) {
@@ -1436,18 +1436,18 @@ async function handleRegistration() {
     } catch (e) {
         console.error("Registration error:", e);
         const errorHtml = `
-            <div style="font-weight:bold; margin-bottom:0.5rem;">通信エラー（または混雑）が発生しました。</div>
+            <div style="font-weight:bold; margin-bottom:0.5rem;">通信エラー�E�また�E混雑）が発生しました、E/div>
             <p style="font-size:0.9rem; margin-bottom:1rem;">
-                データが送信されている可能性があります。<strong>何度もボタンを押さず</strong>、
-                まずは下の「確認ボタン」を押して番号が出るか試してください。<br>
-                （または数分待ってからページを再読み込みしてください）
+                チE�Eタが送信されてぁE��可能性があります、Estrong>何度も�Eタンを押さず</strong>、E
+                まず�E下�E「確認�Eタン」を押して番号が�Eるか試してください、Ebr>
+                �E�また�E数刁E��E��てからペ�Eジを�E読み込みしてください�E�E
             </p>
             <button type="button" class="btn-primary btn-check-status" onclick="handleCheckStatus()" 
-                style="background:#00b894; border:none; padding:8px 15px; border-radius:8px;">✅ 登録されたか確認する</button>
+                style="background:#00b894; border:none; padding:8px 15px; border-radius:8px;">✁E登録されたか確認すめE/button>
         `;
         showStatus(errorHtml, "error");
         
-        // showStatusがテキストのみを想定している場合があるため、innerHTMLを許容するように修正が必要かも
+        // showStatusがテキスト�Eみを想定してぁE��場合があるため、innerHTMLを許容するように修正が忁E��かめE
         // 手動でHTMLを流し込む
         const statusDiv = document.getElementById('registration-status');
         if (statusDiv) statusDiv.innerHTML = errorHtml;
@@ -1500,7 +1500,7 @@ function handleEditAuth() {
         fillFormForEdit(entry);
     } else {
         const err = document.getElementById('auth-error');
-        err.textContent = "受付番号または認証情報が正しくありません。";
+        err.textContent = "受付番号また�E認証惁E��が正しくありません、E;
         err.classList.remove('hidden');
     }
 }
@@ -1557,11 +1557,11 @@ function fillFormForEdit(entry) {
 
     // v7.6.6: Enable catgory migration for admins. Ensure all categories are available.
     if (isAdminAuth || isAdminAuthAction) {
-        ['一般', 'みん釣り', '水宝', 'ハリミツ'].forEach(source => {
+        ['一般', 'みん�EめE, '水宁E, 'ハリミツ'].forEach(source => {
             let sourceRadio = document.querySelector(`input[name="reg-source"][value="${source}"]`);
             if (!sourceRadio) {
                 const selector = document.getElementById('main-source-selector');
-                const badgeClassMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
+                const badgeClassMap = { '一般': 'badge-ippan', 'みん�EめE: 'badge-mintsuri', '水宁E: 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
                 const badgeClass = badgeClassMap[source] || 'badge-ippan';
                 const label = document.createElement('label');
                 label.className = 'source-option admin-only temp-option';
@@ -1585,7 +1585,7 @@ function fillFormForEdit(entry) {
         document.getElementById('edit-auth-section').classList.add('hidden');
         document.getElementById('registration-form').classList.remove('hidden');
         document.getElementById('app-title').textContent = "登録変更: " + entry.id;
-        document.getElementById('submit-registration').textContent = "変更を保存する";
+        document.getElementById('submit-registration').textContent = "変更を保存すめE;
         document.getElementById('cancel-edit').classList.remove('hidden');
     } catch (e) {
         console.error("BORIJIN: fillFormForEdit failed:", e);
@@ -1614,8 +1614,8 @@ function showResult(entry) {
     const pList = document.getElementById('res-participant-list');
     if (pList) {
         pList.innerHTML = entry.participants.map(p => {
-            const genderMark = p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
-            return `<li>${p.name} ${genderMark} (${p.type === 'fisher' ? '釣り' : '見学'})</li>`;
+            const genderMark = p.gender === 'male' ? '♁E : (p.gender === 'female' ? '♀' : '');
+            return `<li>${p.name} ${genderMark} (${p.type === 'fisher' ? '釣めE : '見学'})</li>`;
         }).join('');
     }
 
@@ -1623,7 +1623,7 @@ function showResult(entry) {
     const regCard = document.getElementById('registration-card');
     if (regCard) regCard.classList.add('hidden');
 
-    showToast('✨ 登録完了しました！', 'success');
+    showToast('✨ 登録完亁E��ました�E�E, 'success');
     window.scrollTo(0, 0);
 }
 
@@ -1660,7 +1660,7 @@ function resetForm() {
     document.getElementById('registration-status').classList.add('hidden');
     
     updateAppTitle();
-    document.getElementById('submit-registration').textContent = "この内容で登録する";
+    document.getElementById('submit-registration').textContent = "こ�E冁E��で登録する";
     
     const cancelEditBtn = document.getElementById('cancel-edit');
     if (cancelEditBtn) cancelEditBtn.classList.add('hidden');
@@ -1688,25 +1688,25 @@ function showStatus(msg, type, noScroll = false) {
 
 // Admin / Dashboard
 function clearLocalCache() {
-    if (!confirm("ブラウザに保存されているキャッシュを削除し、クラウドから最新データを再取得しますか？\n（現在送信中のデータがある場合は失われる可能性があります）")) {
+    if (!confirm("ブラウザに保存されてぁE��キャチE��ュを削除し、クラウドから最新チE�Eタを�E取得しますか�E�\n�E�現在送信中のチE�Eタがある場合�E失われる可能性があります！E)) {
         return;
     }
     localStorage.removeItem('fishing_app_v3_data');
     localStorage.removeItem('fishing_app_pending_reg');
-    showToast("キャッシュをクリアしました。再読み込みします...", "info");
+    showToast("キャチE��ュをクリアしました。�E読み込みしまぁE..", "info");
     setTimeout(() => location.reload(), 1000);
 }
 
 function updateDashboard() {
     try {
         const fishersIppan = sumCategoryFishers('一般');
-        const fishersMintsuri = sumCategoryFishers('みん釣り');
-        const fishersSuiho = sumCategoryFishers('水宝');
+        const fishersMintsuri = sumCategoryFishers('みん�EめE);
+        const fishersSuiho = sumCategoryFishers('水宁E);
         const fishersHarimitsu = sumCategoryFishers('ハリミツ');
 
         const observersIppan = sumCategoryObservers('一般');
-        const observersMintsuri = sumCategoryObservers('みん釣り');
-        const observersSuiho = sumCategoryObservers('水宝');
+        const observersMintsuri = sumCategoryObservers('みん�EめE);
+        const observersSuiho = sumCategoryObservers('水宁E);
         const observersHarimitsu = sumCategoryObservers('ハリミツ');
 
         const totalFishers = fishersIppan + fishersMintsuri + fishersSuiho + fishersHarimitsu;
@@ -1786,11 +1786,11 @@ function updateDashboard() {
             if (e.status === 'cancelled') tr.classList.add('row-cancelled');
             else if (e.status === 'checked-in') tr.classList.add('row-checked-in');
 
-            const badgeMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
-            const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 無効' : '⏳ 待機';
+            const badgeMap = { '一般': 'badge-ippan', 'みん�EめE: 'badge-mintsuri', '水宁E: 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
+            const statusLabel = e.status === 'checked-in' ? '✁E受渁E : e.status === 'absent' ? '❁E欠席' : e.status === 'cancelled' ? '🚫 無効' : '⏳ 征E��E;
 
             const rep = (e.participants && e.participants[0]) || { name: e.representative };
-            const getGenderMark = (p) => p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
+            const getGenderMark = (p) => p.gender === 'male' ? '♁E : (p.gender === 'female' ? '♀' : '');
             
             const pSummary = `
                 <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:400px; font-size:0.95rem;">
@@ -1829,9 +1829,9 @@ function updateDashboard() {
                 <td><small style="white-space:nowrap;">${regTime}</small></td>
                 <td>
                     <div style="display:flex; gap:0.2rem; flex-wrap: nowrap; width: auto; align-items:center;">
-                        <button class="btn-outline btn-small btn-detail" onclick="window.showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
+                        <button class="btn-outline btn-small btn-detail" onclick="window.showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確誁E/button>
                         <button class="btn-outline btn-small" onclick="window.requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
-                        <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="window.quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
+                        <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="window.quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受仁E/button>
                         <button class="btn-outline btn-small" onclick="window.hardDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap; border-color: #ff7675; color: #ff7675;">削除</button>
                     </div>
                 </td>
@@ -1879,7 +1879,7 @@ function renderIkesuPrintView() {
     if (!container) return;
     
     if (!state.settings.ikesuList || state.settings.ikesuList.length === 0) {
-        container.innerHTML = '<p class="text-muted p-4">イケスが設定されていません。</p>';
+        container.innerHTML = '<p class="text-muted p-4">イケスが設定されてぁE��せん、E/p>';
         return;
     }
 
@@ -1898,8 +1898,8 @@ function renderIkesuPrintView() {
         html += `
             <div class="print-page mb-8" style="background:white; padding:1.2rem; border:1px solid #eee; margin-bottom: 2rem; page-break-after: always;">
                 <h3 style="border-bottom: 2px solid #333; padding-bottom: 0.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between;">
-                    <span>${ik.name} メンバー表</span>
-                    <small style="font-size: 0.75rem; font-weight: normal;">定員: ${ik.capacity} / 現在: ${participants.length}名</small>
+                    <span>${ik.name} メンバ�E表</span>
+                    <small style="font-size: 0.75rem; font-weight: normal;">定員: ${ik.capacity} / 現在: ${participants.length}吁E/small>
                 </h3>
                 <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
                     <thead>
@@ -1908,8 +1908,8 @@ function renderIkesuPrintView() {
                             <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">グループ名</th>
                             <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">氏名</th>
                             <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">性別</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">Tシャツ</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">備考</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">TシャチE/th>
+                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">備老E/th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1920,9 +1920,9 @@ function renderIkesuPrintView() {
                                 <td style="border: 1px solid #cbd5e1; padding: 0.4rem; font-weight: 700;">${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}</td>
                                 <td style="border: 1px solid #cbd5e1; padding: 0.4rem; text-align: center;">${genderLabels[p.gender] || '-'}</td>
                                 <td style="border: 1px solid #cbd5e1; padding: 0.4rem; text-align: center;">${p.tshirtSize || '-'}</td>
-                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem;">${p.type === 'observer' ? '【見学】' : ''}</td>
+                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem;">${p.type === 'observer' ? '【見学、E : ''}</td>
                             </tr>
-                        `).join('') : '<tr><td colspan="6" style="border: 1px solid #cbd5e1; padding: 1.5rem; text-align: center;">(参加者なし)</td></tr>'}
+                        `).join('') : '<tr><td colspan="6" style="border: 1px solid #cbd5e1; padding: 1.5rem; text-align: center;">(参加老E��ぁE</td></tr>'}
                     </tbody>
                 </table>
             </div>
@@ -1998,14 +1998,14 @@ window.renderRankings = function() {
                 <div class="ranking-info">
                     <div class="ranking-name">${p.name}</div>
                     <div class="ranking-subtext">${p.group} ${p.ikesu ? ` / ${p.ikesu}` : ''}</div>
-                    <div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">青物: ${p.cA} / 鯛等: ${p.cB}</div>
+                    <div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">青物: ${p.cA} / 鯛筁E ${p.cB}</div>
                 </div>
                 <div class="ranking-points">
                     <span class="rank-val">${p.points}</span><span class="rank-unit">pt</span>
                 </div>
             </div>
         `;
-    }).join('') || '<p class="text-muted p-4">データがありません</p>';
+    }).join('') || '<p class="text-muted p-4">チE�Eタがありません</p>';
 
     // B. Ikesu Team Ranking
     if (!state.settings.ikesuList) return;
@@ -2041,14 +2041,14 @@ window.renderRankings = function() {
                 <div class="ranking-rank ${rankNumClass}">${i + 1}</div>
                 <div class="ranking-info">
                     <div class="ranking-name">${r.name}</div>
-                    <div class="ranking-subtext">合計: ${r.total}pt / 参加: ${r.count}名</div>
+                    <div class="ranking-subtext">合訁E ${r.total}pt / 参加: ${r.count}吁E/div>
                 </div>
                 <div class="ranking-points">
                     <span class="rank-val">${r.avg}</span><span class="rank-unit">avg</span>
                 </div>
             </div>
         `;
-    }).join('') || '<p class="text-muted p-4">データがありません</p>';
+    }).join('') || '<p class="text-muted p-4">チE�Eタがありません</p>';
 };
 
 // 3. Print View
@@ -2128,9 +2128,9 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             .map(([age, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${ageLabels[age] || age}</span>
-                    <span class="stats-count">${count}名</span>
+                    <span class="stats-count">${count}吁E/span>
                 </div>
-            `).join('') || '<div class="text-muted small">データなし</div>';
+            `).join('') || '<div class="text-muted small">チE�EタなぁE/div>';
     }
 
     // v7.8.5: Check for suspicious T-shirt sizes (Adults with 140) in current view
@@ -2146,9 +2146,9 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             .map(([key, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${genderLabels[key] || key}</span>
-                    <span class="stats-count">${count}名</span>
+                    <span class="stats-count">${count}吁E/span>
                 </div>
-            `).join('') || '<div class="text-muted small">データなし</div>';
+            `).join('') || '<div class="text-muted small">チE�EタなぁE/div>';
     }
 
     // Render Regions
@@ -2160,9 +2160,9 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             .map(([reg, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${reg}</span>
-                    <span class="stats-count">${count}名</span>
+                    <span class="stats-count">${count}吁E/span>
                 </div>
-            `).join('') || '<div class="text-muted small">データなし</div>';
+            `).join('') || '<div class="text-muted small">チE�EタなぁE/div>';
     }
 
     // v7.7.0: Render T-shirt Sizes (Total for orders)
@@ -2182,9 +2182,9 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             .map(([size, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${size}</span>
-                    <span class="stats-count">${count}枚</span>
+                    <span class="stats-count">${count}极E/span>
                 </div>
-            `).join('') || '<div class="text-muted small">データなし</div>';
+            `).join('') || '<div class="text-muted small">チE�EタなぁE/div>';
     }
 }
 
@@ -2218,9 +2218,9 @@ function checkTshirtSizeAnomalies(entries) {
         alert.className = 'alert alert-info mt-4';
         alert.style.borderLeft = '5px solid var(--error-color)';
         alert.innerHTML = `
-            <div style="font-weight:bold; color:var(--error-color); margin-bottom:0.5rem;">⚠️ Tシャツサイズの確認推奨 (${anomalies.length}件)</div>
+            <div style="font-weight:bold; color:var(--error-color); margin-bottom:0.5rem;">⚠�E�ETシャチE��イズの確認推奨 (${anomalies.length}件)</div>
             <div style="font-size:0.85rem; color:var(--text-color); margin-bottom:0.5rem;">
-                中学生以上の年代でサイズが「140」になっている方がいます。変更漏れの可能性があるため、名簿から内容をご確認ください。
+                中学生以上�E年代でサイズが、E40」になってぁE��方がいます。変更漏れの可能性があるため、名簿から冁E��をご確認ください、E
             </div>
             <div style="max-height:120px; overflow-y:auto; font-size:0.8rem; background:rgba(0,0,0,0.03); padding:0.5rem; border-radius:4px;">
                 ${anomalies.map(a => `
@@ -2238,8 +2238,8 @@ window.renderPublicStats = function() {
     
     const categories = [
         { id: 'ippan', name: '一般', source: '一般', capacity: state.settings.capacityGeneral, color: 'ippan' },
-        { id: 'mintsuri', name: 'みん釣り', source: 'みん釣り', capacity: state.settings.capacityMintsuri, color: 'mintsuri' },
-        { id: 'suiho', name: '水宝', source: '水宝', capacity: state.settings.capacitySuiho, color: 'suiho' },
+        { id: 'mintsuri', name: 'みん�EめE, source: 'みん�EめE, capacity: state.settings.capacityMintsuri, color: 'mintsuri' },
+        { id: 'suiho', name: '水宁E, source: '水宁E, capacity: state.settings.capacitySuiho, color: 'suiho' },
         { id: 'harimitsu', name: 'ハリミツ', source: 'ハリミツ', capacity: state.settings.capacityHarimitsu, color: 'harimitsu' }
     ];
 
@@ -2255,7 +2255,7 @@ window.renderPublicStats = function() {
                 </div>
                 <div class="public-stat-main">
                     <span class="public-stat-value">${count}</span>
-                    <span class="public-stat-unit">/ ${cat.capacity} 名</span>
+                    <span class="public-stat-unit">/ ${cat.capacity} 吁E/span>
                 </div>
                 <div class="public-progress-container"><div class="public-progress bg-${cat.color}" style="width: ${progress}%"></div></div>
             </div>`;
@@ -2273,16 +2273,16 @@ window.renderPublicStats = function() {
     if (summaryContainer) {
         summaryContainer.innerHTML = `
             <div class="stats-summary-grid mb-4">
-                <div class="summary-card"><div class="summary-label">総登録グループ</div><div class="summary-value">${groups} <small>組</small></div></div>
-                <div class="summary-card"><div class="summary-label">釣り参加者合計</div><div class="summary-value">${fishers} <small>/ ${state.settings.capacityTotal}</small></div></div>
-                <div class="summary-card"><div class="summary-label">見学者合計</div><div class="summary-value">${observers} <small>名</small></div></div>
+                <div class="summary-card"><div class="summary-label">総登録グルーチE/div><div class="summary-value">${groups} <small>絁E/small></div></div>
+                <div class="summary-card"><div class="summary-label">釣り参加老E��訁E/div><div class="summary-value">${fishers} <small>/ ${state.settings.capacityTotal}</small></div></div>
+                <div class="summary-card"><div class="summary-label">見学老E��訁E/div><div class="summary-value">${observers} <small>吁E/small></div></div>
                 <div class="summary-card"><div class="summary-label">最終更新</div><div class="summary-value" style="font-size:1.2rem;">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div>
             </div>`;
     }
 }
 
 window.renderMintsuriCoordinatorView = function() {
-    renderGenericCoordinatorView('みん釣り', 'mintsuri');
+    renderGenericCoordinatorView('みん�EめE, 'mintsuri');
 };
 
 window.renderHarimitsuCoordinatorView = function() {
@@ -2290,7 +2290,7 @@ window.renderHarimitsuCoordinatorView = function() {
 };
 
 window.renderSuihoCoordinatorView = function() {
-    renderGenericCoordinatorView('水宝', 'suiho');
+    renderGenericCoordinatorView('水宁E, 'suiho');
 };
 
 /**
@@ -2307,9 +2307,9 @@ function renderGenericCoordinatorView(sourceName, prefix) {
     
     // v8.1.39: Fixed capacity key mapping
     const capacityKeyMap = {
-        'みん釣り': 'capacityMintsuri',
+        'みん�EめE: 'capacityMintsuri',
         'ハリミツ': 'capacityHarimitsu',
-        '水宝': 'capacitySuiho',
+        '水宁E: 'capacitySuiho',
         '一般': 'capacityGeneral'
     };
     const capacityKey = capacityKeyMap[sourceName];
@@ -2318,10 +2318,10 @@ function renderGenericCoordinatorView(sourceName, prefix) {
     if (summary) {
         summary.innerHTML = `
             <div class="stats-summary-grid">
-                <div class="summary-card"><div class="summary-label">${sourceName} 合計組数</div><div class="summary-value">${sourceEntries.length} <small>組</small></div></div>
+                <div class="summary-card"><div class="summary-label">${sourceName} 合計絁E��</div><div class="summary-value">${sourceEntries.length} <small>絁E/small></div></div>
                 <div class="summary-card"><div class="summary-label">${sourceName} 釣り人数</div><div class="summary-value">${totalFishers} <small>/ ${capacity}</small></div></div>
-                <div class="summary-card"><div class="summary-label">見学人数</div><div class="summary-value">${totalObservers} <small>名</small></div></div>
-                <div class="summary-card"><div class="summary-label">充足率</div><div class="summary-value">${capacity > 0 ? Math.round((totalFishers/capacity)*100) : 0}%</div></div>
+                <div class="summary-card"><div class="summary-label">見学人数</div><div class="summary-value">${totalObservers} <small>吁E/small></div></div>
+                <div class="summary-card"><div class="summary-label">允E��玁E/div><div class="summary-value">${capacity > 0 ? Math.round((totalFishers/capacity)*100) : 0}%</div></div>
             </div>`;
     }
 
@@ -2376,7 +2376,7 @@ function renderActiveCoordinatorView() {
 }
 
 window.exportMintsuriCSV = function() {
-    exportGenericCSV('みん釣り', 'mintsuri_export');
+    exportGenericCSV('みん�EめE, 'mintsuri_export');
 }
 
 window.exportHarimitsuCSV = function() {
@@ -2384,14 +2384,14 @@ window.exportHarimitsuCSV = function() {
 }
 
 window.exportSuihoCSV = function() {
-    exportGenericCSV('水宝', 'suiho_export');
+    exportGenericCSV('水宁E, 'suiho_export');
 }
 
 function exportGenericCSV(sourceName, fileName) {
     const targetEntries = state.entries.filter(e => e.source === sourceName && e.status !== 'cancelled');
-    if (targetEntries.length === 0) return alert('データがありません');
+    if (targetEntries.length === 0) return alert('チE�Eタがありません');
 
-    const headers = ['受付番号', 'グループ名', '代表者名', '電話番号', 'メール', '釣り人数', '見学人数', '登録時間'];
+    const headers = ['受付番号', 'グループ名', '代表老E��', '電話番号', 'メール', '釣り人数', '見学人数', '登録時間'];
     const rows = targetEntries.map(e => [
         e.id, e.groupName, e.representative, e.phone, e.email, e.fishers, e.observers, formatDateForCSV(e.timestamp)
     ]);
@@ -2409,24 +2409,24 @@ function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent)
     const html = `
         <div class="stats-summary-grid">
             <div class="summary-card" style="border-top: 5px solid var(--primary-color);">
-                <div class="summary-label">釣り参加者合計</div>
+                <div class="summary-label">釣り参加老E��訁E/div>
                 <div class="summary-value"><span class="current-fishers">${fishers}</span> <small>/ ${state.settings.capacityTotal}</small></div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">総登録グループ</div>
-                <div class="summary-value">${groups} <small>組</small></div>
+                <div class="summary-label">総登録グルーチE/div>
+                <div class="summary-value">${groups} <small>絁E/small></div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">見学者合計</div>
-                <div class="summary-value">${observers} <small>名</small></div>
+                <div class="summary-label">見学老E��訁E/div>
+                <div class="summary-value">${observers} <small>吁E/small></div>
             </div>
             <div class="summary-card" style="border-top: 5px solid #10b981;">
-                <div class="summary-label">当日受付状況</div>
+                <div class="summary-label">当日受付状況E/div>
                 <div class="summary-value" style="font-size: 1.1rem; line-height: 1.4;">
                     <span style="color: var(--primary-color)">来場: <span class="checked-in-count">${checkedIn}</span></span> / 
                     <span style="color: var(--error-color)">欠席: <span class="absent-count">${absent}</span></span>
                 </div>
-                <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">全 <span class="total-groups-count">${groups}</span> 組</div>
+                <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">全 <span class="total-groups-count">${groups}</span> 絁E/div>
             </div>
         </div>
     `;
@@ -2436,16 +2436,16 @@ function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent)
 
 // Admin Debug Methods
 async function testEmailFeature() {
-    const testEmail = prompt("テストメールの送信先を入力してください:", "test@example.com");
+    const testEmail = prompt("チE��トメールの送信先を入力してください:", "test@example.com");
     if (!testEmail) return;
-    showToast('テストメール送信中...', 'info');
+    showToast('チE��トメール送信中...', 'info');
     try {
         await sendEmailViaGAS({
-            action: 'sendEmail', id: 'TEST-000', groupName: 'テスト',
-            email: testEmail, representative: 'テスト氏名',
-            fishers: 1, observers: 0, source: '一般', participants: [{name: 'テスト参加者', type: 'fisher'}]
+            action: 'sendEmail', id: 'TEST-000', groupName: 'チE��チE,
+            email: testEmail, representative: 'チE��ト氏名',
+            fishers: 1, observers: 0, source: '一般', participants: [{name: 'チE��ト参加老E, type: 'fisher'}]
         });
-        alert("送信リクエスト完了。設定URL: " + GAS_WEB_APP_URL);
+        alert("送信リクエスト完亁E��設定URL: " + GAS_WEB_APP_URL);
     } catch (e) { alert("エラー: " + e.message); }
 }
 
@@ -2504,7 +2504,7 @@ function updateReceptionList() {
         item.className = `reception-group-item ${activeReceptionEntryId === e.id ? 'active' : ''} ${e.isCompleted ? 'completed' : ''}`;
         item.onclick = () => selectReceptionEntry(e.id);
 
-        const badgeClass = e.source === 'みん釣り' ? 'badge-mintsuri' : e.source === '一般' ? 'badge-ippan' : e.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho';
+        const badgeClass = e.source === 'みん�EめE ? 'badge-mintsuri' : e.source === '一般' ? 'badge-ippan' : e.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho';
         
         item.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
@@ -2514,8 +2514,8 @@ function updateReceptionList() {
             <div class="item-meta" style="display:flex; justify-content:space-between; align-items:center;">
                 <div style="font-size:1rem; color:#636e72;">${e.representative}</div>
                 <div style="display:flex; align-items:center; gap:0.5rem;">
-                    <span style="font-size:0.9rem; font-weight:700; color: #0984e3;">${e.isCompleted ? '✅ 受付済' : `${e.finishedCount}/${e.totalCount}`}</span>
-                    ${!e.isCompleted ? `<button onclick="event.stopPropagation(); updateGroupStatus('${e.id}', 'checked-in')" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: var(--primary-color); border: none; border-radius: 4px; color: white; cursor: pointer;">全員受付</button>` : ''}
+                    <span style="font-size:0.9rem; font-weight:700; color: #0984e3;">${e.isCompleted ? '✁E受付渁E : `${e.finishedCount}/${e.totalCount}`}</span>
+                    ${!e.isCompleted ? `<button onclick="event.stopPropagation(); updateGroupStatus('${e.id}', 'checked-in')" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: var(--primary-color); border: none; border-radius: 4px; color: white; cursor: pointer;">全員受仁E/button>` : ''}
                 </div>
             </div>
         `;
@@ -2539,7 +2539,7 @@ function renderReceptionDesk() {
         desk.innerHTML = `
             <div class="reception-placeholder">
                 <i class="icon-search">🔍</i>
-                <p>左側のリストからグループを選択してください。</p>
+                <p>左側のリストからグループを選択してください、E/p>
             </div>
         `;
         return;
@@ -2549,34 +2549,34 @@ function renderReceptionDesk() {
         <div class="desk-header" style="background: #eef2ff; border-bottom: 2px solid var(--primary-color); padding: 1.5rem; border-radius: 8px 8px 0 0;">
             <div class="desk-title-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                 <div class="desk-group-name" style="font-size: 1.8rem; font-weight: 900; color: var(--primary-color);">${entry.groupName}</div>
-                <div class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}" style="font-size: 1.2rem; padding: 0.5rem 1rem;">${entry.source}</div>
+                <div class="badge ${entry.source === 'みん�EめE ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}" style="font-size: 1.2rem; padding: 0.5rem 1rem;">${entry.source}</div>
             </div>
             <div class="desk-meta" style="font-size: 1rem; color: #475569; font-weight: 600;">
                 <span style="background: white; padding: 2px 8px; border-radius: 4px; border: 1px solid #cbd5e1;">ID: ${entry.id}</span>
-                <span style="margin-left: 1rem;">代表者: ${entry.representative}</span>
+                <span style="margin-left: 1rem;">代表老E ${entry.representative}</span>
                 <span style="margin-left: 1rem;">TEL: ${entry.phone}</span>
             </div>
         </div>
 
         <div class="participant-check-list" style="padding: 1.5rem; background: white;">
-            <div class="section-title" style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; border-left-width: 4px;">参加メンバー個別の受付状況</div>
+            <div class="section-title" style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; border-left-width: 4px;">参加メンバ�E個別の受付状況E/div>
             
             ${entry.participants.map((p, idx) => {
                 const typeClass = p.type === 'fisher' ? 'p-badge-fisher' : 'p-badge-observer';
-                const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
+                const typeLabel = p.type === 'fisher' ? '釣めE : '見学';
                 const rowStatusClass = p.status === 'checked-in' ? 'checked-in' : (p.status === 'absent' ? 'absent' : '');
                 
                 return `
                 <div class="participant-check-row ${rowStatusClass}" style="margin-bottom: 12px; padding: 1rem; border-radius: 12px; border: 2px solid ${p.status === 'checked-in' ? '#10b981' : (p.status === 'absent' ? '#ef4444' : '#e2e8f0')}; display: flex; align-items: center; justify-content: space-between; background: ${p.status === 'checked-in' ? '#f0fdf4' : (p.status === 'absent' ? '#fef2f2' : 'white')}; transition: all 0.2s;">
                     <div class="p-info" style="display: flex; align-items: center; gap: 1rem; flex: 1;">
-                        <div style="font-size: 1.5rem; width: 40px; text-align: center;">${p.status === 'checked-in' ? '✅' : (p.status === 'absent' ? '❌' : '⬜')}</div>
+                        <div style="font-size: 1.5rem; width: 40px; text-align: center;">${p.status === 'checked-in' ? '✁E : (p.status === 'absent' ? '❁E : '⬁E)}</div>
                         <div>
                             <div class="p-name" style="font-size: 1.25rem; font-weight: 800; color: #1e293b;">
                                 <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}" style="margin-right: 8px;">${typeLabel}</span>
-                                ${p.name} <small style="font-weight: normal; color: #64748b;">(${p.nickname || 'ニックネーム無'})</small>
+                                ${p.name} <small style="font-weight: normal; color: #64748b;">(${p.nickname || 'ニックネ�Eム無'})</small>
                             </div>
                             <div class="p-meta" style="font-size: 0.9rem; color: #64748b; margin-top: 4px;">
-                                ${p.region || '地域不明'} | ${genderLabels[p.gender] || '-'} | ${ageLabels[p.age] || '-'} | Tシャツ: [<strong>${p.tshirtSize || '不明'}</strong>]
+                                ${p.region || '地域不�E'} | ${genderLabels[p.gender] || '-'} | ${ageLabels[p.age] || '-'} | TシャチE [<strong>${p.tshirtSize || '不�E'}</strong>]
                             </div>
                         </div>
                     </div>
@@ -2590,7 +2590,7 @@ function renderReceptionDesk() {
         </div>
 
         <div class="desk-footer" style="padding: 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; align-items: center; border-radius: 0 -0 8px 8px; gap: 1rem;">
-            <button class="btn-primary btn-large" onclick="window.updateGroupStatus('${entry.id}', 'checked-in')" style="padding: 1rem 2rem; font-size: 1.2rem; white-space: nowrap;">全員まとめて受付</button>
+            <button class="btn-primary btn-large" onclick="window.updateGroupStatus('${entry.id}', 'checked-in')" style="padding: 1rem 2rem; font-size: 1.2rem; white-space: nowrap;">全員まとめて受仁E/button>
         </div>
     `;
 }
@@ -2610,8 +2610,8 @@ window.updateParticipantStatus = function (entryId, pIdx, status) {
     syncGroupStatusFromParticipants(entry);
 
     if (!isTogglingOff) {
-        const statusLabel = status === 'checked-in' ? '受付済' : status === 'absent' ? '欠席' : '未受付';
-        showToast(`${entry.participants[pIdx].name} 様を「${statusLabel}」に更新しました`, 'info');
+        const statusLabel = status === 'checked-in' ? '受付渁E : status === 'absent' ? '欠席' : '未受仁E;
+        showToast(`${entry.participants[pIdx].name} 様を、E{statusLabel}」に更新しました`, 'info');
     }
 
     entry.lastModified = new Date().toLocaleString('ja-JP');
@@ -2627,7 +2627,7 @@ window.updateGroupStatus = function (entryId, status) {
     if (!entry) return;
 
     entry.participants.forEach(p => {
-        // statusが 'checked-in' の場合、既に 'absent' の人は上書きしない
+        // statusぁE'checked-in' の場合、既に 'absent' の人は上書きしなぁE
         if (status === 'checked-in' && p.status === 'absent') {
             return;
         }
@@ -2636,7 +2636,7 @@ window.updateGroupStatus = function (entryId, status) {
     syncGroupStatusFromParticipants(entry);
 
     if (status === 'checked-in') {
-        showToast('グループ全員を受付しました', 'success');
+        showToast('グループ�E員を受付しました', 'success');
     }
 
     entry.lastModified = new Date().toLocaleString('ja-JP');
@@ -2674,7 +2674,7 @@ window.openIkesuModal = function (id = null) {
     if (id) {
         const ikesu = state.settings.ikesuList.find(i => i.id === id);
         if (ikesu) {
-            document.getElementById('ikesu-modal-title').textContent = "イケスの編集";
+            document.getElementById('ikesu-modal-title').textContent = "イケスの編雁E;
             document.getElementById('ikesu-edit-id').value = ikesu.id;
             document.getElementById('ikesu-name').value = ikesu.name;
             document.getElementById('ikesu-capacity').value = ikesu.capacity;
@@ -2703,7 +2703,7 @@ window.saveIkesu = function () {
     const passcode = passEl ? passEl.value.trim() : "";
 
     if (!name || isNaN(capacity) || capacity < 1) {
-        alert("名前と定員（1以上）を正しく入力してください。");
+        alert("名前と定員�E�E以上）を正しく入力してください、E);
         return;
     }
 
@@ -2732,7 +2732,7 @@ window.saveIkesu = function () {
 };
 
 window.deleteIkesu = function (id) {
-    if (!confirm('本当にこのイケスを削除しますか？\n割り当てられていた人は未割り当てに戻ります。')) return;
+    if (!confirm('本当にこ�Eイケスを削除しますか�E�\n割り当てられてぁE��人は未割り当てに戻ります、E)) return;
     state.settings.ikesuList = state.settings.ikesuList.filter(i => i.id !== id);
     state.entries.forEach(e => {
         e.participants.forEach(p => {
@@ -2844,7 +2844,7 @@ window.renderIkesuWorkspace = function () {
                                ${unassignedParts.map(item => `
                                    <div class="drag-item-person draggable" draggable="true" ondragstart="dragPerson(event, '${e.id}', ${item.idx})">
                                        <span>${item.p.name}</span>
-                                       <span class="badge ${item.p.type==='fisher'?'':'badge-observer'}">${item.p.type==='fisher'?'釣り':'見学'}</span>
+                                       <span class="badge ${item.p.type==='fisher'?'':'badge-observer'}">${item.p.type==='fisher'?'釣めE:'見学'}</span>
                                    </div>
                                `).join('')}
                            </div>
@@ -2866,9 +2866,9 @@ window.renderIkesuWorkspace = function () {
         box.innerHTML = `
             <div class="ikesu-header">
                 <span class="ikesu-title">${ik.name}</span>
-                <button class="btn-text" onclick="window.openIkesuModal('${ik.id}')">✏️</button>
+                <button class="btn-text" onclick="window.openIkesuModal('${ik.id}')">✏︁E/button>
             </div>
-            <div class="ikesu-capacity">釣り: ${data.fishers}/${ik.capacity} (見学: ${data.observers})</div>
+            <div class="ikesu-capacity">釣めE ${data.fishers}/${ik.capacity} (見学: ${data.observers})</div>
             <div class="ikesu-drop-area">
                 ${Object.values(data.items.reduce((acc, item) => {
                     if (!acc[item.entry.id]) acc[item.entry.id] = { entry: item.entry, parts: [] };
@@ -2883,7 +2883,7 @@ window.renderIkesuWorkspace = function () {
                             ${group.parts.map(m => `
                                 <div class="drag-item-person" draggable="true" ondragstart="dragPerson(event, '${group.entry.id}', ${m.idx})">
                                     <div style="display:flex; align-items:center; gap:4px;">
-                                        <button class="btn-leader-toggle ${m.p.isLeader ? 'active' : ''}" onclick="window.toggleLeader('${group.entry.id}', ${m.idx})">⭐</button>
+                                        <button class="btn-leader-toggle ${m.p.isLeader ? 'active' : ''}" onclick="window.toggleLeader('${group.entry.id}', ${m.idx})">⭁E/button>
                                         <span>${m.p.name}</span>
                                     </div>
                                 </div>
@@ -2915,7 +2915,7 @@ window.verifyLeaderAuth = function() {
         document.getElementById('leader-step-2').classList.remove('hidden');
         renderLeaderEntryTable();
     } else {
-        showToast('暗証番号が違います', 'error');
+        showToast('暗証番号が違ぁE��ぁE, 'error');
     }
 };
 
@@ -2933,7 +2933,7 @@ window.renderLeaderEntryTable = function() {
 
     container.innerHTML = `
         <table class="leader-table">
-            <thead><tr><th>氏名</th><th>青物(2pt)</th><th>鯛等(1pt)</th><th>小計</th></tr></thead>
+            <thead><tr><th>氏名</th><th>青物(2pt)</th><th>鯛筁E1pt)</th><th>小訁E/th></tr></thead>
             <tbody>
                 ${members.map(m => `
                     <tr data-entry="${m.entry.id}" data-idx="${m.idx}">
@@ -3001,29 +3001,29 @@ window.renderIkesuPrintView = function() {
         html += `
             <div class="print-ikesu-sheet" style="page-break-after: always; padding: 20px; border-bottom: 2px solid #333;">
                 <h2 style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>${ik.name} メンバー表</span>
+                    <span>${ik.name} メンバ�E表</span>
                     <span style="font-size:1rem; background:#eee; padding:5px 10px; border-radius:4px;">リーダー用 暗証番号: <strong>${ik.passcode}</strong></span>
                 </h2>
                 <table class="print-table" style="width:100%; border-collapse:collapse; margin-top:20px;">
-                    <thead><tr style="background:#f0f0f0;"><th>グループ</th><th>氏名</th><th>区分</th><th>備考</th></tr></thead>
+                    <thead><tr style="background:#f0f0f0;"><th>グルーチE/th><th>氏名</th><th>区刁E/th><th>備老E/th></tr></thead>
                     <tbody>
-                        ${members.map(m => `<tr><td>${m.e.groupName}</td><td>${m.p.name}</td><td>${m.p.type==='fisher'?'釣り':'見学'}</td><td>${m.p.isLeader?'★リーダー':''}</td></tr>`).join('')}
+                        ${members.map(m => `<tr><td>${m.e.groupName}</td><td>${m.p.name}</td><td>${m.p.type==='fisher'?'釣めE:'見学'}</td><td>${m.p.isLeader?'☁E��ーダー':''}</td></tr>`).join('')}
                     </tbody>
                 </table>
             </div>
         `;
     });
-    container.innerHTML = html || "データなし";
+    container.innerHTML = html || "チE�EタなぁE;
 };
 
 /* --- SYSTEM STABILIZATION FUNCTIONS RESTORED v8.0.7 --- */
 
 function updateAppTitle() {
     const titleEl = document.getElementById('app-title');
-    const competitionName = state.settings.competitionName || "釣り大会 受付";
+    const competitionName = state.settings.competitionName || "釣り大企E受仁E;
     if (titleEl) {
-        if (currentViewId === 'dashboard-view') titleEl.textContent = `管理者: ${competitionName}`;
-        else if (currentViewId === 'reception-view') titleEl.textContent = `当日受付: ${competitionName}`;
+        if (currentViewId === 'dashboard-view') titleEl.textContent = `管琁E��E ${competitionName}`;
+        else if (currentViewId === 'reception-view') titleEl.textContent = `当日受仁E ${competitionName}`;
         else titleEl.textContent = competitionName;
     }
     document.title = competitionName;
@@ -3065,10 +3065,10 @@ window.updateCapacityTotal = function() {
 };
 
 window.confirmReset = async function () {
-    if (confirm('全ての名簿データを削除します。本当によろしいですか？')) {
+    if (confirm('全ての名簿チE�Eタを削除します。本当によろしいですか�E�E)) {
         state.entries = [];
         state.lastUpdated = Date.now();
-        showToast('リセット中...', 'info');
+        showToast('リセチE��中...', 'info');
         try {
             await syncToCloud();
             localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
@@ -3118,7 +3118,7 @@ function setVal(id, val) {
 }
 
 function handleCheckStatus() {
-    const searchVal = prompt("お名前（代表者）を入力してください。");
+    const searchVal = prompt("お名前（代表老E��を入力してください、E);
     if (!searchVal) return;
     
     dashboardFilter = 'all';
@@ -3127,7 +3127,7 @@ function handleCheckStatus() {
         alert(`${matches.length} 件見つかりました。最新の番号は ${matches[0].id} です。`);
         location.reload();
     } else {
-        alert("見つかりませんでした。もう一度試すか、事務局へお問い合わせください。");
+        alert("見つかりませんでした。もぁE��度試すか、事務局へお問ぁE��わせください、E);
     }
 }
 
@@ -3136,7 +3136,7 @@ function handleCheckStatus() {
  */
 window.hardDeleteEntry = async function (id) {
     if (!isAdminAuth) return;
-    if (!confirm(`エントリー ${id} を完全に削除しますか？\n(送信後、サーバーからも完全に削除されます。テスト入力の整理に使用してください)`)) return;
+    if (!confirm(`エントリー ${id} を完�Eに削除しますか�E�\n(送信後、サーバ�Eからも完�Eに削除されます。テスト�E力�E整琁E��使用してください)`)) return;
 
     try {
         const idx = state.entries.findIndex(e => e.id === id);
@@ -3188,29 +3188,29 @@ window.showEntryDetails = function (id) {
     let participantsHtml = entry.participants.map((p, idx) => `
         <div style="padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; background: ${p.type === 'observer' ? '#f8f9fa' : '#fff'}">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <strong>${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}${p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '')}</strong>
-                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}">${p.type === 'fisher' ? '釣り' : '見学'}</span>
+                <strong>${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}${p.gender === 'male' ? '♁E : (p.gender === 'female' ? '♀' : '')}</strong>
+                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}">${p.type === 'fisher' ? '釣めE : '見学'}</span>
             </div>
             <div style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">
-                ${genderLabels[p.gender] || '-'} / ${ageLabels[p.age] || '-'} / ${p.region || '地域不明'} / Tシャツ: ${p.tshirtSize || 'なし'}
+                ${genderLabels[p.gender] || '-'} / ${ageLabels[p.age] || '-'} / ${p.region || '地域不�E'} / TシャチE ${p.tshirtSize || 'なぁE}
             </div>
             ${p.type === 'fisher' ? `
             <div style="margin-top: 5px; font-weight: bold; color: var(--primary-color);">
-                ${p.catchA || 0}匹 (大物) / ${p.catchB || 0}匹 (その他)
+                ${p.catchA || 0}匹 (大物) / ${p.catchB || 0}匹 (そ�E仁E
             </div>` : ''}
         </div>
     `).join('');
 
     body.innerHTML = `
         <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f1f5f9; border-radius: 8px;">
-            <p><strong>代表者:</strong> ${entry.representative}</p>
+            <p><strong>代表老E</strong> ${entry.representative}</p>
             <p><strong>電話番号:</strong> ${entry.phone}</p>
             <p><strong>メール:</strong> ${entry.email}</p>
-            <p><strong>登録区分:</strong> <span class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}">${entry.source}</span></p>
-            <p><strong>現在の状態:</strong> ${entry.status === 'checked-in' ? '✅ 受付済' : entry.status === 'cancelled' ? '🚫 キャンセル' : '⏳ 待機'}</p>
-            <p><strong>得点合計:</strong> <span style="font-size: 1.2rem; font-weight: 900; color: var(--primary-color);">${groupPoints} pt</span></p>
+            <p><strong>登録区刁E</strong> <span class="badge ${entry.source === 'みん�EめE ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}">${entry.source}</span></p>
+            <p><strong>現在の状慁E</strong> ${entry.status === 'checked-in' ? '✁E受付渁E : entry.status === 'cancelled' ? '🚫 キャンセル' : '⏳ 征E��E}</p>
+            <p><strong>得点合訁E</strong> <span style="font-size: 1.2rem; font-weight: 900; color: var(--primary-color);">${groupPoints} pt</span></p>
         </div>
-        <h4 style="margin-bottom: 0.8rem; font-size: 1rem; color: #475569;">参加者内訳 (${entry.participants.length}名)</h4>
+        <h4 style="margin-bottom: 0.8rem; font-size: 1rem; color: #475569;">参加老E�E訳 (${entry.participants.length}吁E</h4>
         <div>${participantsHtml}</div>
     `;
 
@@ -3245,7 +3245,7 @@ window.requestAdminEdit = function (id) {
         if (titleEl) titleEl.textContent = "登録変更: " + entry.id;
     } catch (e) {
         console.error("BORIJIN: requestAdminEdit failed:", e);
-        showToast("編集画面への遷移に失敗しました", "error");
+        showToast("編雁E��面への遷移に失敗しました", "error");
     }
 };
 
@@ -3273,7 +3273,7 @@ window.quickCheckIn = async function (id) {
     entry.lastModified = new Date().toLocaleString('ja-JP');
     if (newStatus === 'checked-in') entry.checkedIn = true;
     
-    showToast(`${entry.groupName} の状態を「${newStatus === 'checked-in' ? '受付済' : '未受付'}」に更新中...`, 'info');
+    showToast(`${entry.groupName} の状態を、E{newStatus === 'checked-in' ? '受付渁E : '未受仁E}」に更新中...`, 'info');
     
     await saveData();
     updateDashboard();
@@ -3285,7 +3285,7 @@ window.quickCheckIn = async function (id) {
  * v8.1.48: Admin Email Resend
  */
 window.resendEmail = async function (id) {
-    if (!confirm('この申込の確定メールを再送しますか？')) return;
+    if (!confirm('こ�E申込の確定メールを�E送しますか�E�E)) return;
     const entry = state.entries.find(e => e.id === id);
     if (!entry) return;
 
@@ -3298,13 +3298,13 @@ window.resendEmail = async function (id) {
         });
         const res = await response.json();
         if (res.status === 'success') {
-            showToast('✅ メールを再送しました', 'success');
+            showToast('✁Eメールを�E送しました', 'success');
         } else {
             throw new Error(res.message);
         }
     } catch (e) {
         console.error("Email resend failed:", e);
-        showToast('❌ メールの再送に失敗しました。サーバー側のログを確認してください。', 'error');
+        showToast('❁Eメールの再送に失敗しました。サーバ�E側のログを確認してください、E, 'error');
     }
 };
 
@@ -3312,7 +3312,7 @@ window.resendEmail = async function (id) {
  * v8.1.48: Entry Cancellation
  */
 window.cancelEntry = async function (id) {
-    if (!confirm('このエントリーを「無効（キャンセル）」にしますか？\n※データはマスタに残りますが、集計や受入からは除外されます。')) return;
+    if (!confirm('こ�Eエントリーを「無効�E�キャンセル�E�」にしますか�E�\n※チE�Eタはマスタに残りますが、E��計や受�Eからは除外されます、E)) return;
     const entry = state.entries.find(e => e.id === id);
     if (entry) {
         entry.status = 'cancelled';
@@ -3335,13 +3335,13 @@ window.restoreEntry = async function (id) {
         entry.lastModified = new Date().toLocaleString('ja-JP');
         await saveData();
         updateDashboard();
-        showToast('エントリーを有効な状態（待機）に復元しました', 'success');
+        showToast('エントリーを有効な状態（征E��）に復允E��ました', 'success');
         fillFormForEdit(entry); // Refresh the edit view if active
     }
 };
 
 async function exportGroupsCSV() {
-    const headers = ["ID", "区分", "グループ名", "代表者", "電話番号", "人数(釣り)", "人数(見学)", "ステータス", "日時"];
+    const headers = ["ID", "区刁E, "グループ名", "代表老E, "電話番号", "人数(釣めE", "人数(見学)", "スチE�Eタス", "日晁E];
     const rows = state.entries.map(e => [
         e.id, 
         e.source, 
@@ -3357,7 +3357,7 @@ async function exportGroupsCSV() {
 }
 
 async function exportParticipantsCSV() {
-    const headers = ["ID", "区分", "グループ名", "氏名", "ニックネーム", "性別", "年代", "地域", "区分(釣/見)", "サイズ", "ステータス"];
+    const headers = ["ID", "区刁E, "グループ名", "氏名", "ニックネ�Eム", "性別", "年代", "地埁E, "区刁E釣/要E", "サイズ", "スチE�Eタス"];
     const rows = [];
     state.entries.forEach(e => {
         (e.participants || []).forEach(p => {
@@ -3370,7 +3370,7 @@ async function exportParticipantsCSV() {
                 p.gender,
                 p.age,
                 `"${p.region || ''}"`,
-                p.type === 'fisher' ? '釣り' : '見学',
+                p.type === 'fisher' ? '釣めE : '見学',
                 p.tshirtSize,
                 e.status
             ]);
@@ -3398,7 +3398,7 @@ function renderRankings() {
         .filter(e => e.status !== 'cancelled')
         .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
     if (sorted.length === 0) {
-        list.innerHTML = '<li class="p-4 text-center text-muted">データがありません</li>';
+        list.innerHTML = '<li class="p-4 text-center text-muted">チE�Eタがありません</li>';
         return;
     }
     sorted.forEach((e, i) => {
@@ -3424,9 +3424,9 @@ function renderLeaderEntryForm() {
     container.innerHTML = '<p class="text-center p-4">読み込み中...</p>';
     const searchHtml = `
         <div class="form-group">
-            <label>入力するチームを選択</label>
+            <label>入力するチームを選抁E/label>
             <select id="leader-group-select" class="form-control" style="font-size:1.1rem; padding:0.8rem;">
-                <option value="">-- チームを選択してください --</option>
+                <option value="">-- チ�Eムを選択してください --</option>
                 ${state.entries
                     .filter(e => e.status !== 'cancelled')
                     .sort((a,b) => a.groupName.localeCompare(b.groupName, 'ja'))
@@ -3446,16 +3446,16 @@ function renderLeaderEntryForm() {
             area.innerHTML = `
                 <div class="card p-3 mb-3" style="background:#f8f9ff">
                     <h4>${entry.groupName}</h4>
-                    <p class="small text-muted">ID: ${entry.id} / 代表者: ${entry.representative}</p>
+                    <p class="small text-muted">ID: ${entry.id} / 代表老E ${entry.representative}</p>
                     <div class="form-group mt-3">
-                        <label style="font-weight:bold">釣果ポイント (合計)</label>
+                        <label style="font-weight:bold">釣果�EインチE(合訁E</label>
                         <input type="number" id="leader-point-input" class="form-control" 
                                style="font-size:2rem; font-weight:900; text-align:center;" 
                                value="${entry.totalScore || 0}" min="0">
                     </div>
                 </div>
                 <button class="btn-primary w-100 p-3" style="font-size:1.2rem" onclick="window.commitLeaderResultsSave()">
-                    確定して保存
+                    確定して保孁E
                 </button>`;
             area.classList.remove('hidden');
         });
@@ -3469,20 +3469,20 @@ window.commitLeaderResultsSave = async function() {
     const scoreVal = document.getElementById('leader-point-input')?.value;
     const score = parseInt(scoreVal || 0);
 
-    if (!id) { alert("チームを選択してください。"); return; }
+    if (!id) { alert("チ�Eムを選択してください、E); return; }
     const entry = state.entries.find(e => e.id === id);
     if (!entry) return;
-    if (!confirm(`${entry.groupName} の得点を ${score} pt で登録しますか？`)) return;
+    if (!confirm(`${entry.groupName} の得点めE${score} pt で登録しますか�E�`)) return;
 
     entry.totalScore = score;
     entry.lastModified = new Date().toLocaleString('ja-JP');
     showToast("保存中...", "info");
     const success = await syncToCloud();
     if (success) {
-        showToast("✅ 保存完了しました", "success");
+        showToast("✁E保存完亁E��ました", "success");
         renderLeaderEntryForm();
     } else {
-        showToast("❌ 同期に失敗しました", "error");
+        showToast("❁E同期に失敗しました", "error");
     }
 };
 
@@ -3495,8 +3495,8 @@ function updateBulkMailCount() {
 function updateSourceAvailability() {
     try {
         const fishersIppan = sumCategoryFishers('一般');
-        const fishersMintsuri = sumCategoryFishers('みん釣り');
-        const fishersSuiho = sumCategoryFishers('水宝');
+        const fishersMintsuri = sumCategoryFishers('みん�EめE);
+        const fishersSuiho = sumCategoryFishers('水宁E);
         const fishersHarimitsu = sumCategoryFishers('ハリミツ');
         
         // v8.1.18: Filter out cancelled for global capacity check
@@ -3540,8 +3540,8 @@ function updateSourceAvailability() {
         };
 
         updateRadio('一般', fishersIppan, state.settings.capacityGeneral);
-        updateRadio('みん釣り', fishersMintsuri, state.settings.capacityMintsuri);
-        updateRadio('水宝', fishersSuiho, state.settings.capacitySuiho);
+        updateRadio('みん�EめE, fishersMintsuri, state.settings.capacityMintsuri);
+        updateRadio('水宁E, fishersSuiho, state.settings.capacitySuiho);
         updateRadio('ハリミツ', fishersHarimitsu, state.settings.capacityHarimitsu);
     } catch (e) {
         console.warn("Source availability check skipped:", e);
@@ -3551,10 +3551,10 @@ function updateSourceAvailability() {
 async function handleBulkEmailSend() {
     const subject = document.getElementById('bulk-mail-subject').value.trim();
     const body = document.getElementById('bulk-mail-body').value.trim();
-    if (!subject || !body) { alert("件名と本文を入力してください。"); return; }
+    if (!subject || !body) { alert("件名と本斁E��入力してください、E); return; }
     const recipients = Array.from(new Set(state.entries.filter(e => e.status !== 'cancelled' && e.email).map(e => e.email.toLowerCase().trim())));
-    if (recipients.length === 0) { alert("送信対象が見つかりません。"); return; }
-    if (!confirm(`${recipients.length} 名へ一斉メールを送信しますか？`)) return;
+    if (recipients.length === 0) { alert("送信対象が見つかりません、E); return; }
+    if (!confirm(`${recipients.length} 名へ一斉メールを送信しますか�E�`)) return;
     const btn = document.getElementById('btn-send-bulk-mail');
     const originalText = btn.textContent;
     btn.disabled = true;
@@ -3563,13 +3563,13 @@ async function handleBulkEmailSend() {
         const response = await fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'bulk_email', subject, body, recipients }) });
         const result = await response.json();
         if (result.status === 'success') {
-            showToast('✅ 一斉メールを送信しました', 'success');
+            showToast('✁E一斉メールを送信しました', 'success');
             document.getElementById('bulk-mail-subject').value = '';
             document.getElementById('bulk-mail-body').value = '';
         } else { throw new Error(result.message || '送信エラー'); }
     } catch (error) {
         console.error("Bulk email error:", error);
-        showToast('❌ メールの送信に失敗しました', 'error');
+        showToast('❁Eメールの送信に失敗しました', 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
@@ -3638,7 +3638,7 @@ function checkUrlParams() {
         
         // 1. Handle Source (Primary Context)
         if (src) {
-            const validSources = { 'mintsuri': 'みん釣り', 'harimitsu': 'ハリミツ', 'suiho': '水宝', 'general': '一般' };
+            const validSources = { 'mintsuri': 'みん�EめE, 'harimitsu': 'ハリミツ', 'suiho': '水宁E, 'general': '一般' };
             const decodedSrc = validSources[src.toLowerCase()];
             if (decodedSrc) injectSpecialSource(decodedSrc);
         }
@@ -3699,7 +3699,7 @@ function injectSpecialSource(sourceName) {
     
     if (!target) {
         // Create specialized radio if missing
-        const badgeClassMap = { '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu', 'みん釣り': 'badge-mintsuri' };
+        const badgeClassMap = { '水宁E: 'badge-suiho', 'ハリミツ': 'badge-harimitsu', 'みん�EめE: 'badge-mintsuri' };
         const badgeClass = badgeClassMap[sourceName] || 'badge-ippan';
         const label = document.createElement('label');
         label.className = 'source-option forced-source'; // No hidden class here
@@ -3758,10 +3758,10 @@ window.copyShareUrl = function(inputId) {
     const el = document.getElementById(inputId);
     if (el && el.value) {
         navigator.clipboard.writeText(el.value).then(() => {
-            showToast('コピーしました', 'success');
+            showToast('コピ�Eしました', 'success');
         }).catch(err => {
             console.error('Copy failed:', err);
-            showToast('コピーに失敗しました', 'error');
+            showToast('コピ�Eに失敗しました', 'error');
         });
     }
 };
