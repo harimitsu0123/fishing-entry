@@ -84,7 +84,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.34: STABILIZED INITIALIZATION & SYNC");
+        console.log("BORIJIN APP v8.1.49: STABILIZED INITIALIZATION & SYNC");
 
         // v8.1.30: Priority 1 - Restore UI State immediately
         restoreUIState();
@@ -3138,6 +3138,174 @@ window.hardDeleteEntry = async function (id) {
     } catch (err) {
         console.error("Deletion failed:", err);
         showToast('削除に失敗しました', 'error');
+    }
+};
+
+/**
+ * v8.1.48: Restored Entry Details Modal rendering
+ */
+window.showEntryDetails = function (id) {
+    const entry = state.entries.find(e => e.id === id);
+    if (!entry) return;
+
+    const modal = document.getElementById('detail-modal');
+    const body = document.getElementById('detail-modal-body');
+    const title = document.getElementById('detail-modal-title');
+
+    if (title) title.textContent = `[${entry.id}] ${entry.groupName} 詳細`;
+
+    // Calculate Scores for display
+    let groupPoints = 0;
+    (entry.participants || []).forEach(p => {
+        const pA = parseInt(p.catchA || 0);
+        const pB = parseInt(p.catchB || 0);
+        groupPoints += (pA * 2) + pB;
+    });
+
+    let participantsHtml = entry.participants.map((p, idx) => `
+        <div style="padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; background: ${p.type === 'observer' ? '#f8f9fa' : '#fff'}">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <strong>${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}${p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '')}</strong>
+                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}">${p.type === 'fisher' ? '釣り' : '見学'}</span>
+            </div>
+            <div style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">
+                ${genderLabels[p.gender] || '-'} / ${ageLabels[p.age] || '-'} / ${p.region || '地域不明'} / Tシャツ: ${p.tshirtSize || 'なし'}
+            </div>
+            ${p.type === 'fisher' ? `
+            <div style="margin-top: 5px; font-weight: bold; color: var(--primary-color);">
+                ${p.catchA || 0}匹 (大物) / ${p.catchB || 0}匹 (その他)
+            </div>` : ''}
+        </div>
+    `).join('');
+
+    body.innerHTML = `
+        <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f1f5f9; border-radius: 8px;">
+            <p><strong>代表者:</strong> ${entry.representative}</p>
+            <p><strong>電話番号:</strong> ${entry.phone}</p>
+            <p><strong>メール:</strong> ${entry.email}</p>
+            <p><strong>登録区分:</strong> <span class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}">${entry.source}</span></p>
+            <p><strong>現在の状態:</strong> ${entry.status === 'checked-in' ? '✅ 受付済' : entry.status === 'cancelled' ? '🚫 キャンセル' : '⏳ 待機'}</p>
+            <p><strong>得点合計:</strong> <span style="font-size: 1.2rem; font-weight: 900; color: var(--primary-color);">${groupPoints} pt</span></p>
+        </div>
+        <h4 style="margin-bottom: 0.8rem; font-size: 1rem; color: #475569;">参加者内訳 (${entry.participants.length}名)</h4>
+        <div>${participantsHtml}</div>
+    `;
+
+    modal.classList.remove('hidden');
+};
+
+/**
+ * v8.1.48: Close detail modal
+ */
+window.closeDetailModal = function () {
+    const modal = document.getElementById('detail-modal');
+    if (modal) modal.classList.add('hidden');
+};
+
+/**
+ * v8.1.48: Request Admin-led Editing (Redirects to form)
+ */
+window.requestAdminEdit = function (id) {
+    const entry = state.entries.find(e => e.id === id);
+    if (!entry) {
+        showToast('エントリーが見つかりません', 'error');
+        return;
+    }
+    isAdminAuthAction = true; // Flag to show admin controls in form
+    fillFormForEdit(entry);
+    switchView(null, 'registration-view');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    updateAppTitle();
+};
+
+/**
+ * v8.1.48: Quick Toggle Status from Dashboard
+ */
+window.quickCheckIn = async function (id) {
+    const entry = state.entries.find(e => e.id === id);
+    if (!entry) return;
+
+    if (entry.status === 'cancelled') {
+        showToast('キャンセル済みのエントリーは受付できません', 'error');
+        return;
+    }
+
+    const newStatus = entry.status === 'checked-in' ? 'pending' : 'checked-in';
+    entry.status = newStatus;
+    
+    // Also update all individual participants
+    entry.participants.forEach(p => {
+        if (newStatus === 'checked-in' && p.status === 'absent') return;
+        p.status = newStatus;
+    });
+
+    entry.lastModified = new Date().toLocaleString('ja-JP');
+    if (newStatus === 'checked-in') entry.checkedIn = true;
+    
+    showToast(`${entry.groupName} の状態を「${newStatus === 'checked-in' ? '受付済' : '未受付'}」に更新中...`, 'info');
+    
+    await saveData();
+    updateDashboard();
+    updateReceptionList();
+    showToast(`${entry.groupName} の状態を更新しました`, 'success');
+};
+
+/**
+ * v8.1.48: Admin Email Resend
+ */
+window.resendEmail = async function (id) {
+    if (!confirm('この申込の確定メールを再送しますか？')) return;
+    const entry = state.entries.find(e => e.id === id);
+    if (!entry) return;
+
+    showToast('メール再送コマンドを送信中...', 'info');
+    try {
+        const payload = { action: 'resend_email', id: entry.id };
+        const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        const res = await response.json();
+        if (res.status === 'success') {
+            showToast('✅ メールを再送しました', 'success');
+        } else {
+            throw new Error(res.message);
+        }
+    } catch (e) {
+        console.error("Email resend failed:", e);
+        showToast('❌ メールの再送に失敗しました。サーバー側のログを確認してください。', 'error');
+    }
+};
+
+/**
+ * v8.1.48: Entry Cancellation
+ */
+window.cancelEntry = async function (id) {
+    if (!confirm('このエントリーを「無効（キャンセル）」にしますか？\n※データはマスタに残りますが、集計や受入からは除外されます。')) return;
+    const entry = state.entries.find(e => e.id === id);
+    if (entry) {
+        entry.status = 'cancelled';
+        entry.lastModified = new Date().toLocaleString('ja-JP');
+        await saveData();
+        updateDashboard();
+        showToast('エントリーを無効化しました', 'info');
+        resetForm(); // Clear the form if we were editing
+        switchView(null, 'dashboard-view');
+    }
+};
+
+/**
+ * v8.1.48: Restore Entry from Cancellation
+ */
+window.restoreEntry = async function (id) {
+    const entry = state.entries.find(e => e.id === id);
+    if (entry) {
+        entry.status = 'pending';
+        entry.lastModified = new Date().toLocaleString('ja-JP');
+        await saveData();
+        updateDashboard();
+        showToast('エントリーを有効な状態（待機）に復元しました', 'success');
+        fillFormForEdit(entry); // Refresh the edit view if active
     }
 };
 
