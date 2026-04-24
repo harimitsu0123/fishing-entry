@@ -802,7 +802,7 @@ function switchView(btnElement, targetId, skipPush = false, skipScroll = false) 
     if (!targetView) {
         console.warn(`Attempted to switch to non-existent view: ${targetId}`);
         // Fallback to registration if view doesn't exist
-        if (targetId !== 'registration-view') switchView(null, 'registration-view', true, skipScroll);
+        switchView(null, 'registration-view', true, skipScroll);
         return;
     }
 
