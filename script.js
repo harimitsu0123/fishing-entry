@@ -36,30 +36,7 @@ let dashboardFilter = 'all';
 let currentReceptionId = null;
 let isAdminAuthAction = false; // Flag for admin-led edits
 let activeReceptionEntryId = null; // Currently selected in reception desk
-let pendingView = null; // v8.1.61: Ensure critical handlers are globally accessible
-window.showEntryDetails = showEntryDetails;
-window.requestAdminEdit = requestAdminEdit;
-window.quickCheckIn = quickCheckIn;
-window.hardDeleteEntry = hardDeleteEntry;
-window.selectReceptionEntry = selectReceptionEntry;
-window.updateGroupStatus = updateGroupStatus;
-window.switchView = switchView;
-window.switchAdminTab = switchAdminTab;
-window.renderRankings = renderRankings;
-window.copyShareUrl = copyShareUrl;
-window.openShareUrl = openShareUrl;
-window.clearLocalCache = clearLocalCache;
-window.generateBulkTestData = generateBulkTestData;
-window.saveIkesu = saveIkesu;
-window.deleteIkesuFromModal = deleteIkesuFromModal;
-window.closeIkesuModal = closeIkesuModal;
-window.closeDetailModal = closeDetailModal;
-window.handleAdminLogin = handleAdminLogin;
-window.resetForm = resetForm;
-window.renderLeaderEntryForm = renderLeaderEntryForm;
-window.exportMintsuriCSV = exportMintsuriCSV;
-window.renderMintsuriCoordinatorView = renderMintsuriCoordinatorView;
-window.setReceptionSort = setReceptionSort;
+let pendingView = null; // v8.1.10: Global scoped to avoid ReferenceError
 
 // Age labels map - v4.8 Updated
 const ageLabels = {
@@ -3836,3 +3813,26 @@ window.copyShareUrl = function(inputId) {
         });
     }
 };
+
+// v8.1.62: Ensure critical handlers are globally accessible (at the end)
+window.showEntryDetails = showEntryDetails;
+window.requestAdminEdit = requestAdminEdit;
+window.quickCheckIn = quickCheckIn;
+window.hardDeleteEntry = hardDeleteEntry;
+window.selectReceptionEntry = selectReceptionEntry;
+window.updateGroupStatus = updateGroupStatus;
+window.switchView = switchView;
+window.switchAdminTab = switchAdminTab;
+window.renderRankings = renderRankings;
+window.clearLocalCache = clearLocalCache;
+window.generateBulkTestData = generateBulkTestData;
+window.saveIkesu = saveIkesu;
+window.deleteIkesuFromModal = deleteIkesuFromModal;
+window.closeIkesuModal = closeIkesuModal;
+window.closeDetailModal = closeDetailModal;
+window.handleAdminLogin = handleAdminLogin;
+window.resetForm = resetForm;
+window.renderLeaderEntryForm = renderLeaderEntryForm;
+window.exportMintsuriCSV = exportMintsuriCSV;
+window.renderMintsuriCoordinatorView = renderMintsuriCoordinatorView;
+window.setReceptionSort = setReceptionSort;
