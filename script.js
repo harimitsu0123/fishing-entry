@@ -942,7 +942,7 @@ function updateAdminToolbar() {
         toolbar.className = 'admin-toolbar';
         toolbar.innerHTML = `
             <div class="toolbar-content">
-                <button class="btn-toolbar active" data-target="registration-view">受付</button>
+                <button class="btn-toolbar" data-target="registration-view">受付</button>
                 <button class="btn-toolbar" data-target="dashboard-view">管理</button>
                 <button class="btn-toolbar" data-target="reception-view">当日</button>
                 <button class="btn-toolbar logout" id="admin-logout">ログアウト</button>
@@ -950,28 +950,29 @@ function updateAdminToolbar() {
         `;
         document.body.appendChild(toolbar);
 
-        toolbar.querySelectorAll('.btn-toolbar').forEach(btn => {
+        // v8.1.59: Robust listener attachment
+        const buttons = toolbar.querySelectorAll('.btn-toolbar');
+        buttons.forEach(btn => {
             if (btn.id === 'admin-logout') {
-                btn.addEventListener('click', () => {
+                btn.onclick = () => {
                     isAdminAuth = false;
                     localStorage.removeItem('isAdminAuth');
                     sessionStorage.removeItem('isAdminAuth');
                     location.reload();
-                });
-                return;
+                };
+            } else {
+                btn.onclick = () => {
+                    const target = btn.getAttribute('data-target');
+                    switchView(btn, target);
+                };
             }
-            btn.addEventListener('click', () => {
-                const target = btn.getAttribute('data-target');
-                switchView(btn, target);
-                toolbar.querySelectorAll('.btn-toolbar').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            });
         });
     }
 
     // Update active state in toolbar
     toolbar.querySelectorAll('.btn-toolbar').forEach(btn => {
-        if (btn.getAttribute('data-target') === currentViewId) {
+        const target = btn.getAttribute('data-target');
+        if (target === currentViewId) {
             btn.classList.add('active');
         } else {
             btn.classList.remove('active');
