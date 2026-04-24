@@ -2200,7 +2200,6 @@ window.renderRankings = function() {
         `;
     }).join('') : '<div class="p-8 text-center text-muted" style="border: 2px dashed #eee; border-radius: 12px;">イケス別のデータがまだありません</div>';
 };
-};
 
 // 3. Print View
 // (renderIkesuPrintView logic is now integrated into core switchAdminTab)
