@@ -1781,18 +1781,23 @@ function updateDashboard() {
         
         let html = '';
         state.entries.slice().reverse().forEach(e => {
-            // ... (Search / Filter logic stays same)
-            const matchesEntrySearch = e.id.toLowerCase().includes(searchTerm) || e.groupName.toLowerCase().includes(searchTerm) || e.representative.toLowerCase().includes(searchTerm);
-            
-            // v8.1.41: Safety Guard for missing participants
+            // v8.1.58: Comprehensive Safety Guard for missing participants
             const pArray = e.participants || [];
+            
+            // Search logic using pArray
             const pNames = pArray.map(p => p.name).join(' ');
             const pRegions = pArray.map(p => p.region || "").join(' ');
             const pTshirts = pArray.map(p => p.tshirtSize || "").join(' ');
             const pGenders = pArray.map(p => genderLabels[p.gender] || "").join(' ');
             
             const combinedParticipantInfo = (pNames + " " + pRegions + " " + pTshirts + " " + pGenders).toLowerCase();
-            const matchesParticipantSearch = combinedParticipantInfo.includes(searchTerm);
+            const searchTermLower = searchTerm.toLowerCase();
+            
+            const matchesEntrySearch = e.id.toLowerCase().includes(searchTermLower) || 
+                                     e.groupName.toLowerCase().includes(searchTermLower) || 
+                                     e.representative.toLowerCase().includes(searchTermLower);
+            
+            const matchesParticipantSearch = combinedParticipantInfo.includes(searchTermLower);
 
             if (!matchesEntrySearch && !matchesParticipantSearch) return;
             if (dashboardFilter !== 'all' && e.source !== dashboardFilter) return;
@@ -1801,29 +1806,28 @@ function updateDashboard() {
             const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 無効' : '⏳ 待機';
             const rowClass = e.status === 'cancelled' ? 'row-cancelled' : (e.status === 'checked-in' ? 'row-checked-in' : '');
 
-            const rep = (e.participants && e.participants[0]) || { name: e.representative };
+            const rep = pArray[0] || { name: e.representative, nickname: '', gender: '' };
             const getGenderMark = (p) => p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
             
             const pSummary = `
                 <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:400px; font-size:0.95rem;">
                     <strong style="font-weight:800; color:var(--text-color);">${rep.name}</strong>${rep.nickname ? `<small>(${rep.nickname})</small>` : ''}${getGenderMark(rep)}
                     <span style="color:#64748b; font-size:0.8rem; margin-left:4px;">
-                        ${e.participants.length > 1 ? `+ ${e.participants.slice(1).map(p => p.name).join(', ')}` : ''}
+                        ${pArray.length > 1 ? `+ ${pArray.slice(1).map(p => p.name).join(', ')}` : ''}
                     </span>
                 </div>
             `;
 
             const regTime = e.timestamp ? new Date(e.timestamp).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--:--';
 
-            // v8.1.41: Safety Guard for ikesu and catch data
             let groupPoints = 0;
             const ikesuNames = new Set();
-            (e.participants || []).forEach(p => {
+            pArray.forEach(p => {
                 const pA = parseInt(p.catchA || 0);
                 const pB = parseInt(p.catchB || 0);
                 groupPoints += (pA * 2) + pB;
                 if (p.ikesuId) {
-                    const ik = state.settings.ikesuList.find(i => i.id === p.ikesuId);
+                    const ik = (state.settings.ikesuList || []).find(i => i.id === p.ikesuId);
                     if (ik) ikesuNames.add(ik.name);
                 }
             });
@@ -2519,11 +2523,12 @@ function updateReceptionList() {
 
     let html = '';
     processedEntries.forEach(e => {
-        // Search Filter (v7.9.3 Expanded for all member names)
-        const pNames = e.participants.map(p => p.name).join(' ');
-        const pNicks = e.participants.map(p => p.nickname || "").join(' ');
-        const pTshirts = e.participants.map(p => p.tshirtSize || "").join(' ');
-        const pGenders = e.participants.map(p => genderLabels[p.gender] || "").join(' ');
+        // Search Filter (v8.1.58: Safety guarded)
+        const pArray = e.participants || [];
+        const pNames = pArray.map(p => p.name).join(' ');
+        const pNicks = pArray.map(p => p.nickname || "").join(' ');
+        const pTshirts = pArray.map(p => p.tshirtSize || "").join(' ');
+        const pGenders = pArray.map(p => genderLabels[p.gender] || "").join(' ');
         const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks} ${pTshirts} ${pGenders}`.toLowerCase();
         
         if (searchTerm && !combined.includes(searchTerm)) return;
