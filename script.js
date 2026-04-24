@@ -1725,8 +1725,13 @@ function clearLocalCache() {
     setTimeout(() => location.reload(), 1000);
 }
 
-function updateDashboard() {
+/**
+ * v8.1.67: Unified Dashboard Update (Globally exposed)
+ */
+window.updateDashboard = function() {
     try {
+        if (!state.entries) return;
+
         const fishersIppan = sumCategoryFishers('一般');
         const fishersMintsuri = sumCategoryFishers('みん釣り');
         const fishersSuiho = sumCategoryFishers('水宝');
@@ -1873,6 +1878,10 @@ function updateDashboard() {
             `;
         });
         
+        if (!html) {
+            html = '<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--text-muted);">登録データがありません。</td></tr>';
+        }
+        
         list.innerHTML = html;
         window.scrollTo(0, scrollPos);
 
@@ -1908,33 +1917,32 @@ function switchAdminTab(tabId) {
     });
 
     // 3. Trigger Specific View Renderers (Ensure lazy loading)
-    if (tabId === 'tab-list') updateDashboard();
+    if (tabId === 'tab-list') (typeof window.updateDashboard === 'function') && window.updateDashboard();
     if (tabId === 'tab-ikesu') (typeof renderIkesuWorkspace === 'function') && renderIkesuWorkspace();
-    if (tabId === 'tab-rankings') (typeof renderRankings === 'function') && renderRankings();
-    if (tabId === 'tab-print') (typeof updatePrintView === 'function') && updatePrintView();
-    if (tabId === 'tab-stats') (typeof renderBreakdownStats === 'function') && renderBreakdownStats();
+    if (tabId === 'tab-rankings') (typeof window.renderRankings === 'function') && window.renderRankings();
+    if (tabId === 'tab-print') (typeof window.updatePrintView === 'function') && window.updatePrintView();
+    if (tabId === 'tab-stats') (typeof window.renderBreakdownStats === 'function') && window.renderBreakdownStats();
 }
 
 /**
- * v8.1.65: Master function for print view
+ * v8.1.66: Master function for print view (Globally exposed)
  */
 window.updatePrintView = function() {
     const mode = document.querySelector('input[name="print-mode"]:checked')?.value || 'ikesu';
     if (mode === 'group') {
-        renderGroupPrintView();
+        window.renderGroupPrintView();
     } else {
-        renderIkesuPrintView();
+        window.renderIkesuPrintView();
     }
 };
 
 /**
- * Renders the printable member list view organized by ikesu
+ * Renders the printable member list view organized by ikesu (Globally exposed)
  */
-function renderIkesuPrintView() {
+window.renderIkesuPrintView = function() {
     const container = document.getElementById('print-view-container');
     if (!container) return;
     
-    // Safety: ensure ikesuList exists
     if (!state.settings.ikesuList || state.settings.ikesuList.length === 0) {
         container.innerHTML = `
             <div class="alert alert-warning">
@@ -1955,7 +1963,7 @@ function renderIkesuPrintView() {
             });
         });
 
-        if (participants.length === 0) return; // Skip empty ikesu in print view
+        if (participants.length === 0) return;
 
         html += `
             <div class="print-page ikesu-sheet" style="background:white; padding:1.5rem; border:1px solid #ddd; margin-bottom: 2rem; page-break-after: always; color: black;">
@@ -1995,12 +2003,12 @@ function renderIkesuPrintView() {
     });
 
     container.innerHTML = html || '<p class="text-muted p-4">割り当てられた参加者がいません。</p>';
-}
+};
 
 /**
- * v8.1.65: Group-based printing (1 page per group for prize prep)
+ * v8.1.66: Group-based printing (1 page per group for prize prep) (Globally exposed)
  */
-function renderGroupPrintView() {
+window.renderGroupPrintView = function() {
     const container = document.getElementById('print-view-container');
     if (!container) return;
 
