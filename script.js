@@ -340,7 +340,8 @@ function finalizeLoad() {
     renderActiveCoordinatorView();
 
     // v7.6.1: Run URL parameter check AFTER loading is fully settled
-    checkUrlParams();
+    // v8.1.56: Skip scroll when refreshing data
+    checkUrlParams(true); 
 
     // v7.6.1: Initialize specialized URL display in Admin Tab
     generateSpecialUrls();
@@ -791,7 +792,7 @@ function initApp() {
     });
 }
 
-function switchView(btnElement, targetId, skipPush = false) {
+function switchView(btnElement, targetId, skipPush = false, skipScroll = false) {
     if (!targetId) return;
 
     // Auto-correction for legacy or incorrect names
@@ -801,8 +802,14 @@ function switchView(btnElement, targetId, skipPush = false) {
     if (!targetView) {
         console.warn(`Attempted to switch to non-existent view: ${targetId}`);
         // Fallback to registration if view doesn't exist
-        if (targetId !== 'registration-view') switchView(null, 'registration-view', true);
+        if (targetId !== 'registration-view') switchView(null, 'registration-view', true, skipScroll);
         return;
+    }
+
+    // Only skip if already active to prevent flickering (v8.1.56)
+    if (currentViewId === targetId && document.body.classList.contains(`view-${targetId}`)) {
+        // Still run updates but skip heavy class toggling if possible?
+        // Actually, let's keep it simple for now.
     }
 
     currentViewId = targetId;
@@ -824,114 +831,40 @@ function switchView(btnElement, targetId, skipPush = false) {
         window.history.pushState({ viewId: targetId }, '', url);
     }
 
-    if (targetId === 'mintsuri-coordinator-view') {
-        renderMintsuriCoordinatorView();
+    // Update Nav UI
+    document.querySelectorAll('.nav-btn, .btn-toolbar').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-target') === targetId);
+    });
+
+    document.querySelectorAll('.view').forEach(view => {
+        view.classList.toggle('active', view.id === targetId);
+    });
+
+    // Handle PC Sidebar visibility (Registry/Dashboard specific)
+    const container = document.querySelector('.container');
+    if (container) {
+        const isWide = (targetId === 'dashboard-view' || targetId === 'reception-view' || targetId.includes('coordinator-view'));
+        container.classList.toggle('view-wide', isWide);
     }
 
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    // Body class for CSS scoping
+    document.body.className = `view-${targetId}`;
 
-    // Always scroll to top when changing view
-    window.scrollTo(0, 0);
-
-    if (btnElement) btnElement.classList.add('active');
-    else {
-        const activeNav = document.querySelector(`.nav-btn[data-target="${targetId}"]`);
-        if (activeNav) activeNav.classList.add('active');
-    }
-
-    targetView.classList.add('active');
-
-    // Reset Title based on view
-    updateAppTitle();
-
-    if (targetId === 'registration-view') {
-        const adminActions = document.getElementById('admin-extra-actions');
-        if (adminActions && !isAdminAuthAction) {
-            adminActions.classList.add('hidden');
-        }
-        
-        // Ensure app title is restored to tournament name from settings
-        updateAppTitle();
-
-        // v7.1.1: Always ensure a fresh form if not editing
-        const editId = document.getElementById('edit-entry-id').value;
-        if (!editId) {
-            resetForm(); 
-        }
-        updateSourceAvailability();
-    }
+    // Specific View Initializers
     if (targetId === 'dashboard-view') {
         updateDashboard();
         switchAdminTab(currentAdminTab); 
     }
     if (targetId === 'reception-view') {
         updateReceptionList();
+        renderReceptionDesk();
     }
-    if (targetId === 'public-stats-view') {
-        renderPublicStats();
+    if (targetId === 'public-stats-view') renderPublicStats();
+
+    // v8.1.31: Always scroll to top when switching views manually
+    if (!skipScroll) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    if (targetId === 'mintsuri-coordinator-view') {
-        renderMintsuriCoordinatorView();
-    }
-
-    // v6.6: Dynamic Width Control
-    const container = document.querySelector('.container');
-    if (container) {
-        if (targetId === 'dashboard-view' || targetId === 'reception-view' || targetId === 'public-stats-view') {
-            container.classList.add('view-wide');
-            document.body.classList.add('view-wide');
-        } else {
-            container.classList.remove('view-wide');
-            document.body.classList.remove('view-wide');
-        }
-    }
-
-    // Toggle admin visibility based on state
-    // Toggle admin visibility based on state
-    const adminElements = document.querySelectorAll('.admin-only');
-    const params = new URLSearchParams(window.location.search);
-    const srcParam = params.get('src');
-
-    adminElements.forEach(el => {
-        if (isAdminAuth) {
-            el.classList.remove('hidden');
-        } else if (isAdminAuthAction && targetId === 'registration-view') {
-            // v8.1.52: If we are in an admin-led edit, allow admin-only elements 
-            // WITHIN the registration view to be shown.
-            if (targetView.contains(el) || el === targetView) {
-                el.classList.remove('hidden');
-            } else {
-                el.classList.add('hidden');
-            }
-        } else {
-            el.classList.add('hidden');
-        }
-    });
-
-    // v8.1.52: Special handling for admin actions inside registration view
-    if (targetId === 'registration-view' && isAdminAuthAction) {
-        const adminActions = document.getElementById('admin-extra-actions');
-        if (adminActions) adminActions.classList.remove('hidden');
-    }
-
-    // v8.1.33: Stricter Category Visibility in Special Windows
-    if (srcParam) {
-        document.querySelectorAll('#main-source-selector .source-option').forEach(el => {
-            if (el.classList.contains('forced-source')) {
-                el.classList.remove('hidden');
-            } else {
-                el.classList.add('hidden');
-            }
-        });
-    }
-
-    // Handle body class for toolbar space (v4.6)
-    document.body.className = document.body.className.replace(/view-\S+/g, '').trim();
-    document.body.classList.add('view-' + targetId);
-
-    // Ensure Admin toolbar is handled separately if needed
-    updateAdminToolbar();
 }
 
 function updateAdminToolbar() {
@@ -1783,8 +1716,8 @@ function updateDashboard() {
         
         // v7.9.8: Save scroll position before update
         const scrollPos = window.scrollY;
-        list.innerHTML = '';
-
+        
+        let html = '';
         state.entries.slice().reverse().forEach(e => {
             // ... (Search / Filter logic stays same)
             const matchesEntrySearch = e.id.toLowerCase().includes(searchTerm) || e.groupName.toLowerCase().includes(searchTerm) || e.representative.toLowerCase().includes(searchTerm);
@@ -1800,15 +1733,11 @@ function updateDashboard() {
             const matchesParticipantSearch = combinedParticipantInfo.includes(searchTerm);
 
             if (!matchesEntrySearch && !matchesParticipantSearch) return;
-
             if (dashboardFilter !== 'all' && e.source !== dashboardFilter) return;
-
-            const tr = document.createElement('tr');
-            if (e.status === 'cancelled') tr.classList.add('row-cancelled');
-            else if (e.status === 'checked-in') tr.classList.add('row-checked-in');
 
             const badgeMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
             const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 無効' : '⏳ 待機';
+            const rowClass = e.status === 'cancelled' ? 'row-cancelled' : (e.status === 'checked-in' ? 'row-checked-in' : '');
 
             const rep = (e.participants && e.participants[0]) || { name: e.representative };
             const getGenderMark = (p) => p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
@@ -1838,27 +1767,31 @@ function updateDashboard() {
             });
             const ikesuDisplay = Array.from(ikesuNames).join(', ') || '-';
 
-            tr.innerHTML = `
-                <td><span class="id-badge" style="white-space:nowrap;">${e.id}</span></td>
-                <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}" style="white-space:nowrap;">${e.source}</span></td>
-                <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}">${e.groupName}</div></td>
-                <td>${pSummary}</td>
-                <td><small style="white-space:nowrap;">${e.fishers} / ${e.observers}</small></td>
-                <td><small style="white-space:nowrap;">${ikesuDisplay}</small></td>
-                <td><div style="font-weight:900; color:var(--primary-color); text-align:center;">${groupPoints}</div></td>
-                <td><span style="font-size:0.75rem; font-weight:700; white-space:nowrap;">${statusLabel}</span></td>
-                <td><small style="white-space:nowrap;">${regTime}</small></td>
-                <td>
-                    <div style="display:flex; gap:0.2rem; flex-wrap: nowrap; width: auto; align-items:center;">
-                        <button class="btn-outline btn-small btn-detail" onclick="window.showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
-                        <button class="btn-outline btn-small" onclick="window.requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
-                        <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="window.quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
-                        <button class="btn-outline btn-small" onclick="window.hardDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap; border-color: #ff7675; color: #ff7675;">削除</button>
-                    </div>
-                </td>
+            html += `
+                <tr class="${rowClass}">
+                    <td><span class="id-badge" style="white-space:nowrap;">${e.id}</span></td>
+                    <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}" style="white-space:nowrap;">${e.source}</span></td>
+                    <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}">${e.groupName}</div></td>
+                    <td>${pSummary}</td>
+                    <td><small style="white-space:nowrap;">${e.fishers} / ${e.observers}</small></td>
+                    <td><small style="white-space:nowrap;">${ikesuDisplay}</small></td>
+                    <td><div style="font-weight:900; color:var(--primary-color); text-align:center;">${groupPoints}</div></td>
+                    <td><span style="font-size:0.75rem; font-weight:700; white-space:nowrap;">${statusLabel}</span></td>
+                    <td><small style="white-space:nowrap;">${regTime}</small></td>
+                    <td>
+                        <div style="display:flex; gap:0.2rem; flex-wrap: nowrap; width: auto; align-items:center;">
+                            <button class="btn-outline btn-small btn-detail" onclick="window.showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
+                            <button class="btn-outline btn-small" onclick="window.requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
+                            <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="window.quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
+                            <button class="btn-outline btn-small" onclick="window.hardDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap; border-color: #ff7675; color: #ff7675;">削除</button>
+                        </div>
+                    </td>
+                </tr>
             `;
-            list.appendChild(tr);
         });
+        
+        list.innerHTML = html;
+        window.scrollTo(0, scrollPos);
 
     } catch (e) {
         console.error("Dashboard update failed:", e);
@@ -2329,6 +2262,9 @@ function renderGenericCoordinatorView(sourceName, prefix) {
     const summary = document.getElementById(`${prefix}-stats-summary`);
     if (!list) return;
 
+    // v8.1.56: Save scroll position
+    const scrollPos = window.scrollY;
+
     const sourceEntries = state.entries.filter(e => e.source === sourceName && e.status !== 'cancelled');
     const totalFishers = sourceEntries.reduce((s, e) => s + e.fishers, 0);
     const totalObservers = sourceEntries.reduce((s, e) => s + e.observers, 0);
@@ -2379,6 +2315,7 @@ function renderGenericCoordinatorView(sourceName, prefix) {
         }).join('') || '<tr><td colspan="5" style="text-align:center; padding:2rem;">該当する登録はありません</td></tr>';
 
     renderBreakdownStats(sourceName, `${prefix}-`);
+    window.scrollTo(0, scrollPos);
 }
 
 /**
@@ -2491,10 +2428,13 @@ window.setReceptionSort = function(mode) {
 
 function updateReceptionList() {
     const list = document.getElementById('reception-group-list');
+    if (!list) return;
+
     const searchTerm = document.getElementById('reception-search').value.toLowerCase();
     const showCompleted = document.getElementById('show-completed-toggle').checked;
 
-    list.innerHTML = '';
+    // v8.1.56: Save scroll position of the sidebar
+    const scrollPos = list.scrollTop;
 
     const processedEntries = state.entries.filter(e => e.status !== 'cancelled').map(e => {
         const finishedCount = e.participants.filter(p => p.status === 'checked-in' || p.status === 'absent').length;
@@ -2515,6 +2455,7 @@ function updateReceptionList() {
         return a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' });
     });
 
+    let html = '';
     processedEntries.forEach(e => {
         // Search Filter (v7.9.3 Expanded for all member names)
         const pNames = e.participants.map(p => p.name).join(' ');
@@ -2528,27 +2469,28 @@ function updateReceptionList() {
         // Completion Filter
         if (!showCompleted && e.isCompleted) return;
 
-        const item = document.createElement('div');
-        item.className = `reception-group-item ${activeReceptionEntryId === e.id ? 'active' : ''} ${e.isCompleted ? 'completed' : ''}`;
-        item.onclick = () => selectReceptionEntry(e.id);
-
         const badgeClass = e.source === 'みん釣り' ? 'badge-mintsuri' : e.source === '一般' ? 'badge-ippan' : e.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho';
         
-        item.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
-                <strong style="font-size:1.1rem; color:#2d3436;">${e.id} | ${e.groupName}</strong>
-                <span class="badge ${badgeClass}" style="font-size:0.7rem; padding:0.1rem 0.4rem;">${e.source}</span>
-            </div>
-            <div class="item-meta" style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-size:1rem; color:#636e72;">${e.representative}</div>
-                <div style="display:flex; align-items:center; gap:0.5rem;">
-                    <span style="font-size:0.9rem; font-weight:700; color: #0984e3;">${e.isCompleted ? '✅ 受付済' : `${e.finishedCount}/${e.totalCount}`}</span>
-                    ${!e.isCompleted ? `<button onclick="event.stopPropagation(); updateGroupStatus('${e.id}', 'checked-in')" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: var(--primary-color); border: none; border-radius: 4px; color: white; cursor: pointer;">全員受付</button>` : ''}
+        html += `
+            <div class="reception-group-item ${activeReceptionEntryId === e.id ? 'active' : ''} ${e.isCompleted ? 'completed' : ''}" 
+                 onclick="selectReceptionEntry('${e.id}')">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+                    <strong style="font-size:1.1rem; color:#2d3436;">${e.id} | ${e.groupName}</strong>
+                    <span class="badge ${badgeClass}" style="font-size:0.7rem; padding:0.1rem 0.4rem;">${e.source}</span>
+                </div>
+                <div class="item-meta" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:1rem; color:#636e72;">${e.representative}</div>
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <span style="font-size:0.9rem; font-weight:700; color: #0984e3;">${e.isCompleted ? '✅ 受付済' : `${e.finishedCount}/${e.totalCount}`}</span>
+                        ${!e.isCompleted ? `<button onclick="event.stopPropagation(); updateGroupStatus('${e.id}', 'checked-in')" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: var(--primary-color); border: none; border-radius: 4px; color: white; cursor: pointer;">全員受付</button>` : ''}
+                    </div>
                 </div>
             </div>
         `;
-        list.appendChild(item);
     });
+    
+    list.innerHTML = html;
+    list.scrollTop = scrollPos;
 }
 
 function selectReceptionEntry(id) {
