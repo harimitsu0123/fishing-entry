@@ -1911,9 +1911,21 @@ function switchAdminTab(tabId) {
     if (tabId === 'tab-list') updateDashboard();
     if (tabId === 'tab-ikesu') (typeof renderIkesuWorkspace === 'function') && renderIkesuWorkspace();
     if (tabId === 'tab-rankings') (typeof renderRankings === 'function') && renderRankings();
-    if (tabId === 'tab-print') (typeof renderIkesuPrintView === 'function') && renderIkesuPrintView();
+    if (tabId === 'tab-print') (typeof updatePrintView === 'function') && updatePrintView();
     if (tabId === 'tab-stats') (typeof renderBreakdownStats === 'function') && renderBreakdownStats();
 }
+
+/**
+ * v8.1.65: Master function for print view
+ */
+window.updatePrintView = function() {
+    const mode = document.querySelector('input[name="print-mode"]:checked')?.value || 'ikesu';
+    if (mode === 'group') {
+        renderGroupPrintView();
+    } else {
+        renderIkesuPrintView();
+    }
+};
 
 /**
  * Renders the printable member list view organized by ikesu
@@ -1922,8 +1934,12 @@ function renderIkesuPrintView() {
     const container = document.getElementById('print-view-container');
     if (!container) return;
     
+    // Safety: ensure ikesuList exists
     if (!state.settings.ikesuList || state.settings.ikesuList.length === 0) {
-        container.innerHTML = '<p class="text-muted p-4">イケスが設定されていません。</p>';
+        container.innerHTML = `
+            <div class="alert alert-warning">
+                イケスが設定されていません。「イケス割当」タブでイケスを作成してください。
+            </div>`;
         return;
     }
 
@@ -1932,43 +1948,124 @@ function renderIkesuPrintView() {
         const participants = [];
         state.entries.forEach(e => {
             if (e.status === 'cancelled') return;
-            e.participants.forEach(p => {
+            (e.participants || []).forEach(p => {
                 if (p.ikesuId === ik.id) {
                     participants.push({ ...p, groupId: e.id, groupName: e.groupName });
                 }
             });
         });
 
+        if (participants.length === 0) return; // Skip empty ikesu in print view
+
         html += `
-            <div class="print-page mb-8" style="background:white; padding:1.2rem; border:1px solid #eee; margin-bottom: 2rem; page-break-after: always;">
-                <h3 style="border-bottom: 2px solid #333; padding-bottom: 0.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between;">
-                    <span>${ik.name} メンバー表</span>
-                    <small style="font-size: 0.75rem; font-weight: normal;">定員: ${ik.capacity} / 現在: ${participants.length}名</small>
-                </h3>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+            <div class="print-page ikesu-sheet" style="background:white; padding:1.5rem; border:1px solid #ddd; margin-bottom: 2rem; page-break-after: always; color: black;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #000; padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                    <h2 style="margin:0; font-size: 1.8rem;">${ik.name} メンバー表</h2>
+                    <div style="text-align: right; font-size: 0.9rem;">
+                        <div>印刷日: ${new Date().toLocaleDateString()}</div>
+                        <div>人数: ${participants.length} 名</div>
+                    </div>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; border: 2px solid #000;">
                     <thead>
-                        <tr style="background: #f8fafc;">
-                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">No.</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">グループ名</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">氏名</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">性別</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">Tシャツ</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">備考</th>
+                        <tr style="background: #eee;">
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 40px;">No</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 150px;">グループ名</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem;">氏名</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 60px;">性別</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 80px;">Tシャツ</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 100px;">備考</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${participants.length > 0 ? participants.map((p, idx) => `
-                            <tr>
-                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem; text-align: center;">${idx + 1}</td>
-                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem;">${p.groupName} <small>(${p.groupId})</small></td>
-                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem; font-weight: 700;">${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}</td>
-                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem; text-align: center;">${genderLabels[p.gender] || '-'}</td>
-                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem; text-align: center;">${p.tshirtSize || '-'}</td>
-                                <td style="border: 1px solid #cbd5e1; padding: 0.4rem;">${p.type === 'observer' ? '【見学】' : ''}</td>
+                        ${participants.map((p, idx) => `
+                            <tr style="height: 2.5rem;">
+                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center;">${idx + 1}</td>
+                                <td style="border: 1px solid #000; padding: 0.4rem;">${p.groupName}</td>
+                                <td style="border: 1px solid #000; padding: 0.4rem; font-size: 1.1rem; font-weight: bold;">${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}</td>
+                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center;">${genderLabels[p.gender] || '-'}</td>
+                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-weight: bold;">${p.tshirtSize || '-'}</td>
+                                <td style="border: 1px solid #000; padding: 0.4rem;">${p.type === 'observer' ? '【見学】' : ''}</td>
                             </tr>
-                        `).join('') : '<tr><td colspan="6" style="border: 1px solid #cbd5e1; padding: 1.5rem; text-align: center;">(参加者なし)</td></tr>'}
+                        `).join('')}
                     </tbody>
                 </table>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html || '<p class="text-muted p-4">割り当てられた参加者がいません。</p>';
+}
+
+/**
+ * v8.1.65: Group-based printing (1 page per group for prize prep)
+ */
+function renderGroupPrintView() {
+    const container = document.getElementById('print-view-container');
+    if (!container) return;
+
+    const validEntries = state.entries.filter(e => e.status !== 'cancelled');
+    if (validEntries.length === 0) {
+        container.innerHTML = '<p class="text-muted p-4">登録データがありません。</p>';
+        return;
+    }
+
+    let html = '';
+    // Sort by source then ID
+    [...validEntries].sort((a,b) => a.source.localeCompare(b.source) || a.id.localeCompare(b.id)).forEach(e => {
+        const pArray = e.participants || [];
+        
+        html += `
+            <div class="print-page group-sheet" style="background:white; padding:2rem; border:1px solid #ddd; margin-bottom: 2rem; page-break-after: always; color: black; min-height: 280mm;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #000; padding-bottom: 1rem; margin-bottom: 2rem;">
+                    <div>
+                        <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">[${e.source}]</div>
+                        <h1 style="margin:0; font-size: 2.5rem;">${e.groupName}</h1>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.5rem; font-weight: bold; border: 3px solid #000; padding: 0.5rem 1rem;">${e.id}</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                    <div style="border: 2px solid #000; padding: 1rem;">
+                        <div style="font-size: 0.9rem; border-bottom: 1px solid #000; margin-bottom: 0.5rem;">代表者</div>
+                        <div style="font-size: 1.4rem; font-weight: bold;">${e.representative} 様</div>
+                    </div>
+                    <div style="border: 2px solid #000; padding: 1rem;">
+                        <div style="font-size: 0.9rem; border-bottom: 1px solid #000; margin-bottom: 0.5rem;">合計人数</div>
+                        <div style="font-size: 1.4rem; font-weight: bold;">釣り: ${e.fishers}名 / 見学: ${e.observers}名</div>
+                    </div>
+                </div>
+
+                <h3 style="background: #000; color: white; padding: 0.5rem 1rem; margin-bottom: 1rem;">参加者・Tシャツサイズ 一覧</h3>
+                <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; margin-bottom: 2rem;">
+                    <thead>
+                        <tr style="background: #eee;">
+                            <th style="border: 1px solid #000; padding: 0.8rem; width: 50px;">No</th>
+                            <th style="border: 1px solid #000; padding: 0.8rem;">氏名</th>
+                            <th style="border: 1px solid #000; padding: 0.8rem; width: 120px;">Tシャツ</th>
+                            <th style="border: 1px solid #000; padding: 0.8rem; width: 100px;">区分</th>
+                            <th style="border: 1px solid #000; padding: 0.8rem; width: 150px;">チェック</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pArray.map((p, idx) => `
+                            <tr style="height: 3.5rem;">
+                                <td style="border: 1px solid #000; padding: 0.5rem; text-align: center;">${idx + 1}</td>
+                                <td style="border: 1px solid #000; padding: 0.5rem; font-size: 1.3rem; font-weight: bold;">${p.name}</td>
+                                <td style="border: 1px solid #000; padding: 0.5rem; text-align: center; font-size: 1.3rem; font-weight: 900;">${p.tshirtSize || '-'}</td>
+                                <td style="border: 1px solid #000; padding: 0.5rem; text-align: center;">${p.type === 'fisher' ? '釣り' : '見学'}</td>
+                                <td style="border: 1px solid #000; padding: 0.5rem; text-align: center; font-size: 1.5rem;">□</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 3rem; border-top: 1px dashed #000; padding-top: 1rem;">
+                    <div style="font-size: 0.9rem; margin-bottom: 1rem;">【準備用メモ】</div>
+                    <div style="height: 100px; border: 1px solid #ccc;"></div>
+                </div>
             </div>
         `;
     });

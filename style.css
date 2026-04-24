@@ -2194,3 +2194,49 @@ table {
     font-family: monospace;
     font-weight: bold;
 }
+
+/* --- v8.1.65 Printing Enhancements --- */
+@media print {
+    .no-print, .admin-toolbar, .admin-tab-nav, .header-actions, .search-box, .filter-group, .print-controls, #admin-extra-actions, .card-header button, .btn-primary, .btn-outline {
+        display: none !important;
+    }
+
+    body {
+        background: white !important;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .admin-tab-content {
+        display: block !important;
+        padding: 0 !important;
+    }
+
+    /* Only show the print container when printing */
+    #tab-print {
+        display: block !important;
+    }
+    
+    .admin-tab-content:not(#tab-print) {
+        display: none !important;
+    }
+
+    .print-page {
+        margin: 0 !important;
+        border: none !important;
+        page-break-after: always;
+    }
+}
