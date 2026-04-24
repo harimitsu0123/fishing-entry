@@ -1918,7 +1918,7 @@ function switchAdminTab(tabId) {
 
     // 3. Trigger Specific View Renderers (Ensure lazy loading)
     if (tabId === 'tab-list') (typeof window.updateDashboard === 'function') && window.updateDashboard();
-    if (tabId === 'tab-ikesu') (typeof renderIkesuWorkspace === 'function') && renderIkesuWorkspace();
+    if (tabId === 'tab-ikesu') (typeof window.renderIkesuWorkspace === 'function') && window.renderIkesuWorkspace();
     if (tabId === 'tab-rankings') (typeof window.renderRankings === 'function') && window.renderRankings();
     if (tabId === 'tab-print') (typeof window.updatePrintView === 'function') && window.updatePrintView();
     if (tabId === 'tab-stats') (typeof window.renderBreakdownStats === 'function') && window.renderBreakdownStats();
@@ -2138,7 +2138,7 @@ window.renderRankings = function() {
         return b.cB - a.cB;
     });
 
-    indList.innerHTML = individuals.slice(0, 50).map((p, i) => {
+    indList.innerHTML = individuals.length > 0 ? individuals.slice(0, 50).map((p, i) => {
         const rankClass = i < 3 ? `rank-${i + 1}` : '';
         const rankNumClass = i < 3 ? `top-${i + 1}` : '';
         return `
@@ -2154,7 +2154,7 @@ window.renderRankings = function() {
                 </div>
             </div>
         `;
-    }).join('') || '<p class="text-muted p-4">データがありません</p>';
+    }).join('') : '<div class="p-8 text-center text-muted" style="border: 2px dashed #eee; border-radius: 12px;">個人の釣果データがまだありません</div>';
 
     // B. Ikesu Team Ranking
     if (!state.settings.ikesuList) return;
@@ -2182,7 +2182,7 @@ window.renderRankings = function() {
 
     teamList.sort((a, b) => b.avg - a.avg);
 
-    ikList.innerHTML = teamList.map((r, i) => {
+    ikList.innerHTML = teamList.length > 0 ? teamList.map((r, i) => {
         const rankClass = i < 3 ? `rank-${i + 1}` : '';
         const rankNumClass = i < 3 ? `top-${i + 1}` : '';
         return `
@@ -2197,7 +2197,8 @@ window.renderRankings = function() {
                 </div>
             </div>
         `;
-    }).join('') || '<p class="text-muted p-4">データがありません</p>';
+    }).join('') : '<div class="p-8 text-center text-muted" style="border: 2px dashed #eee; border-radius: 12px;">イケス別のデータがまだありません</div>';
+};
 };
 
 // 3. Print View
@@ -3565,32 +3566,7 @@ function downloadCSV(filename, headers, rows) {
     document.body.removeChild(link);
 }
 
-function renderRankings() {
-    const list = document.getElementById('ranking-list');
-    if (!list) return;
-    list.innerHTML = '';
-    const sorted = [...state.entries]
-        .filter(e => e.status !== 'cancelled')
-        .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
-    if (sorted.length === 0) {
-        list.innerHTML = '<li class="p-4 text-center text-muted">データがありません</li>';
-        return;
-    }
-    sorted.forEach((e, i) => {
-        const li = document.createElement('li');
-        li.className = 'list-item-modern';
-        li.innerHTML = `
-            <div class="rank-badge">${i + 1}</div>
-            <div style="flex:1">
-                <div style="font-weight:bold">${e.groupName}</div>
-                <div style="font-size:0.8rem; color:#666">${e.representative}</div>
-            </div>
-            <div style="font-size:1.2rem; font-weight:900; color:var(--primary-color)">
-                ${e.totalScore || 0} <small style="font-size:0.8rem">pt</small>
-            </div>`;
-        list.appendChild(li);
-    });
-}
+// Redundant renderRankings removed in v8.1.69
 
 /* --- LEADER ENTRY LOGIC --- */
 function renderLeaderEntryForm() {
