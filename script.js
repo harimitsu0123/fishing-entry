@@ -1038,10 +1038,11 @@ window.handleAdminLogin = function() {
     console.log("Admin Login Attempt:", { 
         inputLength: pw.length, 
         isDefaultMatched: pw === 'admin',
-        isStateMatched: pw === state.settings.adminPassword 
+        isStateMatched: (state.settings && pw === state.settings.adminPassword)
     });
 
-    if (pw === state.settings.adminPassword || pw === 'admin') {
+    const adminPw = (state.settings && state.settings.adminPassword) ? state.settings.adminPassword : 'admin';
+    if (pw === adminPw || pw === 'admin') {
         isAdminAuth = true;
         localStorage.setItem('isAdminAuth', 'true'); // Persist
         document.getElementById('admin-auth-modal').classList.add('hidden');
