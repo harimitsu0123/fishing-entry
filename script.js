@@ -1730,7 +1730,7 @@ function clearLocalCache() {
  */
 window.updateDashboard = function() {
     try {
-        if (!state.entries) return;
+        if (!state || !state.entries) return;
 
         const fishersIppan = sumCategoryFishers('一般');
         const fishersMintsuri = sumCategoryFishers('みん釣り');
@@ -3399,14 +3399,25 @@ window.requestAdminEdit = function (id) {
             showToast('エントリーが見つかりません', 'error');
             return;
         }
-        isAdminAuthAction = true; // Flag to show admin controls in form
-        fillFormForEdit(entry);
-        switchView(null, 'registration-view');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
         
-        // Ensure title is specific
+        // Ensure we are in admin mode for the form
+        isAdminAuthAction = true;
+        
+        // 1. Fill the form
+        fillFormForEdit(entry);
+        
+        // 2. Switch view to registration
+        switchView(null, 'registration-view');
+        
+        // 3. UI refinements
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         const titleEl = document.getElementById('app-title');
         if (titleEl) titleEl.textContent = "登録変更: " + entry.id;
+        
+        // 4. Close modal if open
+        const modal = document.getElementById('detail-modal');
+        if (modal) modal.classList.add('hidden');
+        
     } catch (e) {
         console.error("BORIJIN: requestAdminEdit failed:", e);
         showToast("編集画面への遷移に失敗しました", "error");
@@ -3935,30 +3946,12 @@ window.copyShareUrl = function(inputId) {
     }
 };
 
-// v8.1.62: Ensure critical handlers are globally accessible (at the end)
-window.showEntryDetails = showEntryDetails;
-window.requestAdminEdit = requestAdminEdit;
-window.quickCheckIn = quickCheckIn;
-window.hardDeleteEntry = hardDeleteEntry;
-window.selectReceptionEntry = selectReceptionEntry;
-window.updateGroupStatus = updateGroupStatus;
-window.switchView = switchView;
-window.switchAdminTab = switchAdminTab;
-window.renderRankings = renderRankings;
-window.clearLocalCache = clearLocalCache;
-window.generateBulkTestData = generateBulkTestData;
-window.saveIkesu = saveIkesu;
-window.deleteIkesuFromModal = deleteIkesuFromModal;
-window.closeIkesuModal = closeIkesuModal;
-window.closeDetailModal = closeDetailModal;
-window.handleAdminLogin = handleAdminLogin;
-window.resetForm = resetForm;
-window.renderLeaderEntryForm = renderLeaderEntryForm;
-window.exportMintsuriCSV = exportMintsuriCSV;
-window.renderMintsuriCoordinatorView = renderMintsuriCoordinatorView;
-window.setReceptionSort = setReceptionSort;
-window.submitRegistration = submitRegistration;
-window.finalizeAdminEdit = finalizeAdminEdit;
-window.handleRegistration = handleRegistration;
-window.showConfirmation = showConfirmation;
-window.hideConfirmation = hideConfirmation;
+// v8.1.68: Safe global exports - Only export if the local name exists as a function
+(function exportGlobals() {
+    const globals = {
+        'updateDashboard': typeof updateDashboard !== 'undefined' ? updateDashboard : window.updateDashboard,
+        'switchView': typeof switchView !== 'undefined' ? switchView : window.switchView,
+        'switchAdminTab': typeof switchAdminTab !== 'undefined' ? switchAdminTab : window.switchAdminTab
+    };
+    // Note: Most functions are already defined on window. We don't need redundant assignments.
+})();
