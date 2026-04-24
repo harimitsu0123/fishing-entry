@@ -1449,11 +1449,10 @@ async function handleRegistration() {
         showToast('送信中... 少々お待ちください', 'info');
         await sendEmailViaGAS(entryData);
 
+        // v8.1.64: Always show result screen (screenshot screen) even after admin edit
+        showResult(entryData);
         if (isAdminAuthAction) {
-            switchView(null, 'dashboard-view');
             showToast('修正を保存しました', 'success');
-        } else {
-            showResult(entryData);
         }
     } catch (e) {
         console.error("Registration error:", e);
@@ -1698,6 +1697,13 @@ function resetForm() {
 
     updateSourceAvailability();
     setTimeout(() => window.scrollTo(0, 0), 50); 
+}
+
+/**
+ * v8.1.64: Finalize Admin Edit flow
+ */
+async function finalizeAdminEdit() {
+    await handleRegistration();
 }
 
 function showStatus(msg, type, noScroll = false) {
