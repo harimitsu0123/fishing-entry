@@ -661,8 +661,18 @@ function initApp() {
 
     // Form logic
     safeAddListener('add-participant', 'click', () => addParticipantRow());
-    safeAddListener('btn-to-confirm', 'click', showConfirmation);
-    safeAddListener('submit-registration', 'click', handleRegistration);
+    // v8.1.63: Robust registration for confirmation buttons
+    const subBtn = document.getElementById('submit-registration');
+    if (subBtn) {
+        subBtn.onclick = () => {
+            if (isAdminAuthAction) finalizeAdminEdit();
+            else submitRegistration();
+        };
+    }
+    const backBtn = document.getElementById('back-to-edit-from-conf');
+    if (backBtn) {
+        backBtn.onclick = hideConfirmation;
+    }
     safeAddListener('back-to-form', 'click', resetForm);
     safeAddListener('reset-data', 'click', () => {
         if (typeof window.confirmReset === 'function') window.confirmReset();
@@ -3836,3 +3846,8 @@ window.renderLeaderEntryForm = renderLeaderEntryForm;
 window.exportMintsuriCSV = exportMintsuriCSV;
 window.renderMintsuriCoordinatorView = renderMintsuriCoordinatorView;
 window.setReceptionSort = setReceptionSort;
+window.submitRegistration = submitRegistration;
+window.finalizeAdminEdit = finalizeAdminEdit;
+window.handleRegistration = handleRegistration;
+window.showConfirmation = showConfirmation;
+window.hideConfirmation = hideConfirmation;
