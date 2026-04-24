@@ -860,6 +860,68 @@ function switchView(btnElement, targetId, skipPush = false, skipScroll = false) 
         renderReceptionDesk();
     }
     if (targetId === 'public-stats-view') renderPublicStats();
+    if (targetId === 'mintsuri-coordinator-view') renderMintsuriCoordinatorView();
+
+    if (targetId === 'registration-view') {
+        const adminActions = document.getElementById('admin-extra-actions');
+        if (adminActions && !isAdminAuthAction) {
+            adminActions.classList.add('hidden');
+        }
+        
+        // Ensure app title is restored to tournament name from settings
+        updateAppTitle();
+
+        // v7.1.1: Always ensure a fresh form if not editing
+        const editId = document.getElementById('edit-entry-id').value;
+        if (!editId) {
+            resetForm(); 
+        }
+        updateSourceAvailability();
+    }
+
+    // Toggle admin visibility based on state
+    const adminElements = document.querySelectorAll('.admin-only');
+    const params = new URLSearchParams(window.location.search);
+    const srcParam = params.get('src');
+
+    adminElements.forEach(el => {
+        if (isAdminAuth) {
+            el.classList.remove('hidden');
+        } else if (isAdminAuthAction && targetId === 'registration-view') {
+            // v8.1.52: If we are in an admin-led edit, allow admin-only elements 
+            // WITHIN the registration view to be shown.
+            if (targetView.contains(el) || el === targetView) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        } else {
+            el.classList.add('hidden');
+        }
+    });
+
+    // v8.1.52: Special handling for admin actions inside registration view
+    if (targetId === 'registration-view' && isAdminAuthAction) {
+        const adminActions = document.getElementById('admin-extra-actions');
+        if (adminActions) adminActions.classList.remove('hidden');
+    }
+
+    // v8.1.33: Stricter Category Visibility in Special Windows
+    if (srcParam) {
+        document.querySelectorAll('#main-source-selector .source-option').forEach(el => {
+            if (el.classList.contains('forced-source')) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        });
+    }
+
+    // Reset Title based on view
+    updateAppTitle();
+
+    // v8.1.57: Update toolbar state if exists
+    updateAdminToolbar();
 
     // v8.1.31: Always scroll to top when switching views manually
     if (!skipScroll) {
