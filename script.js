@@ -36,7 +36,30 @@ let dashboardFilter = 'all';
 let currentReceptionId = null;
 let isAdminAuthAction = false; // Flag for admin-led edits
 let activeReceptionEntryId = null; // Currently selected in reception desk
-let pendingView = null; // v8.1.10: Global scoped to avoid ReferenceError
+let pendingView = null; // v8.1.61: Ensure critical handlers are globally accessible
+window.showEntryDetails = showEntryDetails;
+window.requestAdminEdit = requestAdminEdit;
+window.quickCheckIn = quickCheckIn;
+window.hardDeleteEntry = hardDeleteEntry;
+window.selectReceptionEntry = selectReceptionEntry;
+window.updateGroupStatus = updateGroupStatus;
+window.switchView = switchView;
+window.switchAdminTab = switchAdminTab;
+window.renderRankings = renderRankings;
+window.copyShareUrl = copyShareUrl;
+window.openShareUrl = openShareUrl;
+window.clearLocalCache = clearLocalCache;
+window.generateBulkTestData = generateBulkTestData;
+window.saveIkesu = saveIkesu;
+window.deleteIkesuFromModal = deleteIkesuFromModal;
+window.closeIkesuModal = closeIkesuModal;
+window.closeDetailModal = closeDetailModal;
+window.handleAdminLogin = handleAdminLogin;
+window.resetForm = resetForm;
+window.renderLeaderEntryForm = renderLeaderEntryForm;
+window.exportMintsuriCSV = exportMintsuriCSV;
+window.renderMintsuriCoordinatorView = renderMintsuriCoordinatorView;
+window.setReceptionSort = setReceptionSort;
 
 // Age labels map - v4.8 Updated
 const ageLabels = {
@@ -1847,10 +1870,10 @@ function updateDashboard() {
                     <td><small style="white-space:nowrap;">${regTime}</small></td>
                     <td>
                         <div style="display:flex; gap:0.2rem; flex-wrap: nowrap; width: auto; align-items:center;">
-                            <button class="btn-outline btn-small btn-detail" onclick="window.showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
-                            <button class="btn-outline btn-small" onclick="window.requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
-                            <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="window.quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
-                            <button class="btn-outline btn-small" onclick="window.hardDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap; border-color: #ff7675; color: #ff7675;">削除</button>
+                            <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
+                            <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
+                            <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
+                            <button class="btn-outline btn-small" onclick="hardDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap; border-color: #ff7675; color: #ff7675;">削除</button>
                         </div>
                     </td>
                 </tr>
