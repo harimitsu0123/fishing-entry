@@ -122,8 +122,11 @@ function restoreUIState() {
     if (viewParam || params.get('src')) return;
 
     if (currentViewId && currentViewId !== 'registration-view') {
-        const lastBtn = document.querySelector(`.nav-btn[data-target="${currentViewId}"]`);
-        switchView(lastBtn, currentViewId);
+        // v8.1.55: Use a small delay to ensure elements are ready
+        setTimeout(() => {
+            const lastBtn = document.querySelector(`.nav-btn[data-target="${currentViewId}"]`);
+            switchView(lastBtn, currentViewId, true); // true = skip pushState
+        }, 10);
     }
     if (isAdminAuth && currentAdminTab) {
         switchAdminTab(currentAdminTab);
@@ -775,9 +778,20 @@ function initApp() {
 
     // Check URL Parameters for special sources
     checkUrlParams();
+
+    // v8.1.55: Browser Back/Forward Support
+    window.addEventListener('popstate', (e) => {
+        if (e.state && e.state.viewId) {
+            console.log("Navigating back to:", e.state.viewId);
+            switchView(null, e.state.viewId, true);
+        } else {
+            // Default to registration view if no state
+            switchView(null, 'registration-view', true);
+        }
+    });
 }
 
-function switchView(btnElement, targetId) {
+function switchView(btnElement, targetId, skipPush = false) {
     if (!targetId) return;
 
     // Auto-correction for legacy or incorrect names
@@ -786,6 +800,8 @@ function switchView(btnElement, targetId) {
     const targetView = document.getElementById(targetId);
     if (!targetView) {
         console.warn(`Attempted to switch to non-existent view: ${targetId}`);
+        // Fallback to registration if view doesn't exist
+        if (targetId !== 'registration-view') switchView(null, 'registration-view', true);
         return;
     }
 
@@ -804,7 +820,7 @@ function switchView(btnElement, targetId) {
     }
 
     // Only push if the view actually changed to avoid junk history
-    if (currentParams.get('view') !== newViewId) {
+    if (!skipPush && currentParams.get('view') !== newViewId) {
         window.history.pushState({ viewId: targetId }, '', url);
     }
 
@@ -1758,7 +1774,12 @@ function updateDashboard() {
 
         // Dashboard List Rendering (Fixed & Cleaned v7.3.0)
         const list = document.getElementById('entry-list');
-        const searchTerm = document.getElementById('dashboard-search').value.toLowerCase();
+        const searchInput = document.getElementById('dashboard-search');
+        if (!list || !searchInput) {
+            console.warn("Dashboard elements not found, skipping update.");
+            return;
+        }
+        const searchTerm = searchInput.value.toLowerCase();
         
         // v7.9.8: Save scroll position before update
         const scrollPos = window.scrollY;
@@ -1850,6 +1871,13 @@ function updateDashboard() {
  */
 function switchAdminTab(tabId) {
     if (!tabId) return;
+    
+    // v8.1.55: Validation check for tab content existence
+    if (!document.getElementById(tabId)) {
+        console.warn("Target tab not found, falling back to tab-list:", tabId);
+        tabId = 'tab-list';
+    }
+
     currentAdminTab = tabId;
     sessionStorage.setItem('currentAdminTab', tabId);
 
@@ -3174,6 +3202,11 @@ window.showEntryDetails = function (id) {
     const modal = document.getElementById('detail-modal');
     const body = document.getElementById('detail-modal-body');
     const title = document.getElementById('detail-modal-title');
+
+    if (!modal || !body) {
+        console.error("Modal elements not found!");
+        return;
+    }
 
     if (title) title.textContent = `[${entry.id}] ${entry.groupName} 詳細`;
 
