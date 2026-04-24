@@ -1019,7 +1019,7 @@ function checkTimeframe() {
 }
 
 // Admin Auth
-function showAdminLogin(targetView) {
+window.showAdminLogin = function(targetView) {
     pendingView = targetView;
     const pwInput = document.getElementById('global-admin-password');
     const errDiv = document.getElementById('admin-auth-error');
@@ -1028,9 +1028,9 @@ function showAdminLogin(targetView) {
     
     document.getElementById('admin-auth-modal').classList.remove('hidden');
     if (pwInput) setTimeout(() => pwInput.focus(), 100);
-}
+};
 
-function handleAdminLogin() {
+window.handleAdminLogin = function() {
     const pwInput = document.getElementById('global-admin-password');
     if (!pwInput) return;
     const pw = pwInput.value.trim();
