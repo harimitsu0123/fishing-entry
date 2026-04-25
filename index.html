@@ -309,7 +309,7 @@
                 </div>
 
                 <!-- Tab: Registration List -->
-                <div id="tab-list" class="admin-tab-content">
+                <div id="tab-list" class="admin-tab-content active">
                     <!-- Global Stats Summary (Top) -->
                     <div id="global-stats-summary-top" class="mb-4"></div>
 
@@ -377,7 +377,7 @@
                             </div>
                         </div>
                         <div class="search-box mb-3">
-                            <input type="text" id="dashboard-search" autocomplete="off" placeholder="番号、グループ名、代表者、地域、参加者名で検索...">
+                            <input type="text" id="dashboard-search" autocomplete="off" placeholder="名前・番号などで検索...">
                         </div>
                         <div class="filter-group mb-4">
                             <button class="filter-btn active" data-filter="all">すべて</button>
@@ -426,7 +426,7 @@
                 </div>
 
                 <!-- Tab: General Settings -->
-                <div id="tab-settings" class="admin-tab-content active">
+                <div id="tab-settings" class="admin-tab-content">
                     <!-- Share URL & QR Code Combined -->
                     <div class="card mb-4" style="background: #f0f7ff; border: 2px solid var(--primary-color);">
                         <div class="form-row" style="align-items: center; gap: 2rem;">
@@ -789,7 +789,7 @@
                     <!-- Search & List Column -->
                     <div class="reception-sidebar">
                         <div class="search-box mb-2">
-                            <input type="text" id="reception-search" placeholder="受付番号・代表者・同行者・Tシャツで検索...">
+                            <input type="text" id="reception-search" autocomplete="off" placeholder="名前・番号などで検索...">
                         </div>
                         <div class="filter-controls mb-2" style="display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
                             <div class="btn-group" style="display: flex; gap: 2px; background: #e2e8f0; padding: 2px; border-radius: 6px;">
@@ -846,7 +846,7 @@
                      <!-- Mintsuri specific stats injected here -->
                 </div>
                 <div class="search-box mb-3">
-                    <input type="text" id="mintsuri-search" autocomplete="off" placeholder="受付番号、グループ、参加者名、性別、サイズで検索..." oninput="renderMintsuriCoordinatorView()">
+                    <input type="text" id="mintsuri-search" autocomplete="off" placeholder="名前・番号などで検索..." oninput="renderMintsuriCoordinatorView()">
                 </div>
                 <div class="table-container">
                     <table class="mintsuri-table">
@@ -903,7 +903,7 @@
                 </div>
                 <div id="harimitsu-stats-summary" class="mb-4"></div>
                 <div class="search-box mb-3">
-                    <input type="text" id="harimitsu-search" autocomplete="off" placeholder="検索..." oninput="renderHarimitsuCoordinatorView()">
+                    <input type="text" id="harimitsu-search" autocomplete="off" placeholder="名前・番号などで検索..." oninput="renderHarimitsuCoordinatorView()">
                 </div>
                 <div class="table-container">
                     <table>
@@ -955,7 +955,7 @@
                 </div>
                 <div id="suiho-stats-summary" class="mb-4"></div>
                 <div class="search-box mb-3">
-                    <input type="text" id="suiho-search" autocomplete="off" placeholder="検索..." oninput="renderSuihoCoordinatorView()">
+                    <input type="text" id="suiho-search" autocomplete="off" placeholder="名前・番号などで検索..." oninput="renderSuihoCoordinatorView()">
                 </div>
                 <div class="table-container">
                     <table>

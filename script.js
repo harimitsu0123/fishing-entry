@@ -622,11 +622,14 @@ function initApp() {
     const srcParam = params.get('src');
     const viewParam = params.get('view');
 
-    // v8.1.42: Explicitly clear all search boxes to prevent browser autofill/stale values
-    ['dashboard-search', 'mintsuri-search', 'harimitsu-search', 'suiho-search', 'reception-search'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
+    // v8.1.42/v8.1.74: Explicitly clear all search boxes to prevent browser autofill/stale values
+    window.clearSearchBoxes = function() {
+        ['dashboard-search', 'mintsuri-search', 'harimitsu-search', 'suiho-search', 'reception-search', 'ikesu-search', 'coordinator-search'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+    };
+    clearSearchBoxes();
 
     // v8.1.39: Critical Fix for entries flashing - Reset filter if it's set to hidden 'ippan'
 
@@ -807,6 +810,9 @@ function initApp() {
 
 function switchView(btnElement, targetId, skipPush = false, skipScroll = false) {
     if (!targetId) return;
+
+    // v8.1.74: Clear search boxes when switching views to prevent stale filters causing blank screens
+    if (typeof window.clearSearchBoxes === 'function') window.clearSearchBoxes();
 
     // Auto-correction for legacy or incorrect names
     if (targetId === 'admin-view') targetId = 'dashboard-view';
@@ -1927,6 +1933,9 @@ function switchAdminTab(tabId) {
     sessionStorage.setItem('currentAdminTab', tabId);
 
     // 1. Update Navigation Button States
+    // v8.1.74: Clear search boxes when switching sub-tabs to prevent blank list issues
+    if (typeof window.clearSearchBoxes === 'function') window.clearSearchBoxes();
+
     document.querySelectorAll('.admin-tab-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
     });
