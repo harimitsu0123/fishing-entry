@@ -666,7 +666,9 @@ function initApp() {
     };
 
     // Form logic
+    safeAddListener('btn-to-confirm', 'click', showConfirmation);
     safeAddListener('add-participant', 'click', () => addParticipantRow());
+    safeAddListener('cancel-edit-btn', 'click', resetForm);
     // v8.1.63: Robust registration for confirmation buttons
     const subBtn = document.getElementById('submit-registration');
     if (subBtn) {
