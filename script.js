@@ -187,7 +187,7 @@ async function loadData() {
                 }
                 
                 updateSyncStatus('success');
-                finalizeLoad();
+                finalizeLoad(true); // v8.1.52: Identify as refresh to skip redundant resets
                 return;
             }
         }
@@ -307,7 +307,7 @@ function mergeData(local, cloud) {
 
 
 
-function finalizeLoad() {
+function finalizeLoad(isRefresh = false) {
     // Ensure settings are merged with defaults
     state.settings = {
         ...{
@@ -339,15 +339,18 @@ function finalizeLoad() {
     // v8.1.42: Ensure coordinator views also refresh automatically on sync
     renderActiveCoordinatorView();
 
-    // v7.6.1: Run URL parameter check AFTER loading is fully settled
-    // v8.1.56: Skip scroll when refreshing data
-    checkUrlParams(true); 
+    // v8.1.52: ONLY run startup helpers if this is NOT a standard auto-sync refresh
+    if (!isRefresh) {
+        // v7.6.1: Run URL parameter check AFTER loading is fully settled
+        // v8.1.56: Skip scroll when refreshing data
+        checkUrlParams(true); 
 
-    // v7.6.1: Initialize specialized URL display in Admin Tab
-    generateSpecialUrls();
+        // v7.6.1: Initialize specialized URL display in Admin Tab
+        generateSpecialUrls();
 
-    // v7.0: 自動復旧チェック（再読み込み時）
-    setTimeout(checkPendingRegistration, 500);
+        // v7.0: 自動復旧チェック（再読み込み時）
+        setTimeout(checkPendingRegistration, 500);
+    }
 }
 
 // v7.7.0: Automatically update existing entries to new T-shirt labels
@@ -1235,6 +1238,12 @@ function showConfirmation() {
 
     // Basic Validation Check (HTML5 Native)
     if (!document.getElementById('registration-form').reportValidity()) {
+        console.warn("BORIJIN: Form validity check failed. Inspection required.");
+        // v8.1.52: Log specific validation issues for debugging
+        const invalidFields = document.querySelectorAll('#registration-form :invalid');
+        invalidFields.forEach(field => {
+            console.warn(`Invalid field: ${field.id || field.name} - ${field.validationMessage}`);
+        });
         showStatus("入力内容に不備があります。赤枠の部分をご確認ください。", "error", true);
         return;
     }
@@ -1541,6 +1550,16 @@ function fillFormForEdit(entry) {
         if (list) {
             list.innerHTML = '';
             entry.participants.forEach(p => addParticipantRow(p, false));
+        }
+
+        // v8.1.52: Select correct reg-source radio button
+        if (entry.source) {
+            const radio = document.querySelector(`input[name="reg-source"][value="${entry.source}"]`);
+            if (radio) {
+                radio.checked = true;
+                // UI update for specialized window logic
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
+            }
         }
 
     // UI Adjustments for Edit Mode
