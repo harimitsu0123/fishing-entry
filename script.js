@@ -1319,7 +1319,8 @@ function showConfirmation() {
         const li = document.createElement('li');
         const typeLabel = p.type === 'fisher' ? '【釣り】' : '【見学】';
         const genderLabel = genderLabels[p.gender] || p.gender;
-        li.textContent = `${idx + 1}. ${typeLabel} ${p.name} / ${genderLabel} [${p.tshirtSize}]` + (p.nickname ? ` (${p.nickname})` : '');
+        const ageLabel = ageLabels[p.age] || p.age;
+        li.textContent = `${idx + 1}. ${typeLabel} ${p.name} / ${p.region} / ${genderLabel} / ${ageLabel} [${p.tshirtSize}]` + (p.nickname ? ` (${p.nickname})` : '');
         summaryList.appendChild(li);
     });
 
