@@ -674,7 +674,7 @@ function initApp() {
     if (subBtn) {
         subBtn.onclick = () => {
             if (isAdminAuthAction) finalizeAdminEdit();
-            else submitRegistration();
+            else handleRegistration();
         };
     }
     const backBtn = document.getElementById('back-to-edit-from-conf');
