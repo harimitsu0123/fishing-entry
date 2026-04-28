@@ -1121,9 +1121,32 @@ th {
     flex-direction: column;
 }
 
+/* --- Reverted Ikesu Workspace Design (v8.3.29) --- */
+.ikesu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    padding: 0.5rem;
+}
+
+.ikesu-box {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 180px;
+    transition: border-color 0.2s;
+}
+
 .ikesu-box:hover {
     border-color: var(--primary-color);
-    box-shadow: 0 4px 10px rgba(0, 119, 190, 0.1);
+}
+
+.ikesu-box.over {
+    border-color: var(--error-color);
+    background: #fff5f5;
 }
 
 .ikesu-header {
@@ -1132,18 +1155,108 @@ th {
     align-items: center;
     margin-bottom: 0.3rem;
     padding-bottom: 0.2rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #eee;
 }
 
 .ikesu-title {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: var(--text-dark);
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
 }
+
+.ikesu-title .num {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary-color);
+}
+
+.ikesu-title .unit {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--text-muted);
+}
+
+.capacity-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    background: #eee;
+    color: #333;
+}
+
+.capacity-badge.warning { background: #fff3e0; color: #e65100; }
+.capacity-badge.full { background: #e8f5e9; color: #2e7d32; }
+.capacity-badge.over { background: #ffebee; color: #c62828; }
+
+.ikesu-drop-area {
+    flex: 1;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+/* Original Card Style with Counts */
+.drag-item-group {
+    background: white;
+    border: 1px solid #ddd;
+    border-left: 5px solid var(--primary-color);
+    border-radius: 4px;
+    padding: 0.4rem;
+    margin-bottom: 0.2rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    user-select: none;
+}
+
+.drag-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.drag-item-header.no-border {
+    border: none;
+    margin-top: -4px;
+    padding-top: 0;
+}
+
+.group-name-text {
+    font-weight: bold;
+    font-size: 0.85rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    flex-shrink: 0;
+    max-width: 150px;
+}
+
+.count-badge-row {
+    display: flex;
+    gap: 4px;
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+.badge-fisher-count { background: #dbeafe; color: #1e40af; padding: 1px 6px; border-radius: 4px; }
+.badge-observer-count { background: #f1f5f9; color: #475569; padding: 1px 6px; border-radius: 4px; }
+
+.drag-item-participants.active {
+    display: block;
+    margin-top: 4px;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 4px;
+}
+
+.drag-item-person {
+    padding: 2px 6px;
+    margin: 1px 0;
+    background: #f8fafc;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .ikesu-box.drag-over {
@@ -1152,18 +1265,6 @@ th {
     transform: scale(1.02);
 }
 
-.drag-item-group {
-    background: white;
-    border: 1px solid #ddd;
-    border-left: 5px solid var(--primary-color);
-    border-radius: 4px;
-    padding: 0.25rem 0.4rem;
-    margin-bottom: 0.3rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    user-select: none;
-    -webkit-user-select: none;
-    transition: transform 0.1s;
-}
 
 /* Category Specific Border Colors v8.3.0 */
 .drag-item-group.source-ippan { border-left-color: var(--color-ippan); }
@@ -1218,7 +1319,7 @@ th {
     border-radius: 12px;
 }
 
-.admin-tab-btn {
+.admin-tab-btn, .day-tab-btn {
     flex: 1;
     min-width: 120px;
     padding: 1rem 1.2rem;
@@ -1235,12 +1336,12 @@ th {
     text-align: center;
 }
 
-.admin-tab-btn:hover {
+.admin-tab-btn:hover, .day-tab-btn:hover {
     background: #e2e8f0;
     color: var(--primary-color);
 }
 
-.admin-tab-btn.active {
+.admin-tab-btn.active, .day-tab-btn.active {
     background: var(--primary-color);
     color: #fff;
     box-shadow: 0 4px 12px rgba(0, 91, 181, 0.3);
@@ -2180,16 +2281,18 @@ table {
     background: transparent;
     border: none;
     cursor: pointer;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     padding: 0 4px;
     filter: grayscale(1);
-    opacity: 0.4;
+    opacity: 0.3;
     transition: all 0.2s;
 }
 
 .btn-leader-toggle.active {
     filter: none;
     opacity: 1;
+    color: #ffca28;
+    text-shadow: 0 0 5px rgba(255, 202, 40, 0.5);
 }
 /* Split Card Theming */
 .split-card.ippan { border-top: 4px solid var(--color-ippan); }
@@ -2247,13 +2350,13 @@ table {
         padding: 0 !important;
     }
 
-    /* Only show the print container when printing */
-    #tab-print {
-        display: block !important;
+    /* v8.3.13: Allow printing of whatever tab is currently active (Member list, etc) */
+    .admin-tab-content:not(.active) {
+        display: none !important;
     }
     
-    .admin-tab-content:not(#tab-print) {
-        display: none !important;
+    .admin-tab-content.active {
+        display: block !important;
     }
 
     .print-page {
@@ -2261,4 +2364,15 @@ table {
         border: none !important;
         page-break-after: always;
     }
+}
+
+/* v8.3.17: Force active tab visibility on screen and print */
+.admin-tab-content.active {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 200px !important;
+}
+.admin-tab-content:not(.active) {
+    display: none !important;
 }

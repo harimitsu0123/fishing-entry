@@ -27,8 +27,8 @@
     <nav class="navbar">
         <div class="nav-container">
             <h1 id="app-title" onclick="handleSecureClick(event)">釣り大会 受付</h1>
-            <span class="app-version">v8.3.12</span>
-            <!-- v8.3.12: Final stable version with login & sync fixes -->
+            <span class="app-version">v8.3.40</span>
+            <!-- v8.3.23: Print button smaller, mode container tighter -->
         </div>
     </nav>
 
@@ -254,8 +254,7 @@
             <nav class="admin-tab-nav">
                 <button class="admin-tab-btn active" data-tab="tab-list">名簿一覧</button>
                 <button class="admin-tab-btn" data-tab="tab-ikesu">イケス割当</button>
-                <button class="admin-tab-btn" data-tab="tab-rankings">釣果ランキング</button>
-                <button class="admin-tab-btn" data-tab="tab-print">メンバー表印刷</button>
+                <button class="admin-tab-btn" data-tab="tab-print" onclick="window.updatePrintView()">メンバー表印刷</button>
                 <button class="admin-tab-btn" data-tab="tab-settings">大会設定</button>
                 <button class="admin-tab-btn" data-tab="tab-stats">統計・分析</button>
                 <button class="admin-tab-btn hidden" data-tab="tab-email">一括メール</button>
@@ -305,6 +304,37 @@
                                     <!-- Ikesu containers will go here -->
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Print Member Lists (v8.3.22) -->
+                <div id="tab-print" class="admin-tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="no-print" style="font-size: 1.25rem;">メンバー表・印刷</h2>
+                            <button class="btn-primary" onclick="window.print()" style="padding: 6px 12px; font-size: 0.85rem; border-radius: 6px;">この画面を印刷する</button>
+                        </div>
+                        <p class="text-muted mb-4 no-print" style="font-size: 0.9rem;">A4縦・横の印刷に適した形式で一覧を表示します。用途に合わせてモードを選択してください。</p>
+                        
+                        <div class="print-controls mb-4 no-print" style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-wrap: wrap; align-items: center; gap: 1.2rem;">
+                            <div style="font-weight: bold; font-size: 0.9rem; white-space: nowrap;">印刷モード:</div>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                                <input type="radio" name="print-mode" value="ikesu" checked onchange="window.updatePrintView()">
+                                <span>イケス別 (リーダー用)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                                <input type="radio" name="print-mode" value="group" onchange="window.updatePrintView()">
+                                <span>グループ別 (事前準備用)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                                <input type="radio" name="print-mode" value="result" onchange="window.updatePrintView()">
+                                <span>イケス別 (釣果記入用)</span>
+                            </label>
+                        </div>
+
+                        <div id="print-view-container">
+                            <p class="text-muted p-4">名簿データを読み込んでいます...</p>
                         </div>
                     </div>
                 </div>
@@ -377,8 +407,9 @@
                                 <button id="export-participants-csv" class="btn-outline">参加者一覧 (CSV書き出し)</button>
                             </div>
                         </div>
-                        <div class="search-box mb-3">
-                            <input type="text" id="dashboard-search" autocomplete="off" placeholder="名前・番号などで検索...">
+                        <div class="search-box mb-3" style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="text" id="dashboard-search" autocomplete="off" placeholder="名前・番号などで検索..." style="flex: 1;">
+                            <button class="btn-secondary no-print" onclick="window.printMemberList()" style="white-space: nowrap; padding: 0.75rem 1.2rem;">名簿を印刷</button>
                         </div>
                         <div class="filter-group mb-4">
                             <button class="filter-btn active" data-filter="all">すべて</button>
@@ -400,7 +431,7 @@
                                         <th>得点</th>
                                         <th>状態</th>
                                         <th>登録時間</th>
-                                        <th>操作</th>
+                                        <th class="no-print">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody id="entry-list"></tbody>
@@ -660,66 +691,7 @@
                             </div>
                         </div>
                     </div>
-                <!-- Tab: Tournament Rankings (v8.0.0) -->
-                <div id="tab-rankings" class="admin-tab-content">
-                    <div class="card">
-                        <div class="card-header" style="flex-wrap: wrap; gap: 0.5rem;">
-                            <div style="display:flex; align-items:center; gap:0.5rem;">
-                                <h2>釣果集計・ランキング</h2>
-                                <button class="btn-primary btn-small" onclick="window.print()" style="padding:0.4rem 0.8rem; border-radius:30px;">📄 ランキングを印刷</button>
-                            </div>
-                            <div style="display:flex; gap:0.5rem;">
-                                <button class="btn-outline btn-small" onclick="switchView(null, 'leader-entry-view'); renderLeaderEntryForm();">リーダー入力画面を開く</button>
-                                <button class="btn-outline btn-small" onclick="renderRankings()">情報を更新</button>
-                            </div>
-                        </div>
-                        
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
-                            <!-- Individual Ranking -->
-                            <div class="ranking-panel">
-                                <h3 class="section-title">個人ランキング</h3>
-                                <div id="ranking-individual-list" class="stats-list">
-                                    <!-- Ranking cards will load here -->
-                                </div>
-                            </div>
-                            
-                            <!-- Ikesu Team Ranking -->
-                            <div class="ranking-panel">
-                                <h3 class="section-title">イケス対抗戦（平均釣果）</h3>
-                                <div id="ranking-ikesu-list" class="stats-list">
-                                    <!-- Ranking cards will load here -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Tab: Print Member Lists (v8.0.0) -->
-                <div id="tab-print" class="admin-tab-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2>メンバー表・印刷</h2>
-                            <button class="btn-primary" onclick="window.print()">この画面を印刷する</button>
-                        </div>
-                        <p class="text-muted mb-4">A4縦・横の印刷に適した形式で一覧を表示します。用途に合わせてモードを選択してください。</p>
-                        
-                        <div class="print-controls mb-4 no-print" style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 1.5rem;">
-                            <div style="font-weight: bold; font-size: 0.9rem;">印刷モード:</div>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                <input type="radio" name="print-mode" value="ikesu" checked onchange="window.updatePrintView()">
-                                <span>イケス別 (リーダー用)</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                <input type="radio" name="print-mode" value="group" onchange="window.updatePrintView()">
-                                <span>グループ別 (事前準備用・1組1枚)</span>
-                            </label>
-                        </div>
-
-                        <div id="print-view-container">
-                            <!-- Printable tables will load here -->
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Tab: Bulk Email -->
                 <div id="tab-email" class="admin-tab-content">
@@ -775,43 +747,85 @@
             </div>
         </section>
 
-        <!-- Reception View -->
-        <section id="reception-view" class="view">
-            <div class="card">
-                <div class="card-header">
-                    <h2>当日受付アシスタント</h2>
-                    <div class="reception-stats-header">
-                        <span class="rec-stat-item">来場: <strong id="rec-check-in-count">0</strong></span>
-                        <span class="rec-stat-item">欠席: <strong id="rec-absent-count">0</strong></span>
+        <!-- Day View (Tournament Operations) v8.3.25 -->
+        <section id="day-view" class="view">
+            <!-- Day Sub-tabs Navigation -->
+            <div class="card mb-3 no-print" style="padding: 0.5rem; background: #f1f5f9;">
+                <nav class="admin-tab-nav" style="margin-bottom: 0;">
+                    <button class="day-tab-btn active" data-tab="day-reception" onclick="switchDayTab('day-reception')">受付</button>
+                    <button class="day-tab-btn" data-tab="day-entry" onclick="switchDayTab('day-entry')">釣果</button>
+                    <button class="day-tab-btn" data-tab="day-rankings" onclick="switchDayTab('day-rankings'); renderRankings();">ランキング</button>
+                </nav>
+            </div>
+
+            <div id="day-tab-container">
+                <!-- Sub-tab: Reception Desk -->
+                <div id="day-reception" class="day-tab-content active">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>当日受付アシスタント</h2>
+                            <div class="reception-stats-header">
+                                <span class="rec-stat-item">来場: <strong id="rec-check-in-count">0</strong></span>
+                                <span class="rec-stat-item">欠席: <strong id="rec-absent-count">0</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="reception-container">
+                            <!-- Search & List Column -->
+                            <div class="reception-sidebar">
+                                <div class="search-box mb-2">
+                                    <input type="text" id="reception-search" autocomplete="off" placeholder="名前・番号などで検索...">
+                                </div>
+                                <div id="reception-list" class="reception-list">
+                                    <!-- List items injected by JS -->
+                                </div>
+                            </div>
+
+                            <!-- Detail Column -->
+                            <div id="reception-detail" class="reception-detail-panel">
+                                <div class="empty-state">
+                                    <p>左のリストからグループを選択してください。</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="reception-container">
-                    <!-- Search & List Column -->
-                    <div class="reception-sidebar">
-                        <div class="search-box mb-2">
-                            <input type="text" id="reception-search" autocomplete="off" placeholder="名前・番号などで検索...">
+                <!-- Sub-tab: Catch Entry (Leader Form) -->
+                <div id="day-entry" class="day-tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>当日の釣果入力（リーダー用）</h2>
                         </div>
-                        <div class="filter-controls mb-2" style="display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-                            <div class="btn-group" style="display: flex; gap: 2px; background: #e2e8f0; padding: 2px; border-radius: 6px;">
-                                <button id="sort-reception-id" class="btn-toolbar active" onclick="setReceptionSort('id')" style="padding: 2px 8px; font-size: 0.75rem; border: none; border-radius: 4px; cursor: pointer;">ID順</button>
-                                <button id="sort-reception-source" class="btn-toolbar" onclick="setReceptionSort('source')" style="padding: 2px 8px; font-size: 0.75rem; border: none; border-radius: 4px; cursor: pointer;">区分順</button>
+                        <div class="p-3">
+                            <p class="text-muted mb-4">この画面はリーダー向けと共通です。暗証番号を入力してログインしてください。</p>
+                            <div style="text-align: center; padding: 2rem; border: 2px dashed #cbd5e1; border-radius: 12px;">
+                                <button class="btn-primary btn-large" onclick="switchView(null, 'leader-entry-view'); renderLeaderEntryForm();">入力画面（ログイン）を開く</button>
                             </div>
-                            <label class="toggle-control" style="font-size: 0.8rem; cursor: pointer;">
-                                <input type="checkbox" id="show-completed-toggle">
-                                <span class="control-label">受付済みを表示</span>
-                            </label>
-                        </div>
-                        <div class="reception-group-list" id="reception-group-list">
-                            <!-- Group list items injected here -->
                         </div>
                     </div>
+                </div>
 
-                    <!-- Detail Column (Desk) -->
-                    <div class="reception-desk" id="reception-detail-area">
-                        <div class="reception-placeholder">
-                            <i class="icon-search">🔍</i>
-                            <p>左側のリストからグループを選択してください</p>
+                <!-- Sub-tab: Rankings -->
+                <div id="day-rankings" class="day-tab-content">
+                    <div class="card" style="border-top: 5px solid var(--primary-color);">
+                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <h2 style="margin:0;">釣果ランキング</h2>
+                                <button class="btn-primary btn-small" onclick="window.print()" style="padding:0.4rem 0.8rem; border-radius:30px; margin-top: 5px;">📄 ランキングを印刷</button>
+                            </div>
+                            <button class="btn-outline btn-small" onclick="renderRankings()">情報を更新</button>
+                        </div>
+                        
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+                            <div class="ranking-panel">
+                                <h3 class="section-title">個人ランキング</h3>
+                                <div id="ranking-individual-list" class="stats-list"></div>
+                            </div>
+                            <div class="ranking-panel">
+                                <h3 class="section-title">イケス対抗戦（平均釣果）</h3>
+                                <div id="ranking-ikesu-list" class="stats-list"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1148,14 +1162,14 @@
     </footer>
 
     <!-- Global Sync Status (v7.1) -->
-    <div id="sync-status-footer" class="sync-status-indicator admin-only hidden">
+    <div id="sync-status-footer" class="sync-status-indicator admin-only hidden no-print">
         <div id="sync-dot" class="sync-dot"></div>
         <span id="sync-text">クラウド同期: 待機中</span>
     </div>
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=8.3.12"></script>
+    <script src="script.js?v=8.3.40"></script>
 </body>
 
 </html>

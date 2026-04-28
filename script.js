@@ -1154,6 +1154,26 @@ function switchView(btnElement, targetId, skipPush = false, skipScroll = false) 
     }
 }
 
+window.switchDayTab = function(tabId) {
+    document.querySelectorAll('.day-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.querySelectorAll('.day-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    const targetContent = document.getElementById(tabId);
+    if (targetContent) targetContent.classList.add('active');
+
+    const targetBtn = document.querySelector(`.day-tab-btn[data-tab="${tabId}"]`);
+    if (targetBtn) targetBtn.classList.add('active');
+
+    // v8.3.25: Special handling for rankings
+    if (tabId === 'day-rankings') {
+        renderRankings();
+    }
+};
+
 function updateAdminToolbar() {
     let toolbar = document.getElementById('admin-toolbar');
     if (!isAdminAuth) {
@@ -1167,9 +1187,9 @@ function updateAdminToolbar() {
         toolbar.className = 'admin-toolbar';
         toolbar.innerHTML = `
             <div class="toolbar-content">
-                <button class="btn-toolbar" data-target="registration-view">受付</button>
-                <button class="btn-toolbar" data-target="dashboard-view">管理</button>
-                <button class="btn-toolbar" data-target="reception-view">当日</button>
+                <button class="btn-toolbar" data-target="registration-view">受付フォーム</button>
+                <button class="btn-toolbar" data-target="dashboard-view">大会準備・管理</button>
+                <button class="btn-toolbar" data-target="day-view">大会当日</button>
                 <button class="btn-toolbar logout" id="admin-logout">ログアウト</button>
             </div>
         `;
@@ -1709,7 +1729,19 @@ window.updateDashboard = function() {
 
         // v7.3 & v8.1.7: Update Share URLs in Dashboard Settings (User Requirements Match)
         const baseUrl = window.location.href.split('?')[0].split('#')[0];
-        
+        const isLocalFile = window.location.protocol === 'file:';
+
+        // Add local file warning to UI if necessary
+        const warningContainer = document.getElementById('local-file-warning');
+        if (warningContainer) {
+            warningContainer.innerHTML = isLocalFile ? `
+                <div class="alert alert-warning no-print mb-4">
+                    <strong>【ご注意】</strong> 現在ローカルファイルとして実行されています。印刷されるQRコードは、このPC内を指すためスマホでは読み取れません。
+                    本番環境（GitHub Pages等）にアップロードすると、スマホから釣果報告ができるようになります。
+                </div>
+            ` : '';
+        }
+
         // 1. Main Public URL
         const mainUrlEl = document.getElementById('public-share-url');
         if (mainUrlEl) mainUrlEl.value = baseUrl;
@@ -1813,7 +1845,7 @@ window.updateDashboard = function() {
                     <td><div style="font-weight:900; color:var(--primary-color); text-align:center;">${groupPoints}</div></td>
                     <td><span style="font-size:0.75rem; font-weight:700; white-space:nowrap;">${statusLabel}</span></td>
                     <td><small style="white-space:nowrap;">${regTime}</small></td>
-                    <td>
+                    <td class="no-print">
                         <div style="display:flex; gap:0.2rem; flex-wrap: nowrap; width: auto; align-items:center;">
                             <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
                             <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
@@ -1870,7 +1902,12 @@ function switchAdminTab(tabId) {
     if (tabId === 'tab-list') (typeof window.updateDashboard === 'function') && window.updateDashboard();
     if (tabId === 'tab-ikesu') (typeof window.renderIkesuWorkspace === 'function') && window.renderIkesuWorkspace();
     if (tabId === 'tab-rankings') (typeof window.renderRankings === 'function') && window.renderRankings();
-    if (tabId === 'tab-print') (typeof window.updatePrintView === 'function') && window.updatePrintView();
+    if (tabId === 'tab-print') {
+        // v8.3.26: Small delay to ensure tab is visible before rendering
+        setTimeout(() => {
+            (typeof window.updatePrintView === 'function') && window.updatePrintView();
+        }, 50);
+    }
     if (tabId === 'tab-stats') (typeof window.renderBreakdownStats === 'function') && window.renderBreakdownStats();
 }
 
@@ -1878,11 +1915,19 @@ function switchAdminTab(tabId) {
  * v8.1.66: Master function for print view (Globally exposed)
  */
 window.updatePrintView = function() {
-    const mode = document.querySelector('input[name="print-mode"]:checked')?.value || 'ikesu';
-    if (mode === 'group') {
-        window.renderGroupPrintView();
-    } else {
-        window.renderIkesuPrintView();
+    try {
+        const mode = document.querySelector('input[name="print-mode"]:checked')?.value || 'ikesu';
+        if (mode === 'group') {
+            window.renderGroupPrintView();
+        } else if (mode === 'result') {
+            window.renderIkesuResultView();
+        } else {
+            window.renderIkesuPrintView();
+        }
+    } catch (err) {
+        console.error("Print View Error:", err);
+        const container = document.getElementById('print-view-container');
+        if (container) container.innerHTML = `<div class="alert alert-danger">表示エラーが発生しました: ${err.message}</div>`;
     }
 };
 
@@ -1893,11 +1938,13 @@ window.renderIkesuPrintView = function() {
     const container = document.getElementById('print-view-container');
     if (!container) return;
     
+    if (!state.entries || state.entries.length === 0) {
+        container.innerHTML = `<div class="alert alert-info">名簿データを読み込んでいます。しばらくお待ちください...</div>`;
+        return;
+    }
+
     if (!state.settings.ikesuList || state.settings.ikesuList.length === 0) {
-        container.innerHTML = `
-            <div class="alert alert-warning">
-                イケスが設定されていません。「イケス割当」タブでイケスを作成してください。
-            </div>`;
+        container.innerHTML = `<div class="alert alert-warning">イケスが設定されていません。</div>`;
         return;
     }
 
@@ -1916,34 +1963,44 @@ window.renderIkesuPrintView = function() {
         if (participants.length === 0) return;
 
         html += `
-            <div class="print-page ikesu-sheet" style="background:white; padding:1.5rem; border:1px solid #ddd; margin-bottom: 2rem; page-break-after: always; color: black;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #000; padding-bottom: 0.5rem; margin-bottom: 1rem;">
-                    <h2 style="margin:0; font-size: 1.8rem;">${ik.name} メンバー表</h2>
-                    <div style="text-align: right; font-size: 0.9rem;">
-                        <div>印刷日: ${new Date().toLocaleDateString()}</div>
-                        <div>人数: ${participants.length} 名</div>
+            <div class="print-page ikesu-sheet" style="background:white; padding:1rem; border:1px solid #eee; margin-bottom: 2rem; page-break-after: always; color: black;">
+                <div style="display: flex; align-items: flex-end; border-bottom: 5px solid #000; padding-bottom: 0.3rem; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: baseline; gap: 4px; min-width: 180px;">
+                        <span style="font-size: 3.5rem; font-weight: 900; line-height: 1;">${ik.name.replace('イケス','')}</span>
+                        <span style="font-size: 1rem; font-weight: 700; color: #333;">イケス</span>
+                    </div>
+                    <div style="flex: 1; display: flex; justify-content: center; align-items: baseline; gap: 10px; margin-bottom: 5px;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #666; background: #eee; padding: 2px 6px; border-radius: 4px;">イケスリーダー</span>
+                        <span style="font-size: 1.8rem; font-weight: 900; color: #000;">${participants.find(p => p.isLeader)?.name || '未設定'} 様</span>
+                    </div>
+                    <div style="text-align: right; font-size: 0.8rem; min-width: 180px;">
+                        <div style="font-weight: 700; font-size: 1rem; color: #666;">イケス メンバー表</div>
+                        <div>印刷日: ${new Date().toLocaleDateString()} | 人数: ${participants.length} 名</div>
                     </div>
                 </div>
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid #000;">
                     <thead>
-                        <tr style="background: #eee;">
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 40px;">No</th>
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 150px;">グループ名</th>
-                            <th style="border: 1px solid #000; padding: 0.5rem;">氏名</th>
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 60px;">性別</th>
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 80px;">Tシャツ</th>
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 100px;">備考</th>
+                        <tr style="background: #eee; font-size: 0.85rem;">
+                            <th style="border: 1px solid #000; padding: 0.4rem; width: 35px;">No</th>
+                            <th style="border: 1px solid #000; padding: 0.4rem; width: 100px;">グループ名</th>
+                            <th style="border: 1px solid #000; padding: 0.4rem;">氏名</th>
+                            <th style="border: 1px solid #000; padding: 0.4rem; width: 50px; white-space: nowrap;">性別</th>
+                            <th style="border: 1px solid #000; padding: 0.4rem; width: 60px; white-space: nowrap;">Tシャツ</th>
+                            <th style="border: 1px solid #000; padding: 0.4rem; min-width: 120px;">備考</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody style="font-size: 0.95rem;">
                         ${participants.map((p, idx) => `
-                            <tr style="height: 2.5rem;">
-                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center;">${idx + 1}</td>
-                                <td style="border: 1px solid #000; padding: 0.4rem;">${p.groupName}</td>
-                                <td style="border: 1px solid #000; padding: 0.4rem; font-size: 1.1rem; font-weight: bold;">${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}</td>
-                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center;">${genderLabels[p.gender] || '-'}</td>
-                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-weight: bold;">${p.tshirtSize || '-'}</td>
-                                <td style="border: 1px solid #000; padding: 0.4rem;">${p.type === 'observer' ? '【見学】' : ''}</td>
+                            <tr style="height: 2.1rem;">
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center;">${idx + 1}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; overflow:hidden;">${p.groupName}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: bold;">${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center;">${genderLabels[p.gender] || '-'}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-weight: bold;">${p.tshirtSize || '-'}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: left; font-weight: bold; font-size: 0.85rem; color: ${p.isLeader ? '#d32f2f' : 'inherit'};">
+                                    ${p.isLeader ? '★リーダー' : ''}
+                                    ${p.type === 'observer' ? '（見学者）' : ''}
+                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -1951,8 +2008,126 @@ window.renderIkesuPrintView = function() {
             </div>
         `;
     });
+    container.innerHTML = html || '<p class="text-muted p-4">対象者がいません。</p>';
+};
 
-    container.innerHTML = html || '<p class="text-muted p-4">割り当てられた参加者がいません。</p>';
+/**
+ * v8.3.22: Ikesu-based results recording sheet (Globally exposed)
+ */
+window.renderIkesuResultView = function() {
+    const container = document.getElementById('print-view-container');
+    if (!container) return;
+    
+    if (!state.settings.ikesuList || state.settings.ikesuList.length === 0) {
+        container.innerHTML = `<div class="alert alert-warning">イケスが設定されていません。</div>`;
+        return;
+    }
+
+    const baseUrl = window.location.href.split('?')[0];
+    const leaderUrl = window.location.href.split('?')[0] + '?view=leader-entry';
+    const isLocalFile = window.location.protocol === 'file:';
+
+    let html = isLocalFile ? `
+        <div class="alert alert-warning no-print mb-4">
+            <strong>【ご注意】</strong> 現在ローカルファイルとして実行されています。印刷されるQRコードは、このPC内を指すためスマホでは読み取れません。
+            本番環境（GitHub Pages等）にアップロードすると、スマホから釣果報告ができるようになります。
+        </div>
+    ` : '';
+    state.settings.ikesuList.forEach((ik, idx) => {
+        const participants = [];
+        state.entries.forEach(e => {
+            if (e.status === 'cancelled') return;
+            (e.participants || []).forEach(p => {
+                if (p.ikesuId === ik.id && p.type === 'fisher') {
+                    participants.push({ ...p, groupName: e.groupName });
+                }
+            });
+        });
+
+        if (participants.length === 0) return;
+
+        html += `
+            <div class="print-page result-sheet" style="background:white; padding:1.2rem; border:1px solid #eee; margin-bottom: 2rem; page-break-after: always; color: black; position: relative;">
+                <div style="display: flex; align-items: center; border-bottom: 5px solid #000; padding-bottom: 0.5rem; margin-bottom: 1.2rem;">
+                    <div style="display: flex; align-items: baseline; gap: 4px; min-width: 150px; flex-shrink: 0;">
+                        <span style="font-size: 3.5rem; font-weight: 900; line-height: 1;">${ik.name.replace('イケス','')}</span>
+                        <span style="font-size: 1rem; font-weight: 800; color: #333;">イケス</span>
+                    </div>
+                    <div style="flex: 1; display: flex; justify-content: center; align-items: baseline; gap: 10px; padding: 0 10px;">
+                        <span style="font-size: 0.8rem; font-weight: 800; color: #666; background: #eee; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">イケスリーダー</span>
+                        <span style="font-size: 1.8rem; font-weight: 900; color: #000; white-space: nowrap;">${participants.find(p => p.isLeader)?.name || '未設定'} 様</span>
+                    </div>
+                    <div style="text-align: right; min-width: 280px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end;">
+                        <div style="font-weight: 800; font-size: 1rem; color: #666; margin-bottom: 6px;">イケス 釣果記入表</div>
+                        <div style="display: flex; gap: 15px; align-items: center; border: 3px solid #000; padding: 6px 12px; background: #fff;">
+                             <div id="qr-ikesu-${idx}" style="width: 90px; height: 90px; flex-shrink: 0; background: #fff;"></div>
+                             <div style="text-align: left; line-height: 1.1; min-width: 80px;">
+                                 <div style="font-size: 0.75rem; font-weight: bold; color: #666;">WEB報告用</div>
+                                 <div style="font-size: 0.7rem; font-weight: bold; color: #666; margin-top: 4px;">暗証番号</div>
+                                 <div style="font-size: 2rem; font-weight: 900; color: #d32f2f;">${ik.passcode || '----'}</div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 10px; font-size: 0.95rem; color: #000; font-weight: bold; background: #fff3cd; padding: 5px 10px; border-left: 5px solid #ffa000; margin-bottom: 1.2rem;">
+                    <strong>【手順】</strong> 各枠に<strong>釣った合計匹数</strong>を記入し、右上のQRから報告してください。
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; border: 3px solid #000;">
+                    <thead>
+                        <tr style="background: #000; color: #fff; font-size: 0.9rem;">
+                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 35px;">No</th>
+                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 140px; white-space: nowrap;">グループ名</th>
+                            <th style="border: 1px solid #fff; padding: 0.6rem; white-space: nowrap;">氏名</th>
+                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 80px; background: #d32f2f;">タイ (匹)</th>
+                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 80px; background: #1976d2;">青物 (匹)</th>
+                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 80px; background: #388e3c;">その他 (匹)</th>
+                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 60px; color: #000; background: #f0f0f0;">合計</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${participants.map((p, pIdx) => `
+                            <tr style="height: 2.2rem;">
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold;">${pIdx + 1}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-size: 0.8rem; font-weight: bold; overflow: hidden; max-width: 140px; white-space: nowrap; text-overflow: ellipsis;">${p.groupName}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 800; font-size: 1rem; white-space: nowrap;">${p.name}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #fafafa;"></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div style="margin-top: 1.2rem; border: 2px solid #000; padding: 0.8rem; height: 120px;">
+                    <div style="font-size: 0.9rem; font-weight: 900; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 8px;">【イケス全体メモ・集計欄】</div>
+                </div>
+                <div style="margin-top: 10px; text-align: right; font-size: 0.75rem; color: #666; font-weight: bold;">
+                    生成日: ${new Date().toLocaleString()} | 釣堀まつり 管理システム
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+
+    // v8.3.25: Coarser QR pattern (Level L) and compact URL
+    if (typeof QRCode !== 'undefined') {
+        const shortLeaderUrl = leaderUrl.replace(window.location.origin, ''); // Try relative if same origin
+        state.settings.ikesuList.forEach((ik, idx) => {
+            const qrEl = document.getElementById(`qr-ikesu-${idx}`);
+            if (qrEl) {
+                new QRCode(qrEl, {
+                    text: leaderUrl, // Keep full URL for reliability
+                    width: 90,
+                    height: 90,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M // Medium error correction (v8.3.26)
+                });
+            }
+        });
+    }
 };
 
 /**
@@ -1969,60 +2144,63 @@ window.renderGroupPrintView = function() {
     }
 
     let html = '';
-    // Sort by source then ID
-    [...validEntries].sort((a,b) => a.source.localeCompare(b.source) || a.id.localeCompare(b.id)).forEach(e => {
+    const sorted = [...validEntries].sort((a,b) => a.source.localeCompare(b.source) || a.id.localeCompare(b.id));
+    
+    sorted.forEach((e, entryIdx) => {
         const pArray = e.participants || [];
+        // v8.3.21: Removed fixed min-height for better single-page fit. Added page-break optimization.
+        const isLast = entryIdx === sorted.length - 1;
         
         html += `
-            <div class="print-page group-sheet" style="background:white; padding:2rem; border:1px solid #ddd; margin-bottom: 2rem; page-break-after: always; color: black; min-height: 280mm;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #000; padding-bottom: 1rem; margin-bottom: 2rem;">
+            <div class="print-page group-sheet" style="background:white; padding:1.2rem; border:1px solid #eee; margin-bottom: 1rem; ${isLast ? '' : 'page-break-after: always;'} color: black;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #000; padding-bottom: 0.5rem; margin-bottom: 1rem;">
                     <div>
-                        <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">[${e.source}]</div>
-                        <h1 style="margin:0; font-size: 2.5rem;">${e.groupName}</h1>
+                        <div style="font-size: 1rem; font-weight: bold; margin-bottom: 0.2rem;">[${e.source}]</div>
+                        <h1 style="margin:0; font-size: 2rem;">${e.groupName}</h1>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 1.5rem; font-weight: bold; border: 3px solid #000; padding: 0.5rem 1rem;">${e.id}</div>
+                        <div style="font-size: 1.2rem; font-weight: bold; border: 3px solid #000; padding: 0.3rem 0.8rem;">${e.id}</div>
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-                    <div style="border: 2px solid #000; padding: 1rem;">
-                        <div style="font-size: 0.9rem; border-bottom: 1px solid #000; margin-bottom: 0.5rem;">代表者</div>
-                        <div style="font-size: 1.4rem; font-weight: bold;">${e.representative} 様</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div style="border: 2px solid #000; padding: 0.6rem;">
+                        <div style="font-size: 0.8rem; border-bottom: 1px solid #000; margin-bottom: 0.3rem;">代表者</div>
+                        <div style="font-size: 1.2rem; font-weight: bold;">${e.representative} 様</div>
                     </div>
-                    <div style="border: 2px solid #000; padding: 1rem;">
-                        <div style="font-size: 0.9rem; border-bottom: 1px solid #000; margin-bottom: 0.5rem;">合計人数</div>
-                        <div style="font-size: 1.4rem; font-weight: bold;">釣り: ${e.fishers}名 / 見学: ${e.observers}名</div>
+                    <div style="border: 2px solid #000; padding: 0.6rem;">
+                        <div style="font-size: 0.8rem; border-bottom: 1px solid #000; margin-bottom: 0.3rem;">合計人数</div>
+                        <div style="font-size: 1.2rem; font-weight: bold;">釣り: ${e.fishers}名 / 見学: ${e.observers}名</div>
                     </div>
                 </div>
 
-                <h3 style="background: #000; color: white; padding: 0.5rem 1rem; margin-bottom: 1rem;">参加者・Tシャツサイズ 一覧</h3>
-                <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; margin-bottom: 2rem;">
+                <h3 style="background: #000; color: white; padding: 0.4rem 0.8rem; margin-bottom: 0.8rem; font-size: 1rem;">参加者・Tシャツサイズ 一覧</h3>
+                <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; margin-bottom: 1rem;">
                     <thead>
-                        <tr style="background: #eee;">
-                            <th style="border: 1px solid #000; padding: 0.8rem; width: 50px;">No</th>
-                            <th style="border: 1px solid #000; padding: 0.8rem;">氏名</th>
-                            <th style="border: 1px solid #000; padding: 0.8rem; width: 120px;">Tシャツ</th>
-                            <th style="border: 1px solid #000; padding: 0.8rem; width: 100px;">区分</th>
-                            <th style="border: 1px solid #000; padding: 0.8rem; width: 150px;">チェック</th>
+                        <tr style="background: #eee; font-size: 0.85rem;">
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 45px;">No</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem;">氏名</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 100px;">Tシャツ</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 80px;">区分</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 100px;">チェック</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${pArray.map((p, idx) => `
-                            <tr style="height: 3.5rem;">
-                                <td style="border: 1px solid #000; padding: 0.5rem; text-align: center;">${idx + 1}</td>
-                                <td style="border: 1px solid #000; padding: 0.5rem; font-size: 1.3rem; font-weight: bold;">${p.name}</td>
-                                <td style="border: 1px solid #000; padding: 0.5rem; text-align: center; font-size: 1.3rem; font-weight: 900;">${p.tshirtSize || '-'}</td>
-                                <td style="border: 1px solid #000; padding: 0.5rem; text-align: center;">${p.type === 'fisher' ? '釣り' : '見学'}</td>
-                                <td style="border: 1px solid #000; padding: 0.5rem; text-align: center; font-size: 1.5rem;">□</td>
+                            <tr style="height: 2.1rem;">
+                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center;">${idx + 1}</td>
+                                <td style="border: 1px solid #000; padding: 0.4rem; font-size: 1.15rem; font-weight: bold;">${p.name}</td>
+                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.2rem; font-weight: 900;">${p.tshirtSize || '-'}</td>
+                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center;">${p.type === 'fisher' ? '釣り' : '見学'}</td>
+                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.2rem;">□</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
 
-                <div style="margin-top: 3rem; border-top: 1px dashed #000; padding-top: 1rem;">
-                    <div style="font-size: 0.9rem; margin-bottom: 1rem;">【準備用メモ】</div>
-                    <div style="height: 100px; border: 1px solid #ccc;"></div>
+                <div style="margin-top: 1.5rem; border-top: 1px dashed #000; padding-top: 0.5rem;">
+                    <div style="font-size: 0.8rem; margin-bottom: 0.5rem;">【準備用メモ】</div>
+                    <div style="height: 60px; border: 1px solid #ccc;"></div>
                 </div>
             </div>
         `;
@@ -2648,7 +2826,7 @@ function selectReceptionEntry(id) {
 
 
 function renderReceptionDesk() {
-    const desk = document.getElementById('reception-detail-area');
+    const desk = document.getElementById('reception-detail');
     const entry = state.entries.find(e => e.id === activeReceptionEntryId);
 
     if (!entry) {
@@ -2927,6 +3105,8 @@ window.renderIkesuWorkspace = function () {
 
     const assignedData = {};
     if (!state.settings.ikesuList) state.settings.ikesuList = [];
+    if (!window.expandedIkesuIds) window.expandedIkesuIds = new Set();
+
     state.settings.ikesuList.forEach(ik => assignedData[ik.id] = { ik, fishers: 0, observers: 0, items: [] });
 
     const searchTerm = (document.getElementById('ikesu-search')?.value || "").toLowerCase().trim();
@@ -2951,32 +3131,45 @@ window.renderIkesuWorkspace = function () {
         });
 
         if (unassignedParts.length > 0 && matchesSearch) {
-                   const isFull = unassignedParts.length === e.participants.length;
-                   const sourceClass = `source-${e.source === '一般' ? 'ippan' : e.source === 'みん釣り' ? 'mintsuri' : e.source === '水宝' ? 'suiho' : e.source === 'ハリミツ' ? 'harimitsu' : 'default'}`;
-                   let html = `
-                       <div class="drag-item-group ${sourceClass} ${isFull ? 'draggable' : ''}" 
-                            ${isFull ? `draggable="true" ondragstart="dragGroup(event, '${e.id}')"` : ''}>
-                           <div class="drag-item-header">
-                               <div><strong>[${e.id}] ${e.groupName}</strong></div>
-                               <button class="btn-expand" onclick="toggleGroupExpand('${e.id}')">∨</button>
-                           </div>
-                           <div class="drag-item-participants" id="drag-parts-${e.id}">
-                               ${unassignedParts.map(item => `
-                                   <div class="drag-item-person draggable" draggable="true" ondragstart="dragPerson(event, '${e.id}', ${item.idx})">
-                                       <span>${item.p.name}</span>
-                                       <span class="badge ${item.p.type==='fisher'?'':'badge-observer'}">${item.p.type==='fisher'?'釣り':'見学'}</span>
-                                   </div>
-                               `).join('')}
-                           </div>
-                       </div>
-                   `;
-                   unassignedList.insertAdjacentHTML('beforeend', html);
+            const isFull = unassignedParts.length === e.participants.length;
+            const fishers = unassignedParts.filter(i => i.p.type === 'fisher').length;
+            const observers = unassignedParts.filter(i => i.p.type === 'observer').length;
+            
+            const sourceClass = `source-${e.source === '一般' ? 'ippan' : e.source === 'みん釣り' ? 'mintsuri' : e.source === '水宝' ? 'suiho' : e.source === 'ハリミツ' ? 'harimitsu' : 'default'}`;
+            let html = `
+                <div class="drag-item-group ${sourceClass} ${isFull ? 'draggable' : ''}" 
+                     ${isFull ? `draggable="true" ondragstart="dragGroup(event, '${e.id}')"` : ''}>
+                    <div class="drag-item-header" style="flex-wrap: nowrap;">
+                        <div class="group-name-text">[${e.id}] ${e.groupName}</div>
+                        <div class="count-badge-row">
+                            <span class="badge-fisher-count">${fishers}</span>
+                            <span class="badge-observer-count">${observers}</span>
+                        </div>
+                    </div>
+                    <div class="drag-item-participants active">
+                        ${unassignedParts.map(item => `
+                            <div class="drag-item-person draggable" draggable="true" ondragstart="dragPerson(event, '${e.id}', ${item.idx})">
+                                <span>${item.p.name}</span>
+                                <span class="badge ${item.p.type==='fisher'?'':'badge-observer'}">${item.p.type==='fisher'?'釣り':'見学'}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            unassignedList.insertAdjacentHTML('beforeend', html);
         }
     });
 
     state.settings.ikesuList.forEach(ik => {
         const data = assignedData[ik.id];
-        const isOver = data.fishers > ik.capacity;
+        const current = data.fishers;
+        const capacity = ik.capacity;
+        const isOver = current > capacity;
+        const isFull = current === capacity;
+        
+        const isExpanded = window.expandedIkesuIds.has(ik.id);
+        const badgeClass = isOver ? 'over' : isFull ? 'full' : (current >= capacity - 1) ? 'warning' : '';
+        
         const box = document.createElement('div');
         box.className = `ikesu-box drag-zone ${isOver ? 'over' : ''}`;
         box.ondragover = allowDrop;
@@ -2985,10 +3178,16 @@ window.renderIkesuWorkspace = function () {
 
         box.innerHTML = `
             <div class="ikesu-header">
-                <span class="ikesu-title">${ik.name}</span>
-                <button class="btn-text" onclick="window.openIkesuModal('${ik.id}')">✏️</button>
+                <div class="ikesu-title">
+                    <span class="num">${ik.name.replace('イケス','')}</span>
+                    <span class="unit">イケス</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <div class="capacity-badge ${badgeClass}">${current} / ${capacity}</div>
+                    <button class="btn-text" onclick="window.toggleIkesuExpand('${ik.id}')" title="メンバー表示切替" style="font-size: 1rem; padding: 0 4px;">${isExpanded ? '👁️' : '🕶️'}</button>
+                    <button class="btn-text" onclick="window.openIkesuModal('${ik.id}')">✏️</button>
+                </div>
             </div>
-            <div class="ikesu-capacity">釣り: ${data.fishers}/${ik.capacity} (見学: ${data.observers})</div>
             <div class="ikesu-drop-area">
                 ${Object.values(data.items.reduce((acc, item) => {
                     if (!acc[item.entry.id]) acc[item.entry.id] = { entry: item.entry, parts: [] };
@@ -2996,18 +3195,27 @@ window.renderIkesuWorkspace = function () {
                     return acc;
                 }, {})).map(group => {
                     const sc = `source-${group.entry.source === '一般' ? 'ippan' : group.entry.source === 'みん釣り' ? 'mintsuri' : group.entry.source === '水宝' ? 'suiho' : group.entry.source === 'ハリミツ' ? 'harimitsu' : 'default'}`;
+                    const fishers = group.parts.filter(i => i.p.type === 'fisher').length;
+                    const observers = group.parts.filter(i => i.p.type === 'observer').length;
+                    
                     return `
                     <div class="drag-item-group ${sc} draggable" draggable="true" ondragstart="dragGroup(event, '${group.entry.id}')">
-                        <div class="drag-item-header">
-                            <div style="font-size:0.85rem;"><strong>${group.entry.groupName}</strong></div>
+                        <div class="drag-item-header" style="flex-wrap: nowrap;">
+                            <div class="group-name-text">${group.entry.groupName}</div>
+                            <div class="count-badge-row">
+                                <span class="badge-fisher-count">${fishers}</span>
+                                <span class="badge-observer-count">${observers}</span>
+                            </div>
                         </div>
-                        <div class="drag-item-participants active">
+                        <div class="drag-item-participants ${isExpanded ? 'active' : ''}">
                             ${group.parts.map(m => `
                                 <div class="drag-item-person" draggable="true" ondragstart="dragPerson(event, '${group.entry.id}', ${m.idx})">
                                     <div style="display:flex; align-items:center; gap:4px;">
-                                        <button class="btn-leader-toggle ${m.p.isLeader ? 'active' : ''}" onclick="window.toggleLeader('${group.entry.id}', ${m.idx})">⭐</button>
+                                        <button class="btn-leader-toggle ${m.p.isLeader ? 'active' : ''}" 
+                                                onclick="window.toggleLeader(event, '${group.entry.id}', ${m.idx})">⭐</button>
                                         <span>${m.p.name}</span>
                                     </div>
+                                    ${m.p.type === 'observer' ? '<span style="font-size:0.6rem; color:#64748b;">(見)</span>' : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -3021,6 +3229,10 @@ window.renderIkesuWorkspace = function () {
 };
 
 /* --- Leader Entry Functions --- */
+window.printMemberList = function() {
+    window.print();
+};
+
 window.resetLeaderAuth = function() {
     const ikId = document.getElementById('leader-ikesu-select').value;
     document.getElementById('leader-auth-section').classList.toggle('hidden', !ikId);
@@ -3110,34 +3322,52 @@ window.commitLeaderResultsSave = function() {
     window.location.reload();
 };
 
-window.renderIkesuPrintView = function() {
-    const container = document.getElementById('print-view-container');
-    if (!container) return;
-    let html = "";
-    state.settings.ikesuList?.forEach(ik => {
-        const members = [];
-        state.entries.forEach(e => {
-            if (e.status === 'cancelled') return;
-            e.participants.forEach(p => { if(p.ikesuId === ik.id) members.push({p, e}); });
-        });
-        if (members.length === 0) return;
-        html += `
-            <div class="print-ikesu-sheet" style="page-break-after: always; padding: 20px; border-bottom: 2px solid #333;">
-                <h2 style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>${ik.name} メンバー表</span>
-                    <span style="font-size:1rem; background:#eee; padding:5px 10px; border-radius:4px;">リーダー用 暗証番号: <strong>${ik.passcode}</strong></span>
-                </h2>
-                <table class="print-table" style="width:100%; border-collapse:collapse; margin-top:20px;">
-                    <thead><tr style="background:#f0f0f0;"><th>グループ</th><th>氏名</th><th>区分</th><th>備考</th></tr></thead>
-                    <tbody>
-                        ${members.map(m => `<tr><td>${m.e.groupName}</td><td>${m.p.name}</td><td>${m.p.type==='fisher'?'釣り':'見学'}</td><td>${m.p.isLeader?'★リーダー':''}</td></tr>`).join('')}
-                    </tbody>
-                </table>
-            </div>
-        `;
-    });
-    container.innerHTML = html || "データなし";
+window.toggleIkesuExpand = function(ikId) {
+    if (!window.expandedIkesuIds) window.expandedIkesuIds = new Set();
+    if (window.expandedIkesuIds.has(ikId)) {
+        window.expandedIkesuIds.delete(ikId);
+    } else {
+        window.expandedIkesuIds.add(ikId);
+    }
+    renderIkesuWorkspace();
 };
+
+window.splitGroupInWorkspace = function(entryId) {
+    showToast('個人単位で移動可能です', 'info');
+};
+
+window.toggleLeader = function(event, entryId, pIdx) {
+    if (event) {
+        if (event.preventDefault) event.preventDefault();
+        if (event.stopPropagation) event.stopPropagation();
+    }
+    const entry = state.entries.find(e => e.id === entryId);
+    if (!entry || !entry.participants[pIdx]) return;
+    
+    const targetIkesuId = entry.participants[pIdx].ikesuId;
+    const isNowLeader = !entry.participants[pIdx].isLeader;
+    
+    // Clear leaders in SAME IKESU or SAME TEAM (Exclusive)
+    if (isNowLeader) {
+        state.entries.forEach(e => {
+            // Clear within the same team
+            if (e.id === entryId) {
+                e.participants.forEach(p => p.isLeader = false);
+            }
+            // Clear within the same ikesu
+            if (targetIkesuId) {
+                e.participants.forEach(p => {
+                    if (p.ikesuId === targetIkesuId) p.isLeader = false;
+                });
+            }
+        });
+    }
+    
+    entry.participants[pIdx].isLeader = isNowLeader;
+    saveStateToLocalStorage();
+    renderIkesuWorkspace();
+};
+
 
 /* --- SYSTEM STABILIZATION FUNCTIONS RESTORED v8.0.7 --- */
 
