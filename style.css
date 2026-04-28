@@ -90,6 +90,19 @@ body {
     user-select: none;
 }
 
+.app-version {
+    font-size: 0.7rem;
+    opacity: 0.5;
+    font-weight: 800;
+    margin-left: 10px;
+    background: #f0f7ff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #cce5ff;
+    color: var(--primary-color);
+    white-space: nowrap;
+}
+
 .nav-links {
     display: none;
     /* Hide top nav links for standard users as requested */

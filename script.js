@@ -38,6 +38,204 @@ let isAdminAuthAction = false; // Flag for admin-led edits
 let activeReceptionEntryId = null; // Currently selected in reception desk
 let pendingView = null; // v8.1.10: Global scoped to avoid ReferenceError
 
+/**
+ * v8.2.12: Unified Bypass Authorization Helper (Promoted to Top)
+ */
+function isBypassAllowed() {
+    const editId = document.getElementById('edit-entry-id')?.value || '';
+    return isAdminAuth || isAdminAuthAction || !!editId || currentViewId.includes('coordinator-view');
+}
+
+/**
+ * v8.2.12: Core Global Handlers (Promoted to Top)
+ */
+window.showConfirmation = function() {
+    console.log("BORIJIN: showConfirmation started");
+    const editId = document.getElementById('edit-entry-id')?.value || '';
+    const isAdmin = isBypassAllowed();
+    
+    // v8.2.10: Force clear timeframe overlay
+    const overlay = document.getElementById('timeframe-overlay');
+    if (overlay) overlay.classList.add('hidden');
+
+    const pRows = document.querySelectorAll('.participant-row');
+    const participants = Array.from(pRows).map(row => ({
+        type: row.querySelector('.p-type').value,
+        name: row.querySelector('.p-name').value,
+        nickname: row.querySelector('.p-nick').value,
+        region: row.querySelector('.p-region').value,
+        age: row.querySelector('.p-age').value,
+        gender: row.querySelector('.p-gender').value,
+        tshirtSize: row.querySelector('.p-tshirt').value
+    }));
+
+    if (participants.length === 0) {
+        showStatus("参加者を1名以上登録してください。", "error");
+        return;
+    }
+
+    const groupName = document.getElementById('group-name').value;
+    const repName = document.getElementById('representative-name').value;
+    const repPhone = document.getElementById('rep-phone').value;
+    const repEmail = document.getElementById('rep-email').value;
+    const repEmailConfirm = document.getElementById('rep-email-confirm').value;
+
+    if (repEmail !== repEmailConfirm) {
+        showStatus("メールアドレスが一致しません。もう一度ご確認ください。", "error");
+        return;
+    }
+
+    const sourceEl = document.querySelector('input[name="reg-source"]:checked');
+    const source = sourceEl ? sourceEl.value : '一般';
+    const fisherCount = participants.filter(p => p.type === 'fisher').length;
+
+    // v8.2.27: Capacity check in confirmation disabled per user request
+    if (false) {
+        const currentCategoryFishers = state.entries
+            .filter(en => en.id !== editId && en.source === source && en.status !== 'cancelled')
+            .reduce((sum, en) => sum + en.fishers, 0);
+
+        let capacityLimit = 0;
+        if (source === '一般') capacityLimit = state.settings.capacityGeneral;
+        else if (source === 'みん釣り') capacityLimit = state.settings.capacityMintsuri;
+        else if (source === '水宝') capacityLimit = state.settings.capacitySuiho;
+        else if (source === 'ハリミツ') capacityLimit = state.settings.capacityHarimitsu;
+
+        if (currentCategoryFishers + fisherCount > capacityLimit) {
+            showStatus(`大変申し訳ありません。この枠（${source}）は定員に達したため、現在受付を停止しております。`, "error");
+            return;
+        }
+    }
+
+    document.getElementById('conf-source').textContent = source;
+    document.getElementById('conf-group').textContent = groupName;
+    document.getElementById('conf-rep-name').textContent = repName;
+    document.getElementById('conf-rep-phone').textContent = repPhone;
+    document.getElementById('conf-rep-email').textContent = repEmail;
+
+    const summaryList = document.getElementById('conf-participant-summary');
+    summaryList.innerHTML = '';
+    participants.forEach((p, idx) => {
+        const li = document.createElement('li');
+        li.textContent = `${p.name} (${p.nickname || 'ニックネームなし'}) - ${p.type === 'fisher' ? '釣り' : '見学'}`;
+        summaryList.appendChild(li);
+    });
+
+    document.getElementById('registration-form').classList.add('hidden');
+    document.getElementById('confirmation-section').classList.remove('hidden');
+    document.getElementById('app-title').textContent = "登録内容の確認";
+    window.scrollTo(0, 0);
+}
+
+window.handleRegistration = async function() {
+    const submitBtn = document.getElementById('submit-registration');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = "保存中... そのままお待ちください";
+
+    const now = new Date();
+    const editId = document.getElementById('edit-entry-id')?.value || '';
+    const isPowerUser = isBypassAllowed();
+    
+    // v8.2.19: Forced clear timeframe overlay removed in v8.2.26
+
+    // v8.2.19: All guards disabled per user request
+    if (false) { }
+
+    const pRows = document.querySelectorAll('.participant-row');
+    const participants = Array.from(pRows).map(row => ({
+        type: row.querySelector('.p-type').value,
+        name: row.querySelector('.p-name').value,
+        nickname: row.querySelector('.p-nick').value,
+        region: row.querySelector('.p-region').value,
+        age: row.querySelector('.p-age').value,
+        gender: row.querySelector('.p-gender').value,
+        tshirtSize: row.querySelector('.p-tshirt').value
+    }));
+
+    const sourceEl = document.querySelector('input[name="reg-source"]:checked');
+    const source = sourceEl ? sourceEl.value : '一般';
+    const fisherCount = participants.filter(p => p.type === 'fisher').length;
+    const observerCount = participants.filter(p => p.type === 'observer').length;
+
+    // v8.2.19: Capacity check disabled per user request
+    if (false) {
+        const currentCategoryFishers = state.entries
+            .filter(en => en.id !== editId && en.source === source && en.status !== 'cancelled')
+            .reduce((sum, en) => sum + en.fishers, 0);
+        const totalNow = state.entries
+            .filter(en => en.id !== editId && en.status !== 'cancelled')
+            .reduce((sum, en) => sum + en.fishers, 0);
+
+        let capacityLimit = 0;
+        if (source === '一般') capacityLimit = state.settings.capacityGeneral;
+        else if (source === 'みん釣り') capacityLimit = state.settings.capacityMintsuri;
+        else if (source === '水宝') capacityLimit = state.settings.capacitySuiho;
+        else if (source === 'ハリミツ') capacityLimit = state.settings.capacityHarimitsu;
+
+        if (currentCategoryFishers + fisherCount > capacityLimit || totalNow + fisherCount > state.settings.capacityTotal) {
+            alert('定員オーバーのため登録できません。');
+            return;
+        }
+    }
+
+    const existingEntry = editId ? state.entries.find(en => en.id === editId) : null;
+    const finalParticipants = participants.map((p, idx) => {
+        const oldP = existingEntry && existingEntry.participants[idx];
+        if (oldP && oldP.name === p.name) {
+            return { ...p, ikesuId: oldP.ikesuId || null, isLeader: oldP.isLeader || false, status: oldP.status || 'pending' };
+        }
+        return { ...p, ikesuId: null, isLeader: false, status: 'pending' };
+    });
+
+    const entryData = {
+        id: editId || null,
+        groupName: document.getElementById('group-name').value,
+        representativeName: document.getElementById('representative-name').value,
+        repPhone: document.getElementById('rep-phone').value,
+        repEmail: document.getElementById('rep-email').value,
+        source: source,
+        fishers: fisherCount,
+        observers: observerCount,
+        participants: finalParticipants,
+        status: existingEntry ? existingEntry.status : 'pending',
+        timestamp: existingEntry ? existingEntry.timestamp : new Date().toLocaleString('ja-JP'),
+        lastModified: existingEntry ? new Date().toLocaleString('ja-JP') : null
+    };
+
+    // v8.2.18: Removed undefined showLoading()
+    try {
+        // v8.2.25: Using 'no-cors' to force transmission through browser security
+        await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData })
+        });
+
+        // In no-cors mode, we can't check result.status, so we assume success if no exception
+        showToast(editId ? "修正を送信しました。" : "登録を送信しました。", "success");
+        
+        // Show result screen immediately
+        showResult(entryData);
+        
+        // Refresh data in background if possible (this might still fail if loadData also has CORS issues)
+        setTimeout(() => loadData(), 1000); 
+
+    } catch (error) {
+        console.error('Registration error:', error);
+        showStatus('通信エラーが発生しました。再度お試しください。 [' + error.toString() + ']', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    } finally {
+        // v8.2.18: Removed undefined hideLoading()
+    }
+}
+
+window.finalizeAdminEdit = async function() {
+    await window.handleRegistration();
+}
+
 // Age labels map - v4.8 Updated
 const ageLabels = {
     "elementary": "小学生以下",
@@ -58,11 +256,13 @@ const tshirtSizes = ['140', '150', 'S', 'M', 'L', 'XL（2L）', '2XL（3L）', '
 /// Admin Registration Helper
 window.startAdminRegistration = function (source) {
     resetForm();
+    isAdminAuthAction = true; // v8.1.99: Set action flag to allow bypass during this session
     switchView(null, 'registration-view');
 
-    // Add temp radio for this admin source
-    const selector = document.getElementById('main-source-selector');
-    const badgeClass = source === '水宝' ? 'badge-suiho' : 'badge-harimitsu';
+    // v8.2.02: Correct badge class and auto-fill password
+    const badgeClassMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
+    const badgeClass = badgeClassMap[source] || 'badge-ippan';
+    
     const label = document.createElement('label');
     label.className = 'source-option admin-only temp-option';
     label.innerHTML = `
@@ -74,6 +274,10 @@ window.startAdminRegistration = function (source) {
     `;
     selector.appendChild(label);
 
+    // v8.2.02: Auto-fill password for admin-led registrations to pass validation
+    const passInput = document.getElementById('edit-password');
+    if (passInput) passInput.value = '0000';
+
     // Smooth scroll to form start
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -84,7 +288,7 @@ window.startAdminRegistration = function (source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.1.54: STABILIZED INITIALIZATION & SYNC");
+        console.log("BORIJIN APP v8.2.12: HANDLERS PROMOTED");
 
         // v8.1.30: Priority 1 - Restore UI State immediately
         restoreUIState();
@@ -500,15 +704,21 @@ async function saveData() {
     state.lastUpdated = Date.now();
     localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
     
-    // v6.5: 同期前に最新を一度取得してマージする「Fetch-First」方式
+    // v8.1.90: Improved pre-fetch with timeout to prevent hangs
     try {
-        const response = await fetch(`${GAS_WEB_APP_URL}?action=get&_t=${Date.now()}`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        const response = await fetch(`${GAS_WEB_APP_URL}?action=get&_t=${Date.now()}`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (response.ok) {
             const cloudData = await response.json();
             state = mergeData(state, cloudData);
             localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
         }
-    } catch (e) { console.warn("Save pre-fetch failed, pushing current instead."); }
+    } catch (e) { 
+        console.warn("Save pre-fetch failed or timed out, pushing current instead:", e); 
+    }
 
     return await syncToCloud();
 }
@@ -670,13 +880,7 @@ function initApp() {
     safeAddListener('add-participant', 'click', () => addParticipantRow());
     safeAddListener('cancel-edit-btn', 'click', resetForm);
     // v8.1.63: Robust registration for confirmation buttons
-    const subBtn = document.getElementById('submit-registration');
-    if (subBtn) {
-        subBtn.onclick = () => {
-            if (isAdminAuthAction) finalizeAdminEdit();
-            else handleRegistration();
-        };
-    }
+    // v8.2.06: Redundant handlers removed. Using onclick attributes in index.html for robustness.
     const backBtn = document.getElementById('back-to-edit-from-conf');
     if (backBtn) {
         backBtn.onclick = hideConfirmation;
@@ -1002,31 +1206,8 @@ function updateAdminToolbar() {
 }
 
 function checkTimeframe() {
-    const overlay = document.getElementById('timeframe-overlay');
-    if (!overlay) return;
-
-    // Admins bypass timeframe checks to allow setup and proxy registrations
-    if (isAdminAuth) {
-        overlay.classList.add('hidden');
-        return;
-    }
-
-    const title = document.getElementById('timeframe-title');
-    const desc = document.getElementById('timeframe-desc');
-    const now = new Date();
-
-
-    if (state.settings.startTime && now < new Date(state.settings.startTime)) {
-        title.textContent = `${state.settings.competitionName || "釣り大会"} 開始前`;
-        desc.textContent = `${new Date(state.settings.startTime).toLocaleString('ja-JP')} から受付を開始します。しばらくお待ちください。`;
-        overlay.classList.remove('hidden');
-    } else if (state.settings.deadline && now > new Date(state.settings.deadline)) {
-        title.textContent = "受付終了しました";
-        desc.textContent = "本大会の受付は終了いたしました。";
-        overlay.classList.remove('hidden');
-    } else {
-        overlay.classList.add('hidden');
-    }
+    // v8.2.26: Timeframe check completely disabled
+    return;
 }
 
 // Admin Auth
@@ -1225,281 +1406,15 @@ function updateRemoveButtons() {
         row.querySelector('.remove-p').disabled = (rows.length <= 1);
     }
 }
-
-// Registration / Edit Logic
-function showConfirmation() {
-    checkTimeframe(); // Double check
-    if (!document.getElementById('timeframe-overlay').classList.contains('hidden')) {
-        return;
-    }
-    const editId = document.getElementById('edit-entry-id').value;
-    const pRows = document.querySelectorAll('.participant-row');
-    const participants = Array.from(pRows).map(row => ({
-        type: row.querySelector('.p-type').value,
-        name: row.querySelector('.p-name').value,
-        nickname: row.querySelector('.p-nick').value,
-        region: row.querySelector('.p-region').value,
-        age: row.querySelector('.p-age').value,
-        gender: row.querySelector('.p-gender').value,
-        tshirtSize: row.querySelector('.p-tshirt').value
-    }));
-
-    // Basic Validation Check (HTML5 Native)
-    if (!document.getElementById('registration-form').reportValidity()) {
-        console.warn("BORIJIN: Form validity check failed. Inspection required.");
-        // v8.1.52: Log specific validation issues for debugging
-        const invalidFields = document.querySelectorAll('#registration-form :invalid');
-        invalidFields.forEach(field => {
-            console.warn(`Invalid field: ${field.id || field.name} - ${field.validationMessage}`);
-        });
-        showStatus("入力内容に不備があります。赤枠の部分をご確認ください。", "error", true);
-        return;
-    }
-
-    // Minimum 1 participant validation
-    if (participants.length === 0) {
-        showStatus("参加者を1名以上登録してください。", "error");
-        return;
-    }
-
-    const groupName = document.getElementById('group-name').value;
-    const repName = document.getElementById('representative-name').value;
-    const repPhone = document.getElementById('rep-phone').value;
-    const repEmail = document.getElementById('rep-email').value;
-    const repEmailConfirm = document.getElementById('rep-email-confirm').value;
-
-    if (repEmail !== repEmailConfirm) {
-        showStatus("メールアドレスが一致しません。もう一度ご確認ください。", "error");
-        return;
-    }
-
-    const sourceEl = document.querySelector('input[name="reg-source"]:checked');
-    const source = sourceEl ? sourceEl.value : '一般';
-
-    const fisherCount = participants.filter(p => p.type === 'fisher').length;
-    const observerCount = participants.filter(p => p.type === 'observer').length;
-
-    // Category Capacity Check
-    const currentCategoryFishers = state.entries
-        .filter(en => en.id !== editId && en.source === source && en.status !== 'cancelled')
-        .reduce((sum, en) => sum + en.fishers, 0);
-
-    let capacityLimit = 0;
-    if (source === '一般') capacityLimit = state.settings.capacityGeneral;
-    else if (source === 'みん釣り') capacityLimit = state.settings.capacityMintsuri;
-    else if (source === '水宝') capacityLimit = state.settings.capacitySuiho;
-    else if (source === 'ハリミツ') capacityLimit = state.settings.capacityHarimitsu;
-
-    if (currentCategoryFishers + fisherCount > capacityLimit) {
-        showStatus(`大変申し訳ありません。この枠（${source}）は定員に達したため、現在受付を停止しております。`, "error");
-        return;
-    }
-
-    // Aggregate Capacity Check
-    const totalFishers = state.entries
-        .filter(en => en.id !== editId && en.status !== 'cancelled')
-        .reduce((sum, en) => sum + en.fishers, 0);
-
-    if (totalFishers + fisherCount > state.settings.capacityTotal) {
-        showStatus("大変申し訳ありません。大会全体の定員に達したため、受付を終了いたしました。", "error");
-        return;
-    }
-
-    // Populate confirmation screen
-    document.getElementById('conf-source').textContent = source;
-    document.getElementById('conf-group').textContent = groupName;
-    document.getElementById('conf-rep-name').textContent = repName;
-    document.getElementById('conf-rep-phone').textContent = repPhone;
-    document.getElementById('conf-rep-email').textContent = repEmail;
-
-    // Populate Participant Summary
-    const summaryList = document.getElementById('conf-participant-summary');
-    summaryList.innerHTML = '';
-    participants.forEach((p, idx) => {
-        const li = document.createElement('li');
-        const typeLabel = p.type === 'fisher' ? '【釣り】' : '【見学】';
-        const genderLabel = genderLabels[p.gender] || p.gender;
-        const ageLabel = ageLabels[p.age] || p.age;
-        li.textContent = `${idx + 1}. ${typeLabel} ${p.name} / ${p.region} / ${genderLabel} / ${ageLabel} [${p.tshirtSize}]` + (p.nickname ? ` (${p.nickname})` : '');
-        summaryList.appendChild(li);
-    });
-
-    // Switch Views
-    document.getElementById('registration-form').classList.add('hidden');
-    document.getElementById('confirmation-section').classList.remove('hidden');
-    document.getElementById('app-title').textContent = "登録内容の確認";
-    window.scrollTo(0, 0);
-}
-
 function hideConfirmation() {
     document.getElementById('confirmation-section').classList.add('hidden');
     document.getElementById('registration-form').classList.remove('hidden');
-    document.getElementById('app-title').textContent = document.getElementById('edit-entry-id').value ? "登録変更" : state.settings.competitionName;
+    const editId = document.getElementById('edit-entry-id')?.value;
+    document.getElementById('app-title').textContent = editId ? "登録変更" : (state.settings.competitionName || "釣り大会 受付");
     window.scrollTo(0, 0);
 }
 
-async function handleRegistration() {
-    // v7.3.2: Submission Timeframe Guard
-    const now = new Date();
-    if (!isAdminAuth) {
-        if (state.settings.startTime && now < new Date(state.settings.startTime)) {
-            alert('受付開始前です。まだ申し込みはできません。');
-            return;
-        }
-        if (state.settings.deadline && now > new Date(state.settings.deadline)) {
-            alert('受付は終了しました。');
-            return;
-        }
-    }
-
-    // Re-gather data (already validated)
-    const editId = document.getElementById('edit-entry-id').value;
-    const pRows = document.querySelectorAll('.participant-row');
-    const participants = Array.from(pRows).map(row => ({
-        type: row.querySelector('.p-type').value,
-        name: row.querySelector('.p-name').value,
-        nickname: row.querySelector('.p-nick').value,
-        region: row.querySelector('.p-region').value,
-        age: row.querySelector('.p-age').value,
-        gender: row.querySelector('.p-gender').value,
-        tshirtSize: row.querySelector('.p-tshirt').value
-    }));
-
-    const sourceEl = document.querySelector('input[name="reg-source"]:checked');
-    const source = sourceEl ? sourceEl.value : '一般';
-    const fisherCount = participants.filter(p => p.type === 'fisher').length;
-    const observerCount = participants.filter(p => p.type === 'observer').length;
-
-    // Final Capacity Check (Double guard)
-    const currentCategoryFishers = state.entries
-        .filter(en => en.id !== editId && en.source === source && en.status !== 'cancelled')
-        .reduce((sum, en) => sum + en.fishers, 0);
-    const totalNow = state.entries
-        .filter(en => en.id !== editId && en.status !== 'cancelled')
-        .reduce((sum, en) => sum + en.fishers, 0);
-
-    let capacityLimit = 0;
-    if (source === '一般') capacityLimit = state.settings.capacityGeneral;
-    else if (source === 'みん釣り') capacityLimit = state.settings.capacityMintsuri;
-    else if (source === '水宝') capacityLimit = state.settings.capacitySuiho;
-    else if (source === 'ハリミツ') capacityLimit = state.settings.capacityHarimitsu;
-
-    if (currentCategoryFishers + fisherCount > capacityLimit || totalNow + fisherCount > state.settings.capacityTotal) {
-        showStatus("定員エラー：登録直前に定員に達しました。内容を確認し、再度お試しください。", "error");
-        return;
-    }
-
-    let entryData = {
-        transactionId: Date.now() + Math.random().toString(36).substring(2, 10), // Unique ID for deduplication
-        source: source,
-        groupName: document.getElementById('group-name').value,
-        representative: document.getElementById('representative-name').value,
-        phone: document.getElementById('rep-phone').value,
-        email: document.getElementById('rep-email').value,
-        password: document.getElementById('edit-password').value,
-        participants: participants.map(p => ({ ...p, status: 'pending' })), // Initialize status
-        fishers: fisherCount,
-        observers: observerCount,
-        status: editId ? (state.entries.find(en => en.id === editId).status || 'pending') : 'pending',
-        checkedIn: editId ? (state.entries.find(en => en.id === editId).checkedIn || false) : false,
-        checkInTime: editId ? (state.entries.find(en => en.id === editId).checkInTime || null) : null,
-        timestamp: editId ? state.entries.find(en => en.id === editId).timestamp : new Date().toLocaleString('ja-JP'),
-        lastModified: editId ? new Date().toLocaleString('ja-JP') : null
-    };
-
-    // Loading state for UX
-    const submitBtn = document.getElementById('submit-registration');
-    const originalBtnText = submitBtn.textContent;
-    submitBtn.disabled = true;
-    submitBtn.textContent = "送信中... そのままお待ちください";
-
-    // v7.0: 二重登録防止のため、送信開始時に内容を一時保存
-    try {
-        entryData._ts = Date.now();
-        localStorage.setItem('fishing_app_pending_reg', JSON.stringify(entryData));
-        
-        // v6.9: Random jitter (0-500ms) to spread initial burst load
-        await new Promise(r => setTimeout(r, Math.random() * 500));
-
-        if (editId) {
-            entryData.id = editId;
-            const idx = state.entries.findIndex(en => en.id === editId);
-            state.entries[idx] = entryData;
-            showToast('登録内容を更新しました', 'success');
-            await saveData();
-        } else {
-            // v6.9: Robust Retry Loop for atomic submission
-            let attempts = 0;
-            let success = false;
-            while (attempts < 3 && !success) {
-                try {
-                    const submitPayload = { action: 'submit', entry: entryData };
-                    const response = await fetch(GAS_WEB_APP_URL, {
-                        method: 'POST',
-                        mode: 'cors',
-                        headers: { 'Content-Type': 'text/plain' },
-                        body: JSON.stringify(submitPayload)
-                    });
-
-                    if (!response.ok) throw new Error("Server busy");
-                    const result = await response.json();
-                    if (result.status === 'success' && result.entry) {
-                        entryData = result.entry;
-                        state.entries.push(entryData);
-                        localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
-                        localStorage.removeItem('fishing_app_pending_reg'); // 成功したので一時データを削除
-                        showToast('登録が完了しました！', 'success');
-                        success = true;
-                    } else {
-                        throw new Error(result.message || "Unknown error");
-                    }
-                } catch (err) {
-                    attempts++;
-                    if (attempts >= 3) throw err;
-                    submitBtn.textContent = `混雑しています... 再試行中 (${attempts}/3)`;
-                    // Exponential backoff: 1s, 2s, 4s... with random jitter
-                    const waitTime = Math.pow(2, attempts) * 1000 + (Math.random() * 1000);
-                    await new Promise(r => setTimeout(r, waitTime));
-                }
-            }
-        }
-
-        updateDashboard();
-        showToast('送信中... 少々お待ちください', 'info');
-        await sendEmailViaGAS(entryData);
-
-        // v8.1.64: Always show result screen (screenshot screen) even after admin edit
-        showResult(entryData);
-        if (isAdminAuthAction) {
-            showToast('修正を保存しました', 'success');
-        }
-    } catch (e) {
-        console.error("Registration error:", e);
-        const errorHtml = `
-            <div style="font-weight:bold; margin-bottom:0.5rem;">通信エラー（または混雑）が発生しました。</div>
-            <p style="font-size:0.9rem; margin-bottom:1rem;">
-                データが送信されている可能性があります。<strong>何度もボタンを押さず</strong>、
-                まずは下の「確認ボタン」を押して番号が出るか試してください。<br>
-                （または数分待ってからページを再読み込みしてください）
-            </p>
-            <button type="button" class="btn-primary btn-check-status" onclick="handleCheckStatus()" 
-                style="background:#00b894; border:none; padding:8px 15px; border-radius:8px;">✅ 登録されたか確認する</button>
-        `;
-        showStatus(errorHtml, "error");
-        
-        // showStatusがテキストのみを想定している場合があるため、innerHTMLを許容するように修正が必要かも
-        // 手動でHTMLを流し込む
-        const statusDiv = document.getElementById('registration-status');
-        if (statusDiv) statusDiv.innerHTML = errorHtml;
-
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalBtnText;
-    } finally {
-        // v6.9: Guarantee sync status cleanup
-        updateSyncStatus('success'); 
-    }
-}
-
+// Registration / Edit Logic
 async function sendEmailViaGAS(entryData) {
     if (!entryData.email) return;
     try {
@@ -1637,6 +1552,9 @@ function fillFormForEdit(entry) {
         document.getElementById('app-title').textContent = "登録変更: " + entry.id;
         document.getElementById('submit-registration').textContent = "変更を保存する";
         document.getElementById('cancel-edit').classList.remove('hidden');
+        
+        // v8.2.01: Explicitly clear timeframe overlay when editing
+        checkTimeframe();
     } catch (e) {
         console.error("BORIJIN: fillFormForEdit failed:", e);
         showToast("フォームの読み込みに失敗しました", "error");
@@ -1657,9 +1575,9 @@ function showResult(entry) {
     updateAppTitle();
 
     // Populate Recovery Backup Details (v6.3)
-    document.getElementById('res-rep-name').textContent = entry.representative;
-    document.getElementById('res-rep-phone').textContent = entry.phone;
-    document.getElementById('res-rep-email').textContent = entry.email;
+    document.getElementById('res-rep-name').textContent = entry.representative || entry.representativeName;
+    document.getElementById('res-rep-phone').textContent = entry.phone || entry.repPhone;
+    document.getElementById('res-rep-email').textContent = entry.email || entry.repEmail;
     
     const pList = document.getElementById('res-participant-list');
     if (pList) {
@@ -1689,6 +1607,8 @@ function resetForm() {
         if (el) el.value = "";
     });
 
+    isAdminAuthAction = false; // v8.2.05: Reset action flag on form reset
+    
     // Reset radio selection
     const defaultRadio = document.querySelector('input[name="reg-source"][value="一般"]');
     if (defaultRadio) defaultRadio.checked = true;
@@ -1707,6 +1627,9 @@ function resetForm() {
     document.getElementById('confirmation-section').classList.add('hidden');
     document.getElementById('registration-result').classList.add('hidden');
     document.getElementById('edit-auth-section').classList.add('hidden');
+    const editIdInput = document.getElementById('edit-entry-id');
+    if (editIdInput) editIdInput.value = '';
+    
     document.getElementById('registration-status').classList.add('hidden');
     
     updateAppTitle();
@@ -1728,12 +1651,7 @@ function resetForm() {
     setTimeout(() => window.scrollTo(0, 0), 50); 
 }
 
-/**
- * v8.1.64: Finalize Admin Edit flow
- */
-async function finalizeAdminEdit() {
-    await handleRegistration();
-}
+    // v8.2.12: Old isBypassAllowed logic moved to top
 
 function showStatus(msg, type, noScroll = false) {
     const div = document.getElementById('registration-status');
@@ -2530,9 +2448,15 @@ function renderGenericCoordinatorView(sourceName, prefix) {
                 <td>${e.representative}${repInfo.nickname ? ` <small>(${repInfo.nickname})</small>` : ''}</td>
                 <td>${e.fishers} / ${e.observers}</td>
                 <td><small>${regTime}</small></td>
+                <td>
+                    <div style="display:flex; gap:0.3rem;">
+                        <button class="btn-outline btn-small" onclick="showEntryDetails('${e.id}')">確認</button>
+                        ${prefix === 'harimitsu' ? `<button class="btn-primary btn-small" onclick="requestAdminEdit('${e.id}')">修正</button>` : ''}
+                    </div>
+                </td>
             </tr>
         `;
-        }).join('') || '<tr><td colspan="5" style="text-align:center; padding:2rem;">該当する登録はありません</td></tr>';
+        }).join('') || '<tr><td colspan="6" style="text-align:center; padding:2rem;">該当する登録はありません</td></tr>';
 
     renderBreakdownStats(sourceName, `${prefix}-`);
     window.scrollTo(0, scrollPos);
@@ -3359,16 +3283,27 @@ window.hardDeleteEntry = async function (id) {
  * v8.1.48: Restored Entry Details Modal rendering
  */
 window.showEntryDetails = function (id) {
+    window.currentDetailId = id; // Store for modal edit button
     const entry = state.entries.find(e => e.id === id);
     if (!entry) return;
 
     const modal = document.getElementById('detail-modal');
     const body = document.getElementById('detail-modal-body');
     const title = document.getElementById('detail-modal-title');
+    const editBtn = document.getElementById('modal-edit-btn');
 
     if (!modal || !body) {
         console.error("Modal elements not found!");
         return;
+    }
+
+    // v8.1.95: Restore restriction - Hide edit button for Mintsuri/Suiho coordinators
+    if (editBtn) {
+        if (currentViewId === 'mintsuri-coordinator-view' || currentViewId === 'suiho-coordinator-view') {
+            editBtn.classList.add('hidden');
+        } else {
+            editBtn.classList.remove('hidden');
+        }
     }
 
     if (title) title.textContent = `[${entry.id}] ${entry.groupName} 詳細`;
@@ -3962,3 +3897,6 @@ window.copyShareUrl = function(inputId) {
     };
     // Note: Most functions are already defined on window. We don't need redundant assignments.
 })();
+
+function showLoading() { console.log("BORIJIN: Loading started..."); }
+function hideLoading() { console.log("BORIJIN: Loading finished."); }
