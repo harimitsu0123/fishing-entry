@@ -27,8 +27,8 @@
     <nav class="navbar">
         <div class="nav-container">
             <h1 id="app-title" onclick="handleSecureClick(event)">釣り大会 受付</h1>
-            <span class="app-version">v8.2.30</span>
-            <!-- v8.2.30: Admin nav controls removed per user request -->
+            <span class="app-version">v8.3.01</span>
+            <!-- v8.3.01: Ikesu workspace enhanced -->
         </div>
     </nav>
 
@@ -266,10 +266,12 @@
 
                 <!-- Tab: Ikesu Assignment -->
                 <div id="tab-ikesu" class="admin-tab-content">
-                    <div class="card mb-4" style="display: flex; flex-direction: column; height: 80vh;">
-                        <div class="card-header">
-                            <h2>イケス（釣り座）割り当て</h2>
-                            <button class="btn-primary" onclick="openIkesuModal()">+ イケスを追加</button>
+                    <div class="card mb-4" style="display: flex; flex-direction: column; height: 90vh;">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <h2 style="margin: 0;">イケス（釣り座）割り当て</h2>
+                                <button class="btn-primary btn-header-add" onclick="openIkesuModal()" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">+ 追加</button>
+                            </div>
                         </div>
                         <p class="text-muted mt-2">左側のグループカードを右側のイケスにドラッグ＆ドロップしてください。</p>
 
@@ -1157,7 +1159,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=8.2.30"></script>
+    <script src="script.js?v=8.3.01"></script>
 </body>
 
 </html>

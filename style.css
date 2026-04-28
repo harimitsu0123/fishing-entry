@@ -1155,14 +1155,21 @@ th {
 .drag-item-group {
     background: white;
     border: 1px solid #ddd;
-    border-left: 4px solid var(--primary-color);
-    border-radius: 6px;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-left: 5px solid var(--primary-color);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     user-select: none;
     -webkit-user-select: none;
+    transition: transform 0.1s;
 }
+
+/* Category Specific Border Colors v8.3.0 */
+.drag-item-group.source-ippan { border-left-color: var(--color-ippan); }
+.drag-item-group.source-mintsuri { border-left-color: var(--color-mintsuri); }
+.drag-item-group.source-suiho { border-left-color: var(--color-suiho); }
+.drag-item-group.source-harimitsu { border-left-color: var(--color-harimitsu); }
 
 .drag-item-group.draggable {
     cursor: grab;
