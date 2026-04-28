@@ -27,8 +27,8 @@
     <nav class="navbar">
         <div class="nav-container">
             <h1 id="app-title" onclick="handleSecureClick(event)">釣り大会 受付</h1>
-            <span class="app-version">v8.3.01</span>
-            <!-- v8.3.01: Ikesu workspace enhanced -->
+            <span class="app-version">v8.3.02</span>
+            <!-- v8.3.02: Admin login and Ikesu logic stabilized -->
         </div>
     </nav>
 
@@ -1062,11 +1062,7 @@
                 </div>
                 <div class="form-actions mt-4">
                     <button id="verify-admin" class="btn-primary" onclick="window.handleAdminLogin()">ログイン</button>
-                    <button id="cancel-admin" class="btn-secondary" onclick="    const editIdInput = document.getElementById('edit-entry-id');
-    if (editIdInput) editIdInput.value = '';
-    
-    document.getElementById('registration-status').classList.add('hidden');
-">キャンセル</button>
+                    <button id="cancel-admin" class="btn-secondary" onclick="document.getElementById('admin-auth-modal').classList.add('hidden')">キャンセル</button>
                 </div>
             </div>
         </div>
@@ -1159,7 +1155,7 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js?v=8.3.01"></script>
+    <script src="script.js?v=8.3.02"></script>
 </body>
 
 </html>

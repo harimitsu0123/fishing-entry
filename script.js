@@ -4,7 +4,7 @@ let state = {
     entries: [],
     deletedIds: [], // v7.9.3: Tracking local hard-deletions
     settings: {
-        competitionName: "隨ｬ1蝗・驥｣繧雁､ｧ莨・,
+        competitionName: "第1回 釣り大会",
         capacityGeneral: 100,
         capacityMintsuri: 100,
         capacitySuiho: 50,
@@ -16,14 +16,14 @@ let state = {
         adminPassword: "admin",
         // v7.9.3: Pre-populated Ikesu List (36 ponds)
         ikesuList: [
-            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `蟆・{i+1}`, capacity: 6 })),
-            { id: 'small-7', name: '蟆・', capacity: 6 },
-            { id: 'small-7n', name: '蟆・蛹・, capacity: 6 },
-            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `蟆・{i+8}`, capacity: 6 })),
-            ...Array.from({length: 10}, (_, i) => ({ id: `med-${i+1}`, name: `荳ｭ${i+1}`, capacity: 8 })),
-            ...Array.from({length: 3}, (_, i) => ({ id: `large-${i+1}`, name: `螟ｧ${i+1}`, capacity: 12 })),
-            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `縺ｧ縺｣縺ｱ繧・{i+1}`, capacity: 12 })),
-            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `蜊・{i+1}`, capacity: 12 }))
+            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `小${i+1}`, capacity: 6 })),
+            { id: 'small-7', name: '小7', capacity: 6 },
+            { id: 'small-7n', name: '小7北', capacity: 6 },
+            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `小${i+8}`, capacity: 6 })),
+            ...Array.from({length: 10}, (_, i) => ({ id: `med-${i+1}`, name: `中${i+1}`, capacity: 8 })),
+            ...Array.from({length: 3}, (_, i) => ({ id: `large-${i+1}`, name: `大${i+1}`, capacity: 12 })),
+            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `でっぱり${i+1}`, capacity: 12 })),
+            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `南${i+1}`, capacity: 12 }))
         ]
     },
     lastUpdated: 0 // Unix timestamp for sync merging
@@ -70,7 +70,7 @@ window.showConfirmation = function() {
     }));
 
     if (participants.length === 0) {
-        showStatus("蜿ょ刈閠・ｒ1蜷堺ｻ･荳顔匳骭ｲ縺励※縺上□縺輔＞縲・, "error");
+        showStatus("参加者を1名以上登録してください。", "error");
         return;
     }
 
@@ -81,12 +81,12 @@ window.showConfirmation = function() {
     const repEmailConfirm = document.getElementById('rep-email-confirm').value;
 
     if (repEmail !== repEmailConfirm) {
-        showStatus("繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺御ｸ閾ｴ縺励∪縺帙ｓ縲ゅｂ縺・ｸ蠎ｦ縺皮｢ｺ隱阪￥縺縺輔＞縲・, "error");
+        showStatus("メールアドレスが一致しません。もう一度ご確認ください。", "error");
         return;
     }
 
     const sourceEl = document.querySelector('input[name="reg-source"]:checked');
-    const source = sourceEl ? sourceEl.value : '荳闊ｬ';
+    const source = sourceEl ? sourceEl.value : '一般';
     const fisherCount = participants.filter(p => p.type === 'fisher').length;
 
     // v8.2.27: Capacity check in confirmation disabled per user request
@@ -96,13 +96,13 @@ window.showConfirmation = function() {
             .reduce((sum, en) => sum + en.fishers, 0);
 
         let capacityLimit = 0;
-        if (source === '荳闊ｬ') capacityLimit = state.settings.capacityGeneral;
-        else if (source === '縺ｿ繧馴・繧・) capacityLimit = state.settings.capacityMintsuri;
-        else if (source === '豌ｴ螳・) capacityLimit = state.settings.capacitySuiho;
-        else if (source === '繝上Μ繝溘ヤ') capacityLimit = state.settings.capacityHarimitsu;
+        if (source === '一般') capacityLimit = state.settings.capacityGeneral;
+        else if (source === 'みん釣り') capacityLimit = state.settings.capacityMintsuri;
+        else if (source === '水宝') capacityLimit = state.settings.capacitySuiho;
+        else if (source === 'ハリミツ') capacityLimit = state.settings.capacityHarimitsu;
 
         if (currentCategoryFishers + fisherCount > capacityLimit) {
-            showStatus(`螟ｧ螟臥筏縺苓ｨｳ縺ゅｊ縺ｾ縺帙ｓ縲ゅ％縺ｮ譫・・{source}・峨・螳壼藤縺ｫ驕斐＠縺溘◆繧√∫樟蝨ｨ蜿嶺ｻ倥ｒ蛛懈ｭ｢縺励※縺翫ｊ縺ｾ縺吶Ａ, "error");
+            showStatus(`大変申し訳ありません。この枠（${source}）は定員に達したため、現在受付を停止しております。`, "error");
             return;
         }
     }
@@ -117,13 +117,13 @@ window.showConfirmation = function() {
     summaryList.innerHTML = '';
     participants.forEach((p, idx) => {
         const li = document.createElement('li');
-        li.textContent = `${p.name} (${p.nickname || '繝九ャ繧ｯ繝阪・繝縺ｪ縺・}) - ${p.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ'}`;
+        li.textContent = `${p.name} (${p.nickname || 'ニックネームなし'}) - ${p.type === 'fisher' ? '釣り' : '見学'}`;
         summaryList.appendChild(li);
     });
 
     document.getElementById('registration-form').classList.add('hidden');
     document.getElementById('confirmation-section').classList.remove('hidden');
-    document.getElementById('app-title').textContent = "逋ｻ骭ｲ蜀・ｮｹ縺ｮ遒ｺ隱・;
+    document.getElementById('app-title').textContent = "登録内容の確認";
     window.scrollTo(0, 0);
 }
 
@@ -131,7 +131,7 @@ window.handleRegistration = async function() {
     const submitBtn = document.getElementById('submit-registration');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = "菫晏ｭ倅ｸｭ... 縺昴・縺ｾ縺ｾ縺雁ｾ・■縺上□縺輔＞";
+    submitBtn.textContent = "保存中... そのままお待ちください";
 
     const now = new Date();
     const editId = document.getElementById('edit-entry-id')?.value || '';
@@ -154,7 +154,7 @@ window.handleRegistration = async function() {
     }));
 
     const sourceEl = document.querySelector('input[name="reg-source"]:checked');
-    const source = sourceEl ? sourceEl.value : '荳闊ｬ';
+    const source = sourceEl ? sourceEl.value : '一般';
     const fisherCount = participants.filter(p => p.type === 'fisher').length;
     const observerCount = participants.filter(p => p.type === 'observer').length;
 
@@ -168,13 +168,13 @@ window.handleRegistration = async function() {
             .reduce((sum, en) => sum + en.fishers, 0);
 
         let capacityLimit = 0;
-        if (source === '荳闊ｬ') capacityLimit = state.settings.capacityGeneral;
-        else if (source === '縺ｿ繧馴・繧・) capacityLimit = state.settings.capacityMintsuri;
-        else if (source === '豌ｴ螳・) capacityLimit = state.settings.capacitySuiho;
-        else if (source === '繝上Μ繝溘ヤ') capacityLimit = state.settings.capacityHarimitsu;
+        if (source === '一般') capacityLimit = state.settings.capacityGeneral;
+        else if (source === 'みん釣り') capacityLimit = state.settings.capacityMintsuri;
+        else if (source === '水宝') capacityLimit = state.settings.capacitySuiho;
+        else if (source === 'ハリミツ') capacityLimit = state.settings.capacityHarimitsu;
 
         if (currentCategoryFishers + fisherCount > capacityLimit || totalNow + fisherCount > state.settings.capacityTotal) {
-            alert('螳壼藤繧ｪ繝ｼ繝舌・縺ｮ縺溘ａ逋ｻ骭ｲ縺ｧ縺阪∪縺帙ｓ縲・);
+            alert('定員オーバーのため登録できません。');
             return;
         }
     }
@@ -214,7 +214,7 @@ window.handleRegistration = async function() {
         });
 
         // In no-cors mode, we can't check result.status, so we assume success if no exception
-        showToast(editId ? "菫ｮ豁｣繧帝∽ｿ｡縺励∪縺励◆縲・ : "逋ｻ骭ｲ繧帝∽ｿ｡縺励∪縺励◆縲・, "success");
+        showToast(editId ? "修正を送信しました。" : "登録を送信しました。", "success");
         
         // Show result screen immediately
         showResult(entryData);
@@ -224,7 +224,7 @@ window.handleRegistration = async function() {
 
     } catch (error) {
         console.error('Registration error:', error);
-        showStatus('騾壻ｿ｡繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆縲ょ・蠎ｦ縺願ｩｦ縺励￥縺縺輔＞縲・[' + error.toString() + ']', 'error');
+        showStatus('通信エラーが発生しました。再度お試しください。 [' + error.toString() + ']', 'error');
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
     } finally {
@@ -238,20 +238,20 @@ window.finalizeAdminEdit = async function() {
 
 // Age labels map - v4.8 Updated
 const ageLabels = {
-    "elementary": "蟆丞ｭｦ逕滉ｻ･荳・,
-    "middle_high": "荳ｭ繝ｻ鬮俶｡逕・,
-    "19_20s": "19豁ｳ縲・0莉｣",
-    "30s": "30莉｣", "40s": "40莉｣", "50s": "50莉｣",
-    "60s": "60莉｣", "70s": "70莉｣", "80s": "80豁ｳ莉･荳・
+    "elementary": "小学生以下",
+    "middle_high": "中・高校生",
+    "19_20s": "19歳〜20代",
+    "30s": "30代", "40s": "40代", "50s": "50代",
+    "60s": "60代", "70s": "70代", "80s": "80歳以上"
 };
 
 const genderLabels = {
-    "male": "逕ｷ諤ｧ",
-    "female": "螂ｳ諤ｧ",
-    "other": "縺昴・莉・
+    "male": "男性",
+    "female": "女性",
+    "other": "その他"
 };
 
-const tshirtSizes = ['140', '150', 'S', 'M', 'L', 'XL・・L・・, '2XL・・L・・, '3XL・・L・・, '4XL・・L・・];
+const tshirtSizes = ['140', '150', 'S', 'M', 'L', 'XL（2L）', '2XL（3L）', '3XL（4L）', '4XL（5L）'];
 
 /// Admin Registration Helper
 window.startAdminRegistration = function (source) {
@@ -260,7 +260,7 @@ window.startAdminRegistration = function (source) {
     switchView(null, 'registration-view');
 
     // v8.2.02: Correct badge class and auto-fill password
-    const badgeClassMap = { '荳闊ｬ': 'badge-ippan', '縺ｿ繧馴・繧・: 'badge-mintsuri', '豌ｴ螳・: 'badge-suiho', '繝上Μ繝溘ヤ': 'badge-harimitsu' };
+    const badgeClassMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
     const badgeClass = badgeClassMap[source] || 'badge-ippan';
     
     const label = document.createElement('label');
@@ -269,7 +269,7 @@ window.startAdminRegistration = function (source) {
         <input type="radio" name="reg-source" value="${source}" checked>
         <span class="source-label">
             <span class="badge ${badgeClass}">${source}</span>
-            ${source}荳諡ｬ逋ｻ骭ｲ
+            ${source}一括登録
         </span>
     `;
     selector.appendChild(label);
@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
         console.error("BORIJIN APP: FATAL INITIALIZATION ERROR", e);
         // Alert the user so we know exactly why it's failing
-        alert("繧ｷ繧ｹ繝・Β襍ｷ蜍墓凾縺ｫ繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆: " + e.message + "\n逕ｻ髱｢諠・ｱ繧貞・隱ｭ縺ｿ霎ｼ縺ｿ縺励※縺上□縺輔＞縲・);
+        alert("システム起動時にエラーが発生しました: " + e.message + "\n画面情報を再読み込みしてください。");
     }
 });
 
@@ -342,7 +342,7 @@ async function loadData() {
     // 1. Try to load from Cloud (GAS) first for synchronization
     updateSyncStatus('syncing');
     try {
-        // 繧ｿ繧､繝繧｢繧ｦ繝・5遘偵ｒ險ｭ螳夲ｼ磯壻ｿ｡迺ｰ蠅・∈縺ｮ驟肴・・・
+        // タイムアウト15秒を設定（通信環境への配慮）
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
 
@@ -367,14 +367,14 @@ async function loadData() {
                     // v7.9.3: Ensure ikesuList is present even in merged state
                     if (!state.settings.ikesuList || state.settings.ikesuList.length === 0) {
                         state.settings.ikesuList = [
-                            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `蟆・{i+1}`, capacity: 6 })),
-                            { id: 'small-7', name: '蟆・', capacity: 6 },
-                            { id: 'small-7n', name: '蟆・蛹・, capacity: 6 },
-                            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `蟆・{i+8}`, capacity: 6 })),
-                            ...Array.from({length: 10}, (_, i) => ({ id: `med-${i+1}`, name: `荳ｭ${i+1}`, capacity: 8 })),
-                            ...Array.from({length: 3}, (_, i) => ({ id: `large-${i+1}`, name: `螟ｧ${i+1}`, capacity: 12 })),
-                            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `縺ｧ縺｣縺ｱ繧・{i+1}`, capacity: 12 })),
-                            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `蜊・{i+1}`, capacity: 12 }))
+                            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `小${i+1}`, capacity: 6 })),
+                            { id: 'small-7', name: '小7', capacity: 6 },
+                            { id: 'small-7n', name: '小7北', capacity: 6 },
+                            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `小${i+8}`, capacity: 6 })),
+                            ...Array.from({length: 10}, (_, i) => ({ id: `med-${i+1}`, name: `中${i+1}`, capacity: 8 })),
+                            ...Array.from({length: 3}, (_, i) => ({ id: `large-${i+1}`, name: `大${i+1}`, capacity: 12 })),
+                            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `でっぱり${i+1}`, capacity: 12 })),
+                            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `南${i+1}`, capacity: 12 }))
                         ];
                     }
                     
@@ -415,7 +415,7 @@ async function loadData() {
             }
         });
         localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
-        // 笘・繝ｭ繝ｼ繧ｫ繝ｫ繝・・繧ｿ繧定ｪｭ縺ｿ霎ｼ繧縺後√け繝ｩ繧ｦ繝峨∈縺ｯ蜍晄焔縺ｫ騾√ｉ縺ｪ縺・ｼ井ｸ頑嶌縺埼亟豁｢・・
+        // ★ ローカルデータを読み込むが、クラウドへは勝手に送らない（上書き防止）
         console.log('Loaded from local storage (no automatic sync)');
     } else {
         // Migration from V2
@@ -438,33 +438,33 @@ async function loadData() {
 }
 
 /**
- * v6.5 鬮伜ｺｦ繝槭・繧ｸ繝ｭ繧ｸ繝・け: ID蜊倅ｽ・+ 蛟句挨繧ｿ繧､繝繧ｹ繧ｿ繝ｳ繝・lastModified)縺ｧ豈碑ｼ・
+ * v6.5 高度マージロジック: ID単位 + 個別タイムスタンプ(lastModified)で比較
  */
 function mergeData(local, cloud) {
-    // 蟶ｸ縺ｫ繧ｯ繝ｩ繧ｦ繝峨ｒ譛譁ｰ縺ｮ迥ｶ諷九・繝吶・繧ｹ縺ｨ縺吶ｋ
+    // 常にクラウドを最新の状態のベースとする
     const merged = { ...cloud }; 
     const localMap = new Map(local.entries.map(e => [e.id, e]));
     const cloudMap = new Map(cloud.entries.map(e => [e.id, e]));
 
-    // --- 1. 繝ｭ繝ｼ繧ｫ繝ｫ蝗ｺ譛会ｼ域悴蜷梧悄・峨・繝・・繧ｿ繧偵・繝ｼ繧ｸ ---
+    // --- 1. ローカル固有（未同期）のデータをマージ ---
     local.entries.forEach(lEntry => {
         const isServerId = /^[AMSH]-\d{3}$/.test(lEntry.id);
         
         if (!cloudMap.has(lEntry.id)) {
-            // 繧ｵ繝ｼ繝舌・逋ｺ陦梧ｸ医∩ID縺ｪ縺ｮ縺ｫ繧ｯ繝ｩ繧ｦ繝峨↓蟄伜惠縺励↑縺・ｴ蜷・
-            // 繧ｵ繝ｼ繝舌・逋ｺ陦梧ｸ医∩ID縺ｪ縺ｮ縺ｫ繧ｯ繝ｩ繧ｦ繝峨↓蟄伜惠縺励↑縺・ｴ蜷・
+            // サーバー発行済みIDなのにクラウドに存在しない場合
+            // サーバー発行済みIDなのにクラウドに存在しない場合
             if (isServerId) {
-                // 繧ｯ繝ｩ繧ｦ繝峨・譛邨よ峩譁ｰ縺ｮ譁ｹ縺梧眠縺励￠繧後・縲√け繝ｩ繧ｦ繝牙・縺ｧ縲梧悽蠖薙・蜑企勁縲阪′縺ゅ▲縺溘→縺ｿ縺ｪ縺・
+                // クラウドの最終更新の方が新しければ、クラウド側で「本当の削除」があったとみなす
                 if (cloud.lastUpdated > (lEntry._ts || 0)) {
                     console.log(`[Sync] ${lEntry.id} was intentionally deleted on Cloud at ${new Date(cloud.lastUpdated).toLocaleString()}. Discarding local.`);
                     return; 
                 }
             }
-            // 譁ｰ隕上ョ繝ｼ繧ｿ縲√∪縺溘・蜑企勁遒ｺ螳壹〒縺ｪ縺・ｂ縺ｮ縺ｯ邯ｭ謖・
+            // 新規データ、または削除確定でないものは維持
             console.log(`[Sync] Keeping local entry ${lEntry.id} which is missing on cloud.`);
             merged.entries.push(lEntry);
         } else {
-            // 荳｡譁ｹ縺ｫ縺ゅｋ蝣ｴ蜷・ 譖ｴ譁ｰ譌･譎・lastModified)縺梧眠縺励＞譁ｹ繧呈治逕ｨ
+            // 両方にある場合: 更新日時(lastModified)が新しい方を採用
             const cEntry = cloudMap.get(lEntry.id);
             const lTime = new Date(lEntry.lastModified || lEntry.timestamp || 0).getTime();
             const cTime = new Date(cEntry.lastModified || cEntry.timestamp || 0).getTime();
@@ -476,8 +476,8 @@ function mergeData(local, cloud) {
         }
     });
 
-    // --- 2. 險ｭ螳壹・繝槭・繧ｸ: 繧ｯ繝ｩ繧ｦ繝牙・縺ｮ險ｭ螳壹ｒ蟶ｸ縺ｫ蜆ｪ蜈医☆繧九′縲√け繝ｩ繧ｦ繝牙・縺檎ｩｺ縺ｾ縺溘・繝・ヵ繧ｩ繝ｫ繝医・蝣ｴ蜷医↓蛯吶∴縺ｦ諷朱㍾縺ｫ繝槭・繧ｸ ---
-    // v7.4.0: 繧ｯ繝ｩ繧ｦ繝峨・譛邨よ峩譁ｰ譌･譎ゅ′繝ｭ繝ｼ繧ｫ繝ｫ繧医ｊ蜿､縺・ｴ蜷医・縲√Ο繝ｼ繧ｫ繝ｫ蛛ｴ縺ｮ譛譁ｰ險ｭ螳壹ｒ菫晄戟縺吶ｋ
+    // --- 2. 設定のマージ: クラウド側の設定を常に優先するが、クラウド側が空またはデフォルトの場合に備えて慎重にマージ ---
+    // v7.4.0: クラウドの最終更新日時がローカルより古い場合は、ローカル側の最新設定を保持する
     const isCloudNewer = (cloud.lastUpdated || 0) > (local.lastUpdated || 0);
     if (isCloudNewer && cloud.settings && Object.keys(cloud.settings).length > 0) {
         merged.settings = { ...local.settings, ...cloud.settings };
@@ -485,7 +485,7 @@ function mergeData(local, cloud) {
         merged.settings = { ...cloud.settings, ...local.settings };
     }
     
-    // --- 3. 驥崎､・賜髯､縲∝炎髯､貂医∩繝輔ぅ繝ｫ繧ｿ縲√た繝ｼ繝・---
+    // --- 3. 重複排除、削除済みフィルタ、ソート ---
     const allDeletedIds = [
         ...(local.deletedIds || []),
         ...(cloud.deletedIds || []),
@@ -515,7 +515,7 @@ function finalizeLoad(isRefresh = false) {
     // Ensure settings are merged with defaults
     state.settings = {
         ...{
-            competitionName: "隨ｬ1蝗・驥｣繧雁､ｧ莨・,
+            competitionName: "第1回 釣り大会",
             capacityGeneral: 100,
             capacityMintsuri: 100,
             capacitySuiho: 50,
@@ -527,7 +527,7 @@ function finalizeLoad(isRefresh = false) {
             adminPassword: "admin",
             ikesuList: Array.from({ length: 10 }, (_, i) => ({
                 id: `ikesu-default-${i + 1}`,
-                name: `繧､繧ｱ繧ｹ ${String.fromCharCode(65 + i)}`, // A, B, C...
+                name: `イケス ${String.fromCharCode(65 + i)}`, // A, B, C...
                 capacity: 15
             }))
         }, ...state.settings
@@ -552,7 +552,7 @@ function finalizeLoad(isRefresh = false) {
         // v7.6.1: Initialize specialized URL display in Admin Tab
         generateSpecialUrls();
 
-        // v7.0: 閾ｪ蜍募ｾｩ譌ｧ繝√ぉ繝・け・亥・隱ｭ縺ｿ霎ｼ縺ｿ譎ゑｼ・
+        // v7.0: 自動復旧チェック（再読み込み時）
         setTimeout(checkPendingRegistration, 500);
     }
 }
@@ -562,17 +562,17 @@ function migrateTshirtSizes() {
     let changed = false;
     // v7.8.6: Further expanded mapping to cover all potential variants
     const mapping = {
-        'LL': 'XL・・L・・, '2L': 'XL・・L・・, 'XL': 'XL・・L・・, 'O': 'XL・・L・・,
-        '3L': '2XL・・L・・, '2XL': '2XL・・L・・, 'XO': '2XL・・L・・,
-        '4L': '3XL・・L・・, '3XL': '3XL・・L・・, '2XO': '3XL・・L・・,
-        '5L': '4XL・・L・・, '4XL': '4XL・・L・・, '3XO': '4XL・・L・・
+        'LL': 'XL（2L）', '2L': 'XL（2L）', 'XL': 'XL（2L）', 'O': 'XL（2L）',
+        '3L': '2XL（3L）', '2XL': '2XL（3L）', 'XO': '2XL（3L）',
+        '4L': '3XL（4L）', '3XL': '3XL（4L）', '2XO': '3XL（4L）',
+        '5L': '4XL（5L）', '4XL': '4XL（5L）', '3XO': '4XL（5L）'
     };
 
     state.entries.forEach(entry => {
         entry.participants.forEach(p => {
             if (!p.tshirtSize) return;
             const normalized = p.tshirtSize.toString().toUpperCase().trim();
-            // Also handle if it's already partial match like "XL" -> "XL・・L・・
+            // Also handle if it's already partial match like "XL" -> "XL（2L）"
             if (mapping[normalized]) {
                 p.tshirtSize = mapping[normalized];
                 changed = true;
@@ -607,7 +607,7 @@ function generateSpecialUrls() {
 
 
 /**
- * v7.0: 騾∽ｿ｡荳ｭ繝・・繧ｿ縺ｮ莠碁㍾逋ｻ骭ｲ繝√ぉ繝・け & 蠕ｩ譌ｧ繝ｭ繧ｸ繝・け
+ * v7.0: 送信中データの二重登録チェック & 復旧ロジック
  */
 async function checkPendingRegistration() {
     const pendingJson = localStorage.getItem('fishing_app_pending_reg');
@@ -616,7 +616,7 @@ async function checkPendingRegistration() {
     try {
         const pending = JSON.parse(pendingJson);
         const now = Date.now();
-        // 1譎る俣莉･荳雁燕縺ｮ蜿､縺・ョ繝ｼ繧ｿ縺ｯ辟｡隕・
+        // 1時間以上前の古いデータは無視
         if (now - (pending._ts || 0) > 3600000) {
             localStorage.removeItem('fishing_app_pending_reg');
             return;
@@ -624,7 +624,7 @@ async function checkPendingRegistration() {
 
         console.log("Pending registration found, checking list...", pending);
         
-        // 譛譁ｰ繝・・繧ｿ繧貞ｼｷ蛻ｶ繝ｪ繝ｭ繝ｼ繝会ｼ亥酔譛滂ｼ・
+        // 最新データを強制リロード（同期）
         await loadDataFromCloudOnly();
 
         const match = state.entries.find(e => 
@@ -638,7 +638,7 @@ async function checkPendingRegistration() {
             console.log("Match found! Restoring success screen.", match);
             
             // v7.4.0: Add "Clear Cache" option to the toast/recovery check
-            showToast('蜑榊屓縺ｮ逋ｻ骭ｲ・磯∽ｿ｡荳ｭ・峨′隕九▽縺九ｊ縺ｾ縺励◆縲・, 'info');
+            showToast('前回の登録（送信中）が見つかりました。', 'info');
             
             localStorage.removeItem('fishing_app_pending_reg');
             showResult(match);
@@ -649,18 +649,18 @@ async function checkPendingRegistration() {
 }
 
 /**
- * v7.4.0: 騾∽ｿ｡蠕・■繝・・繧ｿ縺ｮ豸亥悉・域焔蜍包ｼ・
+ * v7.4.0: 送信待ちデータの消去（手動）
  */
 window.clearPendingRegistration = function() {
-    if (confirm('騾∽ｿ｡荳ｭ縺ｮ荳譎ゅョ繝ｼ繧ｿ繧呈ｶ亥悉縺励∪縺吶°・滂ｼ医☆縺ｧ縺ｫ騾∽ｿ｡縺悟ｮ御ｺ・＠縺ｦ縺・ｋ蝣ｴ蜷医・蠖ｱ髻ｿ縺ゅｊ縺ｾ縺帙ｓ・・)) {
+    if (confirm('送信中の一時データを消去しますか？（すでに送信が完了している場合は影響ありません）')) {
         localStorage.removeItem('fishing_app_pending_reg');
-        showToast('荳譎ゅョ繝ｼ繧ｿ繧呈ｶ亥悉縺励∪縺励◆', 'success');
+        showToast('一時データを消去しました', 'success');
         resetForm();
     }
 };
 
 /**
- * v7.0: 繧ｵ繝ｼ繝舌・縺九ｉ譛譁ｰ繝・・繧ｿ縺ｮ縺ｿ繧堤｢ｺ螳溘↓蜿門ｾ励☆繧具ｼ医・繝ｼ繧ｸ縺ｪ縺励・譛譁ｰ遒ｺ隱咲畑・・
+ * v7.0: サーバーから最新データのみを確実に取得する（マージなしの最新確認用）
  */
 async function loadDataFromCloudOnly() {
     try {
@@ -680,23 +680,23 @@ async function loadDataFromCloudOnly() {
 }
 
 /**
- * v7.0: 謇句虚縺ｧ縺ｮ迥ｶ諷狗｢ｺ隱搾ｼ医お繝ｩ繝ｼ逕ｻ髱｢縺ｮ繝懊ち繝ｳ縺九ｉ蜻ｼ縺ｳ蜃ｺ縺暦ｼ・
+ * v7.0: 手動での状態確認（エラー画面のボタンから呼び出し）
  */
 window.handleCheckStatus = async function() {
     const btn = document.querySelector('.btn-check-status');
     if (btn) {
         btn.disabled = true;
-        btn.textContent = "遒ｺ隱堺ｸｭ...";
+        btn.textContent = "確認中...";
     }
     
     await checkPendingRegistration();
     
-    // 隕九▽縺九ｉ縺ｪ縺九▲縺溷ｴ蜷・
+    // 見つからなかった場合
     const pendingJson = localStorage.getItem('fishing_app_pending_reg');
     if (pendingJson && btn) {
         btn.disabled = false;
-        btn.textContent = "逋ｻ骭ｲ迥ｶ豕√ｒ蜀咲｢ｺ隱阪☆繧・;
-        showToast('縺ｾ縺逋ｻ骭ｲ縺檎｢ｺ隱阪〒縺阪∪縺帙ｓ縲ゅｂ縺・ｸ蠎ｦ縺願ｩｦ縺励＞縺溘□縺上°縲∝・蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・, 'info');
+        btn.textContent = "登録状況を再確認する";
+        showToast('まだ登録が確認できません。もう一度お試しいただくか、再入力してください。', 'info');
     }
 };
 
@@ -724,7 +724,7 @@ async function saveData() {
 }
 
 /** 
- * v6.5 閾ｪ蜍募酔譛溘し繧､繧ｯ繝ｫ (1蛻・
+ * v6.5 自動同期サイクル (1分)
  */
 function startAutoSync() {
     if (window._autoSyncTimer) return;
@@ -789,20 +789,20 @@ function updateSyncStatus(type) {
     if (containerFooter) containerFooter.classList.remove('hidden');
 
     if (type === 'syncing') {
-        if (text) text.textContent = '蜷梧悄荳ｭ...';
+        if (text) text.textContent = '同期中...';
         if (dot) { dot.className = 'sync-dot syncing'; }
     } else if (type === 'success') {
-        if (text) text.textContent = '脂 蜷梧悄螳御ｺ・;
+        if (text) text.textContent = '🎉 同期完了';
         if (dot) { dot.className = 'sync-dot success'; }
         setTimeout(() => { 
-            if (text) text.textContent = '繧ｯ繝ｩ繧ｦ繝画磁邯・ 豁｣蟶ｸ'; 
+            if (text) text.textContent = 'クラウド接続: 正常'; 
             if (dot) { dot.className = 'sync-dot success'; }
         }, 2000);
     } else if (type === 'error') {
-        if (text) text.textContent = '蜷梧悄螟ｱ謨・;
+        if (text) text.textContent = '同期失敗';
         if (dot) { dot.className = 'sync-dot error'; }
     } else if (type === 'error-silent') {
-        if (text) text.textContent = '繧ｯ繝ｩ繧ｦ繝画磁邯・ 豁｣蟶ｸ'; // Keep optimistic if silent
+        if (text) text.textContent = 'クラウド接続: 正常'; // Keep optimistic if silent
         if (dot) { dot.className = 'sync-dot success'; }
     }
 }
@@ -984,7 +984,7 @@ function initApp() {
     const cancelEditBtn = document.getElementById('cancel-edit-btn');
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener('click', () => {
-            if (confirm('菫ｮ豁｣繧剃ｸｭ豁｢縺励※謌ｻ繧翫∪縺吶°・滂ｼ亥､画峩蜀・ｮｹ縺ｯ菫晏ｭ倥＆繧後∪縺帙ｓ・・)) {
+            if (confirm('修正を中止して戻りますか？（変更内容は保存されません）')) {
                 resetForm();
                 switchView(null, isAdminAuth ? 'dashboard-view' : 'registration-view');
                 isAdminAuthAction = false;
@@ -1167,10 +1167,10 @@ function updateAdminToolbar() {
         toolbar.className = 'admin-toolbar';
         toolbar.innerHTML = `
             <div class="toolbar-content">
-                <button class="btn-toolbar" data-target="registration-view">蜿嶺ｻ・/button>
-                <button class="btn-toolbar" data-target="dashboard-view">邂｡逅・/button>
-                <button class="btn-toolbar" data-target="reception-view">蠖捺律</button>
-                <button class="btn-toolbar logout" id="admin-logout">繝ｭ繧ｰ繧｢繧ｦ繝・/button>
+                <button class="btn-toolbar" data-target="registration-view">受付</button>
+                <button class="btn-toolbar" data-target="dashboard-view">管理</button>
+                <button class="btn-toolbar" data-target="reception-view">当日</button>
+                <button class="btn-toolbar logout" id="admin-logout">ログアウト</button>
             </div>
         `;
         document.body.appendChild(toolbar);
@@ -1267,9 +1267,9 @@ window.handleAdminLogin = function() {
         }
         pendingView = null;
 
-        // 笘・admin-only隕∫ｴ縺ｮ陦ｨ遉ｺ蠕後↓DOM縺梧峩譁ｰ縺輔ｌ縺ｦ縺九ｉ繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ
+        // ★ admin-only要素の表示後にDOMが更新されてからスクロール
         setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
-        showToast("邂｡逅・・→縺励※繝ｭ繧ｰ繧､繝ｳ縺励∪縺励◆", "success");
+        showToast("管理者としてログインしました", "success");
     } else {
         console.warn("Admin Auth Failed: Password mismatch.");
         document.getElementById('admin-auth-error').classList.remove('hidden');
@@ -1299,7 +1299,7 @@ function syncSettingsUI() {
     
     // v8.1.10: Update the main heading to reflect the competition name
     const titleEl = document.getElementById('app-title');
-    if (titleEl) titleEl.textContent = state.settings.competitionName || "驥｣繧雁､ｧ莨・蜿嶺ｻ・;
+    if (titleEl) titleEl.textContent = state.settings.competitionName || "釣り大会 受付";
 
     if (document.getElementById('cap-total')) {
         document.getElementById('cap-total').value = state.settings.capacityTotal || 250;
@@ -1325,43 +1325,43 @@ function addParticipantRow(data = null, shouldFocus = true) {
     row.dataset.index = index;
     row.innerHTML = `
         <div class="participant-label">
-            蜿ょ刈閠・${index + 1}${index === 0 ? ' <span class="label-rep">・井ｻ｣陦ｨ閠・ｼ・/span>' : ''}
+            参加者 ${index + 1}${index === 0 ? ' <span class="label-rep">（代表者）</span>' : ''}
         </div>
         <div class="form-row">
             <div class="form-group" style="flex: 1; min-width: 140px;">
-                <label>蛹ｺ蛻・<span class="required">*</span></label>
+                <label>区分 <span class="required">*</span></label>
                 <select class="p-type" required>
-                    <option value="fisher" ${data && data.type === 'fisher' ? 'selected' : ''}>驥｣繧翫ｒ縺吶ｋ</option>
-                    <option value="observer" ${data && data.type === 'observer' ? 'selected' : ''}>隕句ｭｦ縺ｮ縺ｿ</option>
+                    <option value="fisher" ${data && data.type === 'fisher' ? 'selected' : ''}>釣りをする</option>
+                    <option value="observer" ${data && data.type === 'observer' ? 'selected' : ''}>見学のみ</option>
                 </select>
             </div>
             <div class="form-group" style="flex: 2; min-width: 200px;">
-                <label>縺雁錐蜑・<span class="required">*</span></label>
-                <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="${index === 0 ? '萓・ 螻ｱ逕ｰ 螟ｪ驛・(莉｣陦ｨ閠・' : '萓・ 螻ｱ逕ｰ 螟ｪ驛・}">
+                <label>お名前 <span class="required">*</span></label>
+                <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="${index === 0 ? '例: 山田 太郎 (代表者)' : '例: 山田 太郎'}">
             </div>
             <div class="form-group" style="flex: 1; min-width: 100px;">
-                <label>諤ｧ蛻･ <span class="required">*</span></label>
+                <label>性別 <span class="required">*</span></label>
                 <select class="p-gender" required>
-                    <option value="" disabled ${!data ? 'selected' : ''}>驕ｸ謚・..</option>
+                    <option value="" disabled ${!data ? 'selected' : ''}>選択...</option>
                     ${Object.entries(genderLabels).map(([val, label]) => `<option value="${val}" ${data && data.gender === val ? 'selected' : ''}>${label}</option>`).join('')}
                 </select>
             </div>
         </div>
         <div class="form-row">
             <div class="form-group" style="flex: 1; min-width: 140px;">
-                <label>蟷ｴ莉｣ <span class="required">*</span></label>
+                <label>年代 <span class="required">*</span></label>
                 <select class="p-age" required>
                     ${Object.entries(ageLabels).map(([val, label]) => `<option value="${val}" ${data && data.age === val ? 'selected' : ''}>${label}</option>`).join('')}
                 </select>
             </div>
             <div class="form-group" style="flex: 1; min-width: 140px;">
-                <label>蝨ｰ蝓・<span class="required">*</span></label>
-                <input type="text" class="p-region" required value="${data && data.region ? data.region : ''}" placeholder="萓・ 蟋ｫ霍ｯ蟶ゅ∪縺ｧ">
+                <label>地域 <span class="required">*</span></label>
+                <input type="text" class="p-region" required value="${data && data.region ? data.region : ''}" placeholder="例: 姫路市まで">
             </div>
             <div class="form-group" style="flex: 1; min-width: 100px;">
-                <label>T繧ｷ繝｣繝・<span class="required">*</span></label>
+                <label>Tシャツ <span class="required">*</span></label>
                 <select class="p-tshirt" required>
-                    <option value="" disabled ${!data || !data.tshirtSize ? 'selected' : ''}>驕ｸ謚槭＠縺ｦ縺上□縺輔＞</option>
+                    <option value="" disabled ${!data || !data.tshirtSize ? 'selected' : ''}>選択してください</option>
                     ${(() => {
                         // v7.8.6: Improved safety logic
                         const currentSize = data ? data.tshirtSize : '';
@@ -1375,11 +1375,11 @@ function addParticipantRow(data = null, shouldFocus = true) {
             </div>
         </div>
         <div class="form-group">
-            <label>繝九ャ繧ｯ繝阪・繝 <span class="text-muted">(莉ｻ諢・</span></label>
-            <input type="text" class="p-nick" value="${data && data.nickname ? data.nickname : ''}" placeholder="蜷咲ｰｿ逕ｨ縺ｮ諢帷ｧｰ・育ｩｺ谺・庄・・>
+            <label>ニックネーム <span class="text-muted">(任意)</span></label>
+            <input type="text" class="p-nick" value="${data && data.nickname ? data.nickname : ''}" placeholder="名簿用の愛称（空欄可）">
         </div>
         <div class="row-actions">
-            <button type="button" class="btn-icon remove-p" title="蜑企勁">&times;</button>
+            <button type="button" class="btn-icon remove-p" title="削除">&times;</button>
         </div>
     `;
     list.appendChild(row);
@@ -1410,7 +1410,7 @@ function hideConfirmation() {
     document.getElementById('confirmation-section').classList.add('hidden');
     document.getElementById('registration-form').classList.remove('hidden');
     const editId = document.getElementById('edit-entry-id')?.value;
-    document.getElementById('app-title').textContent = editId ? "逋ｻ骭ｲ螟画峩" : (state.settings.competitionName || "驥｣繧雁､ｧ莨・蜿嶺ｻ・);
+    document.getElementById('app-title').textContent = editId ? "登録変更" : (state.settings.competitionName || "釣り大会 受付");
     window.scrollTo(0, 0);
 }
 
@@ -1455,7 +1455,7 @@ function handleEditAuth() {
         fillFormForEdit(entry);
     } else {
         const err = document.getElementById('auth-error');
-        err.textContent = "蜿嶺ｻ倡分蜿ｷ縺ｾ縺溘・隱崎ｨｼ諠・ｱ縺梧ｭ｣縺励￥縺ゅｊ縺ｾ縺帙ｓ縲・;
+        err.textContent = "受付番号または認証情報が正しくありません。";
         err.classList.remove('hidden');
     }
 }
@@ -1522,11 +1522,11 @@ function fillFormForEdit(entry) {
 
     // v7.6.6: Enable catgory migration for admins. Ensure all categories are available.
     if (isAdminAuth || isAdminAuthAction) {
-        ['荳闊ｬ', '縺ｿ繧馴・繧・, '豌ｴ螳・, '繝上Μ繝溘ヤ'].forEach(source => {
+        ['一般', 'みん釣り', '水宝', 'ハリミツ'].forEach(source => {
             let sourceRadio = document.querySelector(`input[name="reg-source"][value="${source}"]`);
             if (!sourceRadio) {
                 const selector = document.getElementById('main-source-selector');
-                const badgeClassMap = { '荳闊ｬ': 'badge-ippan', '縺ｿ繧馴・繧・: 'badge-mintsuri', '豌ｴ螳・: 'badge-suiho', '繝上Μ繝溘ヤ': 'badge-harimitsu' };
+                const badgeClassMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
                 const badgeClass = badgeClassMap[source] || 'badge-ippan';
                 const label = document.createElement('label');
                 label.className = 'source-option admin-only temp-option';
@@ -1549,15 +1549,15 @@ function fillFormForEdit(entry) {
 
         document.getElementById('edit-auth-section').classList.add('hidden');
         document.getElementById('registration-form').classList.remove('hidden');
-        document.getElementById('app-title').textContent = "逋ｻ骭ｲ螟画峩: " + entry.id;
-        document.getElementById('submit-registration').textContent = "螟画峩繧剃ｿ晏ｭ倥☆繧・;
+        document.getElementById('app-title').textContent = "登録変更: " + entry.id;
+        document.getElementById('submit-registration').textContent = "変更を保存する";
         document.getElementById('cancel-edit').classList.remove('hidden');
         
         // v8.2.01: Explicitly clear timeframe overlay when editing
         checkTimeframe();
     } catch (e) {
         console.error("BORIJIN: fillFormForEdit failed:", e);
-        showToast("繝輔か繝ｼ繝縺ｮ隱ｭ縺ｿ霎ｼ縺ｿ縺ｫ螟ｱ謨励＠縺ｾ縺励◆", "error");
+        showToast("フォームの読み込みに失敗しました", "error");
     }
 }
 
@@ -1582,8 +1582,8 @@ function showResult(entry) {
     const pList = document.getElementById('res-participant-list');
     if (pList) {
         pList.innerHTML = entry.participants.map(p => {
-            const genderMark = p.gender === 'male' ? '笙・ : (p.gender === 'female' ? '笙' : '');
-            return `<li>${p.name} ${genderMark} (${p.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ'})</li>`;
+            const genderMark = p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
+            return `<li>${p.name} ${genderMark} (${p.type === 'fisher' ? '釣り' : '見学'})</li>`;
         }).join('');
     }
 
@@ -1591,7 +1591,7 @@ function showResult(entry) {
     const regCard = document.getElementById('registration-card');
     if (regCard) regCard.classList.add('hidden');
 
-    showToast('笨ｨ 逋ｻ骭ｲ螳御ｺ・＠縺ｾ縺励◆・・, 'success');
+    showToast('✨ 登録完了しました！', 'success');
     window.scrollTo(0, 0);
 }
 
@@ -1610,7 +1610,7 @@ function resetForm() {
     isAdminAuthAction = false; // v8.2.05: Reset action flag on form reset
     
     // Reset radio selection
-    const defaultRadio = document.querySelector('input[name="reg-source"][value="荳闊ｬ"]');
+    const defaultRadio = document.querySelector('input[name="reg-source"][value="一般"]');
     if (defaultRadio) defaultRadio.checked = true;
 
     const list = document.getElementById('participant-list');
@@ -1633,7 +1633,7 @@ function resetForm() {
     document.getElementById('registration-status').classList.add('hidden');
     
     updateAppTitle();
-    document.getElementById('submit-registration').textContent = "縺薙・蜀・ｮｹ縺ｧ逋ｻ骭ｲ縺吶ｋ";
+    document.getElementById('submit-registration').textContent = "この内容で登録する";
     
     const cancelEditBtn = document.getElementById('cancel-edit');
     if (cancelEditBtn) cancelEditBtn.classList.add('hidden');
@@ -1663,12 +1663,12 @@ function showStatus(msg, type, noScroll = false) {
 
 // Admin / Dashboard
 function clearLocalCache() {
-    if (!confirm("繝悶Λ繧ｦ繧ｶ縺ｫ菫晏ｭ倥＆繧後※縺・ｋ繧ｭ繝｣繝・す繝･繧貞炎髯､縺励√け繝ｩ繧ｦ繝峨°繧画怙譁ｰ繝・・繧ｿ繧貞・蜿門ｾ励＠縺ｾ縺吶°・歃n・育樟蝨ｨ騾∽ｿ｡荳ｭ縺ｮ繝・・繧ｿ縺後≠繧句ｴ蜷医・螟ｱ繧上ｌ繧句庄閭ｽ諤ｧ縺後≠繧翫∪縺呻ｼ・)) {
+    if (!confirm("ブラウザに保存されているキャッシュを削除し、クラウドから最新データを再取得しますか？\n（現在送信中のデータがある場合は失われる可能性があります）")) {
         return;
     }
     localStorage.removeItem('fishing_app_v3_data');
     localStorage.removeItem('fishing_app_pending_reg');
-    showToast("繧ｭ繝｣繝・す繝･繧偵け繝ｪ繧｢縺励∪縺励◆縲ょ・隱ｭ縺ｿ霎ｼ縺ｿ縺励∪縺・..", "info");
+    showToast("キャッシュをクリアしました。再読み込みします...", "info");
     setTimeout(() => location.reload(), 1000);
 }
 
@@ -1679,15 +1679,15 @@ window.updateDashboard = function() {
     try {
         if (!state || !state.entries) return;
 
-        const fishersIppan = sumCategoryFishers('荳闊ｬ');
-        const fishersMintsuri = sumCategoryFishers('縺ｿ繧馴・繧・);
-        const fishersSuiho = sumCategoryFishers('豌ｴ螳・);
-        const fishersHarimitsu = sumCategoryFishers('繝上Μ繝溘ヤ');
+        const fishersIppan = sumCategoryFishers('一般');
+        const fishersMintsuri = sumCategoryFishers('みん釣り');
+        const fishersSuiho = sumCategoryFishers('水宝');
+        const fishersHarimitsu = sumCategoryFishers('ハリミツ');
 
-        const observersIppan = sumCategoryObservers('荳闊ｬ');
-        const observersMintsuri = sumCategoryObservers('縺ｿ繧馴・繧・);
-        const observersSuiho = sumCategoryObservers('豌ｴ螳・);
-        const observersHarimitsu = sumCategoryObservers('繝上Μ繝溘ヤ');
+        const observersIppan = sumCategoryObservers('一般');
+        const observersMintsuri = sumCategoryObservers('みん釣り');
+        const observersSuiho = sumCategoryObservers('水宝');
+        const observersHarimitsu = sumCategoryObservers('ハリミツ');
 
         const totalFishers = fishersIppan + fishersMintsuri + fishersSuiho + fishersHarimitsu;
         const totalObservers = state.entries.filter(e => e.status !== 'cancelled').reduce((s, e) => s + e.observers, 0);
@@ -1771,12 +1771,12 @@ window.updateDashboard = function() {
             if (!matchesEntrySearch && !matchesParticipantSearch) return;
             if (dashboardFilter !== 'all' && e.source !== dashboardFilter) return;
 
-            const badgeMap = { '荳闊ｬ': 'badge-ippan', '縺ｿ繧馴・繧・: 'badge-mintsuri', '豌ｴ螳・: 'badge-suiho', '繝上Μ繝溘ヤ': 'badge-harimitsu' };
-            const statusLabel = e.status === 'checked-in' ? '笨・蜿玲ｸ・ : e.status === 'absent' ? '笶・谺蟶ｭ' : e.status === 'cancelled' ? '圻 辟｡蜉ｹ' : '竢ｳ 蠕・ｩ・;
+            const badgeMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
+            const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 無効' : '⏳ 待機';
             const rowClass = e.status === 'cancelled' ? 'row-cancelled' : (e.status === 'checked-in' ? 'row-checked-in' : '');
 
             const rep = pArray[0] || { name: e.representative, nickname: '', gender: '' };
-            const getGenderMark = (p) => p.gender === 'male' ? '笙・ : (p.gender === 'female' ? '笙' : '');
+            const getGenderMark = (p) => p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
             
             const pSummary = `
                 <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:400px; font-size:0.95rem;">
@@ -1815,10 +1815,10 @@ window.updateDashboard = function() {
                     <td><small style="white-space:nowrap;">${regTime}</small></td>
                     <td>
                         <div style="display:flex; gap:0.2rem; flex-wrap: nowrap; width: auto; align-items:center;">
-                            <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">遒ｺ隱・/button>
-                            <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">菫ｮ豁｣</button>
-                            <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">蜿嶺ｻ・/button>
-                            <button class="btn-outline btn-small" onclick="hardDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap; border-color: #ff7675; color: #ff7675;">蜑企勁</button>
+                            <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
+                            <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
+                            <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
+                            <button class="btn-outline btn-small" onclick="hardDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap; border-color: #ff7675; color: #ff7675;">削除</button>
                         </div>
                     </td>
                 </tr>
@@ -1826,7 +1826,7 @@ window.updateDashboard = function() {
         });
         
         if (!html) {
-            html = '<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--text-muted);">逋ｻ骭ｲ繝・・繧ｿ縺後≠繧翫∪縺帙ｓ縲・/td></tr>';
+            html = '<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--text-muted);">登録データがありません。</td></tr>';
         }
         
         list.innerHTML = html;
@@ -1896,7 +1896,7 @@ window.renderIkesuPrintView = function() {
     if (!state.settings.ikesuList || state.settings.ikesuList.length === 0) {
         container.innerHTML = `
             <div class="alert alert-warning">
-                繧､繧ｱ繧ｹ縺瑚ｨｭ螳壹＆繧後※縺・∪縺帙ｓ縲ゅ後う繧ｱ繧ｹ蜑ｲ蠖薙阪ち繝悶〒繧､繧ｱ繧ｹ繧剃ｽ懈・縺励※縺上□縺輔＞縲・
+                イケスが設定されていません。「イケス割当」タブでイケスを作成してください。
             </div>`;
         return;
     }
@@ -1918,21 +1918,21 @@ window.renderIkesuPrintView = function() {
         html += `
             <div class="print-page ikesu-sheet" style="background:white; padding:1.5rem; border:1px solid #ddd; margin-bottom: 2rem; page-break-after: always; color: black;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #000; padding-bottom: 0.5rem; margin-bottom: 1rem;">
-                    <h2 style="margin:0; font-size: 1.8rem;">${ik.name} 繝｡繝ｳ繝舌・陦ｨ</h2>
+                    <h2 style="margin:0; font-size: 1.8rem;">${ik.name} メンバー表</h2>
                     <div style="text-align: right; font-size: 0.9rem;">
-                        <div>蜊ｰ蛻ｷ譌･: ${new Date().toLocaleDateString()}</div>
-                        <div>莠ｺ謨ｰ: ${participants.length} 蜷・/div>
+                        <div>印刷日: ${new Date().toLocaleDateString()}</div>
+                        <div>人数: ${participants.length} 名</div>
                     </div>
                 </div>
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid #000;">
                     <thead>
                         <tr style="background: #eee;">
                             <th style="border: 1px solid #000; padding: 0.5rem; width: 40px;">No</th>
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 150px;">繧ｰ繝ｫ繝ｼ繝怜錐</th>
-                            <th style="border: 1px solid #000; padding: 0.5rem;">豌丞錐</th>
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 60px;">諤ｧ蛻･</th>
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 80px;">T繧ｷ繝｣繝・/th>
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 100px;">蛯呵・/th>
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 150px;">グループ名</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem;">氏名</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 60px;">性別</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 80px;">Tシャツ</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 100px;">備考</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1943,7 +1943,7 @@ window.renderIkesuPrintView = function() {
                                 <td style="border: 1px solid #000; padding: 0.4rem; font-size: 1.1rem; font-weight: bold;">${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}</td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center;">${genderLabels[p.gender] || '-'}</td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-weight: bold;">${p.tshirtSize || '-'}</td>
-                                <td style="border: 1px solid #000; padding: 0.4rem;">${p.type === 'observer' ? '縲占ｦ句ｭｦ縲・ : ''}</td>
+                                <td style="border: 1px solid #000; padding: 0.4rem;">${p.type === 'observer' ? '【見学】' : ''}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -1952,7 +1952,7 @@ window.renderIkesuPrintView = function() {
         `;
     });
 
-    container.innerHTML = html || '<p class="text-muted p-4">蜑ｲ繧雁ｽ薙※繧峨ｌ縺溷盾蜉閠・′縺・∪縺帙ｓ縲・/p>';
+    container.innerHTML = html || '<p class="text-muted p-4">割り当てられた参加者がいません。</p>';
 };
 
 /**
@@ -1964,7 +1964,7 @@ window.renderGroupPrintView = function() {
 
     const validEntries = state.entries.filter(e => e.status !== 'cancelled');
     if (validEntries.length === 0) {
-        container.innerHTML = '<p class="text-muted p-4">逋ｻ骭ｲ繝・・繧ｿ縺後≠繧翫∪縺帙ｓ縲・/p>';
+        container.innerHTML = '<p class="text-muted p-4">登録データがありません。</p>';
         return;
     }
 
@@ -1987,24 +1987,24 @@ window.renderGroupPrintView = function() {
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
                     <div style="border: 2px solid #000; padding: 1rem;">
-                        <div style="font-size: 0.9rem; border-bottom: 1px solid #000; margin-bottom: 0.5rem;">莉｣陦ｨ閠・/div>
-                        <div style="font-size: 1.4rem; font-weight: bold;">${e.representative} 讒・/div>
+                        <div style="font-size: 0.9rem; border-bottom: 1px solid #000; margin-bottom: 0.5rem;">代表者</div>
+                        <div style="font-size: 1.4rem; font-weight: bold;">${e.representative} 様</div>
                     </div>
                     <div style="border: 2px solid #000; padding: 1rem;">
-                        <div style="font-size: 0.9rem; border-bottom: 1px solid #000; margin-bottom: 0.5rem;">蜷郁ｨ井ｺｺ謨ｰ</div>
-                        <div style="font-size: 1.4rem; font-weight: bold;">驥｣繧・ ${e.fishers}蜷・/ 隕句ｭｦ: ${e.observers}蜷・/div>
+                        <div style="font-size: 0.9rem; border-bottom: 1px solid #000; margin-bottom: 0.5rem;">合計人数</div>
+                        <div style="font-size: 1.4rem; font-weight: bold;">釣り: ${e.fishers}名 / 見学: ${e.observers}名</div>
                     </div>
                 </div>
 
-                <h3 style="background: #000; color: white; padding: 0.5rem 1rem; margin-bottom: 1rem;">蜿ょ刈閠・・T繧ｷ繝｣繝・し繧､繧ｺ 荳隕ｧ</h3>
+                <h3 style="background: #000; color: white; padding: 0.5rem 1rem; margin-bottom: 1rem;">参加者・Tシャツサイズ 一覧</h3>
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; margin-bottom: 2rem;">
                     <thead>
                         <tr style="background: #eee;">
                             <th style="border: 1px solid #000; padding: 0.8rem; width: 50px;">No</th>
-                            <th style="border: 1px solid #000; padding: 0.8rem;">豌丞錐</th>
-                            <th style="border: 1px solid #000; padding: 0.8rem; width: 120px;">T繧ｷ繝｣繝・/th>
-                            <th style="border: 1px solid #000; padding: 0.8rem; width: 100px;">蛹ｺ蛻・/th>
-                            <th style="border: 1px solid #000; padding: 0.8rem; width: 150px;">繝√ぉ繝・け</th>
+                            <th style="border: 1px solid #000; padding: 0.8rem;">氏名</th>
+                            <th style="border: 1px solid #000; padding: 0.8rem; width: 120px;">Tシャツ</th>
+                            <th style="border: 1px solid #000; padding: 0.8rem; width: 100px;">区分</th>
+                            <th style="border: 1px solid #000; padding: 0.8rem; width: 150px;">チェック</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2013,15 +2013,15 @@ window.renderGroupPrintView = function() {
                                 <td style="border: 1px solid #000; padding: 0.5rem; text-align: center;">${idx + 1}</td>
                                 <td style="border: 1px solid #000; padding: 0.5rem; font-size: 1.3rem; font-weight: bold;">${p.name}</td>
                                 <td style="border: 1px solid #000; padding: 0.5rem; text-align: center; font-size: 1.3rem; font-weight: 900;">${p.tshirtSize || '-'}</td>
-                                <td style="border: 1px solid #000; padding: 0.5rem; text-align: center;">${p.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ'}</td>
-                                <td style="border: 1px solid #000; padding: 0.5rem; text-align: center; font-size: 1.5rem;">笆｡</td>
+                                <td style="border: 1px solid #000; padding: 0.5rem; text-align: center;">${p.type === 'fisher' ? '釣り' : '見学'}</td>
+                                <td style="border: 1px solid #000; padding: 0.5rem; text-align: center; font-size: 1.5rem;">□</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
 
                 <div style="margin-top: 3rem; border-top: 1px dashed #000; padding-top: 1rem;">
-                    <div style="font-size: 0.9rem; margin-bottom: 1rem;">縲先ｺ門ｙ逕ｨ繝｡繝｢縲・/div>
+                    <div style="font-size: 0.9rem; margin-bottom: 1rem;">【準備用メモ】</div>
                     <div style="height: 100px; border: 1px solid #ccc;"></div>
                 </div>
             </div>
@@ -2047,7 +2047,7 @@ window.toggleLeader = function(entryId, partIdx) {
     
     saveData();
     renderIkesuWorkspace();
-    showToast(`${entry.participants[partIdx].name} 讒倥ｒ繝ｪ繝ｼ繝繝ｼ縺ｫ險ｭ螳壹＠縺ｾ縺励◆`, 'info');
+    showToast(`${entry.participants[partIdx].name} 様をリーダーに設定しました`, 'info');
 };
 
 // 2. Tournament Rankings
@@ -2097,14 +2097,14 @@ window.renderRankings = function() {
                 <div class="ranking-info">
                     <div class="ranking-name">${p.name}</div>
                     <div class="ranking-subtext">${p.group} ${p.ikesu ? ` / ${p.ikesu}` : ''}</div>
-                    <div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">髱堤黄: ${p.cA} / 魃帷ｭ・ ${p.cB}</div>
+                    <div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">青物: ${p.cA} / 鯛等: ${p.cB}</div>
                 </div>
                 <div class="ranking-points">
                     <span class="rank-val">${p.points}</span><span class="rank-unit">pt</span>
                 </div>
             </div>
         `;
-    }).join('') : '<div class="p-8 text-center text-muted" style="border: 2px dashed #eee; border-radius: 12px;">蛟倶ｺｺ縺ｮ驥｣譫懊ョ繝ｼ繧ｿ縺後∪縺縺ゅｊ縺ｾ縺帙ｓ</div>';
+    }).join('') : '<div class="p-8 text-center text-muted" style="border: 2px dashed #eee; border-radius: 12px;">個人の釣果データがまだありません</div>';
 
     // B. Ikesu Team Ranking
     if (!state.settings.ikesuList) return;
@@ -2140,14 +2140,14 @@ window.renderRankings = function() {
                 <div class="ranking-rank ${rankNumClass}">${i + 1}</div>
                 <div class="ranking-info">
                     <div class="ranking-name">${r.name}</div>
-                    <div class="ranking-subtext">蜷郁ｨ・ ${r.total}pt / 蜿ょ刈: ${r.count}蜷・/div>
+                    <div class="ranking-subtext">合計: ${r.total}pt / 参加: ${r.count}名</div>
                 </div>
                 <div class="ranking-points">
                     <span class="rank-val">${r.avg}</span><span class="rank-unit">avg</span>
                 </div>
             </div>
         `;
-    }).join('') : '<div class="p-8 text-center text-muted" style="border: 2px dashed #eee; border-radius: 12px;">繧､繧ｱ繧ｹ蛻･縺ｮ繝・・繧ｿ縺後∪縺縺ゅｊ縺ｾ縺帙ｓ</div>';
+    }).join('') : '<div class="p-8 text-center text-muted" style="border: 2px dashed #eee; border-radius: 12px;">イケス別のデータがまだありません</div>';
 };
 
 // 3. Print View
@@ -2227,9 +2227,9 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             .map(([age, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${ageLabels[age] || age}</span>
-                    <span class="stats-count">${count}蜷・/span>
+                    <span class="stats-count">${count}名</span>
                 </div>
-            `).join('') || '<div class="text-muted small">繝・・繧ｿ縺ｪ縺・/div>';
+            `).join('') || '<div class="text-muted small">データなし</div>';
     }
 
     // v7.8.5: Check for suspicious T-shirt sizes (Adults with 140) in current view
@@ -2245,9 +2245,9 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             .map(([key, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${genderLabels[key] || key}</span>
-                    <span class="stats-count">${count}蜷・/span>
+                    <span class="stats-count">${count}名</span>
                 </div>
-            `).join('') || '<div class="text-muted small">繝・・繧ｿ縺ｪ縺・/div>';
+            `).join('') || '<div class="text-muted small">データなし</div>';
     }
 
     // Render Regions
@@ -2259,9 +2259,9 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             .map(([reg, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${reg}</span>
-                    <span class="stats-count">${count}蜷・/span>
+                    <span class="stats-count">${count}名</span>
                 </div>
-            `).join('') || '<div class="text-muted small">繝・・繧ｿ縺ｪ縺・/div>';
+            `).join('') || '<div class="text-muted small">データなし</div>';
     }
 
     // v7.7.0: Render T-shirt Sizes (Total for orders)
@@ -2281,9 +2281,9 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             .map(([size, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${size}</span>
-                    <span class="stats-count">${count}譫・/span>
+                    <span class="stats-count">${count}枚</span>
                 </div>
-            `).join('') || '<div class="text-muted small">繝・・繧ｿ縺ｪ縺・/div>';
+            `).join('') || '<div class="text-muted small">データなし</div>';
     }
 }
 
@@ -2317,13 +2317,13 @@ function checkTshirtSizeAnomalies(entries) {
         alert.className = 'alert alert-info mt-4';
         alert.style.borderLeft = '5px solid var(--error-color)';
         alert.innerHTML = `
-            <div style="font-weight:bold; color:var(--error-color); margin-bottom:0.5rem;">笞・・T繧ｷ繝｣繝・し繧､繧ｺ縺ｮ遒ｺ隱肴耳螂ｨ (${anomalies.length}莉ｶ)</div>
+            <div style="font-weight:bold; color:var(--error-color); margin-bottom:0.5rem;">⚠️ Tシャツサイズの確認推奨 (${anomalies.length}件)</div>
             <div style="font-size:0.85rem; color:var(--text-color); margin-bottom:0.5rem;">
-                荳ｭ蟄ｦ逕滉ｻ･荳翫・蟷ｴ莉｣縺ｧ繧ｵ繧､繧ｺ縺後・40縲阪↓縺ｪ縺｣縺ｦ縺・ｋ譁ｹ縺後＞縺ｾ縺吶ょ､画峩貍上ｌ縺ｮ蜿ｯ閭ｽ諤ｧ縺後≠繧九◆繧√∝錐邁ｿ縺九ｉ蜀・ｮｹ繧偵＃遒ｺ隱阪￥縺縺輔＞縲・
+                中学生以上の年代でサイズが「140」になっている方がいます。変更漏れの可能性があるため、名簿から内容をご確認ください。
             </div>
             <div style="max-height:120px; overflow-y:auto; font-size:0.8rem; background:rgba(0,0,0,0.03); padding:0.5rem; border-radius:4px;">
                 ${anomalies.map(a => `
-                    <div style="margin-bottom:0.25rem;">繝ｻ[${a.id}] ${a.groupName} - ${a.pName} (${a.age})</div>
+                    <div style="margin-bottom:0.25rem;">・[${a.id}] ${a.groupName} - ${a.pName} (${a.age})</div>
                 `).join('')}
             </div>
         `;
@@ -2336,16 +2336,16 @@ window.renderPublicStats = function() {
     const validEntries = state.entries.filter(e => e.status !== 'cancelled');
     
     const categories = [
-        { id: 'ippan', name: '荳闊ｬ', source: '荳闊ｬ', capacity: state.settings.capacityGeneral, color: 'ippan' },
-        { id: 'mintsuri', name: '縺ｿ繧馴・繧・, source: '縺ｿ繧馴・繧・, capacity: state.settings.capacityMintsuri, color: 'mintsuri' },
-        { id: 'suiho', name: '豌ｴ螳・, source: '豌ｴ螳・, capacity: state.settings.capacitySuiho, color: 'suiho' },
-        { id: 'harimitsu', name: '繝上Μ繝溘ヤ', source: '繝上Μ繝溘ヤ', capacity: state.settings.capacityHarimitsu, color: 'harimitsu' }
+        { id: 'ippan', name: '一般', source: '一般', capacity: state.settings.capacityGeneral, color: 'ippan' },
+        { id: 'mintsuri', name: 'みん釣り', source: 'みん釣り', capacity: state.settings.capacityMintsuri, color: 'mintsuri' },
+        { id: 'suiho', name: '水宝', source: '水宝', capacity: state.settings.capacitySuiho, color: 'suiho' },
+        { id: 'harimitsu', name: 'ハリミツ', source: 'ハリミツ', capacity: state.settings.capacityHarimitsu, color: 'harimitsu' }
     ];
 
     const gridHtml = categories.map(cat => {
         const count = validEntries.filter(e => e.source === cat.source).reduce((sum, e) => sum + e.fishers, 0);
         const progress = Math.min(100, (count / cat.capacity) * 100);
-        const statusText = count >= cat.capacity ? '貅蜩｡' : `縺ゅ→ ${cat.capacity - count} 蜷港;
+        const statusText = count >= cat.capacity ? '満員' : `あと ${cat.capacity - count} 名`;
         return `
             <div class="public-stat-card border-top-${cat.color}">
                 <div class="public-stat-label">
@@ -2354,7 +2354,7 @@ window.renderPublicStats = function() {
                 </div>
                 <div class="public-stat-main">
                     <span class="public-stat-value">${count}</span>
-                    <span class="public-stat-unit">/ ${cat.capacity} 蜷・/span>
+                    <span class="public-stat-unit">/ ${cat.capacity} 名</span>
                 </div>
                 <div class="public-progress-container"><div class="public-progress bg-${cat.color}" style="width: ${progress}%"></div></div>
             </div>`;
@@ -2372,24 +2372,24 @@ window.renderPublicStats = function() {
     if (summaryContainer) {
         summaryContainer.innerHTML = `
             <div class="stats-summary-grid mb-4">
-                <div class="summary-card"><div class="summary-label">邱冗匳骭ｲ繧ｰ繝ｫ繝ｼ繝・/div><div class="summary-value">${groups} <small>邨・/small></div></div>
-                <div class="summary-card"><div class="summary-label">驥｣繧雁盾蜉閠・粋險・/div><div class="summary-value">${fishers} <small>/ ${state.settings.capacityTotal}</small></div></div>
-                <div class="summary-card"><div class="summary-label">隕句ｭｦ閠・粋險・/div><div class="summary-value">${observers} <small>蜷・/small></div></div>
-                <div class="summary-card"><div class="summary-label">譛邨よ峩譁ｰ</div><div class="summary-value" style="font-size:1.2rem;">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div>
+                <div class="summary-card"><div class="summary-label">総登録グループ</div><div class="summary-value">${groups} <small>組</small></div></div>
+                <div class="summary-card"><div class="summary-label">釣り参加者合計</div><div class="summary-value">${fishers} <small>/ ${state.settings.capacityTotal}</small></div></div>
+                <div class="summary-card"><div class="summary-label">見学者合計</div><div class="summary-value">${observers} <small>名</small></div></div>
+                <div class="summary-card"><div class="summary-label">最終更新</div><div class="summary-value" style="font-size:1.2rem;">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div>
             </div>`;
     }
 }
 
 window.renderMintsuriCoordinatorView = function() {
-    renderGenericCoordinatorView('縺ｿ繧馴・繧・, 'mintsuri');
+    renderGenericCoordinatorView('みん釣り', 'mintsuri');
 };
 
 window.renderHarimitsuCoordinatorView = function() {
-    renderGenericCoordinatorView('繝上Μ繝溘ヤ', 'harimitsu');
+    renderGenericCoordinatorView('ハリミツ', 'harimitsu');
 };
 
 window.renderSuihoCoordinatorView = function() {
-    renderGenericCoordinatorView('豌ｴ螳・, 'suiho');
+    renderGenericCoordinatorView('水宝', 'suiho');
 };
 
 /**
@@ -2409,10 +2409,10 @@ function renderGenericCoordinatorView(sourceName, prefix) {
     
     // v8.1.39: Fixed capacity key mapping
     const capacityKeyMap = {
-        '縺ｿ繧馴・繧・: 'capacityMintsuri',
-        '繝上Μ繝溘ヤ': 'capacityHarimitsu',
-        '豌ｴ螳・: 'capacitySuiho',
-        '荳闊ｬ': 'capacityGeneral'
+        'みん釣り': 'capacityMintsuri',
+        'ハリミツ': 'capacityHarimitsu',
+        '水宝': 'capacitySuiho',
+        '一般': 'capacityGeneral'
     };
     const capacityKey = capacityKeyMap[sourceName];
     const capacity = state.settings[capacityKey] || 0;
@@ -2420,10 +2420,10 @@ function renderGenericCoordinatorView(sourceName, prefix) {
     if (summary) {
         summary.innerHTML = `
             <div class="stats-summary-grid">
-                <div class="summary-card"><div class="summary-label">${sourceName} 蜷郁ｨ育ｵ・焚</div><div class="summary-value">${sourceEntries.length} <small>邨・/small></div></div>
-                <div class="summary-card"><div class="summary-label">${sourceName} 驥｣繧贋ｺｺ謨ｰ</div><div class="summary-value">${totalFishers} <small>/ ${capacity}</small></div></div>
-                <div class="summary-card"><div class="summary-label">隕句ｭｦ莠ｺ謨ｰ</div><div class="summary-value">${totalObservers} <small>蜷・/small></div></div>
-                <div class="summary-card"><div class="summary-label">蜈・ｶｳ邇・/div><div class="summary-value">${capacity > 0 ? Math.round((totalFishers/capacity)*100) : 0}%</div></div>
+                <div class="summary-card"><div class="summary-label">${sourceName} 合計組数</div><div class="summary-value">${sourceEntries.length} <small>組</small></div></div>
+                <div class="summary-card"><div class="summary-label">${sourceName} 釣り人数</div><div class="summary-value">${totalFishers} <small>/ ${capacity}</small></div></div>
+                <div class="summary-card"><div class="summary-label">見学人数</div><div class="summary-value">${totalObservers} <small>名</small></div></div>
+                <div class="summary-card"><div class="summary-label">充足率</div><div class="summary-value">${capacity > 0 ? Math.round((totalFishers/capacity)*100) : 0}%</div></div>
             </div>`;
     }
 
@@ -2450,13 +2450,13 @@ function renderGenericCoordinatorView(sourceName, prefix) {
                 <td><small>${regTime}</small></td>
                 <td>
                     <div style="display:flex; gap:0.3rem;">
-                        <button class="btn-outline btn-small" onclick="showEntryDetails('${e.id}')">遒ｺ隱・/button>
-                        ${prefix === 'harimitsu' ? `<button class="btn-primary btn-small" onclick="requestAdminEdit('${e.id}')">菫ｮ豁｣</button>` : ''}
+                        <button class="btn-outline btn-small" onclick="showEntryDetails('${e.id}')">確認</button>
+                        ${prefix === 'harimitsu' ? `<button class="btn-primary btn-small" onclick="requestAdminEdit('${e.id}')">修正</button>` : ''}
                     </div>
                 </td>
             </tr>
         `;
-        }).join('') || '<tr><td colspan="6" style="text-align:center; padding:2rem;">隧ｲ蠖薙☆繧狗匳骭ｲ縺ｯ縺ゅｊ縺ｾ縺帙ｓ</td></tr>';
+        }).join('') || '<tr><td colspan="6" style="text-align:center; padding:2rem;">該当する登録はありません</td></tr>';
 
     renderBreakdownStats(sourceName, `${prefix}-`);
     window.scrollTo(0, scrollPos);
@@ -2485,22 +2485,22 @@ function renderActiveCoordinatorView() {
 }
 
 window.exportMintsuriCSV = function() {
-    exportGenericCSV('縺ｿ繧馴・繧・, 'mintsuri_export');
+    exportGenericCSV('みん釣り', 'mintsuri_export');
 }
 
 window.exportHarimitsuCSV = function() {
-    exportGenericCSV('繝上Μ繝溘ヤ', 'harimitsu_export');
+    exportGenericCSV('ハリミツ', 'harimitsu_export');
 }
 
 window.exportSuihoCSV = function() {
-    exportGenericCSV('豌ｴ螳・, 'suiho_export');
+    exportGenericCSV('水宝', 'suiho_export');
 }
 
 function exportGenericCSV(sourceName, fileName) {
     const targetEntries = state.entries.filter(e => e.source === sourceName && e.status !== 'cancelled');
-    if (targetEntries.length === 0) return alert('繝・・繧ｿ縺後≠繧翫∪縺帙ｓ');
+    if (targetEntries.length === 0) return alert('データがありません');
 
-    const headers = ['蜿嶺ｻ倡分蜿ｷ', '繧ｰ繝ｫ繝ｼ繝怜錐', '莉｣陦ｨ閠・錐', '髮ｻ隧ｱ逡ｪ蜿ｷ', '繝｡繝ｼ繝ｫ', '驥｣繧贋ｺｺ謨ｰ', '隕句ｭｦ莠ｺ謨ｰ', '逋ｻ骭ｲ譎る俣'];
+    const headers = ['受付番号', 'グループ名', '代表者名', '電話番号', 'メール', '釣り人数', '見学人数', '登録時間'];
     const rows = targetEntries.map(e => [
         e.id, e.groupName, e.representative, e.phone, e.email, e.fishers, e.observers, formatDateForCSV(e.timestamp)
     ]);
@@ -2518,24 +2518,24 @@ function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent)
     const html = `
         <div class="stats-summary-grid">
             <div class="summary-card" style="border-top: 5px solid var(--primary-color);">
-                <div class="summary-label">驥｣繧雁盾蜉閠・粋險・/div>
+                <div class="summary-label">釣り参加者合計</div>
                 <div class="summary-value"><span class="current-fishers">${fishers}</span> <small>/ ${state.settings.capacityTotal}</small></div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">邱冗匳骭ｲ繧ｰ繝ｫ繝ｼ繝・/div>
-                <div class="summary-value">${groups} <small>邨・/small></div>
+                <div class="summary-label">総登録グループ</div>
+                <div class="summary-value">${groups} <small>組</small></div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">隕句ｭｦ閠・粋險・/div>
-                <div class="summary-value">${observers} <small>蜷・/small></div>
+                <div class="summary-label">見学者合計</div>
+                <div class="summary-value">${observers} <small>名</small></div>
             </div>
             <div class="summary-card" style="border-top: 5px solid #10b981;">
-                <div class="summary-label">蠖捺律蜿嶺ｻ倡憾豕・/div>
+                <div class="summary-label">当日受付状況</div>
                 <div class="summary-value" style="font-size: 1.1rem; line-height: 1.4;">
-                    <span style="color: var(--primary-color)">譚･蝣ｴ: <span class="checked-in-count">${checkedIn}</span></span> / 
-                    <span style="color: var(--error-color)">谺蟶ｭ: <span class="absent-count">${absent}</span></span>
+                    <span style="color: var(--primary-color)">来場: <span class="checked-in-count">${checkedIn}</span></span> / 
+                    <span style="color: var(--error-color)">欠席: <span class="absent-count">${absent}</span></span>
                 </div>
-                <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">蜈ｨ <span class="total-groups-count">${groups}</span> 邨・/div>
+                <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">全 <span class="total-groups-count">${groups}</span> 組</div>
             </div>
         </div>
     `;
@@ -2545,17 +2545,17 @@ function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent)
 
 // Admin Debug Methods
 async function testEmailFeature() {
-    const testEmail = prompt("繝・せ繝医Γ繝ｼ繝ｫ縺ｮ騾∽ｿ｡蜈医ｒ蜈･蜉帙＠縺ｦ縺上□縺輔＞:", "test@example.com");
+    const testEmail = prompt("テストメールの送信先を入力してください:", "test@example.com");
     if (!testEmail) return;
-    showToast('繝・せ繝医Γ繝ｼ繝ｫ騾∽ｿ｡荳ｭ...', 'info');
+    showToast('テストメール送信中...', 'info');
     try {
         await sendEmailViaGAS({
-            action: 'sendEmail', id: 'TEST-000', groupName: '繝・せ繝・,
-            email: testEmail, representative: '繝・せ繝域ｰ丞錐',
-            fishers: 1, observers: 0, source: '荳闊ｬ', participants: [{name: '繝・せ繝亥盾蜉閠・, type: 'fisher'}]
+            action: 'sendEmail', id: 'TEST-000', groupName: 'テスト',
+            email: testEmail, representative: 'テスト氏名',
+            fishers: 1, observers: 0, source: '一般', participants: [{name: 'テスト参加者', type: 'fisher'}]
         });
-        alert("騾∽ｿ｡繝ｪ繧ｯ繧ｨ繧ｹ繝亥ｮ御ｺ・りｨｭ螳啅RL: " + GAS_WEB_APP_URL);
-    } catch (e) { alert("繧ｨ繝ｩ繝ｼ: " + e.message); }
+        alert("送信リクエスト完了。設定URL: " + GAS_WEB_APP_URL);
+    } catch (e) { alert("エラー: " + e.message); }
 }
 
 
@@ -2614,7 +2614,7 @@ function updateReceptionList() {
         // Completion Filter
         if (!showCompleted && e.isCompleted) return;
 
-        const badgeClass = e.source === '縺ｿ繧馴・繧・ ? 'badge-mintsuri' : e.source === '荳闊ｬ' ? 'badge-ippan' : e.source === '繝上Μ繝溘ヤ' ? 'badge-harimitsu' : 'badge-suiho';
+        const badgeClass = e.source === 'みん釣り' ? 'badge-mintsuri' : e.source === '一般' ? 'badge-ippan' : e.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho';
         
         html += `
             <div class="reception-group-item ${activeReceptionEntryId === e.id ? 'active' : ''} ${e.isCompleted ? 'completed' : ''}" 
@@ -2626,8 +2626,8 @@ function updateReceptionList() {
                 <div class="item-meta" style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="font-size:1rem; color:#636e72;">${e.representative}</div>
                     <div style="display:flex; align-items:center; gap:0.5rem;">
-                        <span style="font-size:0.9rem; font-weight:700; color: #0984e3;">${e.isCompleted ? '笨・蜿嶺ｻ俶ｸ・ : `${e.finishedCount}/${e.totalCount}`}</span>
-                        ${!e.isCompleted ? `<button onclick="event.stopPropagation(); updateGroupStatus('${e.id}', 'checked-in')" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: var(--primary-color); border: none; border-radius: 4px; color: white; cursor: pointer;">蜈ｨ蜩｡蜿嶺ｻ・/button>` : ''}
+                        <span style="font-size:0.9rem; font-weight:700; color: #0984e3;">${e.isCompleted ? '✅ 受付済' : `${e.finishedCount}/${e.totalCount}`}</span>
+                        ${!e.isCompleted ? `<button onclick="event.stopPropagation(); updateGroupStatus('${e.id}', 'checked-in')" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: var(--primary-color); border: none; border-radius: 4px; color: white; cursor: pointer;">全員受付</button>` : ''}
                     </div>
                 </div>
             </div>
@@ -2653,8 +2653,8 @@ function renderReceptionDesk() {
     if (!entry) {
         desk.innerHTML = `
             <div class="reception-placeholder">
-                <i class="icon-search">剥</i>
-                <p>蟾ｦ蛛ｴ縺ｮ繝ｪ繧ｹ繝医°繧峨げ繝ｫ繝ｼ繝励ｒ驕ｸ謚槭＠縺ｦ縺上□縺輔＞縲・/p>
+                <i class="icon-search">🔍</i>
+                <p>左側のリストからグループを選択してください。</p>
             </div>
         `;
         return;
@@ -2664,40 +2664,40 @@ function renderReceptionDesk() {
         <div class="desk-header" style="background: #eef2ff; border-bottom: 2px solid var(--primary-color); padding: 1.5rem; border-radius: 8px 8px 0 0;">
             <div class="desk-title-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                 <div class="desk-group-name" style="font-size: 1.8rem; font-weight: 900; color: var(--primary-color);">${entry.groupName}</div>
-                <div class="badge ${entry.source === '縺ｿ繧馴・繧・ ? 'badge-mintsuri' : entry.source === '荳闊ｬ' ? 'badge-ippan' : entry.source === '繝上Μ繝溘ヤ' ? 'badge-harimitsu' : 'badge-suiho'}" style="font-size: 1.2rem; padding: 0.5rem 1rem;">${entry.source}</div>
+                <div class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}" style="font-size: 1.2rem; padding: 0.5rem 1rem;">${entry.source}</div>
             </div>
             <div class="desk-meta" style="font-size: 1rem; color: #475569; font-weight: 600;">
                 <span style="background: white; padding: 2px 8px; border-radius: 4px; border: 1px solid #cbd5e1;">ID: ${entry.id}</span>
-                <span style="margin-left: 1rem;">莉｣陦ｨ閠・ ${entry.representative}</span>
+                <span style="margin-left: 1rem;">代表者: ${entry.representative}</span>
                 <span style="margin-left: 1rem;">TEL: ${entry.phone}</span>
             </div>
         </div>
 
         <div class="participant-check-list" style="padding: 1.5rem; background: white;">
-            <div class="section-title" style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; border-left-width: 4px;">蜿ょ刈繝｡繝ｳ繝舌・蛟句挨縺ｮ蜿嶺ｻ倡憾豕・/div>
+            <div class="section-title" style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; border-left-width: 4px;">参加メンバー個別の受付状況</div>
             
             ${entry.participants.map((p, idx) => {
                 const typeClass = p.type === 'fisher' ? 'p-badge-fisher' : 'p-badge-observer';
-                const typeLabel = p.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ';
+                const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
                 const rowStatusClass = p.status === 'checked-in' ? 'checked-in' : (p.status === 'absent' ? 'absent' : '');
                 
                 return `
                 <div class="participant-check-row ${rowStatusClass}" style="margin-bottom: 12px; padding: 1rem; border-radius: 12px; border: 2px solid ${p.status === 'checked-in' ? '#10b981' : (p.status === 'absent' ? '#ef4444' : '#e2e8f0')}; display: flex; align-items: center; justify-content: space-between; background: ${p.status === 'checked-in' ? '#f0fdf4' : (p.status === 'absent' ? '#fef2f2' : 'white')}; transition: all 0.2s;">
                     <div class="p-info" style="display: flex; align-items: center; gap: 1rem; flex: 1;">
-                        <div style="font-size: 1.5rem; width: 40px; text-align: center;">${p.status === 'checked-in' ? '笨・ : (p.status === 'absent' ? '笶・ : '筮・)}</div>
+                        <div style="font-size: 1.5rem; width: 40px; text-align: center;">${p.status === 'checked-in' ? '✅' : (p.status === 'absent' ? '❌' : '⬜')}</div>
                         <div>
                             <div class="p-name" style="font-size: 1.25rem; font-weight: 800; color: #1e293b;">
                                 <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}" style="margin-right: 8px;">${typeLabel}</span>
-                                ${p.name} <small style="font-weight: normal; color: #64748b;">(${p.nickname || '繝九ャ繧ｯ繝阪・繝辟｡'})</small>
+                                ${p.name} <small style="font-weight: normal; color: #64748b;">(${p.nickname || 'ニックネーム無'})</small>
                             </div>
                             <div class="p-meta" style="font-size: 0.9rem; color: #64748b; margin-top: 4px;">
-                                ${p.region || '蝨ｰ蝓滉ｸ肴・'} | ${genderLabels[p.gender] || '-'} | ${ageLabels[p.age] || '-'} | T繧ｷ繝｣繝・ [<strong>${p.tshirtSize || '荳肴・'}</strong>]
+                                ${p.region || '地域不明'} | ${genderLabels[p.gender] || '-'} | ${ageLabels[p.age] || '-'} | Tシャツ: [<strong>${p.tshirtSize || '不明'}</strong>]
                             </div>
                         </div>
                     </div>
                     <div class="p-status-actions" style="display: flex; gap: 8px;">
-                        <button class="btn-status in ${p.status === 'checked-in' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'checked-in')" style="padding: 1rem 1.5rem; font-size: 1rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #10b981; background: ${p.status === 'checked-in' ? '#10b981' : 'white'}; color: ${p.status === 'checked-in' ? 'white' : '#10b981'}; min-width: 100px;">譚･蝣ｴ</button>
-                        <button class="btn-status out ${p.status === 'absent' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'absent')" style="padding: 1rem 1.5rem; font-size: 1rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #ef4444; background: ${p.status === 'absent' ? '#ef4444' : 'white'}; color: ${p.status === 'absent' ? 'white' : '#ef4444'}; min-width: 100px;">谺蟶ｭ</button>
+                        <button class="btn-status in ${p.status === 'checked-in' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'checked-in')" style="padding: 1rem 1.5rem; font-size: 1rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #10b981; background: ${p.status === 'checked-in' ? '#10b981' : 'white'}; color: ${p.status === 'checked-in' ? 'white' : '#10b981'}; min-width: 100px;">来場</button>
+                        <button class="btn-status out ${p.status === 'absent' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'absent')" style="padding: 1rem 1.5rem; font-size: 1rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #ef4444; background: ${p.status === 'absent' ? '#ef4444' : 'white'}; color: ${p.status === 'absent' ? 'white' : '#ef4444'}; min-width: 100px;">欠席</button>
                     </div>
                 </div>
                 `;
@@ -2705,7 +2705,7 @@ function renderReceptionDesk() {
         </div>
 
         <div class="desk-footer" style="padding: 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; align-items: center; border-radius: 0 -0 8px 8px; gap: 1rem;">
-            <button class="btn-primary btn-large" onclick="window.updateGroupStatus('${entry.id}', 'checked-in')" style="padding: 1rem 2rem; font-size: 1.2rem; white-space: nowrap;">蜈ｨ蜩｡縺ｾ縺ｨ繧√※蜿嶺ｻ・/button>
+            <button class="btn-primary btn-large" onclick="window.updateGroupStatus('${entry.id}', 'checked-in')" style="padding: 1rem 2rem; font-size: 1.2rem; white-space: nowrap;">全員まとめて受付</button>
         </div>
     `;
 }
@@ -2725,8 +2725,8 @@ window.updateParticipantStatus = function (entryId, pIdx, status) {
     syncGroupStatusFromParticipants(entry);
 
     if (!isTogglingOff) {
-        const statusLabel = status === 'checked-in' ? '蜿嶺ｻ俶ｸ・ : status === 'absent' ? '谺蟶ｭ' : '譛ｪ蜿嶺ｻ・;
-        showToast(`${entry.participants[pIdx].name} 讒倥ｒ縲・{statusLabel}縲阪↓譖ｴ譁ｰ縺励∪縺励◆`, 'info');
+        const statusLabel = status === 'checked-in' ? '受付済' : status === 'absent' ? '欠席' : '未受付';
+        showToast(`${entry.participants[pIdx].name} 様を「${statusLabel}」に更新しました`, 'info');
     }
 
     entry.lastModified = new Date().toLocaleString('ja-JP');
@@ -2742,7 +2742,7 @@ window.updateGroupStatus = function (entryId, status) {
     if (!entry) return;
 
     entry.participants.forEach(p => {
-        // status縺・'checked-in' 縺ｮ蝣ｴ蜷医∵里縺ｫ 'absent' 縺ｮ莠ｺ縺ｯ荳頑嶌縺阪＠縺ｪ縺・
+        // statusが 'checked-in' の場合、既に 'absent' の人は上書きしない
         if (status === 'checked-in' && p.status === 'absent') {
             return;
         }
@@ -2751,7 +2751,7 @@ window.updateGroupStatus = function (entryId, status) {
     syncGroupStatusFromParticipants(entry);
 
     if (status === 'checked-in') {
-        showToast('繧ｰ繝ｫ繝ｼ繝怜・蜩｡繧貞女莉倥＠縺ｾ縺励◆', 'success');
+        showToast('グループ全員を受付しました', 'success');
     }
 
     entry.lastModified = new Date().toLocaleString('ja-JP');
@@ -2789,7 +2789,7 @@ window.openIkesuModal = function (id = null) {
     if (id) {
         const ikesu = state.settings.ikesuList.find(i => i.id === id);
         if (ikesu) {
-            document.getElementById('ikesu-modal-title').textContent = "繧､繧ｱ繧ｹ縺ｮ邱ｨ髮・;
+            document.getElementById('ikesu-modal-title').textContent = "イケスの編集";
             document.getElementById('ikesu-edit-id').value = ikesu.id;
             document.getElementById('ikesu-name').value = ikesu.name;
             document.getElementById('ikesu-capacity').value = ikesu.capacity;
@@ -2798,7 +2798,7 @@ window.openIkesuModal = function (id = null) {
             return;
         }
     }
-    document.getElementById('ikesu-modal-title').textContent = "繧､繧ｱ繧ｹ縺ｮ霑ｽ蜉";
+    document.getElementById('ikesu-modal-title').textContent = "イケスの追加";
     document.getElementById('ikesu-edit-id').value = '';
     document.getElementById('ikesu-name').value = '';
     document.getElementById('ikesu-capacity').value = '15';
@@ -2818,7 +2818,7 @@ window.saveIkesu = function () {
     const passcode = passEl ? passEl.value.trim() : "";
 
     if (!name || isNaN(capacity) || capacity < 1) {
-        alert("蜷榊燕縺ｨ螳壼藤・・莉･荳奇ｼ峨ｒ豁｣縺励￥蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・);
+        alert("名前と定員（1以上）を正しく入力してください。");
         return;
     }
 
@@ -2847,7 +2847,7 @@ window.saveIkesu = function () {
 };
 
 window.deleteIkesu = function (id) {
-    if (!confirm('譛ｬ蠖薙↓縺薙・繧､繧ｱ繧ｹ繧貞炎髯､縺励∪縺吶°・歃n蜑ｲ繧雁ｽ薙※繧峨ｌ縺ｦ縺・◆莠ｺ縺ｯ譛ｪ蜑ｲ繧雁ｽ薙※縺ｫ謌ｻ繧翫∪縺吶・)) return;
+    if (!confirm('本当にこのイケスを削除しますか？\n割り当てられていた人は未割り当てに戻ります。')) return;
     state.settings.ikesuList = state.settings.ikesuList.filter(i => i.id !== id);
     state.entries.forEach(e => {
         e.participants.forEach(p => {
@@ -2954,13 +2954,13 @@ window.renderIkesuWorkspace = function () {
                             ${isFull ? `draggable="true" ondragstart="dragGroup(event, '${e.id}')"` : ''}>
                            <div class="drag-item-header">
                                <div><strong>[${e.id}] ${e.groupName}</strong></div>
-                               <button class="btn-expand" onclick="toggleGroupExpand('${e.id}')">竏ｨ</button>
+                               <button class="btn-expand" onclick="toggleGroupExpand('${e.id}')">∨</button>
                            </div>
                            <div class="drag-item-participants" id="drag-parts-${e.id}">
                                ${unassignedParts.map(item => `
                                    <div class="drag-item-person draggable" draggable="true" ondragstart="dragPerson(event, '${e.id}', ${item.idx})">
                                        <span>${item.p.name}</span>
-                                       <span class="badge ${item.p.type==='fisher'?'':'badge-observer'}">${item.p.type==='fisher'?'驥｣繧・:'隕句ｭｦ'}</span>
+                                       <span class="badge ${item.p.type==='fisher'?'':'badge-observer'}">${item.p.type==='fisher'?'釣り':'見学'}</span>
                                    </div>
                                `).join('')}
                            </div>
@@ -2982,9 +2982,9 @@ window.renderIkesuWorkspace = function () {
         box.innerHTML = `
             <div class="ikesu-header">
                 <span class="ikesu-title">${ik.name}</span>
-                <button class="btn-text" onclick="window.openIkesuModal('${ik.id}')">笨擾ｸ・/button>
+                <button class="btn-text" onclick="window.openIkesuModal('${ik.id}')">✏️</button>
             </div>
-            <div class="ikesu-capacity">驥｣繧・ ${data.fishers}/${ik.capacity} (隕句ｭｦ: ${data.observers})</div>
+            <div class="ikesu-capacity">釣り: ${data.fishers}/${ik.capacity} (見学: ${data.observers})</div>
             <div class="ikesu-drop-area">
                 ${Object.values(data.items.reduce((acc, item) => {
                     if (!acc[item.entry.id]) acc[item.entry.id] = { entry: item.entry, parts: [] };
@@ -3029,12 +3029,12 @@ window.verifyLeaderAuth = function() {
     const input = document.getElementById('leader-passcode-input').value;
     const ikesu = state.settings.ikesuList?.find(ik => ik.id === ikId);
     if (ikesu && (input === ikesu.passcode || input === state.settings.adminPassword)) {
-        showToast('隱崎ｨｼ謌仙粥', 'success');
+        showToast('認証成功', 'success');
         document.getElementById('leader-step-1').classList.add('hidden');
         document.getElementById('leader-step-2').classList.remove('hidden');
         renderLeaderEntryTable();
     } else {
-        showToast('證苓ｨｼ逡ｪ蜿ｷ縺碁＆縺・∪縺・, 'error');
+        showToast('暗証番号が違います', 'error');
     }
 };
 
@@ -3052,7 +3052,7 @@ window.renderLeaderEntryTable = function() {
 
     container.innerHTML = `
         <table class="leader-table">
-            <thead><tr><th>豌丞錐</th><th>髱堤黄(2pt)</th><th>魃帷ｭ・1pt)</th><th>蟆剰ｨ・/th></tr></thead>
+            <thead><tr><th>氏名</th><th>青物(2pt)</th><th>鯛等(1pt)</th><th>小計</th></tr></thead>
             <tbody>
                 ${members.map(m => `
                     <tr data-entry="${m.entry.id}" data-idx="${m.idx}">
@@ -3102,7 +3102,7 @@ window.commitLeaderResultsSave = function() {
         }
     });
     saveData();
-    showToast('菫晏ｭ倥＠縺ｾ縺励◆', 'success');
+    showToast('保存しました', 'success');
     window.location.reload();
 };
 
@@ -3120,29 +3120,29 @@ window.renderIkesuPrintView = function() {
         html += `
             <div class="print-ikesu-sheet" style="page-break-after: always; padding: 20px; border-bottom: 2px solid #333;">
                 <h2 style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>${ik.name} 繝｡繝ｳ繝舌・陦ｨ</span>
-                    <span style="font-size:1rem; background:#eee; padding:5px 10px; border-radius:4px;">繝ｪ繝ｼ繝繝ｼ逕ｨ 證苓ｨｼ逡ｪ蜿ｷ: <strong>${ik.passcode}</strong></span>
+                    <span>${ik.name} メンバー表</span>
+                    <span style="font-size:1rem; background:#eee; padding:5px 10px; border-radius:4px;">リーダー用 暗証番号: <strong>${ik.passcode}</strong></span>
                 </h2>
                 <table class="print-table" style="width:100%; border-collapse:collapse; margin-top:20px;">
-                    <thead><tr style="background:#f0f0f0;"><th>繧ｰ繝ｫ繝ｼ繝・/th><th>豌丞錐</th><th>蛹ｺ蛻・/th><th>蛯呵・/th></tr></thead>
+                    <thead><tr style="background:#f0f0f0;"><th>グループ</th><th>氏名</th><th>区分</th><th>備考</th></tr></thead>
                     <tbody>
-                        ${members.map(m => `<tr><td>${m.e.groupName}</td><td>${m.p.name}</td><td>${m.p.type==='fisher'?'驥｣繧・:'隕句ｭｦ'}</td><td>${m.p.isLeader?'笘・Μ繝ｼ繝繝ｼ':''}</td></tr>`).join('')}
+                        ${members.map(m => `<tr><td>${m.e.groupName}</td><td>${m.p.name}</td><td>${m.p.type==='fisher'?'釣り':'見学'}</td><td>${m.p.isLeader?'★リーダー':''}</td></tr>`).join('')}
                     </tbody>
                 </table>
             </div>
         `;
     });
-    container.innerHTML = html || "繝・・繧ｿ縺ｪ縺・;
+    container.innerHTML = html || "データなし";
 };
 
 /* --- SYSTEM STABILIZATION FUNCTIONS RESTORED v8.0.7 --- */
 
 function updateAppTitle() {
     const titleEl = document.getElementById('app-title');
-    const competitionName = state.settings.competitionName || "驥｣繧雁､ｧ莨・蜿嶺ｻ・;
+    const competitionName = state.settings.competitionName || "釣り大会 受付";
     if (titleEl) {
-        if (currentViewId === 'dashboard-view') titleEl.textContent = `邂｡逅・・ ${competitionName}`;
-        else if (currentViewId === 'reception-view') titleEl.textContent = `蠖捺律蜿嶺ｻ・ ${competitionName}`;
+        if (currentViewId === 'dashboard-view') titleEl.textContent = `管理者: ${competitionName}`;
+        else if (currentViewId === 'reception-view') titleEl.textContent = `当日受付: ${competitionName}`;
         else titleEl.textContent = competitionName;
     }
     document.title = competitionName;
@@ -3170,7 +3170,7 @@ function handleSettingsUpdate(e) {
     updateDashboard();
     checkTimeframe();
     updateAppTitle();
-    showToast('螟ｧ莨夊ｨｭ螳壹ｒ縺吶∋縺ｦ菫晏ｭ倥＠縺ｾ縺励◆', 'success');
+    showToast('大会設定をすべて保存しました', 'success');
 }
 
 window.updateCapacityTotal = function() {
@@ -3184,10 +3184,10 @@ window.updateCapacityTotal = function() {
 };
 
 window.confirmReset = async function () {
-    if (confirm('蜈ｨ縺ｦ縺ｮ蜷咲ｰｿ繝・・繧ｿ繧貞炎髯､縺励∪縺吶よ悽蠖薙↓繧医ｍ縺励＞縺ｧ縺吶°・・)) {
+    if (confirm('全ての名簿データを削除します。本当によろしいですか？')) {
         state.entries = [];
         state.lastUpdated = Date.now();
-        showToast('繝ｪ繧ｻ繝・ヨ荳ｭ...', 'info');
+        showToast('リセット中...', 'info');
         try {
             await syncToCloud();
             localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
@@ -3209,7 +3209,7 @@ function generateAdminQRCode() {
     if (!container) return;
     container.innerHTML = "";
     if (typeof QRCode === 'undefined') {
-        container.innerHTML = "<p style='font-size:0.8rem; color:var(--text-muted);'>QR繧ｳ繝ｼ繝峨Λ繧､繝悶Λ繝ｪ隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</p>";
+        container.innerHTML = "<p style='font-size:0.8rem; color:var(--text-muted);'>QRコードライブラリ読み込み中...</p>";
         return;
     }
     const baseUrl = window.location.href.split('?')[0].split('#')[0];
@@ -3237,16 +3237,16 @@ function setVal(id, val) {
 }
 
 function handleCheckStatus() {
-    const searchVal = prompt("縺雁錐蜑搾ｼ井ｻ｣陦ｨ閠・ｼ峨ｒ蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・);
+    const searchVal = prompt("お名前（代表者）を入力してください。");
     if (!searchVal) return;
     
     dashboardFilter = 'all';
     const matches = state.entries.filter(e => e.representative.includes(searchVal));
     if (matches.length > 0) {
-        alert(`${matches.length} 莉ｶ隕九▽縺九ｊ縺ｾ縺励◆縲よ怙譁ｰ縺ｮ逡ｪ蜿ｷ縺ｯ ${matches[0].id} 縺ｧ縺吶Ａ);
+        alert(`${matches.length} 件見つかりました。最新の番号は ${matches[0].id} です。`);
         location.reload();
     } else {
-        alert("隕九▽縺九ｊ縺ｾ縺帙ｓ縺ｧ縺励◆縲ゅｂ縺・ｸ蠎ｦ隧ｦ縺吶°縲∽ｺ句漁螻縺ｸ縺雁撫縺・粋繧上○縺上□縺輔＞縲・);
+        alert("見つかりませんでした。もう一度試すか、事務局へお問い合わせください。");
     }
 }
 
@@ -3255,12 +3255,12 @@ function handleCheckStatus() {
  */
 window.hardDeleteEntry = async function (id) {
     if (!isAdminAuth) return;
-    if (!confirm(`繧ｨ繝ｳ繝医Μ繝ｼ ${id} 繧貞ｮ悟・縺ｫ蜑企勁縺励∪縺吶°・歃n(騾∽ｿ｡蠕後√し繝ｼ繝舌・縺九ｉ繧ょｮ悟・縺ｫ蜑企勁縺輔ｌ縺ｾ縺吶ゅユ繧ｹ繝亥・蜉帙・謨ｴ逅・↓菴ｿ逕ｨ縺励※縺上□縺輔＞)`)) return;
+    if (!confirm(`エントリー ${id} を完全に削除しますか？\n(送信後、サーバーからも完全に削除されます。テスト入力の整理に使用してください)`)) return;
 
     try {
         const idx = state.entries.findIndex(e => e.id === id);
         if (idx === -1) {
-            showToast('繧ｨ繝ｳ繝医Μ繝ｼ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ', 'error');
+            showToast('エントリーが見つかりません', 'error');
             return;
         }
 
@@ -3269,7 +3269,7 @@ window.hardDeleteEntry = async function (id) {
         state.deletedIds.push(id);
 
         state.entries.splice(idx, 1);
-        showToast('繧ｨ繝ｳ繝医Μ繝ｼ繧貞炎髯､縺励∪縺励◆', 'success');
+        showToast('エントリーを削除しました', 'success');
 
         // Refresh UI
         updateDashboard();
@@ -3279,7 +3279,7 @@ window.hardDeleteEntry = async function (id) {
         await saveData();
     } catch (err) {
         console.error("Deletion failed:", err);
-        showToast('蜑企勁縺ｫ螟ｱ謨励＠縺ｾ縺励◆', 'error');
+        showToast('削除に失敗しました', 'error');
     }
 };
 
@@ -3310,7 +3310,7 @@ window.showEntryDetails = function (id) {
         }
     }
 
-    if (title) title.textContent = `[${entry.id}] ${entry.groupName} 隧ｳ邏ｰ`;
+    if (title) title.textContent = `[${entry.id}] ${entry.groupName} 詳細`;
 
     // Calculate Scores for display
     let groupPoints = 0;
@@ -3323,29 +3323,29 @@ window.showEntryDetails = function (id) {
     let participantsHtml = entry.participants.map((p, idx) => `
         <div style="padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; background: ${p.type === 'observer' ? '#f8f9fa' : '#fff'}">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <strong>${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}${p.gender === 'male' ? '笙・ : (p.gender === 'female' ? '笙' : '')}</strong>
-                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}">${p.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ'}</span>
+                <strong>${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}${p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '')}</strong>
+                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}">${p.type === 'fisher' ? '釣り' : '見学'}</span>
             </div>
             <div style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">
-                ${genderLabels[p.gender] || '-'} / ${ageLabels[p.age] || '-'} / ${p.region || '蝨ｰ蝓滉ｸ肴・'} / T繧ｷ繝｣繝・ ${p.tshirtSize || '縺ｪ縺・}
+                ${genderLabels[p.gender] || '-'} / ${ageLabels[p.age] || '-'} / ${p.region || '地域不明'} / Tシャツ: ${p.tshirtSize || 'なし'}
             </div>
             ${p.type === 'fisher' ? `
             <div style="margin-top: 5px; font-weight: bold; color: var(--primary-color);">
-                ${p.catchA || 0}蛹ｹ (螟ｧ迚ｩ) / ${p.catchB || 0}蛹ｹ (縺昴・莉・
+                ${p.catchA || 0}匹 (大物) / ${p.catchB || 0}匹 (その他)
             </div>` : ''}
         </div>
     `).join('');
 
     body.innerHTML = `
         <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f1f5f9; border-radius: 8px;">
-            <p><strong>莉｣陦ｨ閠・</strong> ${entry.representative}</p>
-            <p><strong>髮ｻ隧ｱ逡ｪ蜿ｷ:</strong> ${entry.phone}</p>
-            <p><strong>繝｡繝ｼ繝ｫ:</strong> ${entry.email}</p>
-            <p><strong>逋ｻ骭ｲ蛹ｺ蛻・</strong> <span class="badge ${entry.source === '縺ｿ繧馴・繧・ ? 'badge-mintsuri' : entry.source === '荳闊ｬ' ? 'badge-ippan' : entry.source === '繝上Μ繝溘ヤ' ? 'badge-harimitsu' : 'badge-suiho'}">${entry.source}</span></p>
-            <p><strong>迴ｾ蝨ｨ縺ｮ迥ｶ諷・</strong> ${entry.status === 'checked-in' ? '笨・蜿嶺ｻ俶ｸ・ : entry.status === 'cancelled' ? '圻 繧ｭ繝｣繝ｳ繧ｻ繝ｫ' : '竢ｳ 蠕・ｩ・}</p>
-            <p><strong>蠕礼せ蜷郁ｨ・</strong> <span style="font-size: 1.2rem; font-weight: 900; color: var(--primary-color);">${groupPoints} pt</span></p>
+            <p><strong>代表者:</strong> ${entry.representative}</p>
+            <p><strong>電話番号:</strong> ${entry.phone}</p>
+            <p><strong>メール:</strong> ${entry.email}</p>
+            <p><strong>登録区分:</strong> <span class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}">${entry.source}</span></p>
+            <p><strong>現在の状態:</strong> ${entry.status === 'checked-in' ? '✅ 受付済' : entry.status === 'cancelled' ? '🚫 キャンセル' : '⏳ 待機'}</p>
+            <p><strong>得点合計:</strong> <span style="font-size: 1.2rem; font-weight: 900; color: var(--primary-color);">${groupPoints} pt</span></p>
         </div>
-        <h4 style="margin-bottom: 0.8rem; font-size: 1rem; color: #475569;">蜿ょ刈閠・・險ｳ (${entry.participants.length}蜷・</h4>
+        <h4 style="margin-bottom: 0.8rem; font-size: 1rem; color: #475569;">参加者内訳 (${entry.participants.length}名)</h4>
         <div>${participantsHtml}</div>
     `;
 
@@ -3367,7 +3367,7 @@ window.requestAdminEdit = function (id) {
     try {
         const entry = state.entries.find(e => e.id === id);
         if (!entry) {
-            showToast('繧ｨ繝ｳ繝医Μ繝ｼ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ', 'error');
+            showToast('エントリーが見つかりません', 'error');
             return;
         }
         
@@ -3383,7 +3383,7 @@ window.requestAdminEdit = function (id) {
         // 3. UI refinements
         window.scrollTo({ top: 0, behavior: 'smooth' });
         const titleEl = document.getElementById('app-title');
-        if (titleEl) titleEl.textContent = "逋ｻ骭ｲ螟画峩: " + entry.id;
+        if (titleEl) titleEl.textContent = "登録変更: " + entry.id;
         
         // 4. Close modal if open
         const modal = document.getElementById('detail-modal');
@@ -3391,7 +3391,7 @@ window.requestAdminEdit = function (id) {
         
     } catch (e) {
         console.error("BORIJIN: requestAdminEdit failed:", e);
-        showToast("邱ｨ髮・判髱｢縺ｸ縺ｮ驕ｷ遘ｻ縺ｫ螟ｱ謨励＠縺ｾ縺励◆", "error");
+        showToast("編集画面への遷移に失敗しました", "error");
     }
 };
 
@@ -3403,7 +3403,7 @@ window.quickCheckIn = async function (id) {
     if (!entry) return;
 
     if (entry.status === 'cancelled') {
-        showToast('繧ｭ繝｣繝ｳ繧ｻ繝ｫ貂医∩縺ｮ繧ｨ繝ｳ繝医Μ繝ｼ縺ｯ蜿嶺ｻ倥〒縺阪∪縺帙ｓ', 'error');
+        showToast('キャンセル済みのエントリーは受付できません', 'error');
         return;
     }
 
@@ -3419,23 +3419,23 @@ window.quickCheckIn = async function (id) {
     entry.lastModified = new Date().toLocaleString('ja-JP');
     if (newStatus === 'checked-in') entry.checkedIn = true;
     
-    showToast(`${entry.groupName} 縺ｮ迥ｶ諷九ｒ縲・{newStatus === 'checked-in' ? '蜿嶺ｻ俶ｸ・ : '譛ｪ蜿嶺ｻ・}縲阪↓譖ｴ譁ｰ荳ｭ...`, 'info');
+    showToast(`${entry.groupName} の状態を「${newStatus === 'checked-in' ? '受付済' : '未受付'}」に更新中...`, 'info');
     
     await saveData();
     updateDashboard();
     updateReceptionList();
-    showToast(`${entry.groupName} 縺ｮ迥ｶ諷九ｒ譖ｴ譁ｰ縺励∪縺励◆`, 'success');
+    showToast(`${entry.groupName} の状態を更新しました`, 'success');
 };
 
 /**
  * v8.1.48: Admin Email Resend
  */
 window.resendEmail = async function (id) {
-    if (!confirm('縺薙・逕ｳ霎ｼ縺ｮ遒ｺ螳壹Γ繝ｼ繝ｫ繧貞・騾√＠縺ｾ縺吶°・・)) return;
+    if (!confirm('この申込の確定メールを再送しますか？')) return;
     const entry = state.entries.find(e => e.id === id);
     if (!entry) return;
 
-    showToast('繝｡繝ｼ繝ｫ蜀埼√さ繝槭Φ繝峨ｒ騾∽ｿ｡荳ｭ...', 'info');
+    showToast('メール再送コマンドを送信中...', 'info');
     try {
         const payload = { action: 'resend_email', id: entry.id };
         const response = await fetch(GAS_WEB_APP_URL, {
@@ -3444,13 +3444,13 @@ window.resendEmail = async function (id) {
         });
         const res = await response.json();
         if (res.status === 'success') {
-            showToast('笨・繝｡繝ｼ繝ｫ繧貞・騾√＠縺ｾ縺励◆', 'success');
+            showToast('✅ メールを再送しました', 'success');
         } else {
             throw new Error(res.message);
         }
     } catch (e) {
         console.error("Email resend failed:", e);
-        showToast('笶・繝｡繝ｼ繝ｫ縺ｮ蜀埼√↓螟ｱ謨励＠縺ｾ縺励◆縲ゅし繝ｼ繝舌・蛛ｴ縺ｮ繝ｭ繧ｰ繧堤｢ｺ隱阪＠縺ｦ縺上□縺輔＞縲・, 'error');
+        showToast('❌ メールの再送に失敗しました。サーバー側のログを確認してください。', 'error');
     }
 };
 
@@ -3458,14 +3458,14 @@ window.resendEmail = async function (id) {
  * v8.1.48: Entry Cancellation
  */
 window.cancelEntry = async function (id) {
-    if (!confirm('縺薙・繧ｨ繝ｳ繝医Μ繝ｼ繧偵檎┌蜉ｹ・医く繝｣繝ｳ繧ｻ繝ｫ・峨阪↓縺励∪縺吶°・歃n窶ｻ繝・・繧ｿ縺ｯ繝槭せ繧ｿ縺ｫ谿九ｊ縺ｾ縺吶′縲・寔險医ｄ蜿怜・縺九ｉ縺ｯ髯､螟悶＆繧後∪縺吶・)) return;
+    if (!confirm('このエントリーを「無効（キャンセル）」にしますか？\n※データはマスタに残りますが、集計や受入からは除外されます。')) return;
     const entry = state.entries.find(e => e.id === id);
     if (entry) {
         entry.status = 'cancelled';
         entry.lastModified = new Date().toLocaleString('ja-JP');
         await saveData();
         updateDashboard();
-        showToast('繧ｨ繝ｳ繝医Μ繝ｼ繧堤┌蜉ｹ蛹悶＠縺ｾ縺励◆', 'info');
+        showToast('エントリーを無効化しました', 'info');
         resetForm(); // Clear the form if we were editing
         switchView(null, 'dashboard-view');
     }
@@ -3481,13 +3481,13 @@ window.restoreEntry = async function (id) {
         entry.lastModified = new Date().toLocaleString('ja-JP');
         await saveData();
         updateDashboard();
-        showToast('繧ｨ繝ｳ繝医Μ繝ｼ繧呈怏蜉ｹ縺ｪ迥ｶ諷具ｼ亥ｾ・ｩ滂ｼ峨↓蠕ｩ蜈・＠縺ｾ縺励◆', 'success');
+        showToast('エントリーを有効な状態（待機）に復元しました', 'success');
         fillFormForEdit(entry); // Refresh the edit view if active
     }
 };
 
 async function exportGroupsCSV() {
-    const headers = ["ID", "蛹ｺ蛻・, "繧ｰ繝ｫ繝ｼ繝怜錐", "莉｣陦ｨ閠・, "髮ｻ隧ｱ逡ｪ蜿ｷ", "莠ｺ謨ｰ(驥｣繧・", "莠ｺ謨ｰ(隕句ｭｦ)", "繧ｹ繝・・繧ｿ繧ｹ", "譌･譎・];
+    const headers = ["ID", "区分", "グループ名", "代表者", "電話番号", "人数(釣り)", "人数(見学)", "ステータス", "日時"];
     const rows = state.entries.map(e => [
         e.id, 
         e.source, 
@@ -3503,7 +3503,7 @@ async function exportGroupsCSV() {
 }
 
 async function exportParticipantsCSV() {
-    const headers = ["ID", "蛹ｺ蛻・, "繧ｰ繝ｫ繝ｼ繝怜錐", "豌丞錐", "繝九ャ繧ｯ繝阪・繝", "諤ｧ蛻･", "蟷ｴ莉｣", "蝨ｰ蝓・, "蛹ｺ蛻・驥｣/隕・", "繧ｵ繧､繧ｺ", "繧ｹ繝・・繧ｿ繧ｹ"];
+    const headers = ["ID", "区分", "グループ名", "氏名", "ニックネーム", "性別", "年代", "地域", "区分(釣/見)", "サイズ", "ステータス"];
     const rows = [];
     state.entries.forEach(e => {
         (e.participants || []).forEach(p => {
@@ -3516,7 +3516,7 @@ async function exportParticipantsCSV() {
                 p.gender,
                 p.age,
                 `"${p.region || ''}"`,
-                p.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ',
+                p.type === 'fisher' ? '釣り' : '見学',
                 p.tshirtSize,
                 e.status
             ]);
@@ -3542,12 +3542,12 @@ function downloadCSV(filename, headers, rows) {
 function renderLeaderEntryForm() {
     const container = document.getElementById('leader-entry-form-container');
     if (!container) return;
-    container.innerHTML = '<p class="text-center p-4">隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</p>';
+    container.innerHTML = '<p class="text-center p-4">読み込み中...</p>';
     const searchHtml = `
         <div class="form-group">
-            <label>蜈･蜉帙☆繧九メ繝ｼ繝繧帝∈謚・/label>
+            <label>入力するチームを選択</label>
             <select id="leader-group-select" class="form-control" style="font-size:1.1rem; padding:0.8rem;">
-                <option value="">-- 繝√・繝繧帝∈謚槭＠縺ｦ縺上□縺輔＞ --</option>
+                <option value="">-- チームを選択してください --</option>
                 ${state.entries
                     .filter(e => e.status !== 'cancelled')
                     .sort((a,b) => a.groupName.localeCompare(b.groupName, 'ja'))
@@ -3567,16 +3567,16 @@ function renderLeaderEntryForm() {
             area.innerHTML = `
                 <div class="card p-3 mb-3" style="background:#f8f9ff">
                     <h4>${entry.groupName}</h4>
-                    <p class="small text-muted">ID: ${entry.id} / 莉｣陦ｨ閠・ ${entry.representative}</p>
+                    <p class="small text-muted">ID: ${entry.id} / 代表者: ${entry.representative}</p>
                     <div class="form-group mt-3">
-                        <label style="font-weight:bold">驥｣譫懊・繧､繝ｳ繝・(蜷郁ｨ・</label>
+                        <label style="font-weight:bold">釣果ポイント (合計)</label>
                         <input type="number" id="leader-point-input" class="form-control" 
                                style="font-size:2rem; font-weight:900; text-align:center;" 
                                value="${entry.totalScore || 0}" min="0">
                     </div>
                 </div>
                 <button class="btn-primary w-100 p-3" style="font-size:1.2rem" onclick="window.commitLeaderResultsSave()">
-                    遒ｺ螳壹＠縺ｦ菫晏ｭ・
+                    確定して保存
                 </button>`;
             area.classList.remove('hidden');
         });
@@ -3590,20 +3590,20 @@ window.commitLeaderResultsSave = async function() {
     const scoreVal = document.getElementById('leader-point-input')?.value;
     const score = parseInt(scoreVal || 0);
 
-    if (!id) { alert("繝√・繝繧帝∈謚槭＠縺ｦ縺上□縺輔＞縲・); return; }
+    if (!id) { alert("チームを選択してください。"); return; }
     const entry = state.entries.find(e => e.id === id);
     if (!entry) return;
-    if (!confirm(`${entry.groupName} 縺ｮ蠕礼せ繧・${score} pt 縺ｧ逋ｻ骭ｲ縺励∪縺吶°・歔)) return;
+    if (!confirm(`${entry.groupName} の得点を ${score} pt で登録しますか？`)) return;
 
     entry.totalScore = score;
     entry.lastModified = new Date().toLocaleString('ja-JP');
-    showToast("菫晏ｭ倅ｸｭ...", "info");
+    showToast("保存中...", "info");
     const success = await syncToCloud();
     if (success) {
-        showToast("笨・菫晏ｭ伜ｮ御ｺ・＠縺ｾ縺励◆", "success");
+        showToast("✅ 保存完了しました", "success");
         renderLeaderEntryForm();
     } else {
-        showToast("笶・蜷梧悄縺ｫ螟ｱ謨励＠縺ｾ縺励◆", "error");
+        showToast("❌ 同期に失敗しました", "error");
     }
 };
 
@@ -3615,10 +3615,10 @@ function updateBulkMailCount() {
 
 function updateSourceAvailability() {
     try {
-        const fishersIppan = sumCategoryFishers('荳闊ｬ');
-        const fishersMintsuri = sumCategoryFishers('縺ｿ繧馴・繧・);
-        const fishersSuiho = sumCategoryFishers('豌ｴ螳・);
-        const fishersHarimitsu = sumCategoryFishers('繝上Μ繝溘ヤ');
+        const fishersIppan = sumCategoryFishers('一般');
+        const fishersMintsuri = sumCategoryFishers('みん釣り');
+        const fishersSuiho = sumCategoryFishers('水宝');
+        const fishersHarimitsu = sumCategoryFishers('ハリミツ');
         
         // v8.1.18: Filter out cancelled for global capacity check
         const totalNow = state.entries.filter(e => e.status !== 'cancelled').reduce((sum, en) => sum + en.fishers, 0);
@@ -3660,10 +3660,10 @@ function updateSourceAvailability() {
             }
         };
 
-        updateRadio('荳闊ｬ', fishersIppan, state.settings.capacityGeneral);
-        updateRadio('縺ｿ繧馴・繧・, fishersMintsuri, state.settings.capacityMintsuri);
-        updateRadio('豌ｴ螳・, fishersSuiho, state.settings.capacitySuiho);
-        updateRadio('繝上Μ繝溘ヤ', fishersHarimitsu, state.settings.capacityHarimitsu);
+        updateRadio('一般', fishersIppan, state.settings.capacityGeneral);
+        updateRadio('みん釣り', fishersMintsuri, state.settings.capacityMintsuri);
+        updateRadio('水宝', fishersSuiho, state.settings.capacitySuiho);
+        updateRadio('ハリミツ', fishersHarimitsu, state.settings.capacityHarimitsu);
     } catch (e) {
         console.warn("Source availability check skipped:", e);
     }
@@ -3672,25 +3672,25 @@ function updateSourceAvailability() {
 async function handleBulkEmailSend() {
     const subject = document.getElementById('bulk-mail-subject').value.trim();
     const body = document.getElementById('bulk-mail-body').value.trim();
-    if (!subject || !body) { alert("莉ｶ蜷阪→譛ｬ譁・ｒ蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・); return; }
+    if (!subject || !body) { alert("件名と本文を入力してください。"); return; }
     const recipients = Array.from(new Set(state.entries.filter(e => e.status !== 'cancelled' && e.email).map(e => e.email.toLowerCase().trim())));
-    if (recipients.length === 0) { alert("騾∽ｿ｡蟇ｾ雎｡縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲・); return; }
-    if (!confirm(`${recipients.length} 蜷阪∈荳譁峨Γ繝ｼ繝ｫ繧帝∽ｿ｡縺励∪縺吶°・歔)) return;
+    if (recipients.length === 0) { alert("送信対象が見つかりません。"); return; }
+    if (!confirm(`${recipients.length} 名へ一斉メールを送信しますか？`)) return;
     const btn = document.getElementById('btn-send-bulk-mail');
     const originalText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '騾∽ｿ｡荳ｭ...';
+    btn.textContent = '送信中...';
     try {
         const response = await fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'bulk_email', subject, body, recipients }) });
         const result = await response.json();
         if (result.status === 'success') {
-            showToast('笨・荳譁峨Γ繝ｼ繝ｫ繧帝∽ｿ｡縺励∪縺励◆', 'success');
+            showToast('✅ 一斉メールを送信しました', 'success');
             document.getElementById('bulk-mail-subject').value = '';
             document.getElementById('bulk-mail-body').value = '';
-        } else { throw new Error(result.message || '騾∽ｿ｡繧ｨ繝ｩ繝ｼ'); }
+        } else { throw new Error(result.message || '送信エラー'); }
     } catch (error) {
         console.error("Bulk email error:", error);
-        showToast('笶・繝｡繝ｼ繝ｫ縺ｮ騾∽ｿ｡縺ｫ螟ｱ謨励＠縺ｾ縺励◆', 'error');
+        showToast('❌ メールの送信に失敗しました', 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
@@ -3764,7 +3764,7 @@ function checkUrlParams() {
         
         // 1. Handle Source (Primary Context)
         if (src) {
-            const validSources = { 'mintsuri': '縺ｿ繧馴・繧・, 'harimitsu': '繝上Μ繝溘ヤ', 'suiho': '豌ｴ螳・, 'general': '荳闊ｬ' };
+            const validSources = { 'mintsuri': 'みん釣り', 'harimitsu': 'ハリミツ', 'suiho': '水宝', 'general': '一般' };
             const decodedSrc = validSources[src.toLowerCase()];
             if (decodedSrc) injectSpecialSource(decodedSrc);
         }
@@ -3805,7 +3805,7 @@ function injectSpecialSource(sourceName) {
     selector.classList.add('special-window');
 
     // v8.1.23: Hide selector entirely if it's 'General' (unless admin)
-    if (sourceName === '荳闊ｬ' && !isAdminAuth) {
+    if (sourceName === '一般' && !isAdminAuth) {
         if (selectorGroup) selectorGroup.classList.add('hidden');
         console.log("General window: hiding selector");
     } else {
@@ -3825,7 +3825,7 @@ function injectSpecialSource(sourceName) {
     
     if (!target) {
         // Create specialized radio if missing
-        const badgeClassMap = { '豌ｴ螳・: 'badge-suiho', '繝上Μ繝溘ヤ': 'badge-harimitsu', '縺ｿ繧馴・繧・: 'badge-mintsuri' };
+        const badgeClassMap = { '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu', 'みん釣り': 'badge-mintsuri' };
         const badgeClass = badgeClassMap[sourceName] || 'badge-ippan';
         const label = document.createElement('label');
         label.className = 'source-option forced-source'; // No hidden class here
@@ -3855,9 +3855,9 @@ function injectSpecialSource(sourceName) {
         target.dispatchEvent(new Event('change', { bubbles: true }));
     }
     
-    // v8.1.36: Explicitly ensure "荳闊ｬ" is hidden in ANY specialized window
-    if (sourceName !== '荳闊ｬ') {
-        const ippanRadio = selector.querySelector('input[value="荳闊ｬ"]');
+    // v8.1.36: Explicitly ensure "一般" is hidden in ANY specialized window
+    if (sourceName !== '一般') {
+        const ippanRadio = selector.querySelector('input[value="一般"]');
         if (ippanRadio) {
             ippanRadio.disabled = true;
             ippanRadio.closest('.source-option')?.classList.add('hidden');
@@ -3884,10 +3884,10 @@ window.copyShareUrl = function(inputId) {
     const el = document.getElementById(inputId);
     if (el && el.value) {
         navigator.clipboard.writeText(el.value).then(() => {
-            showToast('繧ｳ繝斐・縺励∪縺励◆', 'success');
+            showToast('コピーしました', 'success');
         }).catch(err => {
             console.error('Copy failed:', err);
-            showToast('繧ｳ繝斐・縺ｫ螟ｱ謨励＠縺ｾ縺励◆', 'error');
+            showToast('コピーに失敗しました', 'error');
         });
     }
 };
