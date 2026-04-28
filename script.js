@@ -2993,7 +2993,7 @@ window.renderIkesuWorkspace = function () {
                 }, {})).map(group => {
                     const sc = `source-${group.entry.source === '一般' ? 'ippan' : group.entry.source === 'みん釣り' ? 'mintsuri' : group.entry.source === '水宝' ? 'suiho' : group.entry.source === 'ハリミツ' ? 'harimitsu' : 'default'}`;
                     return `
-                    <div class="drag-item-group ${sc}">
+                    <div class="drag-item-group ${sc} draggable" draggable="true" ondragstart="dragGroup(event, '${group.entry.id}')">
                         <div class="drag-item-header">
                             <div style="font-size:0.85rem;"><strong>${group.entry.groupName}</strong></div>
                         </div>
