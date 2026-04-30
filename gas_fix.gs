@@ -1,10 +1,10 @@
 /**
- * GAS側: 高負荷・同時送信対応版データサーバー (v7.1.5)
+ * GAS側: 高負荷・同時送信対応版データサーバー (v8.4.0)
  * 
  * 修正点:
- * 1. サーバー側での LockService による完全な排他制御
- * 2. transactionId による二重登録防止機能（リロードや再試行時のダブリを排除）
- * 3. 書き込み時の最新データ再取得による「逆転現象」の防止
+ * 1. フロントエンドのアクション名 (register, edit, resend_email, bulk_email) に完全対応
+ * 2. 登録時・編集時の自動返信メール送信機能の追加
+ * 3. 管理画面からのメール再送・一括送信機能の実装
  */
 
 var PROP_KEY = "fishing_tournament_data_v6";
@@ -12,88 +12,157 @@ var PROP_KEY = "fishing_tournament_data_v6";
 function doPost(e) {
   var lock = LockService.getScriptLock();
   try {
-    // 最大30秒間、他のリクエストを待たせて「一人ずつ」処理する
     lock.waitLock(30000);
     
     var request = JSON.parse(e.postData.contents);
     var props = PropertiesService.getScriptProperties();
-    
-    // 現在の最新データを取得（これを行わないと、前の人の保存を上書きしてしまう可能性がある）
     var rawData = props.getProperty(PROP_KEY);
     var db = rawData ? JSON.parse(rawData) : { entries: [], settings: {}, lastUpdated: 0 };
     
-    // --- 【アクション 1】 新規登録 (submit) ---
-    if (request.action === 'submit') {
+    var action = request.action;
+    
+    // --- 【アクション: 登録 (register / submit)】 ---
+    if (action === 'register' || action === 'submit') {
       var entry = request.entry;
       
-      // A. 二重登録の徹底排除 (transactionId を使用)
+      // 二重登録チェック
       if (entry.transactionId) {
         var existing = db.entries.find(function(en) { return en.transactionId === entry.transactionId; });
-        if (existing) {
-          // すでにこのIDで保存されていたら、その保存済みのデータを返す（二重発行を防ぐ）
-          return createJsonResponse({ status: 'success', entry: existing, note: 'recovered' });
-        }
+        if (existing) return createJsonResponse({ status: 'success', entry: existing, note: 'recovered' });
       }
       
-      // B. 自動採番ロジック (Lock中なので絶対に被らない)
-      var prefixMap = { '一般': 'A', 'みん釣り': 'M', '水宝': 'S', 'ハリミツ': 'H' };
-      var prefix = prefixMap[entry.source] || 'A';
-      var samePrefix = db.entries.filter(function(en) { 
-        return en.id && en.id.indexOf(prefix + '-') === 0; 
-      });
+      // 自動採番
+      entry.id = generateEntryId(db, entry.source);
       
-      var nextNum = 1;
-      if (samePrefix.length > 0) {
-        var nums = samePrefix.map(function(en) { 
-          var parts = en.id.split('-');
-          return parts.length > 1 ? parseInt(parts[1]) : 0; 
-        });
-        nextNum = Math.max.apply(null, nums) + 1;
-      }
-      entry.id = prefix + '-' + ("00" + nextNum).slice(-3);
-      
-      // C. データベースに保存
       db.entries.push(entry);
-      db.lastUpdated = new Date().getTime();
-      props.setProperty(PROP_KEY, JSON.stringify(db));
+      saveToDb(db, props);
+      
+      // ★ 自動返信メール送信
+      sendEntryConfirmationEmail(entry, "【受付完了】釣り大会へのお申し込みありがとうございます");
       
       return createJsonResponse({ status: 'success', entry: entry });
-        
     } 
     
-    // --- 【アクション 2】 設定・データの上書き保存 (save) ---
-    else if (request.action === 'save') {
-      var incomingData = request.data;
+    // --- 【アクション: 編集 (edit)】 ---
+    else if (action === 'edit') {
+      var entry = request.entry;
+      var index = db.entries.findIndex(function(en) { return en.id === entry.id; });
+      if (index !== -1) {
+        db.entries[index] = entry;
+        saveToDb(db, props);
+        
+        // ★ 修正完了メール送信
+        sendEntryConfirmationEmail(entry, "【内容修正】お申し込み内容の変更を承りました");
+        return createJsonResponse({ status: 'success', entry: entry });
+      }
+      return createJsonResponse({ status: 'error', message: 'Entry not found' });
+    }
+    
+    // --- 【アクション: メール再送 (resend_email)】 ---
+    else if (action === 'resend_email') {
+      var targetEntry = db.entries.find(function(en) { return en.id === request.id; });
+      if (targetEntry) {
+        sendEntryConfirmationEmail(targetEntry, "【再送】釣り大会 お申し込み内容のご確認");
+        return createJsonResponse({ status: 'success' });
+      }
+      return createJsonResponse({ status: 'error', message: 'Entry not found' });
+    }
+    
+    // --- 【アクション: 一括送信 (bulk_email)】 ---
+    else if (action === 'bulk_email') {
+      var subject = request.subject;
+      var bodyTemplate = request.body;
+      var entriesToMail = request.entries; // 個別データを含む配列
       
-      // サーバー側の方が新しい更新を持っていた場合、安全のため単純な上書きを避けるロジックを入れることも可能ですが、
-      // 基本的にはフロント側の「Fetch -> Merge -> Save」フローを信頼します。
-      db = incomingData;
-      db.lastUpdated = new Date().getTime();
-      props.setProperty(PROP_KEY, JSON.stringify(db));
-      
+      entriesToMail.forEach(function(entry) {
+        if (!entry.repEmail) return;
+        
+        // 変数の置換
+        var personalizedBody = bodyTemplate
+          .replace(/{{番号}}/g, entry.id || "")
+          .replace(/{{名前}}/g, entry.representativeName || "")
+          .replace(/{{グループ}}/g, entry.groupName || "")
+          .replace(/{{釣り人数}}/g, entry.fishers || "0")
+          .replace(/{{見学人数}}/g, entry.observers || "0")
+          .replace(/{{参加者名簿}}/g, entry.participantsList || "");
+        
+        try {
+          GmailApp.sendEmail(entry.repEmail, subject, personalizedBody);
+        } catch(e) {
+          console.error("Failed to send personalized bulk email to: " + entry.repEmail);
+        }
+      });
+      return createJsonResponse({ status: 'success' });
+    }
+    
+    // --- 【アクション: 保存 (save)】 ---
+    else if (action === 'save') {
+      db = request.data;
+      saveToDb(db, props);
       return createJsonResponse({ status: 'success' });
     }
     
   } catch (error) {
     return createJsonResponse({ status: 'error', message: error.toString() });
   } finally {
-    // 処理が終わったら必ずロックを解除して次の人を迎え入れる
     lock.releaseLock();
   }
 }
 
+function generateEntryId(db, source) {
+  var prefixMap = { '一般': 'A', 'みん釣り': 'M', '水宝': 'S', 'ハリミツ': 'H' };
+  var prefix = prefixMap[source] || 'A';
+  var samePrefix = db.entries.filter(function(en) { 
+    return en.id && en.id.indexOf(prefix + '-') === 0; 
+  });
+  
+  var nextNum = 1;
+  if (samePrefix.length > 0) {
+    var nums = samePrefix.map(function(en) { 
+      var parts = en.id.split('-');
+      return parts.length > 1 ? parseInt(parts[1]) : 0; 
+    });
+    nextNum = Math.max.apply(null, nums) + 1;
+  }
+  return prefix + '-' + ("00" + nextNum).slice(-3);
+}
+
+function saveToDb(db, props) {
+  db.lastUpdated = new Date().getTime();
+  props.setProperty(PROP_KEY, JSON.stringify(db));
+}
+
+/** メール送信ヘルパー */
+function sendEntryConfirmationEmail(entry, subject) {
+  if (!entry.repEmail) return;
+  
+  var body = 
+    entry.representativeName + " 様\n\n" +
+    "この度は「釣り大会」へのお申し込み、誠にありがとうございます。\n" +
+    "以下の内容で受付を完了いたしました。\n\n" +
+    "--------------------------------------------------\n" +
+    "■ 受付番号: " + entry.id + "\n" +
+    "■ グループ名: " + entry.groupName + "\n" +
+    "■ 釣り人数: " + entry.fishers + " 名\n" +
+    "■ 見学人数: " + entry.observers + " 名\n" +
+    "--------------------------------------------------\n\n" +
+    "当日は受付にて「受付番号」をお伝えいただくか、\n" +
+    "本メールの画面をご提示ください。\n\n" +
+    "内容の変更やキャンセルを希望される場合は、\n" +
+    "公式サイトの修正フォームよりお手続きをお願いいたします。\n\n" +
+    "大会当日、皆様にお会いできることを楽しみにしております。\n\n" +
+    "--- 釣り大会 事務局 ---";
+    
+  GmailApp.sendEmail(entry.repEmail, subject, body);
+}
+
 function doGet(e) {
-  var action = e.parameter.action;
   var props = PropertiesService.getScriptProperties();
   var rawData = props.getProperty(PROP_KEY);
-  
-  // 初期データがない場合の雛形
   var defaultData = '{"entries":[],"settings":{},"lastUpdated":0}';
-  
   return createJsonResponse(rawData ? JSON.parse(rawData) : JSON.parse(defaultData));
 }
 
-/** JSONレスポンス生成用のヘルパー */
 function createJsonResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);

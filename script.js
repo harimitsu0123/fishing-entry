@@ -117,7 +117,18 @@ window.showConfirmation = function() {
     summaryList.innerHTML = '';
     participants.forEach((p, idx) => {
         const li = document.createElement('li');
-        li.textContent = `${p.name} (${p.nickname || 'ニックネームなし'}) - ${p.type === 'fisher' ? '釣り' : '見学'}`;
+        li.style.padding = "0.5rem";
+        li.style.borderBottom = "1px solid #eee";
+        
+        const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
+        const genderLabel = genderLabels[p.gender] || p.gender;
+        const nicknameLabel = p.nickname ? `(${p.nickname})` : '';
+        const detailText = `【${genderLabel} / ${p.age} / ${p.tshirtSize}サイズ】`;
+        
+        li.innerHTML = `
+            <strong>${idx + 1}. ${p.name}</strong> ${nicknameLabel} <br>
+            <span style="font-size: 0.85rem; color: #666;">${detailText} - <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-mintsuri'}" style="font-size: 0.7rem;">${typeLabel}</span></span>
+        `;
         summaryList.appendChild(li);
     });
 
@@ -205,22 +216,25 @@ window.handleRegistration = async function() {
 
     // v8.2.18: Removed undefined showLoading()
     try {
-        // v8.2.25: Using 'no-cors' to force transmission through browser security
-        await fetch(GAS_WEB_APP_URL, {
+        // v8.4.0: Using 'cors' to receive and check result status from GAS
+        const response = await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
-            mode: 'no-cors',
+            mode: 'cors',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData })
         });
 
-        // In no-cors mode, we can't check result.status, so we assume success if no exception
-        showToast(editId ? "修正を送信しました。" : "登録を送信しました。", "success");
+        const result = await response.json();
         
-        // Show result screen immediately
-        showResult(entryData);
-        
-        // Refresh data in background if possible (this might still fail if loadData also has CORS issues)
-        setTimeout(() => loadData(), 1000); 
+        if (result.status === 'success') {
+            showToast(editId ? "修正を送信しました。" : "登録を送信しました。", "success");
+            // Show result screen immediately
+            showResult(result.entry || entryData);
+            // Refresh data in background
+            setTimeout(() => loadData(), 1000); 
+        } else {
+            throw new Error(result.message || "サーバー側でエラーが発生しました。");
+        }
 
     } catch (error) {
         console.error('Registration error:', error);
@@ -284,6 +298,53 @@ window.startAdminRegistration = function (source) {
     // Ensure selector is visible for admin
     const selectorGroup = document.getElementById('source-selector-group');
     if (selectorGroup) selectorGroup.classList.remove('hidden');
+};
+
+// v8.4.2: Quick Registration with Observer support
+window.quickAdminRegistration = function(source) {
+    const fCountStr = prompt(`${source}枠：釣り人数を入力してください`, "1");
+    if (fCountStr === null || fCountStr === "") return;
+    const fCount = parseInt(fCountStr) || 0;
+
+    const oCountStr = prompt(`${source}枠：見学者数を入力してください`, "0");
+    if (oCountStr === null || oCountStr === "") return;
+    const oCount = parseInt(oCountStr) || 0;
+    
+    resetForm();
+    isAdminAuthAction = true;
+    switchView(null, 'registration-view');
+
+    // Auto-fill minimum required fields
+    document.getElementById('group-name').value = `${source}予約（電話分）`;
+    document.getElementById('representative-name').value = `${source}事務局`;
+    document.getElementById('rep-phone').value = "000-0000-0000";
+    document.getElementById('rep-email').value = "dummy@example.com";
+    document.getElementById('rep-email-confirm').value = "dummy@example.com";
+    document.getElementById('edit-password').value = "0000";
+
+    const radio = document.querySelector(`input[name="reg-source"][value="${source}"]`);
+    if (radio) { radio.checked = true; } else { window.startAdminRegistration(source); }
+
+    // Add fishers
+    for(let i=0; i<fCount; i++) {
+        addParticipantRow('fisher'); 
+        const rows = document.querySelectorAll('.participant-row');
+        const lastRow = rows[rows.length - 1];
+        lastRow.querySelector('.p-name').value = `釣り人${i+1}`;
+    }
+    // Add observers
+    for(let i=0; i<oCount; i++) {
+        addParticipantRow('observer');
+        const rows = document.querySelectorAll('.participant-row');
+        const lastRow = rows[rows.length - 1];
+        lastRow.querySelector('.p-name').value = `見学者${i+1}`;
+    }
+
+    setTimeout(() => {
+        const btn = document.getElementById('btn-to-confirm');
+        if (btn) btn.scrollIntoView({ behavior: 'smooth' });
+        showToast(`${source}：釣り${fCount}名、見学${oCount}名をクイック入力しました。`, 'info');
+    }, 300);
 };
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
@@ -1317,6 +1378,12 @@ function syncSettingsUI() {
     updateIfInactive('registration-deadline', state.settings.deadline);
     updateIfInactive('admin-password-set', state.settings.adminPassword);
     
+    // v8.4.2: Load manual adjustments
+    updateIfInactive('adj-suiho-fishers', state.settings.adjSuihoFishers || 0);
+    updateIfInactive('adj-suiho-observers', state.settings.adjSuihoObservers || 0);
+    updateIfInactive('adj-harimitsu-fishers', state.settings.adjHarimitsuFishers || 0);
+    updateIfInactive('adj-harimitsu-observers', state.settings.adjHarimitsuObservers || 0);
+    
     // v8.1.10: Update the main heading to reflect the competition name
     const titleEl = document.getElementById('app-title');
     if (titleEl) titleEl.textContent = state.settings.competitionName || "釣り大会 受付";
@@ -1982,7 +2049,7 @@ window.renderIkesuPrintView = function() {
                     <thead>
                         <tr style="background: #eee; font-size: 0.85rem;">
                             <th style="border: 1px solid #000; padding: 0.4rem; width: 35px;">No</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 100px;">グループ名</th>
+                            <th style="border: 1px solid #000; padding: 0.4rem; width: 180px;">グループ名</th>
                             <th style="border: 1px solid #000; padding: 0.4rem;">氏名</th>
                             <th style="border: 1px solid #000; padding: 0.4rem; width: 50px; white-space: nowrap;">性別</th>
                             <th style="border: 1px solid #000; padding: 0.4rem; width: 60px; white-space: nowrap;">Tシャツ</th>
@@ -2077,7 +2144,7 @@ window.renderIkesuResultView = function() {
                     <thead>
                         <tr style="background: #000; color: #fff; font-size: 0.9rem;">
                             <th style="border: 1px solid #fff; padding: 0.6rem; width: 35px;">No</th>
-                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 140px; white-space: nowrap;">グループ名</th>
+                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 200px; white-space: nowrap;">グループ名</th>
                             <th style="border: 1px solid #fff; padding: 0.6rem; white-space: nowrap;">氏名</th>
                             <th style="border: 1px solid #fff; padding: 0.6rem; width: 80px; background: #d32f2f;">タイ (匹)</th>
                             <th style="border: 1px solid #fff; padding: 0.6rem; width: 80px; background: #1976d2;">青物 (匹)</th>
@@ -2089,7 +2156,7 @@ window.renderIkesuResultView = function() {
                         ${participants.map((p, pIdx) => `
                             <tr style="height: 2.2rem;">
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold;">${pIdx + 1}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-size: 0.8rem; font-weight: bold; overflow: hidden; max-width: 140px; white-space: nowrap; text-overflow: ellipsis;">${p.groupName}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-size: 0.8rem; font-weight: bold; overflow: hidden; max-width: 200px;">${p.groupName}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 800; font-size: 1rem; white-space: nowrap;">${p.name}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center;"></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center;"></td>
@@ -2347,16 +2414,28 @@ window.switchView = function(btnEl, viewId) {
 // v7.6.3: Restored missing helper functions
 function sumCategoryFishers(category) {
     if (!state.entries) return 0;
-    return state.entries
+    const dbCount = state.entries
         .filter(e => e.source === category && e.status !== 'cancelled')
         .reduce((sum, e) => sum + e.fishers, 0);
+    
+    // v8.4.2: Add manual adjustment
+    let adj = 0;
+    if (category === '水宝') adj = state.settings.adjSuihoFishers || 0;
+    if (category === 'ハリミツ') adj = state.settings.adjHarimitsuFishers || 0;
+    return dbCount + adj;
 }
 
 function sumCategoryObservers(category) {
     if (!state.entries) return 0;
-    return state.entries
+    const dbCount = state.entries
         .filter(e => e.source === category && e.status !== 'cancelled')
         .reduce((sum, e) => sum + e.observers, 0);
+
+    // v8.4.2: Add manual adjustment
+    let adj = 0;
+    if (category === '水宝') adj = state.settings.adjSuihoObservers || 0;
+    if (category === 'ハリミツ') adj = state.settings.adjHarimitsuObservers || 0;
+    return dbCount + adj;
 }
 
 function updateSplitUI(prefix, current, max, observers) {
@@ -3399,6 +3478,12 @@ function handleSettingsUpdate(e) {
     state.settings.startTime = document.getElementById('registration-start').value;
     state.settings.deadline = document.getElementById('registration-deadline').value;
     state.settings.adminPassword = document.getElementById('admin-password-set').value;
+
+    // v8.4.2: Save manual adjustments
+    state.settings.adjSuihoFishers = parseInt(document.getElementById('adj-suiho-fishers').value) || 0;
+    state.settings.adjSuihoObservers = parseInt(document.getElementById('adj-suiho-observers').value) || 0;
+    state.settings.adjHarimitsuFishers = parseInt(document.getElementById('adj-harimitsu-fishers').value) || 0;
+    state.settings.adjHarimitsuObservers = parseInt(document.getElementById('adj-harimitsu-observers').value) || 0;
     saveData();
     syncSettingsUI();
     updateDashboard();
@@ -3759,6 +3844,83 @@ async function exportParticipantsCSV() {
     downloadCSV("participants_export.csv", headers, rows);
 }
 
+// v8.4.3: Bulk Email Helpers
+window.insertMailVar = function(tag) {
+    const textarea = document.getElementById('bulk-mail-body');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    textarea.value = text.substring(0, start) + tag + text.substring(end);
+    textarea.focus();
+    textarea.selectionStart = textarea.selectionEnd = start + tag.length;
+};
+
+window.previewBulkEmail = function() {
+    const body = document.getElementById('bulk-mail-body').value;
+    const entries = state.entries.filter(e => e.status !== 'cancelled' && e.repEmail);
+    if (entries.length === 0) { alert("送信対象がいません。"); return; }
+    
+    const entry = entries[0];
+    const pList = (entry.participants || []).map(p => `${p.name}(${genderLabels[p.gender] || p.gender})`).join(', ');
+    
+    const previewText = body
+        .replace(/{{番号}}/g, entry.id || "")
+        .replace(/{{名前}}/g, entry.representativeName || "")
+        .replace(/{{グループ}}/g, entry.groupName || "")
+        .replace(/{{釣り人数}}/g, entry.fishers || "0")
+        .replace(/{{見学人数}}/g, entry.observers || "0")
+        .replace(/{{参加者名簿}}/g, pList);
+
+    const area = document.getElementById('bulk-mail-preview-area');
+    const content = document.getElementById('bulk-mail-preview-content');
+    content.textContent = previewText;
+    area.style.display = 'block';
+    area.scrollIntoView({ behavior: 'smooth' });
+};
+
+async function handleBulkEmailSend() {
+    const subject = document.getElementById('bulk-mail-subject').value.trim();
+    const body = document.getElementById('bulk-mail-body').value.trim();
+    if (!subject || !body) { alert("件名と本文を入力してください。"); return; }
+    
+    const entriesToMail = state.entries.filter(e => e.status !== 'cancelled' && e.repEmail).map(e => {
+        // Add participantsList string for GAS replacement
+        const pList = (e.participants || []).map(p => `${p.name}(${genderLabels[p.gender] || p.gender})`).join(', ');
+        return { ...e, participantsList: pList };
+    });
+
+    if (entriesToMail.length === 0) { alert("送信対象が見つかりません。"); return; }
+    if (!confirm(`${entriesToMail.length} 名へ個別データを含めた一斉メールを送信しますか？`)) return;
+    
+    const btn = document.getElementById('btn-send-bulk-mail');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '送信中...';
+    try {
+        const response = await fetch(GAS_WEB_APP_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ 
+                action: 'bulk_email', 
+                subject, 
+                body, 
+                entries: entriesToMail
+            }) 
+        });
+        const result = await response.json();
+        if (result.status === 'success') {
+            showToast('✅ 一斉メールを送信しました', 'success');
+        } else {
+            throw new Error(result.message || '送信に失敗しました');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('❌ メール送信エラー', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
+
 function downloadCSV(filename, headers, rows) {
     const csvContent = "\uFEFF" + [headers, ...rows].map(e => e.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -3907,15 +4069,23 @@ async function handleBulkEmailSend() {
     const subject = document.getElementById('bulk-mail-subject').value.trim();
     const body = document.getElementById('bulk-mail-body').value.trim();
     if (!subject || !body) { alert("件名と本文を入力してください。"); return; }
-    const recipients = Array.from(new Set(state.entries.filter(e => e.status !== 'cancelled' && e.email).map(e => e.email.toLowerCase().trim())));
-    if (recipients.length === 0) { alert("送信対象が見つかりません。"); return; }
-    if (!confirm(`${recipients.length} 名へ一斉メールを送信しますか？`)) return;
+    const entriesToMail = state.entries.filter(e => e.status !== 'cancelled' && e.repEmail);
+    if (entriesToMail.length === 0) { alert("送信対象が見つかりません。"); return; }
+    if (!confirm(`${entriesToMail.length} 名へ個別データを含めた一斉メールを送信しますか？\n（本文内の {{番号}}, {{名前}} 等が自動置換されます）`)) return;
     const btn = document.getElementById('btn-send-bulk-mail');
     const originalText = btn.textContent;
     btn.disabled = true;
     btn.textContent = '送信中...';
     try {
-        const response = await fetch(GAS_WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'bulk_email', subject, body, recipients }) });
+        const response = await fetch(GAS_WEB_APP_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ 
+                action: 'bulk_email', 
+                subject, 
+                body, 
+                entries: entriesToMail // 送信対象のエントリをまるごと渡す
+            }) 
+        });
         const result = await response.json();
         if (result.status === 'success') {
             showToast('✅ 一斉メールを送信しました', 'success');

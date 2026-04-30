@@ -252,13 +252,12 @@
 
             <!-- Admin Sub-tabs Navigation -->
             <nav class="admin-tab-nav">
-                <button class="admin-tab-btn active" data-tab="tab-list">名簿一覧</button>
+                <button class="admin-tab-btn active" data-tab="tab-list">申込一覧</button>
                 <button class="admin-tab-btn" data-tab="tab-ikesu">イケス割当</button>
                 <button class="admin-tab-btn" data-tab="tab-print" onclick="window.updatePrintView()">メンバー表印刷</button>
                 <button class="admin-tab-btn" data-tab="tab-settings">大会設定</button>
                 <button class="admin-tab-btn" data-tab="tab-stats">統計・分析</button>
-                <button class="admin-tab-btn hidden" data-tab="tab-email">一括メール</button>
-                <button class="admin-tab-btn" data-tab="tab-data">データ管理</button>
+                <button class="admin-tab-btn admin-only hidden" data-tab="tab-email">一括メール</button>
             </nav>
 
             <div id="admin-tab-container">
@@ -454,11 +453,28 @@
                                 <span class="badge badge-harimitsu">ハリミツ</span> ハリミツ枠で登録
                             </button>
                         </div>
+                        <div class="flex-gap mt-3" style="border-top: 1px dashed #ccc; padding-top: 1rem;">
+                            <button type="button" class="btn-outline" onclick="quickAdminRegistration('水宝')" style="font-size: 0.85rem;">
+                                ⚡ 水宝 クイック登録（人数のみ確保）
+                            </button>
+                            <button type="button" class="btn-outline" onclick="quickAdminRegistration('ハリミツ')" style="font-size: 0.85rem;">
+                                ⚡ ハリミツ クイック登録（人数のみ確保）
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Tab: General Settings -->
                 <div id="tab-settings" class="admin-tab-content">
+                    <!-- Quick Access Menu for Reorganized Tabs (v8.4.2) -->
+                    <div class="admin-special-menu mb-4" style="background: #f1f5f9; padding: 1.2rem; border-radius: 12px; display: flex; gap: 1rem; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <button type="button" class="btn-primary" onclick="switchAdminTab('tab-proxy')" style="flex: 1; background: #fff; border: 2px solid var(--primary-color); color: var(--primary-color);">
+                            📝 代理・一括登録を開く
+                        </button>
+                        <button type="button" class="btn-primary" onclick="switchAdminTab('tab-data')" style="flex: 1; background: #fff; border: 2px solid var(--error-color); color: var(--error-color);">
+                            ⚙️ データ管理（リセット等）を開く
+                        </button>
+                    </div>
                     <!-- Share URL & QR Code Combined -->
                     <div class="card mb-4" style="background: #f0f7ff; border: 2px solid var(--primary-color);">
                         <div class="form-row" style="align-items: center; gap: 2rem;">
@@ -589,46 +605,60 @@
                                 一般利用者には自動的に制限画面が表示されます。
                             </p>
 
-                            <div class="section-title mt-4">定員設定</div>
-                            <div class="alert alert-info mb-3"
-                                style="display:flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <span style="font-weight: 700;">釣り参加 合計: </span>
-                                    <span id="capacity-total-summary"
-                                        style="font-size: 1.5rem; color: var(--primary-color);">0</span>
-                                    <span style="font-weight: 700;"> / <span id="display-cap-total">250</span>名</span>
-                                </div>
-                                <div id="capacity-warning-msg" class="hidden"
-                                    style="color: var(--error-color); font-weight: bold;">
-                                    ⚠️ 定員を超えています！
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group" style="flex: 1.5; background: #fffbe6; padding: 0.5rem; border-radius: 8px; border: 1px solid #ffe58f;">
-                                    <label for="cap-total" style="color: #856404; font-weight: 700;">🏆 大会 全体定員 (合計)</label>
-                                    <input type="number" id="cap-total" min="1" style="border-color: #ffe58f;">
+                            <div class="section-title mt-4" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>定員設定</span>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="font-size: 0.85rem; color: #666;">
+                                        現在の合計: <span id="capacity-total-summary" style="font-weight: bold; color: var(--primary-color);">0</span> 名
+                                    </div>
+                                    <div style="background: #f1f5f9; padding: 4px 12px; border-radius: 8px; border: 1px solid #cbd5e1; display: flex; align-items: center; gap: 8px;">
+                                        <label for="cap-total" style="font-size: 0.9rem; margin: 0; font-weight: bold;">大会全体の定員:</label>
+                                        <input type="number" id="cap-total" min="0" style="width: 80px; padding: 2px 5px; border: 1px solid #94a3b8; border-radius: 4px; text-align: center; font-weight: bold;">
+                                        <span style="font-size: 0.9rem;">名</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="form-row mt-2">
+                            <div class="form-row mt-2" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
                                 <div class="form-group">
                                     <label for="cap-ippan">一般 枠</label>
-                                    <input type="number" id="cap-ippan" min="0">
+                                    <input type="number" id="cap-ippan" min="0" oninput="updateCapacityTotal()">
                                 </div>
                                 <div class="form-group">
                                     <label for="cap-mintsuri">みん釣り 枠</label>
-                                    <input type="number" id="cap-mintsuri" min="0">
+                                    <input type="number" id="cap-mintsuri" min="0" oninput="updateCapacityTotal()">
                                 </div>
                                 <div class="form-group">
                                     <label for="cap-suiho">水宝 枠</label>
-                                    <input type="number" id="cap-suiho" min="0">
+                                    <input type="number" id="cap-suiho" min="0" oninput="updateCapacityTotal()">
                                 </div>
                                 <div class="form-group">
                                     <label for="cap-harimitsu">ハリミツ 枠</label>
-                                    <input type="number" id="cap-harimitsu" min="0">
+                                    <input type="number" id="cap-harimitsu" min="0" oninput="updateCapacityTotal()">
                                 </div>
                                 <div class="form-group">
-                                    <label for="capacity-observers">見学者 枠 (合計)</label>
-                                    <input type="number" id="capacity-observers" min="0">
+                                    <label for="capacity-observers">見学者 (合計)</label>
+                                    <input type="number" id="capacity-observers" min="0" oninput="updateCapacityTotal()">
+                                </div>
+                            </div>
+
+                            <div class="section-title mt-4" style="color: #e67e22; border-left-color: #e67e22; background: #fff4e6;">🛠️ 手動カウント調整（電話受付分など）</div>
+                            <p class="text-muted small">※DB登録せずに人数だけを確保したい場合に使用します。合計数に加算されます。</p>
+                            <div class="form-row mt-2">
+                                <div class="form-group">
+                                    <label>水宝 釣り人</label>
+                                    <input type="number" id="adj-suiho-fishers" min="0" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>水宝 見学</label>
+                                    <input type="number" id="adj-suiho-observers" min="0" placeholder="0">
+                                </div>
+                                <div class="form-group" style="border-left: 1px solid #ddd; padding-left: 1rem;">
+                                    <label>ハリミツ 釣り人</label>
+                                    <input type="number" id="adj-harimitsu-fishers" min="0" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>ハリミツ 見学</label>
+                                    <input type="number" id="adj-harimitsu-observers" min="0" placeholder="0">
                                 </div>
                             </div>
 
@@ -646,6 +676,50 @@
 
 
 
+
+                <!-- Tab: Bulk Email (v8.4.3: Restored & Enhanced) -->
+                <div id="tab-email" class="admin-tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>一括メール送信</h2>
+                        </div>
+                        <p class="text-muted mb-4">現在登録されている全エントリー（キャンセル除く）の代表者へ一斉メールを送信します。</p>
+                        
+                        <div class="form-group mb-3">
+                            <label for="bulk-mail-subject">件名</label>
+                            <input type="text" id="bulk-mail-subject" placeholder="例：【重要】釣り大会当日のご案内">
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label>本文</label>
+                            <div class="mb-2" style="display: flex; flex-wrap: wrap; gap: 0.5rem; background: #f8fafc; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <span style="font-size: 0.8rem; color: #64748b; width: 100%; margin-bottom: 0.3rem;">📋 クリックして項目を挿入:</span>
+                                <button type="button" class="btn-tag" onclick="insertMailVar('{{番号}}')">受付番号</button>
+                                <button type="button" class="btn-tag" onclick="insertMailVar('{{名前}}')">代表者名</button>
+                                <button type="button" class="btn-tag" onclick="insertMailVar('{{グループ}}')">グループ名</button>
+                                <button type="button" class="btn-tag" onclick="insertMailVar('{{釣り人数}}')">釣り人数</button>
+                                <button type="button" class="btn-tag" onclick="insertMailVar('{{見学人数}}')">見学人数</button>
+                                <button type="button" class="btn-tag" onclick="insertMailVar('{{参加者名簿}}')" style="background: #e0f2fe; color: #0369a1; border-color: #7dd3fc;">参加者名簿</button>
+                            </div>
+                            <textarea id="bulk-mail-body" rows="12" placeholder="ここにメール本文を入力してください..."></textarea>
+                        </div>
+
+                        <div class="alert alert-info mb-4" id="bulk-mail-preview-area" style="display: none; background: #fff; border: 2px solid #3b82f6;">
+                            <div style="font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 10px; color: #1d4ed8;">📧 送信プレビュー (一人目の例)</div>
+                            <div id="bulk-mail-preview-content" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6;"></div>
+                            <button type="button" class="btn-secondary mt-3" style="width: 100%;" onclick="document.getElementById('bulk-mail-preview-area').style.display='none'">プレビューを閉じる</button>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem;">
+                            <button type="button" class="btn-secondary" style="flex: 1;" onclick="previewBulkEmail()">
+                                🔍 送信内容を確認（プレビュー）
+                            </button>
+                            <button type="button" id="btn-send-bulk-mail" class="btn-primary" style="flex: 2; font-weight: bold;" onclick="handleBulkEmailSend()">
+                                🚀 一斉メールを送信する
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Tab: Statistics -->
                 <div id="tab-stats" class="admin-tab-content">
@@ -691,6 +765,7 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
 
                 <!-- Tab: Bulk Email -->
