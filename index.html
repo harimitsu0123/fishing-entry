@@ -38,7 +38,7 @@
                     alert("送信対象が見つかりません。"); 
                     return; 
                 }
-                
+
                 const sample = entriesToMail[0];
                 const baseUrl = "https://harimitsu0123.github.io/fishing-entry/";
                 const pList = (sample.participants || []).map(p => {
@@ -89,7 +89,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <h1 id="app-title" onclick="handleSecureClick(event)">釣り大会 受付</h1>
-            <span class="app-version">v8.8.4</span>
+            <span class="app-version">v8.8.5</span>
         </div>
     </nav>
 
@@ -766,6 +766,6 @@
     </footer>
 
     <div id="toast-container" class="toast-container"></div>
-    <script src="script.js?v=8.8.4"></script>
+    <script src="script.js?v=8.8.5"></script>
 </body>
 </html>
