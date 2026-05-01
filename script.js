@@ -176,7 +176,7 @@ async function fetchWithTimeout(resource, options = {}) {
 }
 
 window.handleRegistration = async function() {
-    console.log("BORIJIN: handleRegistration started (v8.8.4)");
+    console.log("BORIJIN: handleRegistration started (v8.8.6)");
     const submitBtn = document.getElementById('submit-registration');
     if (!submitBtn) return;
     
@@ -215,7 +215,7 @@ window.handleRegistration = async function() {
         });
 
         const entryData = {
-            id: editId || ("受理中-" + Date.now().toString().slice(-4)),
+            id: editId || null,
             groupName: document.getElementById('group-name').value,
             representative: document.getElementById('representative-name').value,
             representativeName: document.getElementById('representative-name').value,
@@ -256,11 +256,6 @@ window.handleRegistration = async function() {
                 body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData }),
                 keepalive: true
             }).catch(err => console.error("Final background sync failed:", err));
-        }
-
-        // v8.8.5: If new registration, add to state optimistically
-        if (!editId) {
-            state.entries.push(entryData);
         }
 
         // Optimistic UI update: Update local entries immediately
