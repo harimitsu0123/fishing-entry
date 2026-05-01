@@ -157,14 +157,32 @@ window.showConfirmation = function() {
     window.scrollTo(0, 0);
 }
 
+// v8.8.4: Improved fetch with timeout for mobile reliability
+async function fetchWithTimeout(resource, options = {}) {
+    const { timeout = 8000 } = options;
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    try {
+        const response = await fetch(resource, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(id);
+        return response;
+    } catch (e) {
+        clearTimeout(id);
+        throw e;
+    }
+}
+
 window.handleRegistration = async function() {
-    console.log("BORIJIN: handleRegistration started");
+    console.log("BORIJIN: handleRegistration started (v8.8.4)");
     const submitBtn = document.getElementById('submit-registration');
     if (!submitBtn) return;
     
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = "保存中... そのままお待ちください";
+    submitBtn.textContent = "送信中... そのままお待ちください";
 
     try {
         const editId = document.getElementById('edit-entry-id')?.value || '';
@@ -218,16 +236,27 @@ window.handleRegistration = async function() {
             _ts: Date.now()
         };
 
-        // v8.6.4: Use no-cors to prevent "Failed to fetch" in strict environments.
-        // In no-cors, we cannot read the response body, so we assume success
-        // if the request didn't throw an immediate error.
-        await fetch(GAS_WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData }),
-            keepalive: true
-        });
+        // v8.8.4: Try sync with timeout and retry
+        try {
+            await fetchWithTimeout(GAS_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData }),
+                keepalive: true,
+                timeout: 5000 // 5 seconds for the first attempt
+            });
+        } catch (e) {
+            console.warn("First sync attempt timed out or failed, trying once more in background...");
+            // Second attempt (non-awaited, background)
+            fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData }),
+                keepalive: true
+            }).catch(err => console.error("Final background sync failed:", err));
+        }
 
         // Optimistic UI update: Update local entries immediately
         if (editId) {
