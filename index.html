@@ -89,7 +89,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <h1 id="app-title" onclick="handleSecureClick(event)">釣り大会 受付</h1>
-            <span class="app-version">v8.8.2</span>
+            <span class="app-version">v8.8.3</span>
         </div>
     </nav>
 
@@ -105,7 +105,7 @@
                     <input type="hidden" id="edit-entry-id" value="">
                     <div class="alert alert-info py-2 mb-4" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; background: #eef7ff; border: 1px solid #cce5ff; border-radius: 8px;">
                         <span>既に登録済みで内容を修正したい方はこちら</span>
-                        <button type="button" class="btn-outline btn-small" onclick="revealEditAuth()" style="white-space: nowrap; font-weight: bold; padding: 0.4rem 0.8rem; height: auto; border-color: var(--primary-color); color: var(--primary-color);">修正・変更</button>
+                        <button type="button" id="show-edit-login" class="btn-outline btn-small" onclick="revealEditAuth()" style="white-space: nowrap; font-weight: bold; padding: 0.4rem 0.8rem; height: auto; border-color: var(--primary-color); color: var(--primary-color); cursor: pointer;">修正・変更</button>
                     </div>
 
                     <div class="form-section-card">
@@ -766,6 +766,6 @@
     </footer>
 
     <div id="toast-container" class="toast-container"></div>
-    <script src="script.js?v=8.8.2"></script>
+    <script src="script.js?v=8.8.3"></script>
 </body>
 </html>
