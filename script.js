@@ -39,6 +39,15 @@ let currentSortOrder = 'desc';
 let currentReceptionId = null;
 let isAdminAuthAction = false; // Flag for admin-led edits
 let activeReceptionEntryId = null; // Currently selected in reception desk
+
+// v8.8.1: Global error tracker
+window.onerror = function(msg, url, line, col, error) {
+    console.error("Global Error Caught:", {msg, url, line, col, error});
+    if (typeof showToast === 'function') {
+        showToast("エラー: " + msg, "error");
+    }
+    return false;
+};
 let pendingView = null; // v8.1.10: Global scoped to avoid ReferenceError
 
 /**
@@ -1044,6 +1053,7 @@ function initApp() {
     }
     const recToggle = document.getElementById('show-completed-toggle');
     if (recToggle) {
+        recToggle.removeEventListener('change', updateReceptionList);
         recToggle.addEventListener('change', updateReceptionList);
     }
 
@@ -1107,7 +1117,10 @@ function initApp() {
 }
 
 function switchView(btnElement, targetId, skipPush = false, skipScroll = false) {
-    if (!targetId) return;
+    if (!targetId) {
+        console.warn("switchView called with empty targetId");
+        targetId = 'registration-view';
+    }
 
     // v8.1.74: Clear search boxes when switching views to prevent stale filters causing blank screens
     if (typeof window.clearSearchBoxes === 'function') window.clearSearchBoxes();
@@ -1115,18 +1128,22 @@ function switchView(btnElement, targetId, skipPush = false, skipScroll = false) 
     // Auto-correction for legacy or incorrect names
     if (targetId === 'admin-view') targetId = 'dashboard-view';
 
-    const targetView = document.getElementById(targetId);
+    let targetView = document.getElementById(targetId);
     if (!targetView) {
         console.warn(`Attempted to switch to non-existent view: ${targetId}`);
-        // Fallback to registration if view doesn't exist
-        switchView(null, 'registration-view', true, skipScroll);
-        return;
+        targetId = 'registration-view';
+        targetView = document.getElementById(targetId);
     }
 
-    // Only skip if already active to prevent flickering (v8.1.56)
-    if (currentViewId === targetId && document.body.classList.contains(`view-${targetId}`)) {
-        // Still run updates but skip heavy class toggling if possible?
-        // Actually, let's keep it simple for now.
+    // v8.8.1: Hide ALL views first to ensure a clean state
+    document.querySelectorAll('.view').forEach(v => {
+        v.classList.add('hidden');
+        v.classList.remove('active');
+    });
+
+    if (targetView) {
+        targetView.classList.remove('hidden');
+        targetView.classList.add('active');
     }
 
     currentViewId = targetId;
@@ -3022,9 +3039,9 @@ function renderReceptionDesk() {
         </div>
     `;
     
-    // Ensure handlers are bound: Re-attach to button after DOM update if needed
-    const btn = desk.querySelector('.btn-primary');
-    if (btn) btn.addEventListener('click', () => window.updateGroupStatus(entry.id, 'checked-in'));
+    // v8.8.1: Removed redundant addEventListener that was duplicating the onclick attribute
+    // const btn = desk.querySelector('.btn-primary');
+    // if (btn) btn.addEventListener('click', () => window.updateGroupStatus(entry.id, 'checked-in'));
 }
 
 window.updateParticipantStatus = function (entryId, pIdx, status) {
