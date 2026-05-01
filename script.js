@@ -149,6 +149,67 @@ window.showConfirmation = function() {
     window.scrollTo(0, 0);
 }
 
+window.handleRegistration = async function() {
+    console.log("BORIJIN: handleRegistration started (v8.9.1)");
+    const submitBtn = document.getElementById('submit-registration');
+    if (!submitBtn) return;
+    
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = "送信中... そのままお待ちください";
+
+    try {
+        const editId = document.getElementById('edit-entry-id')?.value || '';
+        const pRows = document.querySelectorAll('.participant-row');
+        const participants = Array.from(pRows).map(row => {
+            const getVal = (cls) => row.querySelector(cls)?.value || '';
+            return {
+                type: getVal('.p-type'),
+                name: getVal('.p-name'),
+                nickname: getVal('.p-nick'),
+                region: getVal('.p-region'),
+                age: getVal('.p-age'),
+                gender: getVal('.p-gender'),
+                tshirtSize: getVal('.p-tshirt')
+            };
+        });
+
+        const sourceEl = document.querySelector('input[name="reg-source"]:checked');
+        const source = sourceEl ? sourceEl.value : '一般';
+        const fisherCount = participants.filter(p => p.type === 'fisher').length;
+        const observerCount = participants.filter(p => p.type === 'observer').length;
+
+        const existingEntry = editId ? state.entries.find(en => en.id === editId) : null;
+        const finalParticipants = participants.map((p, idx) => {
+            const oldP = existingEntry && existingEntry.participants[idx];
+            if (oldP && oldP.name === p.name) {
+                return { ...p, ikesuId: oldP.ikesuId || null, isLeader: oldP.isLeader || false, status: oldP.status || 'pending' };
+            }
+            return { ...p, ikesuId: null, isLeader: false, status: 'pending' };
+        });
+
+        const entryData = {
+            id: editId || null,
+            groupName: document.getElementById('group-name').value,
+            representative: document.getElementById('representative-name').value,
+            representativeName: document.getElementById('representative-name').value,
+            phone: document.getElementById('rep-phone').value,
+            email: document.getElementById('rep-email').value,
+            repPhone: document.getElementById('rep-phone').value,
+            repEmail: document.getElementById('rep-email').value,
+            password: document.getElementById('edit-password').value,
+            memo: document.getElementById('entry-memo')?.value || '',
+            source: source,
+            fishers: fisherCount,
+            observers: observerCount,
+            participants: finalParticipants,
+            status: existingEntry ? existingEntry.status : 'pending',
+            timestamp: existingEntry ? existingEntry.timestamp : new Date().toLocaleString('ja-JP'),
+            lastUpdated: new Date().toLocaleString('ja-JP'),
+            lastModified: new Date().toLocaleString('ja-JP'),
+            _ts: Date.now()
+        };
+
         // v8.7.6: Standard registration fetch (Optimized for reliability)
         await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
@@ -164,10 +225,6 @@ window.showConfirmation = function() {
             if (idx !== -1) {
                 state.entries[idx] = { ...state.entries[idx], ...entryData };
             }
-        } else {
-            // For new entries, we don't have an ID yet if we use no-cors.
-            // But we can add it temporarily if we want.
-            // state.entries.push(entryData);
         }
         saveStateToLocalStorage();
 
