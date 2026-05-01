@@ -588,13 +588,11 @@ function mergeData(local, cloud) {
         }
     });
 
-    // --- 2. 設定のマージ: クラウド側の設定を常に優先するが、クラウド側が空またはデフォルトの場合に備えて慎重にマージ ---
-    // v7.4.0: クラウドの最終更新日時がローカルより古い場合は、ローカル側の最新設定を保持する
-    const isCloudNewer = (cloud.lastUpdated || 0) > (local.lastUpdated || 0);
-    if (isCloudNewer && cloud.settings && Object.keys(cloud.settings).length > 0) {
+    // --- 2. 設定のマージ: クラウド側の設定を常に優先する ---
+    if (cloud.settings && Object.keys(cloud.settings).length > 0) {
         merged.settings = { ...local.settings, ...cloud.settings };
     } else {
-        merged.settings = { ...cloud.settings, ...local.settings };
+        merged.settings = { ...local.settings };
     }
     
     // --- 3. 重複排除、削除済みフィルタ、ソート ---
