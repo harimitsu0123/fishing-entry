@@ -210,32 +210,16 @@ window.handleRegistration = async function() {
             _ts: Date.now()
         };
 
-        // v8.9.2: Hybrid sync (Try CORS for ID, fallback to no-cors for reliability)
-        let finalId = null;
-        try {
-            const response = await fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                mode: 'cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData }),
-                keepalive: true
-            });
-            if (response.ok) {
-                const result = await response.json();
-                if (result && result.id) finalId = result.id;
-            }
-        } catch (e) {
-            console.warn("CORS fetch failed, falling back to no-cors sync...", e);
-            await fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData }),
-                keepalive: true
-            });
+        // v8.9.3: Original simple registration logic as requested
+        const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData })
+        });
+        
+        const result = await response.json();
+        if (result && result.id) {
+            entryData.id = result.id;
         }
-
-        if (finalId) entryData.id = finalId;
 
         // Optimistic UI update: Update local entries immediately
         if (editId) {
