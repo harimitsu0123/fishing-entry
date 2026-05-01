@@ -247,6 +247,10 @@ window.handleRegistration = async function() {
             result = { id: editId || ("PENDING-" + Date.now().toString().slice(-4)) };
         }
 
+        if (result && result.status === 'error') {
+            throw new Error(result.message || "サーバーエラーが発生しました");
+        }
+
         if (result && result.id) {
             entryData.id = result.id;
         }
@@ -257,7 +261,7 @@ window.handleRegistration = async function() {
             if (idx !== -1) {
                 state.entries[idx] = { ...state.entries[idx], ...entryData };
             }
-        } else {
+        } else if (entryData.id) {
             state.entries.push(entryData);
         }
         saveData(); // Sync to local and trigger save process
@@ -547,11 +551,15 @@ async function loadData() {
 function mergeData(local, cloud) {
     // 常にクラウドを最新の状態のベースとする
     const merged = { ...cloud }; 
-    const localMap = new Map(local.entries.map(e => [e.id, e]));
-    const cloudMap = new Map(cloud.entries.map(e => [e.id, e]));
+    // Filter out corrupted null IDs
+    const safeLocalEntries = (local.entries || []).filter(e => e && e.id);
+    const safeCloudEntries = (cloud.entries || []).filter(e => e && e.id);
+    
+    const localMap = new Map(safeLocalEntries.map(e => [e.id, e]));
+    const cloudMap = new Map(safeCloudEntries.map(e => [e.id, e]));
 
     // --- 1. ローカル固有（未同期）のデータをマージ ---
-    local.entries.forEach(lEntry => {
+    safeLocalEntries.forEach(lEntry => {
         const isServerId = /^[AMSH]-\d{3}$/.test(lEntry.id);
         
         if (!cloudMap.has(lEntry.id)) {
@@ -597,7 +605,8 @@ function mergeData(local, cloud) {
     ];
     const uniqueDeletedIds = Array.from(new Set(allDeletedIds));
 
-    const uniqueEntries = Array.from(new Map(merged.entries.map(e => [e.id, e])).values())
+    // Filter out corrupted null IDs here as well
+    const uniqueEntries = Array.from(new Map(merged.entries.filter(e => e && e.id).map(e => [e.id, e])).values())
         .filter(e => !uniqueDeletedIds.includes(e.id));
         
     merged.entries = uniqueEntries.sort((a, b) => {
@@ -1949,9 +1958,10 @@ window.updateDashboard = function() {
             const combinedParticipantInfo = (pNames + " " + pRegions + " " + pTshirts + " " + pGenders).toLowerCase();
             const searchTermLower = searchTerm.toLowerCase();
             
-            const matchesEntrySearch = e.id.toLowerCase().includes(searchTermLower) || 
-                                     e.groupName.toLowerCase().includes(searchTermLower) || 
-                                     e.representative.toLowerCase().includes(searchTermLower);
+            const safeId = e.id || "未採番";
+            const matchesEntrySearch = safeId.toLowerCase().includes(searchTermLower) || 
+                                     (e.groupName && e.groupName.toLowerCase().includes(searchTermLower)) || 
+                                     (e.representative && e.representative.toLowerCase().includes(searchTermLower));
             
             const matchesParticipantSearch = combinedParticipantInfo.includes(searchTermLower);
 
