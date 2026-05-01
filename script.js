@@ -301,6 +301,9 @@ window.startAdminRegistration = function (source) {
     const badgeClassMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
     const badgeClass = badgeClassMap[source] || 'badge-ippan';
     
+    const selector = document.getElementById('main-source-selector');
+    if (!selector) return;
+    
     const label = document.createElement('label');
     label.className = 'source-option admin-only temp-option';
     label.innerHTML = `
@@ -373,26 +376,25 @@ window.quickAdminRegistration = function(source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.2.12: HANDLERS PROMOTED");
-
-        // v8.1.30: Priority 1 - Restore UI State immediately
-        restoreUIState();
-
-        // v8.1.30: Priority 2 - Load data
-        loadData().catch(e => console.error("BORIJIN APP: loadData background error", e));
-
-        // v8.1.30: Priority 3 - Register event listeners and initial UI components
+        console.log("BORIJIN APP v8.9.7: Starting...");
+        
+        // v8.1.30: Priority 1 - Initialize UI and Events
         initApp();
+        
+        // v8.1.30: Priority 2 - Restore UI State (Optional)
+        try { restoreUIState(); } catch(e) { console.warn("restoreUIState failed", e); }
+
+        // v8.1.30: Priority 3 - Load data in background
+        loadData().catch(e => console.error("Cloud load error:", e));
 
         if (isAdminAuth) {
             startAutoSync();
         }
 
-        console.log("BORIJIN APP: Initialization Sequence Finished successfully.");
+        console.log("BORIJIN APP: Started successfully.");
     } catch (e) {
         console.error("BORIJIN APP: FATAL INITIALIZATION ERROR", e);
-        // Alert the user so we know exactly why it's failing
-        alert("システム起動時にエラーが発生しました: " + e.message + "\n画面情報を再読み込みしてください。");
+        alert("システム起動エラー: " + e.message);
     }
 });
 
