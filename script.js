@@ -210,9 +210,11 @@ window.handleRegistration = async function() {
             _ts: Date.now()
         };
 
-        // v8.9.3: Original simple registration logic as requested
+        // v8.9.5: Simple CORS request (Avoids preflight but allows reading JSON response)
         const response = await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData })
         });
         
