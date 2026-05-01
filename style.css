@@ -329,8 +329,10 @@ body.view-reception-view {
     backdrop-filter: blur(8px);
     z-index: 5000;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    overflow-y: auto;
+    padding: 2rem 1rem;
     animation: fadeIn 0.3s ease;
 }
 
@@ -1110,20 +1112,17 @@ textarea:focus {
     min-height: 3rem; /* Reduced from 3.5rem */
 }
 
-/* v8.8.0: Scrollable Confirmation Box */
+/* v8.8.2: Allow full page scroll for confirmation */
 .confirm-box {
-    max-height: 60vh;
-    overflow-y: auto;
     padding: 1rem;
     background: #f8fbff;
     border: 1px solid #e1efff;
     border-radius: 8px;
-    margin-bottom: 1rem;
-    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1.5rem;
 }
 
-#confirmation-section {
-    padding-bottom: 3rem; /* Ensure space for buttons */
+#confirmation-section, #registration-result {
+    padding-bottom: 10rem; /* Massive bottom space for mobile safety */
 }
 
 @media (max-width: 480px) {
