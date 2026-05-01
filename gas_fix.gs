@@ -37,9 +37,6 @@ function doPost(e) {
       db.entries.push(entry);
       saveToDb(db, props);
       
-      // ★ 自動返信メール送信
-      sendEntryConfirmationEmail(entry, "【受付完了】釣り大会へのお申し込みありがとうございます");
-      
       return createJsonResponse({ status: 'success', entry: entry });
     } 
     
@@ -50,9 +47,6 @@ function doPost(e) {
       if (index !== -1) {
         db.entries[index] = entry;
         saveToDb(db, props);
-        
-        // ★ 修正完了メール送信
-        sendEntryConfirmationEmail(entry, "【内容修正】お申し込み内容の変更を承りました");
         return createJsonResponse({ status: 'success', entry: entry });
       }
       return createJsonResponse({ status: 'error', message: 'Entry not found' });
@@ -60,12 +54,7 @@ function doPost(e) {
     
     // --- 【アクション: メール再送 (resend_email)】 ---
     else if (action === 'resend_email') {
-      var targetEntry = db.entries.find(function(en) { return en.id === request.id; });
-      if (targetEntry) {
-        sendEntryConfirmationEmail(targetEntry, "【再送】釣り大会 お申し込み内容のご確認");
-        return createJsonResponse({ status: 'success' });
-      }
-      return createJsonResponse({ status: 'error', message: 'Entry not found' });
+      return createJsonResponse({ status: 'error', message: 'Email feature disabled' });
     }
     
     // --- 【アクション: 一括送信 (bulk_email)】 ---
@@ -132,30 +121,6 @@ function generateEntryId(db, source) {
 function saveToDb(db, props) {
   db.lastUpdated = new Date().getTime();
   props.setProperty(PROP_KEY, JSON.stringify(db));
-}
-
-/** メール送信ヘルパー */
-function sendEntryConfirmationEmail(entry, subject) {
-  if (!entry.repEmail) return;
-  
-  var body = 
-    entry.representativeName + " 様\n\n" +
-    "この度は「釣り大会」へのお申し込み、誠にありがとうございます。\n" +
-    "以下の内容で受付を完了いたしました。\n\n" +
-    "--------------------------------------------------\n" +
-    "■ 受付番号: " + entry.id + "\n" +
-    "■ グループ名: " + entry.groupName + "\n" +
-    "■ 釣り人数: " + entry.fishers + " 名\n" +
-    "■ 見学人数: " + entry.observers + " 名\n" +
-    "--------------------------------------------------\n\n" +
-    "当日は受付にて「受付番号」をお伝えいただくか、\n" +
-    "本メールの画面をご提示ください。\n\n" +
-    "内容の変更やキャンセルを希望される場合は、\n" +
-    "公式サイトの修正フォームよりお手続きをお願いいたします。\n\n" +
-    "大会当日、皆様にお会いできることを楽しみにしております。\n\n" +
-    "--- 釣り大会 事務局 ---";
-    
-  GmailApp.sendEmail(entry.repEmail, subject, body);
 }
 
 function doGet(e) {

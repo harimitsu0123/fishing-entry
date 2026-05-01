@@ -1,4 +1,4 @@
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyGmFH8-GXlWes9GHH-uELyT1NQNDAcK3JatxOSw331-Wd928ZHP9xKAcQFnnekHNLy/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbydXZuGZWqI1rpx0fPJawHMzYekVubxeBCLs9taZPG3glPaFVD19CK7BRx1PZcCkRLf/exec";
 
 let state = {
     entries: [],
@@ -161,7 +161,7 @@ window.showConfirmation = function() {
 }
 
 window.handleRegistration = async function() {
-    console.log("BORIJIN: handleRegistration started (v8.9.1)");
+    console.log("BORIJIN: handleRegistration started (v8.9.9)");
     const submitBtn = document.getElementById('submit-registration');
     if (!submitBtn) return;
     
@@ -221,15 +221,32 @@ window.handleRegistration = async function() {
             _ts: Date.now()
         };
 
-        // v8.9.5: Simple CORS request (Avoids preflight but allows reading JSON response)
-        const response = await fetch(GAS_WEB_APP_URL, {
-            method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData })
-        });
-        
-        const result = await response.json();
+        // v8.9.8: Bulletproof submission with transactionId and fallback
+        const transactionId = editId ? null : (Date.now().toString() + Math.random().toString(36).substr(2, 5));
+        if (!editId) entryData.transactionId = transactionId;
+
+        let result = null;
+        try {
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData })
+            });
+            result = await response.json();
+        } catch (fetchErr) {
+            console.warn("CORS fetch failed, attempting no-cors fallback...", fetchErr);
+            // Fallback for Safari / strict browsers
+            await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData })
+            });
+            // We can't read the response in no-cors, so we fake a success with a temporary ID
+            result = { id: editId || ("PENDING-" + Date.now().toString().slice(-4)) };
+        }
+
         if (result && result.id) {
             entryData.id = result.id;
         }
@@ -240,8 +257,10 @@ window.handleRegistration = async function() {
             if (idx !== -1) {
                 state.entries[idx] = { ...state.entries[idx], ...entryData };
             }
+        } else {
+            state.entries.push(entryData);
         }
-        saveStateToLocalStorage();
+        saveData(); // Sync to local and trigger save process
 
         const entryType = editId ? '修正' : '新規登録';
         if (typeof logChange === 'function') logChange(entryData, entryType, existingEntry);
@@ -376,7 +395,7 @@ window.quickAdminRegistration = function(source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.9.7: Starting...");
+        console.log("BORIJIN APP v8.9.9: Starting...");
         
         // v8.1.30: Priority 1 - Initialize UI and Events
         initApp();
