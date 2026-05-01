@@ -40,6 +40,17 @@ let currentReceptionId = null;
 let isAdminAuthAction = false; // Flag for admin-led edits
 let activeReceptionEntryId = null; // Currently selected in reception desk
 
+// v8.9.6: Restore global error tracker for debugging
+window.onerror = function(msg, url, line, col, error) {
+    console.error("Global Error Caught:", {msg, url, line, col, error});
+    if (typeof showToast === 'function') {
+        showToast("エラー: " + msg, "error");
+    } else {
+        alert("システムエラーが発生しました: " + msg + " (" + line + ":" + col + ")");
+    }
+    return false;
+};
+
 let pendingView = null; // v8.1.10: Global scoped to avoid ReferenceError
 
 /**
