@@ -1,4 +1,4 @@
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyGmFH8-GXlWes9GHH-uELyT1NQNDAcK3JatxOSw331-Wd928ZHP9xKAcQFnnekHNLy/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzn9zkd4zXA8B7RQrHnqovBLahG3nZfUZyeuIRw7FrN8AZXOe9Z3KBbJFXboNZWuVw8/exec";
 
 let state = {
     entries: [],
@@ -161,7 +161,7 @@ window.showConfirmation = function() {
 }
 
 window.handleRegistration = async function() {
-    console.log("BORIJIN: handleRegistration started (v8.9.9)");
+    console.log("BORIJIN: handleRegistration started (v8.9.12)");
     const submitBtn = document.getElementById('submit-registration');
     if (!submitBtn) return;
     
@@ -399,7 +399,7 @@ window.quickAdminRegistration = function(source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.9.9: Starting...");
+        console.log("BORIJIN APP v8.9.12: Starting...");
         
         // v8.1.30: Priority 1 - Initialize UI and Events
         initApp();

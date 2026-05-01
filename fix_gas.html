@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+async function run() {
+    try {
+        const url = 'https://script.google.com/macros/s/AKfycbydXZuGZWqI1rpx0fPJawHMzYekVubxeBCLs9taZPG3glPaFVD19CK7BRx1PZcCkRLf/exec';
+        let res = await fetch(url);
+        let data = await res.json();
+        data.entries = data.entries.filter(e => e.id !== null);
+        
+        let payload = { action: 'save', db: data };
+        let postRes = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(payload)
+        });
+        document.body.innerHTML = '<h1>' + await postRes.text() + '</h1>';
+        console.log('DONE!');
+    } catch(e) {
+        document.body.innerHTML = '<h1>' + e + '</h1>';
+    }
+}
+run();
+</script>
+</body>
+</html>
