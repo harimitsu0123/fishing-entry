@@ -20,6 +20,61 @@
             color: #0f172a !important;
             line-height: 1.6;
         }
+        /* v8.9.8: Maintenance Mode Styles */
+        body.maintenance-active .navbar,
+        body.maintenance-active main,
+        body.maintenance-active footer {
+            display: none !important;
+        }
+        .maintenance-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #f8fafc;
+            z-index: 10000;
+            align-items: center; justify-content: center;
+            padding: 20px;
+            font-family: 'Inter', sans-serif;
+        }
+        body.maintenance-active .maintenance-overlay {
+            display: flex;
+        }
+        .maintenance-card {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        .maintenance-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        .maintenance-card h2 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        .maintenance-card p {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .maintenance-info {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+        .maintenance-footer {
+            font-weight: 700;
+            color: #334155;
+            letter-spacing: 0.05em;
+        }
     </style>
     <title>釣り大会 申し込み状況</title>
     <script>
@@ -86,10 +141,31 @@
 </head>
 
 <body>
+    <!-- v8.9.8: Maintenance Mode Overlay -->
+    <div id="maintenance-mode" class="maintenance-overlay">
+        <div class="maintenance-card">
+            <div class="maintenance-icon">🛠️</div>
+            <h2>システムメンテナンスのお知らせ</h2>
+            <p>
+                現在、より安定したサービスを提供するため、システムの最終調整を行っております。<br>
+                <strong>受付は一時的に停止しております</strong>。
+            </p>
+            <div class="maintenance-info">
+                ご不便をおかけいたしますが、再開までしばらくお待ちください。<br>
+                <small>※再開予定については公式サイトまたはSNSをご確認ください。</small>
+            </div>
+            <div class="maintenance-footer">
+                釣り大会 実行委員会
+            </div>
+            <!-- Bypass for admin: Click the footer small text to enter -->
+            <button class="btn-text" style="opacity: 0.1; font-size: 0.7rem; margin-top: 2rem;" onclick="document.body.classList.remove('maintenance-active')">Admin Bypass</button>
+        </div>
+    </div>
+
     <nav class="navbar">
         <div class="nav-container">
             <h1 id="app-title" onclick="handleSecureClick(event)">釣り大会 受付</h1>
-            <span class="app-version">v8.9.7</span>
+            <span class="app-version">v8.9.8</span>
         </div>
     </nav>
 
@@ -766,6 +842,10 @@
     </footer>
 
     <div id="toast-container" class="toast-container"></div>
-    <script src="script.js?v=8.9.7"></script>
+    <script src="script.js?v=8.9.8"></script>
+    <script>
+        // v8.9.8: Enable maintenance mode by default
+        document.body.classList.add('maintenance-active');
+    </script>
 </body>
 </html>
