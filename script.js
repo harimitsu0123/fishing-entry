@@ -40,14 +40,6 @@ let currentReceptionId = null;
 let isAdminAuthAction = false; // Flag for admin-led edits
 let activeReceptionEntryId = null; // Currently selected in reception desk
 
-// v8.8.1: Global error tracker
-window.onerror = function(msg, url, line, col, error) {
-    console.error("Global Error Caught:", {msg, url, line, col, error});
-    if (typeof showToast === 'function') {
-        showToast("エラー: " + msg, "error");
-    }
-    return false;
-};
 let pendingView = null; // v8.1.10: Global scoped to avoid ReferenceError
 
 /**
@@ -157,106 +149,14 @@ window.showConfirmation = function() {
     window.scrollTo(0, 0);
 }
 
-// v8.8.4: Improved fetch with timeout for mobile reliability
-async function fetchWithTimeout(resource, options = {}) {
-    const { timeout = 8000 } = options;
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
-    try {
-        const response = await fetch(resource, {
-            ...options,
-            signal: controller.signal
+        // v8.7.6: Standard registration fetch (Optimized for reliability)
+        await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData }),
+            keepalive: true
         });
-        clearTimeout(id);
-        return response;
-    } catch (e) {
-        clearTimeout(id);
-        throw e;
-    }
-}
-
-window.handleRegistration = async function() {
-    console.log("BORIJIN: handleRegistration started (v8.8.6)");
-    const submitBtn = document.getElementById('submit-registration');
-    if (!submitBtn) return;
-    
-    const originalText = submitBtn.textContent;
-    submitBtn.disabled = true;
-    submitBtn.textContent = "送信中... そのままお待ちください";
-
-    try {
-        const editId = document.getElementById('edit-entry-id')?.value || '';
-        const pRows = document.querySelectorAll('.participant-row');
-        const participants = Array.from(pRows).map(row => {
-            const getVal = (cls) => row.querySelector(cls)?.value || '';
-            return {
-                type: getVal('.p-type'),
-                name: getVal('.p-name'),
-                nickname: getVal('.p-nick'),
-                region: getVal('.p-region'),
-                age: getVal('.p-age'),
-                gender: getVal('.p-gender'),
-                tshirtSize: getVal('.p-tshirt')
-            };
-        });
-
-        const sourceEl = document.querySelector('input[name="reg-source"]:checked');
-        const source = sourceEl ? sourceEl.value : '一般';
-        const fisherCount = participants.filter(p => p.type === 'fisher').length;
-        const observerCount = participants.filter(p => p.type === 'observer').length;
-
-        const existingEntry = editId ? state.entries.find(en => en.id === editId) : null;
-        const finalParticipants = participants.map((p, idx) => {
-            const oldP = existingEntry && existingEntry.participants[idx];
-            if (oldP && oldP.name === p.name) {
-                return { ...p, ikesuId: oldP.ikesuId || null, isLeader: oldP.isLeader || false, status: oldP.status || 'pending' };
-            }
-            return { ...p, ikesuId: null, isLeader: false, status: 'pending' };
-        });
-
-        const entryData = {
-            id: editId || null,
-            groupName: document.getElementById('group-name').value,
-            representative: document.getElementById('representative-name').value,
-            representativeName: document.getElementById('representative-name').value,
-            phone: document.getElementById('rep-phone').value,
-            email: document.getElementById('rep-email').value,
-            repPhone: document.getElementById('rep-phone').value,
-            repEmail: document.getElementById('rep-email').value,
-            password: document.getElementById('edit-password').value,
-            memo: document.getElementById('entry-memo')?.value || '',
-            source: source,
-            fishers: fisherCount,
-            observers: observerCount,
-            participants: finalParticipants,
-            status: existingEntry ? existingEntry.status : 'pending',
-            timestamp: existingEntry ? existingEntry.timestamp : new Date().toLocaleString('ja-JP'),
-            lastUpdated: new Date().toLocaleString('ja-JP'),
-            lastModified: new Date().toLocaleString('ja-JP'),
-            _ts: Date.now()
-        };
-
-        // v8.8.4: Try sync with timeout and retry
-        try {
-            await fetchWithTimeout(GAS_WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData }),
-                keepalive: true,
-                timeout: 5000 // 5 seconds for the first attempt
-            });
-        } catch (e) {
-            console.warn("First sync attempt timed out or failed, trying once more in background...");
-            // Second attempt (non-awaited, background)
-            fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData }),
-                keepalive: true
-            }).catch(err => console.error("Final background sync failed:", err));
-        }
 
         // Optimistic UI update: Update local entries immediately
         if (editId) {
@@ -1146,10 +1046,7 @@ function initApp() {
 }
 
 function switchView(btnElement, targetId, skipPush = false, skipScroll = false) {
-    if (!targetId) {
-        console.warn("switchView called with empty targetId");
-        targetId = 'registration-view';
-    }
+    if (!targetId) return;
 
     // v8.1.74: Clear search boxes when switching views to prevent stale filters causing blank screens
     if (typeof window.clearSearchBoxes === 'function') window.clearSearchBoxes();
