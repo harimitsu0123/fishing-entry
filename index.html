@@ -4,22 +4,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* v8.5.27: Final UI Stabilization */
+        #bulk-mail-preview-area {
+            border: 3px solid #3b82f6 !important;
+            background-color: #f8fafc !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+            margin-top: 2rem !important;
+            padding: 1.5rem !important;
+            border-radius: 12px !important;
+        }
+        #bulk-mail-preview-content {
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            color: #0f172a !important;
+            line-height: 1.6;
+        }
+    </style>
     <title>釣り大会 申し込み状況</title>
-    <link rel="stylesheet" href="style.css?v=8.1.90">
+    <script>
+        /** v8.5.27: Standardized Preview Logic */
+        function emergencyPreview() {
+            try {
+                const subject = document.getElementById('bulk-mail-subject').value.trim();
+                const body = document.getElementById('bulk-mail-body').value.trim();
+                if (!subject || !body) { alert("件名と本文を入力してください。"); return; }
+                
+                const source = (typeof state !== 'undefined' && state.entries) ? state.entries : 
+                               (window.state && window.state.entries ? window.state.entries : []);
+                const entriesToMail = source.filter(e => e.status !== 'cancelled' && (e.email || e.repEmail || e.phone));
+                
+                if (entriesToMail.length === 0) { 
+                    alert("送信対象が見つかりません。"); 
+                    return; 
+                }
+                
+                const sample = entriesToMail[0];
+                const baseUrl = "https://harimitsu0123.github.io/fishing-entry/";
+                const pList = (sample.participants || []).map(p => {
+                    const ageRaw = p.age || "";
+                    const age = (typeof ageLabels !== 'undefined' && ageLabels[ageRaw]) ? ageLabels[ageRaw] : ageRaw;
+                    
+                    const genderRaw = p.gender || "";
+                    let gender = (typeof genderLabels !== 'undefined' && genderLabels[genderRaw]) ? genderLabels[genderRaw] : genderRaw;
+                    if (gender === "男性") gender = "男";
+                    else if (gender === "女性") gender = "女";
+                    
+                    const region = p.region || "";
+                    const size = p.tshirtSize || "";
+                    return `${p.name}(${gender}/${region}/${age}/${size})`;
+                }).join(', ');
+
+                const previewSample = body
+                    .replace(/{{(番号|受付番号)}}|{受付番号}/g, sample.id || "")
+                    .replace(/{{(名前|代表者名)}}|{代表者名}/g, sample.representative || sample.representativeName || "")
+                    .replace(/{{(グループ|グループ名)}}|{グループ名}/g, sample.groupName || "")
+                    .replace(/{{(釣り人数)}}|{釣り人数}/g, sample.fishers || "0")
+                    .replace(/{{(見学人数)}}|{見学人数}/g, sample.observers || "0")
+                    .replace(/{{(参加者名簿)}}|{参加者名簿}/g, pList)
+                    .replace(/{{(変更URL)}}|{変更URL}/g, baseUrl + "?id=" + sample.id);
+
+                const area = document.getElementById('bulk-mail-preview-area');
+                const content = document.getElementById('bulk-mail-preview-content');
+                if (area && content) {
+                    content.textContent = previewSample;
+                    area.style.display = 'block';
+                    area.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert("プレビュー結果:\n\n" + previewSample);
+                }
+            } catch (err) {
+                alert("エラー発生: " + err.message);
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css?v=8.1.95">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;700;900&display=swap"
-        rel="stylesheet">
-
-    <!-- v7.6.7: LINE/SNS Preview Fix -->
-    <meta name="description" content="釣り大会の公式受付管理システムです。登録内容の確認や修正が可能です。">
-    <meta property="og:title" content="釣り大会 受付管理システム">
-    <meta property="og:description" content="第1回 釣り大会の参加申し込み・状況確認はこちらから。">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://harimitsu0123.github.io/fishing-entry/">
-    
-    <!-- v8.1.7: QRCode Library Restoration -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 
@@ -27,12 +89,9 @@
     <nav class="navbar">
         <div class="nav-container">
             <h1 id="app-title" onclick="handleSecureClick(event)">釣り大会 受付</h1>
-            <span class="app-version">v8.3.40</span>
-            <!-- v8.3.23: Print button smaller, mode container tighter -->
+            <span class="app-version">v8.7.9</span>
         </div>
     </nav>
-
-    <!-- v8.2.26: Timeframe overlay completely removed as it was blocking buttons -->
 
     <main class="container">
         <!-- Registration View -->
@@ -41,382 +100,176 @@
                 <div class="card-header">
                     <h2>受付フォーム</h2>
                 </div>
-
                 <div id="registration-status" class="alert hidden"></div>
-
                 <form id="registration-form" autocomplete="off">
                     <input type="hidden" id="edit-entry-id" value="">
-
-                    <!-- v7.2.1: Modification Link for Users -->
-                    <div class="alert alert-info py-2 mb-4" 
-                         style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; background: #eef7ff; border: 1px solid #cce5ff; border-radius: 8px;">
+                    <div class="alert alert-info py-2 mb-4" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; background: #eef7ff; border: 1px solid #cce5ff; border-radius: 8px;">
                         <span>既に登録済みで内容を修正したい方はこちら</span>
-                        <button type="button" class="btn-outline btn-small" onclick="revealEditAuth()"
-                                style="white-space: nowrap; font-weight: bold; padding: 0.4rem 0.8rem; height: auto; border-color: var(--primary-color); color: var(--primary-color);">修正・変更</button>
+                        <button type="button" class="btn-outline btn-small" onclick="revealEditAuth()" style="white-space: nowrap; font-weight: bold; padding: 0.4rem 0.8rem; height: auto; border-color: var(--primary-color); color: var(--primary-color);">修正・変更</button>
                     </div>
-
 
                     <div class="form-section-card">
                         <div class="form-row">
-                            <!-- Specialized source selector -->
                             <div class="form-group hidden" id="source-selector-group" style="margin-bottom: 1rem; width: 100%;">
                                 <label style="display:block; margin-bottom: 0.5rem; font-weight:700;">受付区分</label>
                                 <div class="source-selector" id="main-source-selector" style="display:flex; flex-wrap: wrap; gap: 0.5rem;">
-                                    <label class="source-option" style="flex: 0 0 auto; min-width: 100px;">
-                                        <input type="radio" name="reg-source" value="一般" checked required>
-                                        <span class="source-label">
-                                            <span class="badge badge-ippan">一般</span>
-                                        </span>
-                                    </label>
-                                    <label class="source-option admin-only hidden" style="flex: 0 0 auto; min-width: 100px;">
-                                        <input type="radio" name="reg-source" value="みん釣り">
-                                        <span class="source-label">
-                                            <span class="badge badge-mintsuri">みん釣り</span>
-                                        </span>
-                                    </label>
-                                    <label class="source-option admin-only hidden" style="flex: 0 0 auto; min-width: 100px;">
-                                        <input type="radio" name="reg-source" value="水宝">
-                                        <span class="source-label">
-                                            <span class="badge badge-suiho">水宝</span>
-                                        </span>
-                                    </label>
-                                    <label class="source-option admin-only hidden" style="flex: 0 0 auto; min-width: 100px;">
-                                        <input type="radio" name="reg-source" value="ハリミツ">
-                                        <span class="source-label">
-                                            <span class="badge badge-harimitsu">ハリミツ</span>
-                                        </span>
-                                    </label>
+                                    <label class="source-option"><input type="radio" name="reg-source" value="一般" checked required><span class="source-label"><span class="badge badge-ippan">一般</span></span></label>
+                                    <label class="source-option admin-only hidden"><input type="radio" name="reg-source" value="みん釣り"><span class="source-label"><span class="badge badge-mintsuri">みん釣り</span></span></label>
+                                    <label class="source-option admin-only hidden"><input type="radio" name="reg-source" value="水宝"><span class="source-label"><span class="badge badge-suiho">水宝</span></span></label>
+                                    <label class="source-option admin-only hidden"><input type="radio" name="reg-source" value="ハリミツ"><span class="source-label"><span class="badge badge-harimitsu">ハリミツ</span></span></label>
                                 </div>
                             </div>
-
                             <div class="form-group" style="flex: 1 1 100%;">
                                 <label for="group-name">グループ名 <span class="required">(※必須)</span></label>
                                 <input type="text" id="group-name" required placeholder="例：チーム・ゼブラ">
-                                <small style="display:block; font-weight:normal; font-size: 0.75rem; color: var(--primary-color);">※個人参加は「個人」または自分の名前</small>
                             </div>
                         </div>
-
                         <div class="form-group">
                             <label for="representative-name">代表者氏名 <span class="required">(※必須)</span></label>
                             <input type="text" id="representative-name" required placeholder="例：山田 太郎">
                         </div>
                         <div class="form-row">
-                            <div class="form-group" style="flex: 1.5;">
-                                <label for="rep-phone">電話番号 <span class="required">(※必須)</span></label>
-                                <input type="tel" id="rep-phone" required placeholder="090-0000-0000">
-                            </div>
-                            <div class="form-group" style="flex: 1.0;">
-                                <label for="edit-password">編集用パスワード <span class="required">(※必須)</span></label>
-                                <input type="text" id="edit-password" required minlength="4"
-                                    placeholder="例：fish2025">
-                            </div>
+                            <div class="form-group" style="flex: 1.5;"><label for="rep-phone">電話番号 <span class="required">(※必須)</span></label><input type="tel" id="rep-phone" required placeholder="090-0000-0000"></div>
+                            <div class="form-group" style="flex: 1.0;"><label for="edit-password">編集用パスワード <span class="required">(※必須)</span></label><input type="text" id="edit-password" required minlength="4" placeholder="例：fish2025"></div>
                         </div>
-                        <div class="form-group">
-                            <label for="rep-email">メールアドレス <span class="required">(※必須)</span></label>
-                            <input type="email" id="rep-email" required placeholder="example@mail.com">
-                        </div>
-                        <div class="form-group">
-                            <label for="rep-email-confirm">メールアドレス（確認用） <span class="required">(※必須)</span></label>
-                            <input type="email" id="rep-email-confirm" required placeholder="もう一度入力してください">
-                        </div>
+                        <div class="form-group"><label for="rep-email">メールアドレス <span class="required">(※必須)</span></label><input type="email" id="rep-email" required placeholder="example@mail.com"></div>
+                        <div class="form-group"><label for="rep-email-confirm">メールアドレス（確認用） <span class="required">(※必須)</span></label><input type="email" id="rep-email-confirm" required placeholder="もう一度入力してください"></div>
                     </div>
 
-                    <div class="section-title">参加者リスト（釣り / 見学）
-                        <small
-                            style="display:block; font-size: 0.8rem; margin-top: 4px; color: var(--error-color); font-weight: bold;">※見学・撮影の方も登録・参加料必須
-                            / Tシャツ等の参加賞は全員にお配りします</small>
-                    </div>
-                    <div id="participant-list">
-                        <!-- Participant rows will be added here -->
-                    </div>
+                    <div class="section-title">参加者リスト（釣り / 見学）<small style="display:block; font-size: 0.8rem; margin-top: 4px; color: var(--error-color); font-weight: bold;">※見学・撮影の方も登録・参加料必須</small></div>
+                    <div id="participant-list"></div>
                     <button type="button" id="add-participant" class="btn-outline w-100 mt-2">+ 参加者を追加</button>
 
-                    <div id="admin-extra-actions" class="hidden"
-                        style="margin-top: 2rem; padding: 1rem; background: #fff4e6; border-radius: 8px; border: 2px dashed #e67e22;">
-                        <h4 style="color: #d35400; margin-bottom: 0.8rem;">管理者操作</h4>
-                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            <button type="button" id="admin-resend-email" class="btn-outline"
-                                style="border-color: #e67e22; color: #e67e22;">メール再送</button>
-                            <button type="button" id="admin-cancel-entry" class="btn-danger">この申込をキャンセル</button>
-                            <button type="button" id="admin-restore-entry"
-                                class="btn-secondary hidden">キャンセルを復元</button>
-                        </div>
+                    <!-- Memo Field -->
+                    <div class="form-group full-width" style="margin-top: 1.5rem;">
+                        <label for="entry-memo">備考（事務局用メモ / 連絡事項）</label>
+                        <textarea id="entry-memo" placeholder="特記事項や事務局への連絡があれば入力してください" rows="3" style="width: 100%; border-radius: 8px; border: 1px solid #ccc; padding: 0.5rem;"></textarea>
                     </div>
 
                     <div class="form-actions mt-4">
                         <button type="button" id="btn-to-confirm" class="btn-primary btn-large w-100" onclick="window.showConfirmation()">確認画面へ進む</button>
-                        <button type="button" id="cancel-edit" class="btn-secondary hidden">キャンセル</button>
+                        <button type="button" id="cancel-edit-btn" class="btn-secondary hidden" onclick="window.resetForm()">キャンセル</button>
                     </div>
                 </form>
 
-                <!-- Confirmation View (Hidden by default) -->
+                <!-- Confirmation View -->
                 <div id="confirmation-section" class="hidden">
-                    <h3 style="margin-top:0.5rem; margin-bottom:0.2rem; font-size:1.1rem;">登録内容の確認</h3>
-                    <p class="mb-1" style="font-size: 0.85rem;">以下の内容で登録します。よろしいですか？</p>
-
+                    <h3>登録内容の確認</h3>
                     <div class="confirm-box">
                         <p><strong>受付区分：</strong> <span id="conf-source"></span></p>
                         <p><strong>グループ名：</strong> <span id="conf-group"></span></p>
                         <p><strong>代表者氏名：</strong> <span id="conf-rep-name"></span></p>
                         <p><strong>電話番号：</strong> <span id="conf-rep-phone"></span></p>
                         <p><strong>メールアドレス：</strong> <span id="conf-rep-email"></span></p>
-
-                        <div id="conf-participant-list-area" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #eee;">
-                            <p style="font-size: 0.75rem; font-weight: 700; margin-bottom: 0.2rem; color: #475569;">お申込者一覧:</p>
-                            <ul id="conf-participant-summary" style="margin: 0; padding-left: 1.2rem; font-size: 0.8rem; color: #334155; line-height: 1.4;"></ul>
-                        </div>
-
-                        <p class="mt-1" style="font-size: 0.7rem; color: #64748b;">※編集用パスワードは非表示ですが保存されます。</p>
+                        <p><strong>備考：</strong> <span id="conf-memo" style="white-space: pre-wrap;"></span></p>
+                        <ul id="conf-participant-summary" style="font-size: 0.8rem; margin-top: 1rem;"></ul>
                     </div>
-
-                    <div class="registration-actions"
-                        style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem;">
-                        <button type="button" class="btn-primary w-100" id="submit-registration"
-                            onclick="window.handleRegistration()"
-                            style="padding: 1rem; font-size: 1.1rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 119, 190, 0.3);">はい、この内容で登録する</button>
-                        <button type="button" class="btn-secondary w-100" id="back-to-edit-from-conf"
-                            onclick="hideConfirmation()"
-                            style="padding: 0.8rem;">入力画面に戻って修正する</button>
-                        <button type="button" id="cancel-edit-btn" class="btn-text w-100 mt-2 hidden"
-                            style="color: var(--error-color); font-size: 0.8rem;">修正を完全に中止して戻る</button>
+                    <div class="registration-actions mt-4" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <button type="button" id="submit-registration" class="btn-primary btn-large" style="cursor: pointer; position: relative; z-index: 10;" onclick="window.handleRegistration()">この内容で登録する</button>
+                        <button type="button" class="btn-secondary w-100" onclick="hideConfirmation()">入力画面に戻って修正する</button>
                     </div>
-
-
                 </div>
 
-                <!-- Edit Verification Login -->
+                <!-- Edit Auth Login -->
                 <div id="edit-auth-section" class="hidden">
                     <h3>登録内容の変更</h3>
-                    <p>受付番号と、登録時の情報を入力してください。</p>
-                    <div class="form-group">
-                        <label>受付番号</label>
-                        <input type="text" id="auth-entry-id" placeholder="例：A-001">
-                    </div>
-                    <div class="form-group">
-                        <label>認証情報（パスワード / 電話 / メール のいずれか）</label>
-                        <input type="text" id="auth-credential" placeholder="認証情報を入力">
-                    </div>
-                    <div class="form-actions">
-                        <button id="verify-edit" class="btn-primary">認証して編集する</button>
-                        <button id="hide-edit-login" class="btn-secondary">戻る</button>
-                    </div>
-                    <div id="auth-error" class="alert alert-error mt-2 hidden"></div>
+                    <div class="form-group"><label>受付番号</label><input type="text" id="auth-entry-id" placeholder="例：A-001"></div>
+                    <div class="form-group"><label>認証情報（パスワード等）</label><input type="text" id="auth-credential"></div>
+                    <div class="form-actions"><button id="verify-edit" class="btn-primary">認証する</button><button id="hide-edit-login" class="btn-secondary">戻る</button></div>
                 </div>
             </div>
 
-            <!-- Last Registration Modal/Result -->
+            <!-- Result Card (v8.6.6 Optimized) -->
             <div id="registration-result" class="card result-card hidden">
                 <h3>登録完了！</h3>
                 <div class="entry-number-container">
                     <span class="label">受付番号</span>
                     <span id="result-number" class="entry-number">---</span>
                 </div>
-                <div class="result-details">
-                    <p><strong>グループ：</strong> <span id="result-group"></span></p>
-                    <p><strong>釣り人数：</strong> <span id="result-fishers"></span> 名</p>
-                    <p><strong>受付区分：</strong> <span id="result-source"></span></p>
-                </div>
-
-                <!-- Recovery Info (v6.3 Backup for Screenshot) -->
-                <div class="result-recovery-info">
-                    <h4>【内容の控え】</h4>
-                    <div>代表者： <span id="res-rep-name"></span></div>
-                    <div>電話： <span id="res-rep-phone"></span></div>
-                    <div>メール： <span id="res-rep-email"></span></div>
-                    <div style="margin-top:0.4rem; font-weight:bold;">参加者一覧：</div>
-                    <ul id="res-participant-list" style="max-height: 100px; overflow-y: auto;"></ul>
-                </div>
-
-                <div class="alert alert-warning mt-4 text-center" style="border: 2px solid #e67e22; background: #fffaf0;">
-                    <strong style="color:var(--error-color); font-size: 1.15rem;">【重要】</strong><br>
-                    <p style="font-size: 1rem; margin-top: 0.5rem; line-height: 1.6;">
-                        ご登録ありがとうございます。<br>
-                        後日、内容を確認した後に<strong>「公式の確定メール」</strong>をお送りいたします。<br>
-                        一週間たっても返事が届かない場合は、お問い合わせください。<br>
-                        （お問い合わせ先については<a href="https://harimitsu.co.jp/event" target="_blank" style="color:var(--primary-color); font-weight:bold; text-decoration:underline;">こちらのHP</a>をご確認ください）
-                    </p>
-                    <p style="font-size: 0.95rem; margin-top: 1rem; background: #fff; padding: 0.5rem; border-radius: 6px; border: 1px dashed #e67e22;">
+                
+                <div class="alert alert-warning mt-2 text-center" style="border: 2px solid #e67e22; background: #fffaf0; padding: 0.5rem; border-radius: 8px;">
+                    <strong style="color:var(--error-color); font-size: 1rem;">【重要】</strong>
+                    <p style="font-size: 0.85rem; margin-top: 0.3rem; background: #fff; padding: 0.4rem; border-radius: 6px; border: 1px dashed #e67e22; line-height: 1.4;">
                         <strong>この画面を必ずスクリーンショットして保存してください。</strong><br>
-                        （受付番号は当日の受付で必要になります）
+                        <span style="font-size: 0.75rem;">※受付番号は当日の受付で必要になります！</span>
                     </p>
-
                 </div>
 
-                <button class="btn-primary mt-4 w-100" id="back-to-form" onclick="resetForm(); window.scrollTo(0,0);">新しい登録を行う</button>
+                <div class="result-recovery-info mt-4" style="text-align: left; background: #f8fbff; padding: 1rem; border-radius: 8px; border: 1px solid #e1efff;">
+                    <h4 style="font-size: 0.9rem; color: #005bb5; margin-bottom: 0.5rem; border-bottom: 1px solid #c0d9f0;">【登録内容の控え】</h4>
+                    <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 0.4rem; color: #1e293b;">グループ：<span id="res-group-name"></span></div>
+                    <div style="font-size: 0.85rem;">代表者：<span id="res-rep-name"></span></div>
+                    <div style="font-size: 0.85rem;">電話：<span id="res-rep-phone"></span></div>
+                    <div style="font-size: 0.85rem;">メール：<span id="res-rep-email"></span></div>
+                    <div style="margin-top:0.6rem; font-weight:bold; font-size: 0.85rem;">参加者一覧：</div>
+                    <ul id="res-participant-list" style="font-size: 0.8rem; margin-top: 0.3rem; padding-left: 1.2rem;"></ul>
+                </div>
+
+                <div class="email-notice mt-4" style="text-align: left; font-size: 0.9rem; line-height: 1.6; background: #f1f5f9; padding: 0.8rem; border-radius: 8px;">
+                    <p>ご登録ありがとうございます。後日、内容を確認した後に<strong>「正式な確定メール」</strong>をお送りいたします。</p>
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.4rem;">※一週間たっても返事が届かない場合はお問い合わせください。</p>
+                </div>
+
+                <div class="result-actions mt-4" style="display: flex; justify-content: center; width: 100%;">
+                    <button class="btn-primary w-100" style="max-width: 300px; padding: 1.2rem;" onclick="resetForm(); window.scrollTo(0,0);">新しい登録を行う</button>
+                </div>
             </div>
         </section>
 
-
         <!-- Dashboard View -->
         <section id="dashboard-view" class="view">
-
-            <!-- Admin Sub-tabs Navigation -->
             <nav class="admin-tab-nav">
                 <button class="admin-tab-btn active" data-tab="tab-list">申込一覧</button>
                 <button class="admin-tab-btn" data-tab="tab-ikesu">イケス割当</button>
-                <button class="admin-tab-btn" data-tab="tab-print" onclick="window.updatePrintView()">メンバー表印刷</button>
+                <button class="admin-tab-btn" data-tab="tab-print" onclick="window.updatePrintView()">印刷</button>
+                <button class="admin-tab-btn" data-tab="tab-logs">変更履歴</button>
                 <button class="admin-tab-btn" data-tab="tab-settings">大会設定</button>
-                <button class="admin-tab-btn" data-tab="tab-stats">統計・分析</button>
-                <button class="admin-tab-btn admin-only hidden" data-tab="tab-email">一括メール</button>
             </nav>
 
             <div id="admin-tab-container">
-
-                <!-- Tab: Ikesu Assignment -->
-                <div id="tab-ikesu" class="admin-tab-content">
-                    <div class="card mb-4" style="display: flex; flex-direction: column; height: 90vh;">
-                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="display: flex; align-items: center; gap: 1rem;">
-                                <h2 style="margin: 0;">イケス（釣り座）割り当て</h2>
-                                <button class="btn-primary btn-header-add" onclick="openIkesuModal()" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">+ 追加</button>
-                            </div>
-                        </div>
-                        <p class="text-muted mt-2">左側のグループカードを右側のイケスにドラッグ＆ドロップしてください。</p>
-
-                        <div class="ikesu-workspace mt-3" style="flex: 1; display: flex; gap: 1rem; overflow: hidden;">
-                            <!-- Left: Unassigned Groups -->
-                            <!-- v8.2.20: Show result screen for screenshot immediately -->
-                            <!-- v8.2.21: Removed immediate resetForm() as it hides the result screen -->
-                            <div class="unassigned-area"
-                                style="width: 300px; background: #f8f9fa; border-radius: 8px; padding: 1rem; display: flex; flex-direction: column;">
-                                <h3
-                                    style="font-size: 1.1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
-                                    未割り当て <span class="badge" id="unassigned-count">0</span></h3>
-                                <input type="text" id="ikesu-search" class="form-control mb-2"
-                                    style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;"
-                                    placeholder="名前や人数で検索..." onkeyup="renderIkesuWorkspace()">
-                                <div id="unassigned-list" class="drag-zone" ondragover="allowDrop(event)"
-                                    ondrop="dropToUnassigned(event)"
-                                    style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; min-height: 200px;">
-                                    <!-- Draggable group cards will go here -->
-                                </div>
-                            </div>
-
-                            <!-- Right: Ikesu Grid -->
-                            <div class="ikesu-grid-area"
-                                style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 1rem; display: flex; flex-direction: column;">
-                                <h3
-                                    style="font-size: 1.1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;">
-                                    イケス一覧</h3>
-                                <div id="ikesu-grid" class="ikesu-grid"
-                                    style="flex: 1; overflow-y: auto; align-content: start;">
-                                    <!-- Ikesu containers will go here -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab: Print Member Lists (v8.3.22) -->
-                <div id="tab-print" class="admin-tab-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="no-print" style="font-size: 1.25rem;">メンバー表・印刷</h2>
-                            <button class="btn-primary" onclick="window.print()" style="padding: 6px 12px; font-size: 0.85rem; border-radius: 6px;">この画面を印刷する</button>
-                        </div>
-                        <p class="text-muted mb-4 no-print" style="font-size: 0.9rem;">A4縦・横の印刷に適した形式で一覧を表示します。用途に合わせてモードを選択してください。</p>
-                        
-                        <div class="print-controls mb-4 no-print" style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-wrap: wrap; align-items: center; gap: 1.2rem;">
-                            <div style="font-weight: bold; font-size: 0.9rem; white-space: nowrap;">印刷モード:</div>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
-                                <input type="radio" name="print-mode" value="ikesu" checked onchange="window.updatePrintView()">
-                                <span>イケス別 (リーダー用)</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
-                                <input type="radio" name="print-mode" value="group" onchange="window.updatePrintView()">
-                                <span>グループ別 (事前準備用)</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
-                                <input type="radio" name="print-mode" value="result" onchange="window.updatePrintView()">
-                                <span>イケス別 (釣果記入用)</span>
-                            </label>
-                        </div>
-
-                        <div id="print-view-container">
-                            <p class="text-muted p-4">名簿データを読み込んでいます...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab: Registration List -->
+                <!-- Tab: List -->
                 <div id="tab-list" class="admin-tab-content active">
-                    <!-- Global Stats Summary (Top) -->
-                    <div id="global-stats-summary-top" class="mb-4"></div>
-
-                    <!-- Status Stats Card -->
-                    <div class="card mb-4 mt-2">
-                        <h2>区分別 登録状況</h2>
-                        <div class="capacity-split-grid mt-4">
-                            <!-- General restored v8.1.46 -->
-                            <div class="split-card ippan">
-                                <div class="split-header">
-                                    <span class="badge badge-ippan">一般</span>
-                                    <span class="split-value"><span id="curr-ippan">0</span> / <span
-                                            id="max-ippan">100</span></span>
-                                </div>
-                                <div class="split-details">見学者: <span id="ippan-observers">0</span>名</div>
-                                <div class="progress-bar">
-                                    <div id="prog-ippan" class="progress" style="background:var(--color-ippan)"></div>
-                                </div>
-                            </div>
-                            <!-- Mintsuri -->
-                            <div class="split-card mintsuri">
-                                <div class="split-header">
-                                    <span class="badge badge-mintsuri">みん釣り</span>
-                                    <span class="split-value"><span id="curr-mintsuri">0</span> / <span
-                                            id="max-mintsuri">100</span></span>
-                                </div>
-                                <div class="split-details">見学者: <span id="mintsuri-observers">0</span>名</div>
-                                <div class="progress-bar">
-                                    <div id="prog-mintsuri" class="progress" style="background:var(--color-mintsuri)"></div>
-                                </div>
-                            </div>
-                            <!-- Suiho -->
-                            <div class="split-card suiho">
-                                <div class="split-header">
-                                    <span class="badge badge-suiho">水宝</span>
-                                    <span class="split-value"><span id="curr-suiho">0</span> / <span
-                                            id="max-suiho">50</span></span>
-                                </div>
-                                <div class="split-details">見学者: <span id="suiho-observers">0</span>名</div>
-                                <div class="progress-bar">
-                                    <div id="prog-suiho" class="progress" style="background:var(--color-suiho)"></div>
-                                </div>
-                            </div>
-                            <!-- Harimitsu -->
-                            <div class="split-card harimitsu">
-                                <div class="split-header">
-                                    <span class="badge badge-harimitsu">ハリミツ</span>
-                                    <span class="split-value"><span id="curr-harimitsu">0</span> / <span
-                                            id="max-harimitsu">50</span></span>
-                                </div>
-                                <div class="split-details">見学者: <span id="harimitsu-observers">0</span>名</div>
-                                <div class="progress-bar">
-                                    <div id="prog-harimitsu" class="progress" style="background:var(--color-harimitsu)"></div>
-                                </div>
-                            </div>
+                    <div id="global-stats-summary-top"></div>
+                    <!-- v8.1.32: Restored Capacity Split Grid -->
+                    <div class="capacity-split-grid mb-4">
+                        <div class="split-card">
+                            <div class="split-header"><span class="badge badge-ippan">一般</span><span class="split-value"><span id="curr-ippan">0</span> / <span id="max-ippan">0</span></span></div>
+                            <div class="split-details">見学: <span id="ippan-observers">0</span></div>
+                            <div class="progress-bar"><div id="prog-ippan" class="progress bg-ippan" style="width: 0%"></div></div>
                         </div>
-                    </div> <!-- End of Status Stats Card -->
+                        <div class="split-card" style="border-top-color: var(--color-mintsuri);">
+                            <div class="split-header"><span class="badge badge-mintsuri">みん釣り</span><span class="split-value"><span id="curr-mintsuri">0</span> / <span id="max-mintsuri">0</span></span></div>
+                            <div class="split-details">見学: <span id="mintsuri-observers">0</span></div>
+                            <div class="progress-bar"><div id="prog-mintsuri" class="progress bg-mintsuri" style="width: 0%"></div></div>
+                        </div>
+                        <div class="split-card" style="border-top-color: var(--color-suiho);">
+                            <div class="split-header"><span class="badge badge-suiho">水宝</span><span class="split-value"><span id="curr-suiho">0</span> / <span id="max-suiho">0</span></span></div>
+                            <div class="split-details">見学: <span id="suiho-observers">0</span></div>
+                            <div class="progress-bar"><div id="prog-suiho" class="progress bg-suiho" style="width: 0%"></div></div>
+                        </div>
+                        <div class="split-card" style="border-top-color: var(--color-harimitsu);">
+                            <div class="split-header"><span class="badge badge-harimitsu">ハリミツ</span><span class="split-value"><span id="curr-harimitsu">0</span> / <span id="max-harimitsu">0</span></span></div>
+                            <div class="split-details">見学: <span id="harimitsu-observers">0</span></div>
+                            <div class="progress-bar"><div id="prog-harimitsu" class="progress bg-harimitsu" style="width: 0%"></div></div>
+                        </div>
+                    </div>
 
                     <div class="card">
-                        <div class="card-header">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                             <h2>申込名簿</h2>
-                            <div class="header-actions">
-                                <button id="export-csv" class="btn-outline">グループ名簿 (CSV書き出し)</button>
-                                <button id="export-participants-csv" class="btn-outline">参加者一覧 (CSV書き出し)</button>
+                            <div style="display: flex; gap: 0.4rem;">
+                                <button id="export-csv" class="btn-text" style="font-size: 0.75rem; padding: 4px 8px; background: #f1f5f9; border-radius: 4px;">CSV(団体)</button>
+                                <button id="export-participants-csv" class="btn-text" style="font-size: 0.75rem; padding: 4px 8px; background: #f1f5f9; border-radius: 4px;">CSV(名簿)</button>
                             </div>
                         </div>
-                        <div class="search-box mb-3" style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="text" id="dashboard-search" autocomplete="off" placeholder="名前・番号などで検索..." style="flex: 1;">
-                            <button class="btn-secondary no-print" onclick="window.printMemberList()" style="white-space: nowrap; padding: 0.75rem 1.2rem;">名簿を印刷</button>
+                        <div class="filter-group mb-3" style="display: flex; gap: 0.5rem; flex-wrap: wrap; padding: 0 1rem;">
+                            <button class="filter-btn active" data-filter="all" onclick="window.setDashboardFilter('all')">すべて</button>
+                            <button class="filter-btn" data-filter="一般" onclick="window.setDashboardFilter('一般')">一般</button>
+                            <button class="filter-btn" data-filter="みん釣り" onclick="window.setDashboardFilter('みん釣り')">みん釣り</button>
+                            <button class="filter-btn" data-filter="水宝" onclick="window.setDashboardFilter('水宝')">水宝</button>
+                            <button class="filter-btn" data-filter="ハリミツ" onclick="window.setDashboardFilter('ハリミツ')">ハリミツ</button>
                         </div>
-                        <div class="filter-group mb-4">
-                            <button class="filter-btn active" data-filter="all">すべて</button>
-                            <button class="filter-btn" data-filter="一般">一般</button>
-                            <button class="filter-btn" data-filter="みん釣り">みん釣り</button>
-                            <button class="filter-btn" data-filter="水宝">水宝</button>
-                            <button class="filter-btn" data-filter="ハリミツ">ハリミツ</button>
-                        </div>
+                        <div class="search-box mb-3"><input type="text" id="dashboard-search" placeholder="検索..."></div>
                         <div class="table-container">
                             <table id="entry-table">
                                 <thead>
@@ -439,43 +292,51 @@
                     </div>
                 </div>
 
-                <!-- Tab: Proxy Registration -->
-                <div id="tab-proxy" class="admin-tab-content">
+                <!-- Tab: Bulk Email -->
+                <div id="tab-email" class="admin-tab-content">
                     <div class="card">
-                        <h2>代理・一括登録</h2>
-                        <p class="text-muted mb-3">一般公開されていない「水宝」「ハリミツ」枠での一括登録をここから開始できます。</p>
-                        <div class="flex-gap">
-                            <button type="button" class="btn-primary" onclick="startAdminRegistration('水宝')">
-                                <span class="badge badge-suiho">水宝</span> 水宝枠で登録
-                            </button>
-                            <button type="button" class="btn-primary" onclick="startAdminRegistration('ハリミツ')"
-                                style="background:#9b59b6; border-color:#9b59b6">
-                                <span class="badge badge-harimitsu">ハリミツ</span> ハリミツ枠で登録
-                            </button>
+                        <div class="card-header"><h2>お知らせ一括送信</h2></div>
+                        <div class="mt-3 mb-4"><p>対象者： <span id="bulk-mail-recipient-count">0</span> 名</p></div>
+                        <div class="form-group mb-3"><label for="bulk-mail-subject">件名</label><input type="text" id="bulk-mail-subject"></div>
+                        <div class="form-group mb-3">
+                            <label>本文</label>
+                            <div class="mb-2" style="display: flex; gap: 0.5rem; flex-wrap: wrap; background: #f1f5f9; padding: 0.5rem; border-radius: 6px;">
+                                <button type="button" class="btn-tag" onclick="insertMailVar('{{名前}}')">代表者名</button>
+                                <button type="button" class="btn-tag" onclick="insertMailVar('{{番号}}')">受付番号</button>
+                                <button type="button" class="btn-tag" onclick="insertMailVar('{{グループ}}')">グループ名</button>
+                                <button type="button" class="btn-tag" onclick="insertMailVar('{{釣り人数}}')">釣り人数</button>
+                                <button type="button" class="btn-tag" onclick="insertMailVar('{{見学人数}}')">見学人数</button>
+                                <button type="button" class="btn-tag" onclick="insertMailVar('{{参加者名簿}}')">参加者名簿</button>
+                                <button type="button" class="btn-tag" onclick="insertMailVar('{{変更URL}}')">変更URL</button>
+                            </div>
+                            <textarea id="bulk-mail-body" rows="12"></textarea>
                         </div>
-                        <div class="flex-gap mt-3" style="border-top: 1px dashed #ccc; padding-top: 1rem;">
-                            <button type="button" class="btn-outline" onclick="quickAdminRegistration('水宝')" style="font-size: 0.85rem;">
-                                ⚡ 水宝 クイック登録（人数のみ確保）
-                            </button>
-                            <button type="button" class="btn-outline" onclick="quickAdminRegistration('ハリミツ')" style="font-size: 0.85rem;">
-                                ⚡ ハリミツ クイック登録（人数のみ確保）
-                            </button>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" class="btn-outline" style="flex: 1;" onclick="emergencyPreview()">👁️ プレビュー</button>
+                            <button type="button" class="btn-primary" style="flex: 2;" onclick="handleBulkEmailSend()">🚀 一斉送信</button>
+                        </div>
+                        <div id="bulk-mail-preview-area" style="display: none;">
+                            <h4>プレビュー結果</h4>
+                            <div id="bulk-mail-preview-content"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tab: General Settings -->
-                <div id="tab-settings" class="admin-tab-content">
-                    <!-- Quick Access Menu for Reorganized Tabs (v8.4.2) -->
-                    <div class="admin-special-menu mb-4" style="background: #f1f5f9; padding: 1.2rem; border-radius: 12px; display: flex; gap: 1rem; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <button type="button" class="btn-primary" onclick="switchAdminTab('tab-proxy')" style="flex: 1; background: #fff; border: 2px solid var(--primary-color); color: var(--primary-color);">
-                            📝 代理・一括登録を開く
-                        </button>
-                        <button type="button" class="btn-primary" onclick="switchAdminTab('tab-data')" style="flex: 1; background: #fff; border: 2px solid var(--error-color); color: var(--error-color);">
-                            ⚙️ データ管理（リセット等）を開く
-                        </button>
+                <!-- Tab: Change Log (NEW) -->
+                <div id="tab-logs" class="admin-tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>変更履歴・ログ</h2>
+                            <button class="btn-text btn-small" onclick="renderChangeLog()">🔄 更新</button>
+                        </div>
+                        <div id="change-log-container" class="log-container">
+                            <div class="text-center py-5 text-muted">ログを読み込み中...</div>
+                        </div>
                     </div>
-                    <!-- Share URL & QR Code Combined -->
+                </div>
+
+                <!-- Tab: Settings (Simplified) -->
+                <div id="tab-settings" class="admin-tab-content">
                     <div class="card mb-4" style="background: #f0f7ff; border: 2px solid var(--primary-color);">
                         <div class="form-row" style="align-items: center; gap: 2rem;">
                             <div style="flex: 2;">
@@ -506,12 +367,11 @@
                         <!-- Specialized URLs Section -->
                         <div class="special-urls mt-4" style="border-top: 1px solid #cce5ff; padding-top: 1.5rem;">
                             <h3 style="font-size: 1rem; color: var(--text-dark); margin-bottom: 0.5rem;">🔗 専用URL一覧 (コピー用)</h3>
-                            <p class="text-muted small mb-4">担当者や一般の方へ共有するためのURLです。</p>
+                            <p class="text-muted small mb-4">協力各社・一般の方へ共有するためのURLです。</p>
 
                             <!-- Group A: Registration Forms -->
                             <div class="url-section-title">受付フォーム用 (窓口用)</div>
                             <div class="url-grid">
-                                <!-- General Registration Hidden (v8.1.38) -->
                                 <div class="url-tile">
                                     <div class="url-tile-header">
                                         <span class="url-tile-title">みん釣り 窓口用</span>
@@ -552,7 +412,7 @@
                             <div class="url-grid">
                                 <div class="url-tile">
                                     <div class="url-tile-header">
-                                        <span class="url-tile-title">みん釣り 管理用</span>
+                                        <span class="url-tile-title">みん釣り 管理</span>
                                         <span class="badge badge-mintsuri">みん釣り</span>
                                     </div>
                                     <div class="url-tile-body">
@@ -561,15 +421,9 @@
                                         <button class="btn-open-link" onclick="openShareUrl('url-mintsuri-admin')">開く</button>
                                     </div>
                                 </div>
-                                <!-- Harimitsu/Suiho Admin links removed as requested (v8.1.39) -->
-                            </div>
-
-                            <!-- Group B: Aggregation -->
-                            <div class="url-section-title">集計・名簿管理</div>
-                            <div class="url-grid">
-                                <div class="url-tile" style="grid-column: span 1;">
+                                <div class="url-tile">
                                     <div class="url-tile-header">
-                                        <span class="url-tile-title">釣果集計フォーム (リーダー用)</span>
+                                        <span class="url-tile-title">成績記入用</span>
                                         <span class="badge badge-ippan" style="background:var(--accent-color)">入力用</span>
                                     </div>
                                     <div class="url-tile-body">
@@ -584,7 +438,7 @@
 
                     <div class="card mb-4">
                         <h2>大会基本設定・定員</h2>
-                        <form id="settings-form-proxy">
+                        <form id="settings-form">
                             <div class="form-group">
                                 <label for="competition-name">大会名称</label>
                                 <input type="text" id="competition-name" placeholder="例：第1回 釣り大会"
@@ -600,10 +454,6 @@
                                     <input type="datetime-local" id="registration-deadline">
                                 </div>
                             </div>
-                            <p class="text-muted" style="font-size: 0.8rem; margin-top: 5px; color: var(--accent-color);">
-                                ※管理者はログイン中、開始前でもフォームを操作・プレビューできます。<br>
-                                一般利用者には自動的に制限画面が表示されます。
-                            </p>
 
                             <div class="section-title mt-4" style="display: flex; justify-content: space-between; align-items: center;">
                                 <span>定員設定</span>
@@ -612,7 +462,7 @@
                                         現在の合計: <span id="capacity-total-summary" style="font-weight: bold; color: var(--primary-color);">0</span> 名
                                     </div>
                                     <div style="background: #f1f5f9; padding: 4px 12px; border-radius: 8px; border: 1px solid #cbd5e1; display: flex; align-items: center; gap: 8px;">
-                                        <label for="cap-total" style="font-size: 0.9rem; margin: 0; font-weight: bold;">大会全体の定員:</label>
+                                        <label for="cap-total" style="font-size: 0.9rem; margin: 0; font-weight: bold;">大会全体定員:</label>
                                         <input type="number" id="cap-total" min="0" style="width: 80px; padding: 2px 5px; border: 1px solid #94a3b8; border-radius: 4px; text-align: center; font-weight: bold;">
                                         <span style="font-size: 0.9rem;">名</span>
                                     </div>
@@ -636,12 +486,12 @@
                                     <input type="number" id="cap-harimitsu" min="0" oninput="updateCapacityTotal()">
                                 </div>
                                 <div class="form-group">
-                                    <label for="capacity-observers">見学者 (合計)</label>
+                                    <label for="capacity-observers">見学者(合計)</label>
                                     <input type="number" id="capacity-observers" min="0" oninput="updateCapacityTotal()">
                                 </div>
                             </div>
 
-                            <div class="section-title mt-4" style="color: #e67e22; border-left-color: #e67e22; background: #fff4e6;">🛠️ 手動カウント調整（電話受付分など）</div>
+                            <div class="section-title mt-4" style="color: #e67e22; border-left-color: #e67e22; background: #fff4e6;">🛠️ 手動カウント調整（電話受付など）</div>
                             <p class="text-muted small">※DB登録せずに人数だけを確保したい場合に使用します。合計数に加算されます。</p>
                             <div class="form-row mt-2">
                                 <div class="form-group">
@@ -672,579 +522,250 @@
                                 onclick="triggerSettingsSave()">大会設定をすべて保存</button>
                         </form>
                     </div>
+
+                    <div class="card border-danger mt-4">
+                        <h2>サーバーデータ管理</h2>
+                        <div style="display:flex; gap:1rem; align-items:center;">
+                            <button id="reset-data" class="btn-danger" onclick="window.confirmReset()">全リセット</button>
+                            <button type="button" class="btn-outline" onclick="clearLocalCache()">🔄 キャッシュ初期化</button>
+                        </div>
+                        <p class="text-muted small mt-2">※全リセットはクラウド上の全データを削除します。慎重に操作してください。</p>
+                    </div>
                 </div>
 
-
-
-
-                <!-- Tab: Bulk Email (v8.4.3: Restored & Enhanced) -->
-                <div id="tab-email" class="admin-tab-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2>一括メール送信</h2>
-                        </div>
-                        <p class="text-muted mb-4">現在登録されている全エントリー（キャンセル除く）の代表者へ一斉メールを送信します。</p>
-                        
-                        <div class="form-group mb-3">
-                            <label for="bulk-mail-subject">件名</label>
-                            <input type="text" id="bulk-mail-subject" placeholder="例：【重要】釣り大会当日のご案内">
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label>本文</label>
-                            <div class="mb-2" style="display: flex; flex-wrap: wrap; gap: 0.5rem; background: #f8fafc; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                <span style="font-size: 0.8rem; color: #64748b; width: 100%; margin-bottom: 0.3rem;">📋 クリックして項目を挿入:</span>
-                                <button type="button" class="btn-tag" onclick="insertMailVar('{{番号}}')">受付番号</button>
-                                <button type="button" class="btn-tag" onclick="insertMailVar('{{名前}}')">代表者名</button>
-                                <button type="button" class="btn-tag" onclick="insertMailVar('{{グループ}}')">グループ名</button>
-                                <button type="button" class="btn-tag" onclick="insertMailVar('{{釣り人数}}')">釣り人数</button>
-                                <button type="button" class="btn-tag" onclick="insertMailVar('{{見学人数}}')">見学人数</button>
-                                <button type="button" class="btn-tag" onclick="insertMailVar('{{参加者名簿}}')" style="background: #e0f2fe; color: #0369a1; border-color: #7dd3fc;">参加者名簿</button>
+                <!-- Placeholder for other tabs -->
+                <div id="tab-ikesu" class="admin-tab-content">
+                    <div class="ikesu-workspace mt-3" style="display: flex; gap: 1.5rem; width: 100%; max-width: 100%; height: calc(100vh - 200px); min-height: 700px; overflow: hidden;">
+                        <!-- 左側：未割当エリア -->
+                        <div class="unassigned-area" style="width: 300px; min-width: 300px; display: flex; flex-direction: column; background: #f8f9fa; padding: 1rem; border-radius: 8px; border: 1px solid #e1e8ed;">
+                            <div class="sidebar-header mb-3">
+                                <h3 style="margin:0; font-size: 1.1rem; color: var(--primary-color);">未割当リスト <span id="unassigned-count" class="badge badge-secondary" style="font-size: 0.8rem; vertical-align: middle;">0</span></h3>
                             </div>
-                            <textarea id="bulk-mail-body" rows="12" placeholder="ここにメール本文を入力してください..."></textarea>
+                            <div class="search-box mb-3">
+                                <input type="text" id="ikesu-search" placeholder="名前・IDで検索..." oninput="renderIkesuWorkspace()">
+                            </div>
+                            <div id="unassigned-list" class="drag-zone" style="flex: 1; overflow-y: auto; padding: 0.5rem;" ondragover="allowDrop(event)" ondrop="dropToUnassigned(event)">
+                                <!-- JSによる挿入 -->
+                            </div>
                         </div>
 
-                        <div class="alert alert-info mb-4" id="bulk-mail-preview-area" style="display: none; background: #fff; border: 2px solid #3b82f6;">
-                            <div style="font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 10px; color: #1d4ed8;">📧 送信プレビュー (一人目の例)</div>
-                            <div id="bulk-mail-preview-content" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6;"></div>
-                            <button type="button" class="btn-secondary mt-3" style="width: 100%;" onclick="document.getElementById('bulk-mail-preview-area').style.display='none'">プレビューを閉じる</button>
-                        </div>
-
-                        <div style="display: flex; gap: 1rem;">
-                            <button type="button" class="btn-secondary" style="flex: 1;" onclick="previewBulkEmail()">
-                                🔍 送信内容を確認（プレビュー）
-                            </button>
-                            <button type="button" id="btn-send-bulk-mail" class="btn-primary" style="flex: 2; font-weight: bold;" onclick="handleBulkEmailSend()">
-                                🚀 一斉メールを送信する
-                            </button>
+                        <!-- 右側：イケス配置エリア -->
+                        <div class="ikesu-main-area" style="flex: 1; display: flex; flex-direction: column; background: #fff; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                                <h3 style="margin:0; font-size: 1.1rem; color: var(--primary-color);">イケス配置図</h3>
+                                <button class="btn-primary btn-small" onclick="window.openIkesuModal()">+ イケス追加</button>
+                            </div>
+                            <div id="ikesu-grid" class="ikesu-grid" style="flex: 1; overflow-y: auto; padding: 0.5rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                                <!-- JSによる挿入 -->
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tab: Statistics -->
+                <div id="tab-print" class="admin-tab-content">
+                    <div class="card no-print">
+                        <div class="card-header"><h2>印刷設定</h2></div>
+                        <div class="form-row mb-4">
+                            <div class="form-group">
+                                <label>印刷モード</label>
+                                <div style="display:flex; gap:1.5rem; margin-top:0.5rem; flex-wrap: wrap;">
+                                    <label style="white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"><input type="radio" name="print-mode" value="ikesu" checked onchange="updatePrintView()"> イケス別名簿</label>
+                                    <label style="white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"><input type="radio" name="print-mode" value="group" onchange="updatePrintView()"> グループ別(賞品用)</label>
+                                    <label style="white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"><input type="radio" name="print-mode" value="result" onchange="updatePrintView()"> 成績記入用紙</label>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-primary w-100" onclick="window.print()">🖨️ 印刷実行 (A4サイズ推奨)</button>
+                    </div>
+                    <div id="print-view-container"></div>
+                </div>
+
                 <div id="tab-stats" class="admin-tab-content">
-                    <div class="card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                            <h2>統計・分析</h2>
-                            <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.3rem 0.6rem; border-radius: 8px;">
-                                <label for="stats-filter-source" style="font-size: 0.8rem; font-weight: 700; color: #475569;">絞り込み:</label>
-                                <select id="stats-filter-source" onchange="renderBreakdownStats(this.value)" style="border: none; background: transparent; font-size: 0.85rem; font-weight: 700; color: var(--primary-color); outline: none; cursor: pointer;">
-                                    <option value="all">全体表示</option>
-                                    <option value="一般">一般枠</option>
-                                    <option value="みん釣り">みん釣り枠</option>
-                                    <option value="水宝">水宝枠</option>
-                                    <option value="ハリミツ">ハリミツ枠</option>
-                                </select>
-                            </div>
+                    <div id="global-stats-summary"></div>
+                    <div class="breakdown-grid mt-4">
+                        <div class="breakdown-card">
+                            <div class="section-title">年代別内訳</div>
+                            <div id="age-breakdown-list" class="stats-list"></div>
                         </div>
-                        <div class="breakdown-grid mt-4">
-                            <div class="breakdown-card">
-                                <div class="section-title">年代別 集計</div>
-                                <div id="age-breakdown-list" class="stats-list">
-                                    <!-- Dynamic content -->
-                                </div>
-                            </div>
-                            <div class="breakdown-card">
-                                <div class="section-title">性別 集計</div>
-                                <div id="gender-breakdown-list" class="stats-list">
-                                    <!-- Dynamic content -->
-                                </div>
-                            </div>
-                             <div class="breakdown-card">
-                                <div class="section-title">地域別 集計</div>
-                                <div id="region-breakdown-list" class="stats-list">
-                                    <!-- Dynamic content -->
-                                </div>
-                            </div>
-                            <!-- v7.7.0: T-shirt Size Analysis -->
-                            <div class="breakdown-card">
-                                <div class="section-title">Tシャツサイズ 集計</div>
-                                <div id="tshirt-breakdown-list" class="stats-list">
-                                    <!-- Dynamic content -->
-                                </div>
-                            </div>
+                        <div class="breakdown-card">
+                            <div class="section-title">性別内訳</div>
+                            <div id="gender-breakdown-list" class="stats-list"></div>
+                        </div>
+                        <div class="breakdown-card">
+                            <div class="section-title">地域別内訳</div>
+                            <div id="region-breakdown-list" class="stats-list"></div>
+                        </div>
+                        <div class="breakdown-card">
+                            <div class="section-title">Tシャツサイズ内訳</div>
+                            <div id="tshirt-breakdown-list" class="stats-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-rankings" class="admin-tab-content">
+                    <div class="breakdown-grid mt-4">
+                        <div class="breakdown-card">
+                            <div class="section-title">個人順位 (Top 50)</div>
+                            <div id="ranking-individual-list" class="stats-list ranking-container"></div>
+                        </div>
+                        <div class="breakdown-card">
+                            <div class="section-title">イケス対抗順位 (平均点順)</div>
+                            <div id="ranking-ikesu-list" class="stats-list ranking-container"></div>
                         </div>
                     </div>
                 </div>
 
 
-                <!-- Tab: Bulk Email -->
-                <div id="tab-email" class="admin-tab-content">
-                    <div class="card" style="border-top: 5px solid var(--accent-color);">
-                        <div class="card-header">
-                            <h2>お知らせ一括送信</h2>
-                            <span class="badge badge-ippan" style="background: var(--accent-color)">Admin Only</span>
-                        </div>
-                        <p class="text-muted mb-3">代表者へ一斉メールを送信します。<br>
-                            対象者： <strong id="bulk-mail-recipient-count">0</strong> 名
-                        </p>
-                        <div class="form-group">
-                            <label for="bulk-mail-subject">件名</label>
-                            <input type="text" id="bulk-mail-subject" placeholder="例：【重要】大会当日に関するお知らせ">
-                        </div>
-                        <div class="form-group">
-                            <label for="bulk-mail-body">本文</label>
-                            <textarea id="bulk-mail-body" rows="10"
-                                style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #ddd;"></textarea>
-                        </div>
-                        <div class="form-actions mt-3">
-                            <button type="button" id="btn-send-bulk-mail" class="btn-primary"
-                                style="background: var(--accent-color); border-color: var(--accent-color)">送信する</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab: Data Management -->
-                <div id="tab-data" class="admin-tab-content">
-                    <div class="card border-danger">
-                        <h2>データ管理 (サーバー共有)</h2>
-                        <p>全ての登録データを削除します。この操作は取り消せません。</p>
-                        <div class="flex-gap mt-3">
-                            <button id="reset-data" class="btn-danger">全データをリセット</button>
-                            <button type="button" class="btn-outline" onclick="generateBulkTestData()"
-                                style="color:var(--secondary-color); border-color:var(--secondary-color)">
-                                🛠️ テストデータ生成 (80件)
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="card mt-4" style="border-left: 5px solid var(--accent-color);">
-                        <h2>端末のキャッシュ管理 (ブラウザ内)</h2>
-                        <p class="text-muted">「削除したはずのデータがまだ表示される」などの不整合が起きる場合に使用してください。ブラウザ内の古い記録を消去し、クラウドから最新データを強制的に再取得します。</p>
-                        <div class="mt-3">
-                            <button type="button" class="btn-outline" onclick="clearLocalCache()" 
-                                style="color:var(--accent-color); border-color:var(--accent-color); font-weight: bold;">
-                                🔄 ローカルキャッシュを初期化して再読込
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Day View (Tournament Operations) v8.3.25 -->
-        <section id="day-view" class="view">
-            <!-- Day Sub-tabs Navigation -->
-            <div class="card mb-3 no-print" style="padding: 0.5rem; background: #f1f5f9;">
-                <nav class="admin-tab-nav" style="margin-bottom: 0;">
-                    <button class="day-tab-btn active" data-tab="day-reception" onclick="switchDayTab('day-reception')">受付</button>
-                    <button class="day-tab-btn" data-tab="day-entry" onclick="switchDayTab('day-entry')">釣果</button>
-                    <button class="day-tab-btn" data-tab="day-rankings" onclick="switchDayTab('day-rankings'); renderRankings();">ランキング</button>
-                </nav>
-            </div>
-
-            <div id="day-tab-container">
-                <!-- Sub-tab: Reception Desk -->
-                <div id="day-reception" class="day-tab-content active">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2>当日受付アシスタント</h2>
-                            <div class="reception-stats-header">
-                                <span class="rec-stat-item">来場: <strong id="rec-check-in-count">0</strong></span>
-                                <span class="rec-stat-item">欠席: <strong id="rec-absent-count">0</strong></span>
-                            </div>
-                        </div>
-
-                        <div class="reception-container">
-                            <!-- Search & List Column -->
-                            <div class="reception-sidebar">
-                                <div class="search-box mb-2">
-                                    <input type="text" id="reception-search" autocomplete="off" placeholder="名前・番号などで検索...">
-                                </div>
-                                <div id="reception-list" class="reception-list">
-                                    <!-- List items injected by JS -->
-                                </div>
-                            </div>
-
-                            <!-- Detail Column -->
-                            <div id="reception-detail" class="reception-detail-panel">
-                                <div class="empty-state">
-                                    <p>左のリストからグループを選択してください。</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sub-tab: Catch Entry (Leader Form) -->
-                <div id="day-entry" class="day-tab-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2>当日の釣果入力（リーダー用）</h2>
-                        </div>
-                        <div class="p-3">
-                            <p class="text-muted mb-4">この画面はリーダー向けと共通です。暗証番号を入力してログインしてください。</p>
-                            <div style="text-align: center; padding: 2rem; border: 2px dashed #cbd5e1; border-radius: 12px;">
-                                <button class="btn-primary btn-large" onclick="switchView(null, 'leader-entry-view'); renderLeaderEntryForm();">入力画面（ログイン）を開く</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sub-tab: Rankings -->
-                <div id="day-rankings" class="day-tab-content">
-                    <div class="card" style="border-top: 5px solid var(--primary-color);">
-                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <h2 style="margin:0;">釣果ランキング</h2>
-                                <button class="btn-primary btn-small" onclick="window.print()" style="padding:0.4rem 0.8rem; border-radius:30px; margin-top: 5px;">📄 ランキングを印刷</button>
-                            </div>
-                            <button class="btn-outline btn-small" onclick="renderRankings()">情報を更新</button>
-                        </div>
-                        
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
-                            <div class="ranking-panel">
-                                <h3 class="section-title">個人ランキング</h3>
-                                <div id="ranking-individual-list" class="stats-list"></div>
-                            </div>
-                            <div class="ranking-panel">
-                                <h3 class="section-title">イケス対抗戦（平均釣果）</h3>
-                                <div id="ranking-ikesu-list" class="stats-list"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </section>
         
-        <!-- Public Statistics View (v7.6.0) -->
-        <section id="public-stats-view" class="view">
-            <div class="card">
-                <div class="card-header">
-                    <h2>現在の登録状況（全体）</h2>
-                </div>
-                <div id="stats-summary-container">
-                    <!-- Global summary cards will be injected here -->
-                </div>
-                <div id="category-split-container">
-                    <!-- Category split cards will be injected here -->
-                </div>
-                <div class="form-actions mt-4">
-                    <button class="btn-primary w-100" onclick="resetForm(); switchView(null, 'registration-view')">登録フォームへ戻る</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Mintsuri Coordinator View (v8.1.36) -->
-        <section id="mintsuri-coordinator-view" class="view">
-            <div class="card">
-                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                    <h2>みん釣り 登録状況</h2>
-                    <button class="btn-outline" onclick="exportMintsuriCSV()">CSVを出力 (Excel用)</button>
-                </div>
-                <div id="mintsuri-stats-summary" class="mb-4">
-                     <!-- Mintsuri specific stats injected here -->
-                </div>
-                <div class="search-box mb-3">
-                    <input type="text" id="mintsuri-search" autocomplete="off" placeholder="名前・番号などで検索..." oninput="renderMintsuriCoordinatorView()">
-                </div>
-                <div class="table-container">
-                    <table class="mintsuri-table">
-                        <thead>
-                            <tr>
-                                <th>受付番号</th>
-                                <th>グループ名</th>
-                                <th>代表者名</th>
-                                <th>釣り/見学</th>
-                                <th>登録時間</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mintsuri-coordinator-list">
-                            <!-- Injected by JS -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- v7.6.6: Added breakdown stats for Mintsuri Coordinator -->
-                <div class="mt-5" style="border-top: 2px solid #e1e8ed; padding-top: 2rem;">
-                    <h3 style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 1.5rem;">📊 みん釣り枠 分析データ</h3>
-                    <div class="breakdown-grid">
-                        <div class="breakdown-card">
-                            <div class="section-title">年代別</div>
-                            <div id="mintsuri-age-breakdown-list" class="stats-list"></div>
+        <!-- Reception View (v8.1.56: High Performance Reception Desk) -->
+        <section id="reception-view" class="view">
+            <div class="reception-layout">
+                <div class="reception-sidebar">
+                    <div class="reception-toolbar">
+                        <div class="search-box"><input type="text" id="reception-search" placeholder="名前・ID・グループ..." oninput="updateReceptionList()"></div>
+                        <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+                            <button class="btn-toolbar active" id="sort-reception-id" onclick="setReceptionSort('id')">ID順</button>
+                            <button class="btn-toolbar" id="sort-reception-source" onclick="setReceptionSort('source')">区分順</button>
+                            <label style="display:flex; align-items:center; gap:0.3rem; font-size:0.8rem; cursor:pointer;">
+                                <input type="checkbox" id="show-completed-toggle" onchange="updateReceptionList()"> 完了を表示
+                            </label>
                         </div>
-                        <div class="breakdown-card">
-                            <div class="section-title">性別</div>
-                            <div id="mintsuri-gender-breakdown-list" class="stats-list"></div>
-                        </div>
-                         <div class="breakdown-card">
-                            <div class="section-title">地域別</div>
-                            <div id="mintsuri-region-breakdown-list" class="stats-list"></div>
-                        </div>
-                        <div class="breakdown-card">
-                            <div class="section-title">Tシャツサイズ</div>
-                            <div id="mintsuri-tshirt-breakdown-list" class="stats-list"></div>
+                    </div>
+                    <div id="reception-group-list" class="reception-list"></div>
+                </div>
+                <div class="reception-main">
+                    <div id="reception-detail" class="reception-desk-card">
+                        <div class="reception-placeholder">
+                            <i class="icon-search">🔍</i>
+                            <p>左側のリストからグループを選択してください。</p>
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
 
-                <div class="form-actions mt-4" style="border-top: 1px solid #eee; padding-top: 1rem; opacity: 0.5;">
-                    <p class="small text-muted text-center">※この画面はみん釣り担当者専用です</p>
+        <!-- Coordinator Views -->
+        <section id="mintsuri-coordinator-view" class="view">
+            <div class="card">
+                <div class="card-header"><h2>みん釣り 登録管理</h2></div>
+                <div id="mintsuri-stats-summary"></div>
+                <div class="search-box my-3"><input type="text" id="mintsuri-search" placeholder="検索..." oninput="renderMintsuriCoordinatorView()"></div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>ID</th><th>グループ</th><th>代表者</th><th>人数</th><th>登録日時</th><th>操作</th></tr></thead>
+                        <tbody id="mintsuri-coordinator-list"></tbody>
+                    </table>
                 </div>
             </div>
         </section>
 
-        <!-- Harimitsu Coordinator View (v8.1.35) -->
         <section id="harimitsu-coordinator-view" class="view">
             <div class="card">
-                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                    <h2>ハリミツ 登録状況</h2>
-                    <button class="btn-outline" onclick="exportHarimitsuCSV()">CSVを出力 (Excel用)</button>
-                </div>
-                <div id="harimitsu-stats-summary" class="mb-4"></div>
-                <div class="search-box mb-3">
-                    <input type="text" id="harimitsu-search" autocomplete="off" placeholder="名前・番号などで検索..." oninput="renderHarimitsuCoordinatorView()">
-                </div>
+                <div class="card-header"><h2>ハリミツ 登録管理</h2></div>
+                <div id="harimitsu-stats-summary"></div>
+                <div class="search-box my-3"><input type="text" id="harimitsu-search" placeholder="検索..." oninput="renderHarimitsuCoordinatorView()"></div>
                 <div class="table-container">
                     <table>
-                        <thead>
-                            <tr>
-                                <th>受付番号</th>
-                                <th>グループ名</th>
-                                <th>代表者名</th>
-                                <th>釣り/見学</th>
-                                <th>登録時間</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>ID</th><th>グループ</th><th>代表者</th><th>人数</th><th>登録日時</th><th>操作</th></tr></thead>
                         <tbody id="harimitsu-coordinator-list"></tbody>
                     </table>
                 </div>
-                <div class="mt-5" style="border-top: 2px solid #e1e8ed; padding-top: 2rem;">
-                    <h3 style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 1.5rem;">📊 ハリミツ枠 分析データ</h3>
-                    <div class="breakdown-grid">
-                        <div class="breakdown-card">
-                            <div class="section-title">年代別</div>
-                            <div id="harimitsu-age-breakdown-list" class="stats-list"></div>
-                        </div>
-                        <div class="breakdown-card">
-                            <div class="section-title">性別</div>
-                            <div id="harimitsu-gender-breakdown-list" class="stats-list"></div>
-                        </div>
-                         <div class="breakdown-card">
-                            <div class="section-title">地域別</div>
-                            <div id="harimitsu-region-breakdown-list" class="stats-list"></div>
-                        </div>
-                        <div class="breakdown-card">
-                            <div class="section-title">Tシャツサイズ</div>
-                            <div id="harimitsu-tshirt-breakdown-list" class="stats-list"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-actions mt-4" style="border-top: 1px solid #eee; padding-top: 1rem; opacity: 0.5;">
-                    <p class="small text-muted text-center">※この画面はハリミツ担当者専用です</p>
-                </div>
             </div>
         </section>
 
-        <!-- Suiho Coordinator View (v8.1.35) -->
         <section id="suiho-coordinator-view" class="view">
             <div class="card">
-                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                    <h2>水宝 登録状況</h2>
-                    <button class="btn-outline" onclick="exportSuihoCSV()">CSVを出力 (Excel用)</button>
-                </div>
-                <div id="suiho-stats-summary" class="mb-4"></div>
-                <div class="search-box mb-3">
-                    <input type="text" id="suiho-search" autocomplete="off" placeholder="名前・番号などで検索..." oninput="renderSuihoCoordinatorView()">
-                </div>
+                <div class="card-header"><h2>水宝 登録管理</h2></div>
+                <div id="suiho-stats-summary"></div>
+                <div class="search-box my-3"><input type="text" id="suiho-search" placeholder="検索..." oninput="renderSuihoCoordinatorView()"></div>
                 <div class="table-container">
                     <table>
-                        <thead>
-                            <tr>
-                                <th>受付番号</th>
-                                <th>グループ名</th>
-                                <th>代表者名</th>
-                                <th>釣り/見学</th>
-                                <th>登録時間</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>ID</th><th>グループ</th><th>代表者</th><th>人数</th><th>登録日時</th><th>操作</th></tr></thead>
                         <tbody id="suiho-coordinator-list"></tbody>
                     </table>
                 </div>
-                <div class="mt-5" style="border-top: 2px solid #e1e8ed; padding-top: 2rem;">
-                    <h3 style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 1.5rem;">📊 水宝枠 分析データ</h3>
-                    <div class="breakdown-grid">
-                        <div class="breakdown-card">
-                            <div class="section-title">年代別</div>
-                            <div id="suiho-age-breakdown-list" class="stats-list"></div>
-                        </div>
-                        <div class="breakdown-card">
-                            <div class="section-title">性別</div>
-                            <div id="suiho-gender-breakdown-list" class="stats-list"></div>
-                        </div>
-                         <div class="breakdown-card">
-                            <div class="section-title">地域別</div>
-                            <div id="suiho-region-breakdown-list" class="stats-list"></div>
-                        </div>
-                        <div class="breakdown-card">
-                            <div class="section-title">Tシャツサイズ</div>
-                            <div id="suiho-tshirt-breakdown-list" class="stats-list"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-actions mt-4" style="border-top: 1px solid #eee; padding-top: 1rem; opacity: 0.5;">
-                    <p class="small text-muted text-center">※この画面は水宝担当者専用です</p>
-                </div>
             </div>
         </section>
+
     </main>
 
-    <!-- Entry Detail Modal (Check View) -->
-    <div id="detail-modal" class="modal hidden">
-        <div class="card modal-content" style="max-width: 600px; width: 95%;">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 id="detail-modal-title">登録詳細の確認</h2>
-                <button type="button" class="btn-icon" onclick="closeDetailModal()" style="font-size: 1.2rem; color: #64748b;">✕</button>
-            </div>
-            <div id="detail-modal-body" style="max-height: 70vh; overflow-y: auto; padding-right: 5px;">
-                <!-- Content injected by JS -->
-            </div>
-            <div class="form-actions mt-4" style="display: flex; gap: 0.5rem;">
-                <button type="button" id="modal-edit-btn" class="btn-primary" style="flex: 1;" onclick="closeDetailModal(); requestAdminEdit(currentDetailId)">修正する</button>
-                <button type="button" class="btn-secondary" style="flex: 1;" onclick="closeDetailModal()">閉じる</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Ikesu Settings Modal -->
-    <div id="ikesu-modal" class="modal hidden">
-        <div class="modal-content card">
-            <div class="modal-header">
-                <h3 id="ikesu-modal-title">イケスの追加</h3>
-            </div>
-            <div class="p-3">
-                <input type="hidden" id="ikesu-edit-id">
-                <div class="form-group">
-                    <label for="ikesu-name">イケス名 <span class="required">*</span></label>
-                    <input type="text" id="ikesu-name" placeholder="例：一般A">
-                </div>
-                <div class="form-group">
-                    <label for="ikesu-capacity">定員（釣り人数） <span class="required">*</span></label>
-                    <input type="number" id="ikesu-capacity" placeholder="例：15" min="1">
-                </div>
-                <div class="form-actions mt-4" style="display: flex; gap: 0.5rem;">
-                    <button id="save-ikesu" class="btn-primary" onclick="window.saveIkesu()" style="flex: 2;">保存</button>
-                    <button id="delete-ikesu-btn" class="btn-outline hidden" onclick="window.deleteIkesuFromModal()" style="flex: 1; border-color: var(--error-color); color: var(--error-color);">削除</button>
-                    <button class="btn-secondary" onclick="window.closeIkesuModal()" style="flex: 1;">閉じる</button>
-                </div>
-            </div>
-        </div>
+    <!-- Sync Status Footer (v8.6.0: Non-intrusive) -->
+    <div id="sync-status-footer" class="sync-status-indicator">
+        <span class="sync-dot"></span>
+        <span id="sync-text">同期済み</span>
     </div>
 
     <!-- Admin Auth Modal -->
     <div id="admin-auth-modal" class="modal hidden">
-        <div class="modal-content card">
-            <div class="modal-header">
-                <h3>管理者認証</h3>
+        <div class="modal-content" style="max-width: 350px;">
+            <h2 class="mb-4">管理者認証</h2>
+            <div class="form-group mb-3">
+                <label for="global-admin-password">暗証番号を入力してください</label>
+                <input type="password" id="global-admin-password" class="w-100" placeholder="••••">
             </div>
-            <div class="p-3">
-                <p class="mb-3">管理画面・当日受付へアクセスするにはパスワードが必要です。</p>
-                <div class="form-group">
-                    <label for="global-admin-password">パスワード</label>
-                    <input type="password" id="global-admin-password" placeholder="••••••••">
-                </div>
-                <div id="admin-auth-error" class="alert alert-error mb-3 hidden">
-                    パスワードが正しくありません。
-                </div>
-                <div class="form-actions mt-4">
-                    <button id="verify-admin" class="btn-primary" onclick="window.handleAdminLogin()">ログイン</button>
-                    <button id="cancel-admin" class="btn-secondary" onclick="document.getElementById('admin-auth-modal').classList.add('hidden')">キャンセル</button>
-                </div>
+            <div id="admin-auth-error" class="alert alert-danger hidden mb-3">暗証番号が正しくありません</div>
+            <div style="display:flex; gap:0.5rem;">
+                <button class="btn-primary flex-1" id="verify-admin">ログイン</button>
+                <button class="btn-text" onclick="document.getElementById('admin-auth-modal').classList.add('hidden')">キャンセル</button>
             </div>
         </div>
     </div>
 
-        <!-- Leader Result Entry View (v8.1.36 Shared Form) -->
-        <section id="leader-entry-view" class="view">
-            <div class="card">
-                <div class="card-header">
-                    <h2>釣果記録フォーム（リーダー用）</h2>
+    <!-- Ikesu Modal (v8.1.56: Advanced Ikesu Config) -->
+    <div id="ikesu-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="ikesu-modal-title" class="mb-4">イケスの設定</h2>
+            <form id="ikesu-form" onsubmit="window.handleIkesuSave(event)">
+                <input type="hidden" id="ikesu-id-hidden">
+                <div class="form-group mb-3">
+                    <label>イケス名 (例: 1, A, 大池-1)</label>
+                    <input type="text" id="ikesu-name-input" class="w-100" required>
                 </div>
-                
-                <div id="leader-step-1">
-                    <div class="alert alert-info py-2 mb-4" style="font-size: 0.85rem;">
-                        自分のイケスを選択し、メンバー表に記載された暗証番号を入力してください。
-                    </div>
-
-                    <div class="form-group mb-4">
-                        <label for="leader-ikesu-select">担当イケスを選択</label>
-                        <select id="leader-ikesu-select" class="form-control" onchange="window.resetLeaderAuth()" 
-                                style="font-size: 1.2rem; padding: 0.8rem; font-weight: 800; color: var(--primary-color);">
-                            <option value="">-- 選択してください --</option>
-                        </select>
-                    </div>
-
-                    <div id="leader-auth-section" class="hidden" style="background: #f1f5f9; padding: 1.5rem; border-radius: 12px; border: 2px solid #e2e8f0;">
-                        <label for="leader-passcode-input" style="display: block; margin-bottom: 0.5rem; font-weight: 800;">暗証番号 (4桁)</label>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <input type="number" id="leader-passcode-input" class="form-control" placeholder="例: 1234" 
-                                   style="font-size: 1.5rem; text-align: center; letter-spacing: 0.3em; font-weight: 900; -webkit-text-security: disc;">
-                            <button class="btn-primary" onclick="window.verifyLeaderAuth()" style="padding: 0 1.5rem;">認証</button>
-                        </div>
+                <div class="form-group mb-3">
+                    <label>定員 (釣り人の最大数)</label>
+                    <input type="number" id="ikesu-capacity-input" class="w-100" min="1" value="10" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label>イケスリーダー用暗証番号 (4桁)</label>
+                    <input type="text" id="ikesu-passcode-input" class="w-100" pattern="[0-9]{4}" placeholder="1234">
+                    <small class="text-muted">※リーダー用ログイン画面で使用します。</small>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2rem;">
+                    <button type="button" id="delete-ikesu-btn" class="btn-danger btn-small hidden" onclick="window.handleIkesuDelete()">削除</button>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button type="button" class="btn-text" onclick="window.closeIkesuModal()">キャンセル</button>
+                        <button type="submit" class="btn-primary">保存</button>
                     </div>
                 </div>
-
-                <div id="leader-step-2" class="hidden">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem;">
-                        <div>
-                            <span id="selected-ikesu-name-display" class="badge badge-ippan" style="background: var(--primary-color); padding: 5px 12px; font-size: 1rem;">一般A</span>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 0.75rem; color: #64748b; font-weight: 700;">イケス合計ポイント</div>
-                            <div id="team-total-display" style="font-size: 1.6rem; font-weight: 900; color: var(--primary-color); line-height: 1;">0 <small style="font-size: 0.8rem;">pt</small></div>
-                        </div>
-                    </div>
-
-                    <div id="leader-entry-table-container">
-                        <!-- Dynamic table will load here -->
-                    </div>
-                    
-                    <div class="mt-4">
-                        <button class="btn-primary btn-large w-100" style="padding: 1rem; font-size: 1.2rem;" onclick="window.requestLeaderResultsSave()">入力内容を確認する</button>
-                    </div>
-                </div>
-
-                <!-- v8.0.3 Confirmation Step -->
-                <div id="leader-step-confirm" class="hidden">
-                    <h3 class="mb-3" style="text-align: center; color: var(--primary-color);">入力内容の確認</h3>
-                    <div id="leader-confirm-summary" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem;">
-                        <!-- Summary list -->
-                    </div>
-                    
-                    <div style="text-align: center; margin: 1.5rem 0;">
-                        <div style="font-size: 0.85rem; font-weight: 700; color: #64748b;">全チーム員 合計点</div>
-                        <div id="confirm-team-total" style="font-size: 3rem; font-weight: 900; color: var(--primary-color); line-height: 1;">0 <small style="font-size: 1rem;">pt</small></div>
-                    </div>
-
-                    <p class="text-muted" style="font-size: 0.8rem; text-align: center; margin-bottom: 1.5rem;">上記の内容でよろしければ「確定・保存」を押してください。</p>
-
-                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                        <button class="btn-primary btn-large w-100" style="padding: 1rem; font-size: 1.2rem;" onclick="window.commitLeaderResultsSave()">確定して保存 (クラウド同期)</button>
-                        <button class="btn-secondary w-100" onclick="window.backToLeaderEdit()">修正する</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <footer class="footer">
-        <div class="container"
-            style="display: flex; justify-content: center; align-items: center; padding: 2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
-            <p id="footer-reveal" onclick="handleSecureClick(event)">&copy; 2026 釣り大会 実行委員会</p>
+            </form>
         </div>
+    </div>
+
+    <!-- Entry Detail Modal (v8.1.66: High Detail Viewer) -->
+    <div id="detail-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 600px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem;">
+                <h2 id="detail-modal-title">申込詳細</h2>
+                <button class="btn-text" style="font-size:1.5rem; padding:0;" onclick="document.getElementById('detail-modal').classList.add('hidden')">&times;</button>
+            </div>
+            <div id="detail-modal-body" class="detail-viewer-body">
+                <!-- Content injected by JS -->
+            </div>
+            <div class="modal-footer mt-4" style="display:flex; justify-content:flex-end; gap:0.5rem; border-top:1px solid #eee; padding-top:1rem;">
+                <button class="btn-text" onclick="document.getElementById('detail-modal').classList.add('hidden')">閉じる</button>
+                <button id="modal-edit-btn" class="btn-primary">編集する</button>
+            </div>
+        </div>
+    </div>
+
+
+    <footer class="mt-5 mb-5 text-muted" style="font-size: 0.8rem; padding: 2rem 0; opacity: 0.6; width: 100%; display: flex; justify-content: center; text-align: center;">
+        <p id="footer-reveal" style="cursor: default; margin: 0; user-select: none;" onclick="handleSecureClick(event)">&copy; 2026 釣り大会 実行委員会</p>
     </footer>
 
-    <!-- Global Sync Status (v7.1) -->
-    <div id="sync-status-footer" class="sync-status-indicator admin-only hidden no-print">
-        <div id="sync-dot" class="sync-dot"></div>
-        <span id="sync-text">クラウド同期: 待機中</span>
-    </div>
-
     <div id="toast-container" class="toast-container"></div>
-
-    <script src="script.js?v=8.3.40"></script>
+    <script src="script.js?v=8.7.9"></script>
 </body>
-
 </html>

@@ -3,6 +3,7 @@ const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyGmFH8-GXlWes9
 let state = {
     entries: [],
     deletedIds: [], // v7.9.3: Tracking local hard-deletions
+    changeLog: [], // v8.6.0: Announcement-style change log
     settings: {
         competitionName: "第1回 釣り大会",
         capacityGeneral: 100,
@@ -33,6 +34,8 @@ let isAdminAuth = localStorage.getItem('isAdminAuth') === 'true'; // Persistent 
 let currentViewId = sessionStorage.getItem('currentViewId') || 'registration-view'; // Persistent view
 let currentAdminTab = sessionStorage.getItem('currentAdminTab') || 'tab-list'; // Persistent tab
 let dashboardFilter = 'all';
+let currentSortField = 'time';
+let currentSortOrder = 'desc';
 let currentReceptionId = null;
 let isAdminAuthAction = false; // Flag for admin-led edits
 let activeReceptionEntryId = null; // Currently selected in reception desk
@@ -59,15 +62,18 @@ window.showConfirmation = function() {
     if (overlay) overlay.classList.add('hidden');
 
     const pRows = document.querySelectorAll('.participant-row');
-    const participants = Array.from(pRows).map(row => ({
-        type: row.querySelector('.p-type').value,
-        name: row.querySelector('.p-name').value,
-        nickname: row.querySelector('.p-nick').value,
-        region: row.querySelector('.p-region').value,
-        age: row.querySelector('.p-age').value,
-        gender: row.querySelector('.p-gender').value,
-        tshirtSize: row.querySelector('.p-tshirt').value
-    }));
+    const participants = Array.from(pRows).map(row => {
+        const getVal = (cls) => row.querySelector(cls)?.value || '';
+        return {
+            type: getVal('.p-type'),
+            name: getVal('.p-name'),
+            nickname: getVal('.p-nick'),
+            region: getVal('.p-region'),
+            age: getVal('.p-age'),
+            gender: getVal('.p-gender'),
+            tshirtSize: getVal('.p-tshirt')
+        };
+    });
 
     if (participants.length === 0) {
         showStatus("参加者を1名以上登録してください。", "error");
@@ -79,6 +85,7 @@ window.showConfirmation = function() {
     const repPhone = document.getElementById('rep-phone').value;
     const repEmail = document.getElementById('rep-email').value;
     const repEmailConfirm = document.getElementById('rep-email-confirm').value;
+    const memo = document.getElementById('entry-memo')?.value || '';
 
     if (repEmail !== repEmailConfirm) {
         showStatus("メールアドレスが一致しません。もう一度ご確認ください。", "error");
@@ -112,6 +119,9 @@ window.showConfirmation = function() {
     document.getElementById('conf-rep-name').textContent = repName;
     document.getElementById('conf-rep-phone').textContent = repPhone;
     document.getElementById('conf-rep-email').textContent = repEmail;
+    if (document.getElementById('conf-memo')) {
+        document.getElementById('conf-memo').textContent = memo;
+    }
 
     const summaryList = document.getElementById('conf-participant-summary');
     summaryList.innerHTML = '';
@@ -139,112 +149,115 @@ window.showConfirmation = function() {
 }
 
 window.handleRegistration = async function() {
+    console.log("BORIJIN: handleRegistration started");
     const submitBtn = document.getElementById('submit-registration');
+    if (!submitBtn) return;
+    
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = "保存中... そのままお待ちください";
 
-    const now = new Date();
-    const editId = document.getElementById('edit-entry-id')?.value || '';
-    const isPowerUser = isBypassAllowed();
-    
-    // v8.2.19: Forced clear timeframe overlay removed in v8.2.26
-
-    // v8.2.19: All guards disabled per user request
-    if (false) { }
-
-    const pRows = document.querySelectorAll('.participant-row');
-    const participants = Array.from(pRows).map(row => ({
-        type: row.querySelector('.p-type').value,
-        name: row.querySelector('.p-name').value,
-        nickname: row.querySelector('.p-nick').value,
-        region: row.querySelector('.p-region').value,
-        age: row.querySelector('.p-age').value,
-        gender: row.querySelector('.p-gender').value,
-        tshirtSize: row.querySelector('.p-tshirt').value
-    }));
-
-    const sourceEl = document.querySelector('input[name="reg-source"]:checked');
-    const source = sourceEl ? sourceEl.value : '一般';
-    const fisherCount = participants.filter(p => p.type === 'fisher').length;
-    const observerCount = participants.filter(p => p.type === 'observer').length;
-
-    // v8.2.19: Capacity check disabled per user request
-    if (false) {
-        const currentCategoryFishers = state.entries
-            .filter(en => en.id !== editId && en.source === source && en.status !== 'cancelled')
-            .reduce((sum, en) => sum + en.fishers, 0);
-        const totalNow = state.entries
-            .filter(en => en.id !== editId && en.status !== 'cancelled')
-            .reduce((sum, en) => sum + en.fishers, 0);
-
-        let capacityLimit = 0;
-        if (source === '一般') capacityLimit = state.settings.capacityGeneral;
-        else if (source === 'みん釣り') capacityLimit = state.settings.capacityMintsuri;
-        else if (source === '水宝') capacityLimit = state.settings.capacitySuiho;
-        else if (source === 'ハリミツ') capacityLimit = state.settings.capacityHarimitsu;
-
-        if (currentCategoryFishers + fisherCount > capacityLimit || totalNow + fisherCount > state.settings.capacityTotal) {
-            alert('定員オーバーのため登録できません。');
-            return;
-        }
-    }
-
-    const existingEntry = editId ? state.entries.find(en => en.id === editId) : null;
-    const finalParticipants = participants.map((p, idx) => {
-        const oldP = existingEntry && existingEntry.participants[idx];
-        if (oldP && oldP.name === p.name) {
-            return { ...p, ikesuId: oldP.ikesuId || null, isLeader: oldP.isLeader || false, status: oldP.status || 'pending' };
-        }
-        return { ...p, ikesuId: null, isLeader: false, status: 'pending' };
-    });
-
-    const entryData = {
-        id: editId || null,
-        groupName: document.getElementById('group-name').value,
-        representativeName: document.getElementById('representative-name').value,
-        repPhone: document.getElementById('rep-phone').value,
-        repEmail: document.getElementById('rep-email').value,
-        source: source,
-        fishers: fisherCount,
-        observers: observerCount,
-        participants: finalParticipants,
-        status: existingEntry ? existingEntry.status : 'pending',
-        timestamp: existingEntry ? existingEntry.timestamp : new Date().toLocaleString('ja-JP'),
-        lastModified: existingEntry ? new Date().toLocaleString('ja-JP') : null
-    };
-
-    // v8.2.18: Removed undefined showLoading()
     try {
-        // v8.4.0: Using 'cors' to receive and check result status from GAS
-        const response = await fetch(GAS_WEB_APP_URL, {
+        const editId = document.getElementById('edit-entry-id')?.value || '';
+        const pRows = document.querySelectorAll('.participant-row');
+        const participants = Array.from(pRows).map(row => {
+            const getVal = (cls) => row.querySelector(cls)?.value || '';
+            return {
+                type: getVal('.p-type'),
+                name: getVal('.p-name'),
+                nickname: getVal('.p-nick'),
+                region: getVal('.p-region'),
+                age: getVal('.p-age'),
+                gender: getVal('.p-gender'),
+                tshirtSize: getVal('.p-tshirt')
+            };
+        });
+
+        const sourceEl = document.querySelector('input[name="reg-source"]:checked');
+        const source = sourceEl ? sourceEl.value : '一般';
+        const fisherCount = participants.filter(p => p.type === 'fisher').length;
+        const observerCount = participants.filter(p => p.type === 'observer').length;
+
+        const existingEntry = editId ? state.entries.find(en => en.id === editId) : null;
+        const finalParticipants = participants.map((p, idx) => {
+            const oldP = existingEntry && existingEntry.participants[idx];
+            if (oldP && oldP.name === p.name) {
+                return { ...p, ikesuId: oldP.ikesuId || null, isLeader: oldP.isLeader || false, status: oldP.status || 'pending' };
+            }
+            return { ...p, ikesuId: null, isLeader: false, status: 'pending' };
+        });
+
+        const entryData = {
+            id: editId || null,
+            groupName: document.getElementById('group-name').value,
+            representative: document.getElementById('representative-name').value,
+            representativeName: document.getElementById('representative-name').value,
+            phone: document.getElementById('rep-phone').value,
+            email: document.getElementById('rep-email').value,
+            repPhone: document.getElementById('rep-phone').value,
+            repEmail: document.getElementById('rep-email').value,
+            password: document.getElementById('edit-password').value,
+            memo: document.getElementById('entry-memo')?.value || '',
+            source: source,
+            fishers: fisherCount,
+            observers: observerCount,
+            participants: finalParticipants,
+            status: existingEntry ? existingEntry.status : 'pending',
+            timestamp: existingEntry ? existingEntry.timestamp : new Date().toLocaleString('ja-JP'),
+            lastUpdated: new Date().toLocaleString('ja-JP'),
+            lastModified: new Date().toLocaleString('ja-JP'),
+            _ts: Date.now()
+        };
+
+        // v8.6.4: Use no-cors to prevent "Failed to fetch" in strict environments.
+        // In no-cors, we cannot read the response body, so we assume success
+        // if the request didn't throw an immediate error.
+        await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData })
         });
 
-        const result = await response.json();
-        
-        if (result.status === 'success') {
-            showToast(editId ? "修正を送信しました。" : "登録を送信しました。", "success");
-            // Show result screen immediately
-            showResult(result.entry || entryData);
-            // Refresh data in background
-            setTimeout(() => loadData(), 1000); 
+        // Optimistic UI update: Update local entries immediately
+        if (editId) {
+            const idx = state.entries.findIndex(en => en.id === editId);
+            if (idx !== -1) {
+                state.entries[idx] = { ...state.entries[idx], ...entryData };
+            }
         } else {
-            throw new Error(result.message || "サーバー側でエラーが発生しました。");
+            // For new entries, we don't have an ID yet if we use no-cors.
+            // But we can add it temporarily if we want.
+            // state.entries.push(entryData);
         }
+        saveStateToLocalStorage();
+
+        const entryType = editId ? '修正' : '新規登録';
+        if (typeof logChange === 'function') logChange(entryData, entryType, existingEntry);
+        
+        showToast(editId ? "修正を送信しました" : "登録完了しました", "success");
+        
+        // Show result screen with local data
+        showResult(entryData);
+        
+        // Refresh data from server in background after a safe delay
+        setTimeout(() => loadData(), 10000);
 
     } catch (error) {
         console.error('Registration error:', error);
-        showStatus('通信エラーが発生しました。再度お試しください。 [' + error.toString() + ']', 'error');
+        alert('エラーが発生しました。再度お試しください。\n' + error.toString());
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
-    } finally {
-        // v8.2.18: Removed undefined hideLoading()
     }
-}
+};
+
+// v8.6.5: Redundant event listener binding
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('submit-registration');
+    if (btn) {
+        btn.addEventListener('click', window.handleRegistration);
+    }
+});
 
 window.finalizeAdminEdit = async function() {
     await window.handleRegistration();
@@ -399,8 +412,6 @@ function restoreUIState() {
 }
 
 async function loadData() {
-    initToast();
-    // 1. Try to load from Cloud (GAS) first for synchronization
     updateSyncStatus('syncing');
     try {
         // タイムアウト15秒を設定（通信環境への配慮）
@@ -567,54 +578,68 @@ function mergeData(local, cloud) {
         return timeA - timeB;
     });
 
+    // v8.6.0: Merge change log
+    const combinedLogs = [...(local.changeLog || []), ...(cloud.changeLog || [])];
+    const logMap = new Map();
+    combinedLogs.forEach(l => { if(l && l.id) logMap.set(l.id, l); });
+    merged.changeLog = Array.from(logMap.values())
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+        .slice(0, 100); // Keep last 100 entries
+
     return merged;
 }
 
 
 
 function finalizeLoad(isRefresh = false) {
-    // Ensure settings are merged with defaults
-    state.settings = {
-        ...{
-            competitionName: "第1回 釣り大会",
-            capacityGeneral: 100,
-            capacityMintsuri: 100,
-            capacitySuiho: 50,
-            capacityHarimitsu: 50,
-            capacityObservers: 100,
-            capacityTotal: 250,
-            startTime: "",
-            deadline: "",
-            adminPassword: "admin",
-            ikesuList: Array.from({ length: 10 }, (_, i) => ({
-                id: `ikesu-default-${i + 1}`,
-                name: `イケス ${String.fromCharCode(65 + i)}`, // A, B, C...
-                capacity: 15
-            }))
-        }, ...state.settings
-    };
+    try {
+        // Ensure settings are merged with defaults
+        state.settings = {
+            ...{
+                competitionName: "第1回 釣り大会",
+                capacityGeneral: 100,
+                capacityMintsuri: 100,
+                capacitySuiho: 50,
+                capacityHarimitsu: 50,
+                capacityObservers: 100,
+                capacityTotal: 250,
+                startTime: "",
+                deadline: "",
+                adminPassword: "admin",
+                ikesuList: Array.from({ length: 10 }, (_, i) => ({
+                    id: `ikesu-default-${i + 1}`,
+                    name: `イケス ${String.fromCharCode(65 + i)}`, // A, B, C...
+                    capacity: 15
+                }))
+            }, ...state.settings
+        };
 
-    checkTimeframe();
-    migrateTshirtSizes(); // v7.7.0: Data migration for new labels
-    updateDashboard();
-    updateReceptionList();
-    updateSourceAvailability();
-    syncSettingsUI();
+        checkTimeframe();
+        migrateTshirtSizes(); // v7.7.0: Data migration for new labels
+        updateDashboard();
+        updateReceptionList();
+        updateSourceAvailability();
+        syncSettingsUI();
 
-    // v8.1.42: Ensure coordinator views also refresh automatically on sync
-    renderActiveCoordinatorView();
+        // v8.1.42: Ensure coordinator views also refresh automatically on sync
+        renderActiveCoordinatorView();
 
-    // v8.1.52: ONLY run startup helpers if this is NOT a standard auto-sync refresh
-    if (!isRefresh) {
-        // v7.6.1: Run URL parameter check AFTER loading is fully settled
-        // v8.1.56: Skip scroll when refreshing data
-        checkUrlParams(true); 
+        // v8.1.52: ONLY run startup helpers if this is NOT a standard auto-sync refresh
+        if (!isRefresh) {
+            // v7.6.1: Run URL parameter check AFTER loading is fully settled
+            // v8.1.56: Skip scroll when refreshing data
+            checkUrlParams(true); 
 
-        // v7.6.1: Initialize specialized URL display in Admin Tab
-        generateSpecialUrls();
+            // v7.6.1: Initialize specialized URL display in Admin Tab
+            generateSpecialUrls();
 
-        // v7.0: 自動復旧チェック（再読み込み時）
-        setTimeout(checkPendingRegistration, 500);
+            // v7.0: 自動復旧チェック（再読み込み時）
+            setTimeout(checkPendingRegistration, 500);
+        }
+    } catch (err) {
+        console.error("BORIJIN APP: Error during finalizeLoad", err);
+    } finally {
+        updateSyncStatus('success');
     }
 }
 
@@ -729,9 +754,8 @@ async function loadDataFromCloudOnly() {
         if (response.ok) {
             const cloudData = await response.json();
             if (cloudData && cloudData.entries) {
-                state.entries = cloudData.entries;
-                state.settings = { ...state.settings, ...cloudData.settings };
-                state.lastUpdated = cloudData.lastUpdated;
+                // v8.7.4: Use mergeData to prevent overwriting local optimistic updates
+                state = mergeData(state, cloudData);
                 localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
             }
         }
@@ -930,6 +954,12 @@ function initApp() {
         switchAdminTab(currentAdminTab);
     }
 
+    // v8.2.14: Initial participant row
+    const list = document.getElementById('participant-list');
+    if (list && list.children.length === 0) {
+        addParticipantRow(null, false);
+    }
+
     // Safe listener registration helper
     const safeAddListener = (id, event, callback) => {
         const el = document.getElementById(id);
@@ -937,9 +967,9 @@ function initApp() {
     };
 
     // Form logic
-    safeAddListener('btn-to-confirm', 'click', showConfirmation);
+    // safeAddListener('btn-to-confirm', 'click', showConfirmation);
     safeAddListener('add-participant', 'click', () => addParticipantRow());
-    safeAddListener('cancel-edit-btn', 'click', resetForm);
+    // safeAddListener('cancel-edit-btn', 'click', resetForm);
     // v8.1.63: Robust registration for confirmation buttons
     // v8.2.06: Redundant handlers removed. Using onclick attributes in index.html for robustness.
     const backBtn = document.getElementById('back-to-edit-from-conf');
@@ -1131,6 +1161,7 @@ function switchView(btnElement, targetId, skipPush = false, skipScroll = false) 
     if (container) {
         const isWide = (targetId === 'dashboard-view' || targetId === 'reception-view' || targetId.includes('coordinator-view'));
         container.classList.toggle('view-wide', isWide);
+        document.body.classList.toggle('view-wide', isWide);
     }
 
     // Body class for CSS scoping
@@ -1548,19 +1579,28 @@ function handleEditAuth() {
 }
 
 function fillFormForEdit(entry) {
+    if (!entry) return;
+    console.log("BORIJIN: fillFormForEdit started for", entry.id);
     try {
-        document.getElementById('edit-entry-id').value = entry.id;
-        document.getElementById('group-name').value = entry.groupName;
-        document.getElementById('representative-name').value = entry.representative;
-        document.getElementById('rep-phone').value = entry.phone;
-        document.getElementById('rep-email').value = entry.email;
-        document.getElementById('rep-email-confirm').value = entry.email;
-        document.getElementById('edit-password').value = entry.password;
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val || '';
+        };
+
+        setVal('edit-entry-id', entry.id);
+        setVal('group-name', entry.groupName);
+        setVal('representative-name', entry.representative || entry.representativeName);
+        setVal('rep-phone', entry.phone || entry.repPhone);
+        setVal('rep-email', entry.email || entry.repEmail);
+        setVal('rep-email-confirm', entry.email || entry.repEmail);
+        setVal('edit-password', entry.password || '');
+        setVal('entry-memo', entry.memo || '');
 
         const list = document.getElementById('participant-list');
         if (list) {
             list.innerHTML = '';
-            entry.participants.forEach(p => addParticipantRow(p, false));
+            const participants = entry.participants || [];
+            participants.forEach(p => addParticipantRow(p, false));
         }
 
         // v8.1.52: Select correct reg-source radio button
@@ -1568,80 +1608,51 @@ function fillFormForEdit(entry) {
             const radio = document.querySelector(`input[name="reg-source"][value="${entry.source}"]`);
             if (radio) {
                 radio.checked = true;
-                // UI update for specialized window logic
                 radio.dispatchEvent(new Event('change', { bubbles: true }));
             }
         }
 
-    // UI Adjustments for Edit Mode
-    const cancelBtn = document.getElementById('cancel-edit-btn');
-    if (cancelBtn) cancelBtn.classList.remove('hidden');
+        // Admin-only: Ensure all category options are available for migration
+        if ((isAdminAuth || isAdminAuthAction) && document.getElementById('main-source-selector')) {
+            ['一般', 'みん釣り', '水宝', 'ハリミツ'].forEach(source => {
+                if (!document.querySelector(`input[name="reg-source"][value="${source}"]`)) {
+                    const selector = document.getElementById('main-source-selector');
+                    const badgeClassMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
+                    const badgeClass = badgeClassMap[source] || 'badge-ippan';
+                    const label = document.createElement('label');
+                    label.className = 'source-option admin-only temp-option';
+                    label.innerHTML = `<input type="radio" name="reg-source" value="${source}" required><span class="source-label"><span class="badge ${badgeClass}">${source}</span></span>`;
+                    selector.appendChild(label);
+                }
+            });
+            const sourceGroup = document.getElementById('source-selector-group');
+            if (sourceGroup) sourceGroup.classList.remove('hidden');
+        }
 
-    // Ensure all success/confirm sections are hidden, and FORM is shown
-    document.getElementById('registration-form').classList.remove('hidden');
-    document.getElementById('confirmation-section').classList.add('hidden');
-    document.getElementById('registration-result').classList.add('hidden');
-    
-    const regCard = document.getElementById('registration-card');
-    if (regCard) regCard.classList.remove('hidden');
-    
-    // Switch to registration-view if not already there (safety)
-    // switchView(null, 'registration-view'); 
-    
-    // Show Admin Actions if triggered from dashboard
-    const adminActions = document.getElementById('admin-extra-actions');
-    if (adminActions && (isAdminAuth || isAdminAuthAction)) {
-        adminActions.classList.remove('hidden');
+        // UI Adjustments for Edit Mode
+        const hide = (id) => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        };
+        const show = (id) => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('hidden');
+        };
 
-        // Connect buttons to global functions
-        document.getElementById('admin-resend-email').onclick = () => window.resendEmail(entry.id);
-        document.getElementById('admin-cancel-entry').onclick = () => window.cancelEntry(entry.id);
-        document.getElementById('admin-restore-entry').onclick = () => window.restoreEntry(entry.id);
-
-        // Toggle cancel/restore visibility
-        document.getElementById('admin-cancel-entry').classList.toggle('hidden', entry.status === 'cancelled');
-        document.getElementById('admin-restore-entry').classList.toggle('hidden', entry.status !== 'cancelled');
-    }
-
-    // Show cancel edit button
-    const cancelEditBtn = document.getElementById('cancel-edit');
-    if (cancelEditBtn) cancelEditBtn.classList.remove('hidden');
-
-    // v7.6.6: Enable catgory migration for admins. Ensure all categories are available.
-    if (isAdminAuth || isAdminAuthAction) {
-        ['一般', 'みん釣り', '水宝', 'ハリミツ'].forEach(source => {
-            let sourceRadio = document.querySelector(`input[name="reg-source"][value="${source}"]`);
-            if (!sourceRadio) {
-                const selector = document.getElementById('main-source-selector');
-                const badgeClassMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
-                const badgeClass = badgeClassMap[source] || 'badge-ippan';
-                const label = document.createElement('label');
-                label.className = 'source-option admin-only temp-option';
-                label.innerHTML = `
-                    <input type="radio" name="reg-source" value="${source}" required>
-                    <span class="source-label">
-                        <span class="badge ${badgeClass}">${source}</span>
-                    </span>
-                `;
-                selector.appendChild(label);
-            }
-        });
-        // Make source selector group visible if it was hidden
-        const sourceGroup = document.getElementById('source-selector-group');
-        if (sourceGroup) sourceGroup.classList.remove('hidden');
-    }
-
-    let sourceRadio = document.querySelector(`input[name="reg-source"][value="${entry.source}"]`);
-    if (sourceRadio) sourceRadio.checked = true;
-
-        document.getElementById('edit-auth-section').classList.add('hidden');
-        document.getElementById('registration-form').classList.remove('hidden');
-        document.getElementById('app-title').textContent = "登録変更: " + entry.id;
-        document.getElementById('submit-registration').textContent = "変更を保存する";
-        document.getElementById('cancel-edit').classList.remove('hidden');
+        hide('edit-auth-section');
+        hide('registration-result');
+        hide('confirmation-section');
+        show('registration-form');
+        document.getElementById('app-title').textContent = "登録変更: " + (entry.id || '');
+        const submitBtn = document.getElementById('submit-registration');
+        if (submitBtn) submitBtn.textContent = "変更を保存する";
         
-        // v8.2.01: Explicitly clear timeframe overlay when editing
-        checkTimeframe();
+        show('cancel-edit');
+        show('registration-card');
+
+        window.scrollTo(0, 0);
+        if (typeof checkTimeframe === 'function') checkTimeframe();
+
     } catch (e) {
         console.error("BORIJIN: fillFormForEdit failed:", e);
         showToast("フォームの読み込みに失敗しました", "error");
@@ -1649,28 +1660,47 @@ function fillFormForEdit(entry) {
 }
 
 function showResult(entry) {
-    document.getElementById('registration-form').classList.add('hidden');
-    document.getElementById('confirmation-section').classList.add('hidden');
-    document.getElementById('registration-result').classList.remove('hidden');
-    document.getElementById('result-number').textContent = entry.id;
-    document.getElementById('result-group').textContent = entry.groupName;
-    document.getElementById('result-fishers').textContent = entry.fishers;
-    document.getElementById('result-source').textContent = entry.source;
-    
-    // v7.6.0: Remove app-title update to avoid 'Done' duplication on mobile.
-    // Keep app-title as the Tournament Name.
-    updateAppTitle();
+    const hide = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    };
+    const show = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('hidden');
+    };
 
+    hide('registration-form');
+    hide('confirmation-section');
+    show('registration-result');
+    
+    // Safety check and population
+    const setResText = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val || '';
+    };
+
+    // v8.6.8: Ensure mapping works even if entry structure varies
+    const groupName = entry.groupName || '';
+    const regId = entry.id || "発行中...";
+
+    setResText('result-number', regId);
+    setResText('res-group-name', groupName);
+    
     // Populate Recovery Backup Details (v6.3)
-    document.getElementById('res-rep-name').textContent = entry.representative || entry.representativeName;
-    document.getElementById('res-rep-phone').textContent = entry.phone || entry.repPhone;
-    document.getElementById('res-rep-email').textContent = entry.email || entry.repEmail;
+    setResText('res-rep-name', entry.representative || entry.representativeName);
+    setResText('res-rep-phone', entry.phone || entry.repPhone);
+    setResText('res-rep-email', entry.email || entry.repEmail);
     
     const pList = document.getElementById('res-participant-list');
     if (pList) {
-        pList.innerHTML = entry.participants.map(p => {
-            const genderMark = p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
-            return `<li>${p.name} ${genderMark} (${p.type === 'fisher' ? '釣り' : '見学'})</li>`;
+        const participants = entry.participants || [];
+        pList.innerHTML = participants.map(p => {
+            const genderLabel = genderLabels[p.gender] || '';
+            const ageLabel = ageLabels[p.age] || '';
+            const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
+            return `<li style="margin-bottom: 0.3rem;">
+                <span style="font-weight: bold;">${p.name}</span> (${genderLabel} / ${ageLabel} / ${p.tshirtSize || 'なし'}) - ${typeLabel}
+            </li>`;
         }).join('');
     }
 
@@ -1678,8 +1708,9 @@ function showResult(entry) {
     const regCard = document.getElementById('registration-card');
     if (regCard) regCard.classList.add('hidden');
 
-    showToast('✨ 登録完了しました！', 'success');
+    // showToast('✨ 登録完了しました！', 'success');
     window.scrollTo(0, 0);
+    updateAppTitle();
 }
 
 function resetForm() {
@@ -1848,7 +1879,27 @@ window.updateDashboard = function() {
         const scrollPos = window.scrollY;
         
         let html = '';
-        state.entries.slice().reverse().forEach(e => {
+        const sortedEntries = state.entries.slice().sort((a, b) => {
+            let valA, valB;
+            switch(currentSortField) {
+                case 'id': valA = a.id; valB = b.id; break;
+                case 'source': valA = a.source; valB = b.source; break;
+                case 'groupName': valA = a.groupName; valB = b.groupName; break;
+                case 'representative': valA = a.representative; valB = b.representative; break;
+                case 'status': valA = a.status; valB = b.status; break;
+                case 'time': valA = new Date(a.timestamp || 0).getTime(); valB = new Date(b.timestamp || 0).getTime(); break;
+                case 'score': 
+                    valA = (a.participants || []).reduce((s, p) => s + (parseInt(p.catchA || 0)*2) + parseInt(p.catchB || 0), 0);
+                    valB = (b.participants || []).reduce((s, p) => s + (parseInt(p.catchA || 0)*2) + parseInt(p.catchB || 0), 0);
+                    break;
+                default: valA = a.timestamp; valB = b.timestamp;
+            }
+            if (valA < valB) return currentSortOrder === 'asc' ? -1 : 1;
+            if (valA > valB) return currentSortOrder === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        sortedEntries.forEach(e => {
             // v8.1.58: Comprehensive Safety Guard for missing participants
             const pArray = e.participants || [];
             
@@ -1871,7 +1922,7 @@ window.updateDashboard = function() {
             if (dashboardFilter !== 'all' && e.source !== dashboardFilter) return;
 
             const badgeMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
-            const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 無効' : '⏳ 待機';
+            const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 無効' : '⏳ 未受付';
             const rowClass = e.status === 'cancelled' ? 'row-cancelled' : (e.status === 'checked-in' ? 'row-checked-in' : '');
 
             const rep = pArray[0] || { name: e.representative, nickname: '', gender: '' };
@@ -1976,6 +2027,7 @@ function switchAdminTab(tabId) {
         }, 50);
     }
     if (tabId === 'tab-stats') (typeof window.renderBreakdownStats === 'function') && window.renderBreakdownStats();
+    if (tabId === 'tab-logs') (typeof window.renderChangeLog === 'function') && window.renderChangeLog();
 }
 
 /**
@@ -2306,8 +2358,8 @@ window.renderRankings = function() {
     let individuals = [];
     state.entries.forEach(e => {
         if (e.status === 'cancelled') return;
-        e.participants.forEach(p => {
-            if (p.type === 'observer') return;
+        (e.participants || []).forEach(p => {
+            if (!p || p.type === 'observer') return;
             const cA = parseInt(p.catchA || 0);
             const cB = parseInt(p.catchB || 0);
             const points = (cA * 2) + (cB * 1);
@@ -2321,7 +2373,7 @@ window.renderRankings = function() {
             });
             // Try to find ikesu
             if (p.ikesuId) {
-                const ik = state.settings.ikesuList.find(i => i.id === p.ikesuId);
+                const ik = (state.settings.ikesuList || []).find(i => i.id === p.ikesuId);
                 if (ik) individuals[individuals.length - 1].ikesu = ik.name;
             }
         });
@@ -2360,8 +2412,8 @@ window.renderRankings = function() {
     
     state.entries.forEach(e => {
         if (e.status === 'cancelled') return;
-        e.participants.forEach(p => {
-            if (p.type === 'observer' || !p.ikesuId || !ikResults[p.ikesuId]) return;
+        (e.participants || []).forEach(p => {
+            if (!p || p.type === 'observer' || !p.ikesuId || !ikResults[p.ikesuId]) return;
             const cA = parseInt(p.catchA || 0);
             const cB = parseInt(p.catchB || 0);
             ikResults[p.ikesuId].totalPoints += (cA * 2) + (cB * 1);
@@ -2416,12 +2468,12 @@ function sumCategoryFishers(category) {
     if (!state.entries) return 0;
     const dbCount = state.entries
         .filter(e => e.source === category && e.status !== 'cancelled')
-        .reduce((sum, e) => sum + e.fishers, 0);
+        .reduce((sum, e) => sum + (parseInt(e.fishers) || 0), 0);
     
     // v8.4.2: Add manual adjustment
     let adj = 0;
-    if (category === '水宝') adj = state.settings.adjSuihoFishers || 0;
-    if (category === 'ハリミツ') adj = state.settings.adjHarimitsuFishers || 0;
+    if (category === '水宝') adj = parseInt(state.settings.adjSuihoFishers || 0);
+    if (category === 'ハリミツ') adj = parseInt(state.settings.adjHarimitsuFishers || 0);
     return dbCount + adj;
 }
 
@@ -2429,12 +2481,12 @@ function sumCategoryObservers(category) {
     if (!state.entries) return 0;
     const dbCount = state.entries
         .filter(e => e.source === category && e.status !== 'cancelled')
-        .reduce((sum, e) => sum + e.observers, 0);
+        .reduce((sum, e) => sum + (parseInt(e.observers) || 0), 0);
 
     // v8.4.2: Add manual adjustment
     let adj = 0;
-    if (category === '水宝') adj = state.settings.adjSuihoObservers || 0;
-    if (category === 'ハリミツ') adj = state.settings.adjHarimitsuObservers || 0;
+    if (category === '水宝') adj = parseInt(state.settings.adjSuihoObservers || 0);
+    if (category === 'ハリミツ') adj = parseInt(state.settings.adjHarimitsuObservers || 0);
     return dbCount + adj;
 }
 
@@ -2529,8 +2581,8 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
         tshirtSizes.forEach(s => tshirtCount[s] = 0);
         
         validEntries.forEach(e => {
-            e.participants.forEach(p => {
-                if (p.tshirtSize) tshirtCount[p.tshirtSize] = (tshirtCount[p.tshirtSize] || 0) + 1;
+            (e.participants || []).forEach(p => {
+                if (p && p.tshirtSize) tshirtCount[p.tshirtSize] = (tshirtCount[p.tshirtSize] || 0) + 1;
             });
         });
 
@@ -2839,8 +2891,9 @@ function updateReceptionList() {
     const scrollPos = list.scrollTop;
 
     const processedEntries = state.entries.filter(e => e.status !== 'cancelled').map(e => {
-        const finishedCount = e.participants.filter(p => p.status === 'checked-in' || p.status === 'absent').length;
-        const totalCount = e.participants.length;
+        const pArray = e.participants || [];
+        const finishedCount = pArray.filter(p => p && (p.status === 'checked-in' || p.status === 'absent')).length;
+        const totalCount = pArray.length;
         const isCompleted = finishedCount === totalCount && totalCount > 0;
         return { ...e, isCompleted, finishedCount, totalCount };
     });
@@ -2861,10 +2914,10 @@ function updateReceptionList() {
     processedEntries.forEach(e => {
         // Search Filter (v8.1.58: Safety guarded)
         const pArray = e.participants || [];
-        const pNames = pArray.map(p => p.name).join(' ');
-        const pNicks = pArray.map(p => p.nickname || "").join(' ');
-        const pTshirts = pArray.map(p => p.tshirtSize || "").join(' ');
-        const pGenders = pArray.map(p => genderLabels[p.gender] || "").join(' ');
+        const pNames = pArray.map(p => p ? p.name : "").join(' ');
+        const pNicks = pArray.map(p => p ? (p.nickname || "") : "").join(' ');
+        const pTshirts = pArray.map(p => p ? (p.tshirtSize || "") : "").join(' ');
+        const pGenders = pArray.map(p => p ? (genderLabels[p.gender] || "") : "").join(' ');
         const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks} ${pTshirts} ${pGenders}`.toLowerCase();
         
         if (searchTerm && !combined.includes(searchTerm)) return;
@@ -2934,7 +2987,8 @@ function renderReceptionDesk() {
         <div class="participant-check-list" style="padding: 1.5rem; background: white;">
             <div class="section-title" style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; border-left-width: 4px;">参加メンバー個別の受付状況</div>
             
-            ${entry.participants.map((p, idx) => {
+            ${(entry.participants || []).map((p, idx) => {
+                if (!p) return '';
                 const typeClass = p.type === 'fisher' ? 'p-badge-fisher' : 'p-badge-observer';
                 const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
                 const rowStatusClass = p.status === 'checked-in' ? 'checked-in' : (p.status === 'absent' ? 'absent' : '');
@@ -2966,6 +3020,10 @@ function renderReceptionDesk() {
             <button class="btn-primary btn-large" onclick="window.updateGroupStatus('${entry.id}', 'checked-in')" style="padding: 1rem 2rem; font-size: 1.2rem; white-space: nowrap;">全員まとめて受付</button>
         </div>
     `;
+    
+    // Ensure handlers are bound: Re-attach to button after DOM update if needed
+    const btn = desk.querySelector('.btn-primary');
+    if (btn) btn.addEventListener('click', () => window.updateGroupStatus(entry.id, 'checked-in'));
 }
 
 window.updateParticipantStatus = function (entryId, pIdx, status) {
@@ -3467,36 +3525,47 @@ window.triggerSettingsSave = function () {
 
 function handleSettingsUpdate(e) {
     if (e && e.preventDefault) e.preventDefault();
-    state.settings.competitionName = document.getElementById('competition-name').value;
-    state.settings.capacityGeneral = parseInt(document.getElementById('cap-ippan').value) || 0;
-    state.settings.capacityMintsuri = parseInt(document.getElementById('cap-mintsuri').value) || 0;
-    state.settings.capacitySuiho = parseInt(document.getElementById('cap-suiho').value) || 0;
-    state.settings.capacityHarimitsu = parseInt(document.getElementById('cap-harimitsu').value) || 0;
-    state.settings.capacityObservers = parseInt(document.getElementById('capacity-observers').value) || 0;
+    
+    const getVal = id => document.getElementById(id)?.value || "";
+    const getInt = id => parseInt(document.getElementById(id)?.value) || 0;
+
+    state.settings.competitionName = getVal('competition-name');
+    state.settings.capacityGeneral = getInt('cap-ippan');
+    state.settings.capacityMintsuri = getInt('cap-mintsuri');
+    state.settings.capacitySuiho = getInt('cap-suiho');
+    state.settings.capacityHarimitsu = getInt('cap-harimitsu');
+    state.settings.capacityObservers = getInt('capacity-observers');
+    
     const capTotalEl = document.getElementById('cap-total');
     if (capTotalEl) state.settings.capacityTotal = parseInt(capTotalEl.value) || 250;
-    state.settings.startTime = document.getElementById('registration-start').value;
-    state.settings.deadline = document.getElementById('registration-deadline').value;
-    state.settings.adminPassword = document.getElementById('admin-password-set').value;
+    
+    state.settings.startTime = getVal('registration-start');
+    state.settings.deadline = getVal('registration-deadline');
+    state.settings.adminPassword = getVal('admin-password-set');
 
     // v8.4.2: Save manual adjustments
-    state.settings.adjSuihoFishers = parseInt(document.getElementById('adj-suiho-fishers').value) || 0;
-    state.settings.adjSuihoObservers = parseInt(document.getElementById('adj-suiho-observers').value) || 0;
-    state.settings.adjHarimitsuFishers = parseInt(document.getElementById('adj-harimitsu-fishers').value) || 0;
-    state.settings.adjHarimitsuObservers = parseInt(document.getElementById('adj-harimitsu-observers').value) || 0;
+    state.settings.adjSuihoFishers = getInt('adj-suiho-fishers');
+    state.settings.adjSuihoObservers = getInt('adj-suiho-observers');
+    state.settings.adjHarimitsuFishers = getInt('adj-harimitsu-fishers');
+    state.settings.adjHarimitsuObservers = getInt('adj-harimitsu-observers');
     saveData();
     syncSettingsUI();
     updateDashboard();
     checkTimeframe();
     updateAppTitle();
+    logChange({ groupName: '大会設定', id: 'SYSTEM' }, '設定変更');
     showToast('大会設定をすべて保存しました', 'success');
 }
 
 window.updateCapacityTotal = function() {
-    const ippan = parseInt(document.getElementById('cap-ippan').value) || 0;
-    const mintsuri = parseInt(document.getElementById('cap-mintsuri').value) || 0;
-    const suiho = parseInt(document.getElementById('cap-suiho').value) || 0;
-    const harimitsu = parseInt(document.getElementById('cap-harimitsu').value) || 0;
+    const getVal = id => {
+        const el = document.getElementById(id);
+        return el ? (parseInt(el.value) || 0) : 0;
+    };
+    const ippan = getVal('cap-ippan');
+    const mintsuri = getVal('cap-mintsuri');
+    const suiho = getVal('cap-suiho');
+    const harimitsu = getVal('cap-harimitsu');
     const total = ippan + mintsuri + suiho + harimitsu;
     const sumEl = document.getElementById('capacity-total-summary');
     if (sumEl) sumEl.textContent = total;
@@ -3595,6 +3664,7 @@ window.hardDeleteEntry = async function (id) {
         updateReceptionList();
 
         // Immediate sync to server
+        logChange({ groupName: id, id: id }, '削除');
         await saveData();
     } catch (err) {
         console.error("Deletion failed:", err);
@@ -3661,7 +3731,7 @@ window.showEntryDetails = function (id) {
             <p><strong>電話番号:</strong> ${entry.phone}</p>
             <p><strong>メール:</strong> ${entry.email}</p>
             <p><strong>登録区分:</strong> <span class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}">${entry.source}</span></p>
-            <p><strong>現在の状態:</strong> ${entry.status === 'checked-in' ? '✅ 受付済' : entry.status === 'cancelled' ? '🚫 キャンセル' : '⏳ 待機'}</p>
+            <p><strong>現在の状態:</strong> ${entry.status === 'checked-in' ? '✅ 受付済' : entry.status === 'cancelled' ? '🚫 キャンセル' : '⏳ 未受付'}</p>
             <p><strong>得点合計:</strong> <span style="font-size: 1.2rem; font-weight: 900; color: var(--primary-color);">${groupPoints} pt</span></p>
         </div>
         <h4 style="margin-bottom: 0.8rem; font-size: 1rem; color: #475569;">参加者内訳 (${entry.participants.length}名)</h4>
@@ -3800,29 +3870,31 @@ window.restoreEntry = async function (id) {
         entry.lastModified = new Date().toLocaleString('ja-JP');
         await saveData();
         updateDashboard();
-        showToast('エントリーを有効な状態（待機）に復元しました', 'success');
+        showToast('エントリーを有効な状態（未受付）に復元しました', 'success');
         fillFormForEdit(entry); // Refresh the edit view if active
     }
 };
 
 async function exportGroupsCSV() {
-    const headers = ["ID", "区分", "グループ名", "代表者", "電話番号", "人数(釣り)", "人数(見学)", "ステータス", "日時"];
+    const headers = ["ID", "区分", "グループ名", "代表者", "電話番号", "メールアドレス", "人数(釣り)", "人数(見学)", "ステータス", "日時", "備考"];
     const rows = state.entries.map(e => [
         e.id, 
         e.source, 
         `"${e.groupName}"`, 
-        `"${e.representative}"`, 
-        `'${e.phone}`, 
+        `"${e.representative || e.representativeName}"`, 
+        `'${e.phone || e.repPhone}`, 
+        `"${e.email || e.repEmail}"`,
         e.fishers, 
         e.observers, 
         e.status, 
-        e.timestamp
+        e.timestamp,
+        `"${(e.memo || "").replace(/\n/g, " ")}"`
     ]);
     downloadCSV("groups_export.csv", headers, rows);
 }
 
 async function exportParticipantsCSV() {
-    const headers = ["ID", "区分", "グループ名", "氏名", "ニックネーム", "性別", "年代", "地域", "区分(釣/見)", "サイズ", "ステータス"];
+    const headers = ["ID", "区分", "グループ名", "代表電話", "代表メール", "氏名", "ニックネーム", "性別", "年代", "地域", "区分(釣/見)", "サイズ", "ステータス", "備考"];
     const rows = [];
     state.entries.forEach(e => {
         (e.participants || []).forEach(p => {
@@ -3830,14 +3902,17 @@ async function exportParticipantsCSV() {
                 e.id,
                 e.source,
                 `"${e.groupName}"`,
+                `'${e.phone || e.repPhone || ""}`,
+                `"${e.email || e.repEmail || ""}"`,
                 `"${p.name}"`,
-                `"${p.nickname || ''}"`,
+                `"${p.nickname || ""}"`,
                 p.gender,
                 p.age,
-                `"${p.region || ''}"`,
+                `"${p.region || ""}"`,
                 p.type === 'fisher' ? '釣り' : '見学',
                 p.tshirtSize,
-                e.status
+                e.status,
+                `"${(e.memo || "").replace(/\n/g, " ")}"`
             ]);
         });
     });
@@ -4306,5 +4381,172 @@ window.copyShareUrl = function(inputId) {
     // Note: Most functions are already defined on window. We don't need redundant assignments.
 })();
 
-function showLoading() { console.log("BORIJIN: Loading started..."); }
-function hideLoading() { console.log("BORIJIN: Loading finished."); }
+function showLoading() {
+    updateSyncStatus('syncing');
+}
+function hideLoading() {
+    updateSyncStatus('success');
+}
+
+/**
+ * v8.6.0: Enhanced Sync Status Handler
+ */
+window.updateSyncStatus = function(status) {
+    const dot = document.querySelector('.sync-dot');
+    const text = document.getElementById('sync-text');
+    if (!dot || !text) return;
+
+    dot.classList.remove('syncing');
+    
+    switch(status) {
+        case 'syncing':
+            dot.style.background = '#3b82f6';
+            dot.classList.add('syncing');
+            text.textContent = '同期中...';
+            break;
+        case 'success':
+            dot.style.background = '#22c55e';
+            text.textContent = '同期済み';
+            break;
+        case 'error':
+        case 'error-silent':
+            dot.style.background = '#ef4444';
+            text.textContent = 'オフライン';
+            break;
+    }
+};
+
+/**
+ * v8.6.0: Change Log Logic
+ */
+window.logChange = function(entry, type, oldEntry = null) {
+    if (!state.changeLog) state.changeLog = [];
+    
+    let details = [];
+    if (type === '修正' && oldEntry) {
+        if (oldEntry.groupName !== entry.groupName) details.push(`グループ名: ${oldEntry.groupName} → ${entry.groupName}`);
+        const oldRep = oldEntry.representative || oldEntry.representativeName;
+        const newRep = entry.representative || entry.representativeName;
+        if (oldRep !== newRep) details.push(`代表者: ${oldRep} → ${newRep}`);
+        
+        if ((oldEntry.phone || oldEntry.repPhone) !== (entry.phone || entry.repPhone)) details.push(`電話番号を変更`);
+        if ((oldEntry.email || oldEntry.repEmail) !== (entry.email || entry.repEmail)) details.push(`メールアドレスを変更`);
+        if (oldEntry.memo !== entry.memo) details.push(`備考欄を更新`);
+        
+        const oldPCount = (oldEntry.participants || []).length;
+        const newPCount = (entry.participants || []).length;
+        if (oldPCount !== newPCount) details.push(`人数変更: ${oldPCount}人 → ${newPCount}人`);
+        
+        // Detailed participant check
+        entry.participants.forEach((p, i) => {
+            const oldP = oldEntry.participants && oldEntry.participants[i];
+            if (oldP) {
+                if (oldP.name !== p.name) details.push(`参加者${i+1}氏名: ${oldP.name} → ${p.name}`);
+                if (oldP.age !== p.age) details.push(`参加者${i+1}年代の変更`);
+                if (oldP.gender !== p.gender) details.push(`参加者${i+1}性別の変更`);
+                if (oldP.tshirtSize !== p.tshirtSize) details.push(`参加者${i+1}Tシャツサイズ: ${oldP.tshirtSize} → ${p.tshirtSize}`);
+                if (oldP.type !== p.type) details.push(`参加者${i+1}種別: ${oldP.type === 'fisher' ? '釣り' : '見学'} → ${p.type === 'fisher' ? '釣り' : '見学'}`);
+            } else {
+                details.push(`参加者追加: ${p.name}`);
+            }
+        });
+        
+        if (details.length === 0) details.push("登録内容の更新（詳細なし）");
+    }
+
+    const logEntry = {
+        id: 'log-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+        timestamp: Date.now(),
+        dateStr: new Date().toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+        type: type, // '新規登録', '修正', '削除', '設定変更'
+        groupName: entry.groupName || entry.representativeName || '不明',
+        entryId: entry.id || 'NEW',
+        isAdmin: !!(isAdminAuth || isAdminAuthAction),
+        details: details
+    };
+
+    state.changeLog.unshift(logEntry);
+    if (state.changeLog.length > 200) state.changeLog.pop();
+    
+    state.lastUpdated = Date.now();
+    saveStateToLocalStorage();
+};
+
+window.deleteLogItem = function(logId) {
+    if (!confirm("この履歴を削除しますか？")) return;
+    state.changeLog = state.changeLog.filter(l => l.id !== logId);
+    saveStateToLocalStorage();
+    window.renderChangeLog();
+};
+
+window.renderChangeLog = function() {
+    const container = document.getElementById('change-log-container');
+    if (!container) return;
+
+    if (!state.changeLog || state.changeLog.length === 0) {
+        container.innerHTML = '<div class="text-center py-5 text-muted">変更履歴はありません</div>';
+        return;
+    }
+
+    const html = state.changeLog.map(log => {
+        let badgeClass = 'log-badge-edit';
+        let itemClass = 'log-edit';
+        
+        if (log.type === '新規登録') { badgeClass = 'log-badge-new'; itemClass = 'log-new'; }
+        else if (log.type === '削除') { badgeClass = 'log-badge-delete'; itemClass = 'log-delete'; }
+        
+        const adminMark = log.isAdmin ? '<span class="admin-badge" style="background:#6366f1; color:white; padding:1px 4px; border-radius:3px; font-size:0.65rem; margin-right:4px;">管理者</span>' : '';
+        
+        let detailsHtml = '';
+        if (log.details && log.details.length > 0) {
+            detailsHtml = `<div class="log-details-list" style="margin-top: 4px; padding-left: 10px; border-left: 2px solid #e2e8f0; font-size: 0.8rem; color: #64748b;">
+                ${log.details.map(d => `<div class="log-detail-item" style="margin-bottom: 2px;">・${d}</div>`).join('')}
+            </div>`;
+        }
+
+        return `
+            <div class="log-item ${itemClass}" style="padding: 0.5rem; border-bottom: 1px solid #f1f5f9; position: relative;">
+                <div style="display: flex; align-items: center; flex-wrap: nowrap; gap: 5px; font-size: 0.82rem; overflow: hidden;">
+                    <span class="log-badge ${badgeClass}" style="font-size: 0.65rem; padding: 1px 4px; flex-shrink: 0;">${log.type}</span>
+                    <span class="log-time" style="font-size: 0.7rem; color: #64748b; flex-shrink: 0;">${log.dateStr}</span>
+                    ${adminMark ? adminMark.replace('margin-right:4px;', 'margin-right:0;') : ''}
+                    <span class="log-group" style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">${log.groupName}</span> 
+                    <span class="text-muted" style="font-size:0.7rem; flex-shrink: 0;">(ID: ${log.entryId})</span>
+                    <span style="flex-shrink: 0; color: #475569;">${log.type === '新規登録' ? '登録' : log.type === '削除' ? '削除' : '修正'}</span>
+                    <button class="btn-icon" onclick="window.deleteLogItem('${log.id}')" style="font-size: 1.1rem; padding: 0 4px; opacity: 0.3; margin-left: auto;">&times;</button>
+                </div>
+                ${detailsHtml}
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = html;
+};
+
+function saveStateToLocalStorage() {
+    localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+}
+
+window.clearLocalCache = function() {
+    if (confirm('ブラウザのキャッシュデータを削除し、クラウドから最新データを再取得しますか？\n（入力途中のデータがある場合は消えてしまいます）')) {
+        localStorage.removeItem('fishing_app_v3_data');
+        location.reload();
+    }
+};
+window.sortDashboard = function(field) {
+    if (currentSortField === field) {
+        currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortField = field;
+        currentSortOrder = 'asc';
+    }
+    updateDashboard();
+};
+
+window.setDashboardFilter = function(filter) {
+    dashboardFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
+    });
+    updateDashboard();
+};

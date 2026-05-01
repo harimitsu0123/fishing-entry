@@ -77,14 +77,16 @@ function doPost(e) {
       entriesToMail.forEach(function(entry) {
         if (!entry.repEmail) return;
         
-        // 変数の置換
+        // 変数の置換 (v8.4.10: {{名前}} などの詳細形式にも対応)
+        var baseUrl = "https://harimitsu0123.github.io/fishing-entry/";
         var personalizedBody = bodyTemplate
-          .replace(/{{番号}}/g, entry.id || "")
-          .replace(/{{名前}}/g, entry.representativeName || "")
-          .replace(/{{グループ}}/g, entry.groupName || "")
-          .replace(/{{釣り人数}}/g, entry.fishers || "0")
-          .replace(/{{見学人数}}/g, entry.observers || "0")
-          .replace(/{{参加者名簿}}/g, entry.participantsList || "");
+          .replace(/{{(番号|受付番号)}}|{受付番号}/g, entry.id || "")
+          .replace(/{{(名前|代表者名)}}|{代表者名}/g, entry.representativeName || "")
+          .replace(/{{(グループ|グループ名)}}|{グループ名}/g, entry.groupName || "")
+          .replace(/{{(釣り人数)}}|{釣り人数}/g, entry.fishers || "0")
+          .replace(/{{(見学人数)}}|{見学人数}/g, entry.observers || "0")
+          .replace(/{{(参加者名簿)}}|{参加者名簿}/g, entry.participantsList || "")
+          .replace(/{{(変更URL)}}|{変更URL}/g, baseUrl + "?id=" + entry.id);
         
         try {
           GmailApp.sendEmail(entry.repEmail, subject, personalizedBody);
