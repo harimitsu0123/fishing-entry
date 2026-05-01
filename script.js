@@ -3743,6 +3743,8 @@ window.showEntryDetails = function (id) {
             editBtn.classList.add('hidden');
         } else {
             editBtn.classList.remove('hidden');
+            // v8.8.7: Restore missing click listener
+            editBtn.onclick = () => window.requestAdminEdit(entry.id);
         }
     }
 
