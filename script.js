@@ -216,7 +216,8 @@ window.handleRegistration = async function() {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData })
+            body: JSON.stringify({ action: editId ? 'edit' : 'register', entry: entryData }),
+            keepalive: true
         });
 
         // Optimistic UI update: Update local entries immediately

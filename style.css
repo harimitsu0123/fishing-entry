@@ -1110,6 +1110,22 @@ textarea:focus {
     min-height: 3rem; /* Reduced from 3.5rem */
 }
 
+/* v8.8.0: Scrollable Confirmation Box */
+.confirm-box {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 1rem;
+    background: #f8fbff;
+    border: 1px solid #e1efff;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+#confirmation-section {
+    padding-bottom: 3rem; /* Ensure space for buttons */
+}
+
 @media (max-width: 480px) {
     .result-card {
         padding: 1rem 0.8rem !important;
