@@ -399,7 +399,7 @@ window.quickAdminRegistration = function(source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.9.12: Starting...");
+        console.log("BORIJIN APP v8.9.33: Starting...");
         
         // v8.1.30: Priority 1 - Initialize UI and Events
         initApp();
@@ -960,7 +960,11 @@ function initApp() {
     window.clearSearchBoxes = function() {
         ['dashboard-search', 'mintsuri-search', 'harimitsu-search', 'suiho-search', 'reception-search', 'ikesu-search', 'coordinator-search'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.value = '';
+            if (el) {
+                el.value = '';
+                // Trigger input event to refresh lists if listeners are attached
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+            }
         });
     };
     clearSearchBoxes();
@@ -2021,7 +2025,9 @@ window.updateDashboard = function() {
         });
         
         if (!html) {
-            html = '<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--text-muted);">登録データがありません。</td></tr>';
+            const hasFilter = searchTerm || dashboardFilter !== 'all';
+            const msg = hasFilter ? '該当するデータが見つかりません。' : '登録データがありません。';
+            html = `<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--text-muted);">${msg}</td></tr>`;
         }
         
         list.innerHTML = html;
@@ -2049,6 +2055,14 @@ function switchAdminTab(tabId) {
     sessionStorage.setItem('currentAdminTab', tabId);
 
     // 1. Update Navigation Button States
+    // v8.1.75: Reset dashboard filter to 'all' when switching back to the main list to prevent blank screens
+    if (tabId === 'tab-list') {
+        dashboardFilter = 'all';
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-filter') === 'all');
+        });
+    }
+
     // v8.1.74: Clear search boxes when switching sub-tabs to prevent blank list issues
     if (typeof window.clearSearchBoxes === 'function') window.clearSearchBoxes();
 

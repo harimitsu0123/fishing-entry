@@ -165,7 +165,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <h1 id="app-title" onclick="handleSecureClick(event)">釣り大会 受付</h1>
-            <span class="app-version">v8.9.32</span>
+            <span class="app-version">v8.9.33</span>
         </div>
     </nav>
 
@@ -345,7 +345,7 @@
                             <button class="filter-btn" data-filter="水宝" onclick="window.setDashboardFilter('水宝')">水宝</button>
                             <button class="filter-btn" data-filter="ハリミツ" onclick="window.setDashboardFilter('ハリミツ')">ハリミツ</button>
                         </div>
-                        <div class="search-box mb-3"><input type="text" id="dashboard-search" placeholder="検索..."></div>
+                        <div class="search-box mb-3"><input type="text" id="dashboard-search" placeholder="検索..." autocomplete="off"></div>
                         <div class="table-container">
                             <table id="entry-table">
                                 <thead>
@@ -617,9 +617,7 @@
                             <div class="sidebar-header mb-3">
                                 <h3 style="margin:0; font-size: 1.1rem; color: var(--primary-color);">未割当リスト <span id="unassigned-count" class="badge badge-secondary" style="font-size: 0.8rem; vertical-align: middle;">0</span></h3>
                             </div>
-                            <div class="search-box mb-3">
-                                <input type="text" id="ikesu-search" placeholder="名前・IDで検索..." oninput="renderIkesuWorkspace()">
-                            </div>
+                                <input type="text" id="ikesu-search" placeholder="名前・IDで検索..." oninput="renderIkesuWorkspace()" autocomplete="off">
                             <div id="unassigned-list" class="drag-zone" style="flex: 1; overflow-y: auto; padding: 0.5rem;" ondragover="allowDrop(event)" ondrop="dropToUnassigned(event)">
                                 <!-- JSによる挿入 -->
                             </div>
@@ -700,7 +698,7 @@
             <div class="reception-layout">
                 <div class="reception-sidebar">
                     <div class="reception-toolbar">
-                        <div class="search-box"><input type="text" id="reception-search" placeholder="名前・ID・グループ..." oninput="updateReceptionList()"></div>
+                        <div class="search-box"><input type="text" id="reception-search" placeholder="名前・ID・グループ..." oninput="updateReceptionList()" autocomplete="off"></div>
                         <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
                             <button class="btn-toolbar active" id="sort-reception-id" onclick="setReceptionSort('id')">ID順</button>
                             <button class="btn-toolbar" id="sort-reception-source" onclick="setReceptionSort('source')">区分順</button>
@@ -727,7 +725,7 @@
             <div class="card">
                 <div class="card-header"><h2>みん釣り 登録管理</h2></div>
                 <div id="mintsuri-stats-summary"></div>
-                <div class="search-box my-3"><input type="text" id="mintsuri-search" placeholder="検索..." oninput="renderMintsuriCoordinatorView()"></div>
+                <div class="search-box my-3"><input type="text" id="mintsuri-search" placeholder="検索..." oninput="renderMintsuriCoordinatorView()" autocomplete="off"></div>
                 <div class="table-container">
                     <table>
                         <thead><tr><th>ID</th><th>グループ</th><th>代表者</th><th>人数</th><th>登録日時</th><th>操作</th></tr></thead>
@@ -741,7 +739,7 @@
             <div class="card">
                 <div class="card-header"><h2>ハリミツ 登録管理</h2></div>
                 <div id="harimitsu-stats-summary"></div>
-                <div class="search-box my-3"><input type="text" id="harimitsu-search" placeholder="検索..." oninput="renderHarimitsuCoordinatorView()"></div>
+                <div class="search-box my-3"><input type="text" id="harimitsu-search" placeholder="検索..." oninput="renderHarimitsuCoordinatorView()" autocomplete="off"></div>
                 <div class="table-container">
                     <table>
                         <thead><tr><th>ID</th><th>グループ</th><th>代表者</th><th>人数</th><th>登録日時</th><th>操作</th></tr></thead>
