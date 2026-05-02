@@ -144,8 +144,10 @@ window.showConfirmation = function() {
         
         const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
         const genderLabel = genderLabels[p.gender] || p.gender;
+        const ageLabel = ageLabels[p.age] || p.age;
+        const regionLabel = p.region ? `${p.region} / ` : '';
         const nicknameLabel = p.nickname ? `(${p.nickname})` : '';
-        const detailText = `【${genderLabel} / ${p.age} / ${p.tshirtSize}サイズ】`;
+        const detailText = `【${genderLabel} / ${regionLabel}${ageLabel} / ${p.tshirtSize}サイズ】`;
         
         li.innerHTML = `
             <strong>${idx + 1}. ${p.name}</strong> ${nicknameLabel} <br>
@@ -275,9 +277,11 @@ window.handleRegistration = async function() {
         
         showToast(editId ? "修正を送信しました" : "登録完了しました", "success");
         
-        // v8.9.34: Safety check for ID before showing result
+        // v8.9.35: Safety check for ID before showing result
         if (!entryData.id && !editId) {
-            entryData.id = "PENDING-" + (Date.now().toString().slice(-4));
+            const prefixMap = { '一般': 'A', 'みん釣り': 'M', '水宝': 'S', 'ハリミツ': 'H' };
+            const prefix = prefixMap[source] || 'A';
+            entryData.id = `${prefix}-9${(Date.now().toString().slice(-3))}`;
             console.warn("BORIJIN: ID missing from result, using fallback:", entryData.id);
         }
 
@@ -409,7 +413,7 @@ window.quickAdminRegistration = function(source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.9.34: Starting...");
+        console.log("BORIJIN APP v8.9.35: Starting...");
         
         // v8.1.30: Priority 1 - Initialize UI and Events
         initApp();
@@ -570,15 +574,16 @@ function mergeData(local, cloud) {
 
     // --- 1. ローカル固有（未同期）のデータをマージ ---
     safeLocalEntries.forEach(lEntry => {
-        const isServerId = /^[AMSH]-\d{3}$/.test(lEntry.id);
+        // v8.9.35: Relaxed regex to match any digit count (e.g. A-1)
+        const isServerId = /^[AMSH]-\d+$/.test(lEntry.id);
         
         if (!cloudMap.has(lEntry.id)) {
             // サーバー発行済みIDなのにクラウドに存在しない場合
-            // サーバー発行済みIDなのにクラウドに存在しない場合
             if (isServerId) {
                 // クラウドの最終更新の方が新しければ、クラウド側で「本当の削除」があったとみなす
-                if (cloud.lastUpdated > (lEntry._ts || 0)) {
-                    console.log(`[Sync] ${lEntry.id} was intentionally deleted on Cloud at ${new Date(cloud.lastUpdated).toLocaleString()}. Discarding local.`);
+                // v8.9.35: Added a small grace period (30s) or if cloud is definitely newer
+                if (cloud.lastUpdated > (lEntry._ts || 0) + 30000) {
+                    console.log(`[Sync] ${lEntry.id} was intentionally deleted on Cloud. Discarding local.`);
                     return; 
                 }
             }
@@ -4338,8 +4343,15 @@ function checkUrlParams() {
         }
     }
 
+    // v8.9.35: Sanitize 'id' before putting it into the auth field.
+    // If it looks like a URL, it's probably browser autofill or a bad link.
     if (id && document.getElementById('auth-entry-id')) {
-        document.getElementById('auth-entry-id').value = id;
+        const isLikelyUrl = id.includes('://') || id.includes('index.html');
+        if (!isLikelyUrl) {
+            document.getElementById('auth-entry-id').value = id;
+        } else {
+            console.warn("BORIJIN: Suppressing URL injection into auth field:", id);
+        }
     }
 }
 
