@@ -277,11 +277,14 @@ window.handleRegistration = async function() {
         
         showToast(editId ? "修正を送信しました" : "登録完了しました", "success");
         
-        // v8.9.35: Safety check for ID before showing result
-        if (!entryData.id && !editId) {
+        // v8.9.36: Enforce 3-digit zero-padding for ID (e.g. A-001)
+        if (entryData.id) {
+            entryData.id = entryData.id.replace(/(\d+)$/, (m) => m.padStart(3, '0'));
+        } else if (!editId) {
             const prefixMap = { '一般': 'A', 'みん釣り': 'M', '水宝': 'S', 'ハリミツ': 'H' };
             const prefix = prefixMap[source] || 'A';
-            entryData.id = `${prefix}-9${(Date.now().toString().slice(-3))}`;
+            const randomSuffix = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+            entryData.id = `${prefix}-9${randomSuffix}`;
             console.warn("BORIJIN: ID missing from result, using fallback:", entryData.id);
         }
 
@@ -413,7 +416,7 @@ window.quickAdminRegistration = function(source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.9.35: Starting...");
+        console.log("BORIJIN APP v8.9.36: Starting...");
         
         // v8.1.30: Priority 1 - Initialize UI and Events
         initApp();
