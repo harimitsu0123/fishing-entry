@@ -161,7 +161,7 @@ window.showConfirmation = function() {
 }
 
 window.handleRegistration = async function() {
-    console.log("BORIJIN: handleRegistration started (v8.9.12)");
+    console.log("BORIJIN: handleRegistration started (v8.9.34)");
     const submitBtn = document.getElementById('submit-registration');
     if (!submitBtn) return;
     
@@ -262,7 +262,11 @@ window.handleRegistration = async function() {
                 state.entries[idx] = { ...state.entries[idx], ...entryData };
             }
         } else if (entryData.id) {
-            state.entries.push(entryData);
+            // Check for duplicates before pushing
+            const isDup = state.entries.some(en => en.id === entryData.id);
+            if (!isDup) {
+                state.entries.push(entryData);
+            }
         }
         saveData(); // Sync to local and trigger save process
 
@@ -271,7 +275,13 @@ window.handleRegistration = async function() {
         
         showToast(editId ? "修正を送信しました" : "登録完了しました", "success");
         
-        // Show result screen with local data
+        // v8.9.34: Safety check for ID before showing result
+        if (!entryData.id && !editId) {
+            entryData.id = "PENDING-" + (Date.now().toString().slice(-4));
+            console.warn("BORIJIN: ID missing from result, using fallback:", entryData.id);
+        }
+
+        console.log("BORIJIN: Showing result screen for ID:", entryData.id);
         showResult(entryData);
         
         // Refresh data from server in background after a safe delay
@@ -399,7 +409,7 @@ window.quickAdminRegistration = function(source) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log("BORIJIN APP v8.9.33: Starting...");
+        console.log("BORIJIN APP v8.9.34: Starting...");
         
         // v8.1.30: Priority 1 - Initialize UI and Events
         initApp();
