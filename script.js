@@ -688,6 +688,7 @@ function finalizeLoad(isRefresh = false) {
                 startTime: "",
                 deadline: "",
                 adminPassword: "admin",
+                maintenanceMode: true,
                 ikesuList: Array.from({ length: 10 }, (_, i) => ({
                     id: `ikesu-default-${i + 1}`,
                     name: `イケス ${String.fromCharCode(65 + i)}`, // A, B, C...
@@ -702,6 +703,7 @@ function finalizeLoad(isRefresh = false) {
         updateReceptionList();
         updateSourceAvailability();
         syncSettingsUI();
+        applyMaintenanceMode();
 
         // v8.1.42: Ensure coordinator views also refresh automatically on sync
         renderActiveCoordinatorView();
@@ -1500,6 +1502,10 @@ function syncSettingsUI() {
     updateIfInactive('registration-deadline', state.settings.deadline);
     updateIfInactive('admin-password-set', state.settings.adminPassword);
     
+    // v8.9.39: Sync maintenance mode checkbox
+    const maintToggle = document.getElementById('maintenance-mode-toggle');
+    if (maintToggle) maintToggle.checked = !!state.settings.maintenanceMode;
+    
     // v8.4.2: Load manual adjustments
     updateIfInactive('adj-suiho-fishers', state.settings.adjSuihoFishers || 0);
     updateIfInactive('adj-suiho-observers', state.settings.adjSuihoObservers || 0);
@@ -2048,7 +2054,7 @@ window.updateDashboard = function() {
                 <tr class="${rowClass}">
                     <td><span class="id-badge" style="white-space:nowrap;">${e.id}</span></td>
                     <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}" style="white-space:nowrap;">${e.source}</span></td>
-                    <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}">${e.groupName}</div></td>
+                    <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}${e.memo ? `\n\n【備考】\n${e.memo}` : ''}">${e.groupName}${e.memo ? ' 📝' : ''}</div></td>
                     <td>${pSummary}</td>
                     <td><small style="white-space:nowrap;">${e.fishers} / ${e.observers}</small></td>
                     <td><small style="white-space:nowrap;">${ikesuDisplay}</small></td>
@@ -3644,6 +3650,11 @@ function handleSettingsUpdate(e) {
     state.settings.startTime = getVal('registration-start');
     state.settings.deadline = getVal('registration-deadline');
     state.settings.adminPassword = getVal('admin-password-set');
+    
+    // v8.9.39: Maintenance Mode Toggle
+    const maintToggle = document.getElementById('maintenance-mode-toggle');
+    if (maintToggle) state.settings.maintenanceMode = maintToggle.checked;
+    applyMaintenanceMode();
 
     // v8.4.2: Save manual adjustments
     state.settings.adjSuihoFishers = getInt('adj-suiho-fishers');
@@ -3657,6 +3668,19 @@ function handleSettingsUpdate(e) {
     updateAppTitle();
     logChange({ groupName: '大会設定', id: 'SYSTEM' }, '設定変更');
     showToast('大会設定をすべて保存しました', 'success');
+}
+
+/**
+ * v8.9.39: Apply maintenance mode class based on current settings
+ */
+function applyMaintenanceMode() {
+    if (state.settings.maintenanceMode) {
+        document.body.classList.add('maintenance-active');
+        console.log("BORIJIN: Maintenance Mode is ENABLED");
+    } else {
+        document.body.classList.remove('maintenance-active');
+        console.log("BORIJIN: Maintenance Mode is DISABLED");
+    }
 }
 
 window.updateCapacityTotal = function() {
