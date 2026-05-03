@@ -1662,13 +1662,44 @@ async function sendEmailViaGAS(entryData) {
 }
 
 function handleEditAuth() {
-    const entryId = document.getElementById('auth-entry-id').value.toUpperCase();
-    const cred = document.getElementById('auth-credential').value;
-    const entry = state.entries.find(e => e.id === entryId);
+    const rawId = document.getElementById('auth-entry-id').value.toUpperCase().trim();
+    const cred = document.getElementById('auth-credential').value.trim();
+    
+    // v8.9.40: Flexible matching (ignore hyphens, spaces, and auto-pad numbers)
+    const clean = (s) => (s || "").replace(/[^A-Z0-9]/g, '');
+    const cleanCred = (s) => (s || "").replace(/[^a-zA-Z0-9@.]/g, '');
+    
+    // Auto-pad the input ID if it looks like A-1 -> A-001
+    let searchId = rawId;
+    if (searchId.includes('-')) {
+        const parts = searchId.split('-');
+        if (parts[1] && /^\d+$/.test(parts[1])) {
+            searchId = parts[0] + '-' + parts[1].padStart(3, '0');
+        }
+    } else if (/^[A-Z]\d+$/.test(searchId)) {
+        // Handle A1 -> A-001
+        searchId = searchId[0] + '-' + searchId.substring(1).padStart(3, '0');
+    }
 
-    if (entry && (entry.password === cred || entry.phone === cred || entry.email === cred)) {
+    console.log("BORIJIN: Attempting auth for", { rawId, searchId, cred });
+
+    const entry = state.entries.find(e => {
+        const matchId = clean(e.id) === clean(searchId) || clean(e.id) === clean(rawId);
+        if (!matchId) return false;
+
+        // Check password (exact) or phone/email (flexible)
+        const matchPass = e.password && e.password === cred;
+        const matchPhone = e.phone && cleanCred(e.phone) === cleanCred(cred);
+        const matchEmail = e.email && cleanCred(e.email) === cleanCred(cred);
+        
+        return matchPass || matchPhone || matchEmail;
+    });
+
+    if (entry) {
+        console.log("BORIJIN: Auth success for", entry.id);
         fillFormForEdit(entry);
     } else {
+        console.warn("BORIJIN: Auth failed for", { searchId, cred });
         const err = document.getElementById('auth-error');
         err.textContent = "受付番号または認証情報が正しくありません。";
         err.classList.remove('hidden');
