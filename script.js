@@ -253,10 +253,18 @@ window.handleRegistration = async function() {
             throw new Error(result.message || "サーバーエラーが発生しました");
         }
 
-        if (result && result.entry && result.entry.id) {
-            entryData.id = result.entry.id;
-        } else if (result && result.id) {
-            entryData.id = result.id;
+        console.log("BORIJIN: Server response received:", result);
+        let serverId = null;
+        if (result) {
+            if (result.entry && typeof result.entry === 'object' && result.entry.id) serverId = result.entry.id;
+            else if (result.id) serverId = result.id;
+            else if (result.entry && typeof result.entry === 'string') serverId = result.entry;
+            else if (result.entry && typeof result.entry === 'object' && result.entry.entry_id) serverId = result.entry.entry_id;
+        }
+
+        if (serverId) {
+            entryData.id = serverId;
+            console.log("BORIJIN: Successfully extracted ID:", serverId);
         }
 
         // v8.9.37: Apply formatting/fallback BEFORE pushing to state to ensure consistency
