@@ -31,6 +31,42 @@ function doPost(e) {
         if (existing) return createJsonResponse({ status: 'success', entry: existing, note: 'recovered' });
       }
       
+      // 定員チェック (v8.9.41)
+      var settings = db.settings || {};
+      var entryFishers = parseInt(entry.fishers) || 0;
+      
+      // 全体定員チェック
+      var totalFishers = db.entries.filter(function(en) { return en.status !== 'cancelled'; }).reduce(function(sum, en) { 
+        return sum + (parseInt(en.fishers) || 0); 
+      }, 0);
+      if (settings.capacityTotal && totalFishers + entryFishers > settings.capacityTotal) {
+        return createJsonResponse({ status: 'error', message: '大会の全体定員（' + settings.capacityTotal + '名）に達したため、登録できません。' });
+      }
+      
+      // 区分別定員チェック
+      var catLimit = 0;
+      if (entry.source === '一般') catLimit = settings.capacityGeneral;
+      else if (entry.source === 'みん釣り') catLimit = settings.capacityMintsuri;
+      else if (entry.source === '水宝') catLimit = settings.capacitySuiho;
+      else if (entry.source === 'ハリミツ') catLimit = settings.capacityHarimitsu;
+      
+      if (catLimit > 0) {
+        var catFishers = db.entries.filter(function(en) { 
+          return en.source === entry.source && en.status !== 'cancelled'; 
+        }).reduce(function(sum, en) { 
+          return sum + (parseInt(en.fishers) || 0); 
+        }, 0);
+        
+        // 手動調整分を加味
+        var adj = 0;
+        if (entry.source === '水宝') adj = parseInt(settings.adjSuihoFishers || 0);
+        if (entry.source === 'ハリミツ') adj = parseInt(settings.adjHarimitsuFishers || 0);
+        
+        if (catFishers + adj + entryFishers > catLimit) {
+          return createJsonResponse({ status: 'error', message: entry.source + 'の定員（' + catLimit + '名）に達したため、登録できません。' });
+        }
+      }
+
       // 自動採番
       entry.id = generateEntryId(db, entry.source);
       

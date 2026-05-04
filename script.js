@@ -223,6 +223,32 @@ window.handleRegistration = async function() {
             _ts: Date.now()
         };
 
+        // v8.9.41: Pre-submission capacity check
+        if (!editId && !isAdminAuth && !isAdminAuthAction) {
+            const currentFishers = sumCategoryFishers(source);
+            const totalNow = state.entries.filter(e => e.status !== 'cancelled').reduce((sum, en) => sum + en.fishers, 0);
+            
+            let catLimit = 0;
+            if (source === '一般') catLimit = state.settings.capacityGeneral;
+            else if (source === 'みん釣り') catLimit = state.settings.capacityMintsuri;
+            else if (source === '水宝') catLimit = state.settings.capacitySuiho;
+            else if (source === 'ハリミツ') catLimit = state.settings.capacityHarimitsu;
+
+            if (state.settings.capacityTotal && totalNow + fisherCount > state.settings.capacityTotal) {
+                alert(`大会の全体定員（${state.settings.capacityTotal}名）に達したため、登録できません。`);
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+
+            if (catLimit > 0 && currentFishers + fisherCount > catLimit) {
+                alert(`${source}の定員（${catLimit}名）に達したため、登録できません。`);
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
         // v8.9.8: Bulletproof submission with transactionId and fallback
         const transactionId = editId ? null : (Date.now().toString() + Math.random().toString(36).substr(2, 5));
         if (!editId) entryData.transactionId = transactionId;
