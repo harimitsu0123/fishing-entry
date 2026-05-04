@@ -1962,7 +1962,7 @@ window.updateDashboard = function() {
         const observersHarimitsu = sumCategoryObservers('ハリミツ');
 
         const totalFishers = fishersIppan + fishersMintsuri + fishersSuiho + fishersHarimitsu;
-        const totalObservers = state.entries.filter(e => e.status !== 'cancelled').reduce((s, e) => s + e.observers, 0);
+        const totalObservers = observersIppan + observersMintsuri + observersSuiho + observersHarimitsu;
         const checkedInCount = state.entries.filter(e => e.status === 'checked-in').length;
         const absentCount = state.entries.filter(e => e.status === 'absent').length;
         const validEntriesCount = state.entries.filter(e => e.status !== 'cancelled').length;
