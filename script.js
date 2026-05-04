@@ -3691,15 +3691,24 @@ window.triggerSettingsSave = function () {
 window.updateCapacityTotal = function() {
     const getI = (id) => parseInt(document.getElementById(id)?.value) || 0;
     const total = getI('cap-ippan') + getI('cap-mintsuri') + getI('cap-suiho') + getI('cap-harimitsu');
+    
+    // Update the input field in settings
     const totalEl = document.getElementById('cap-total');
     if (totalEl) totalEl.value = total;
+    
+    // Update the summary text in settings
+    const sumEl = document.getElementById('capacity-total-summary');
+    if (sumEl) sumEl.textContent = total;
 };
 
-function handleSettingsUpdate(e) {
+async function handleSettingsUpdate(e) {
     if (e && e.preventDefault) e.preventDefault();
     
     const getVal = id => document.getElementById(id)?.value || "";
     const getInt = id => parseInt(document.getElementById(id)?.value) || 0;
+
+    // 最新の合計を強制計算
+    window.updateCapacityTotal();
 
     state.settings.competitionName = getVal('competition-name');
     state.settings.capacityGeneral = getInt('cap-ippan');
@@ -3707,31 +3716,37 @@ function handleSettingsUpdate(e) {
     state.settings.capacitySuiho = getInt('cap-suiho');
     state.settings.capacityHarimitsu = getInt('cap-harimitsu');
     state.settings.capacityObservers = getInt('capacity-observers');
-    
-    const capTotalEl = document.getElementById('cap-total');
-    if (capTotalEl) state.settings.capacityTotal = parseInt(capTotalEl.value) || 250;
+    state.settings.capacityTotal = getInt('cap-total');
     
     state.settings.startTime = getVal('registration-start');
     state.settings.deadline = getVal('registration-deadline');
     state.settings.adminPassword = getVal('admin-password-set');
     
-    // v8.9.39: Maintenance Mode Toggle
     const maintToggle = document.getElementById('maintenance-mode-toggle');
     if (maintToggle) state.settings.maintenanceMode = maintToggle.checked;
     applyMaintenanceMode();
 
-    // v8.4.2: Save manual adjustments
     state.settings.adjSuihoFishers = getInt('adj-suiho-fishers');
     state.settings.adjSuihoObservers = getInt('adj-suiho-observers');
     state.settings.adjHarimitsuFishers = getInt('adj-harimitsu-fishers');
     state.settings.adjHarimitsuObservers = getInt('adj-harimitsu-observers');
+    
+    console.log("BORIJIN: Saving and syncing settings...", state.settings);
+    
     saveData();
     syncSettingsUI();
     updateDashboard();
     checkTimeframe();
     updateAppTitle();
-    logChange({ groupName: '大会設定', id: 'SYSTEM' }, '設定変更');
-    showToast('大会設定をすべて保存しました', 'success');
+    
+    try {
+        await syncToCloud();
+        showToast('大会設定をクラウドに保存しました', 'success');
+        logChange({ groupName: '大会設定', id: 'SYSTEM' }, '設定変更(保存完了)');
+    } catch (err) {
+        console.error("Cloud sync failed:", err);
+        showToast('設定は保存されましたが、クラウド同期に失敗しました。', 'warning');
+    }
 }
 
 /**
@@ -3747,19 +3762,7 @@ function applyMaintenanceMode() {
     }
 }
 
-window.updateCapacityTotal = function() {
-    const getVal = id => {
-        const el = document.getElementById(id);
-        return el ? (parseInt(el.value) || 0) : 0;
-    };
-    const ippan = getVal('cap-ippan');
-    const mintsuri = getVal('cap-mintsuri');
-    const suiho = getVal('cap-suiho');
-    const harimitsu = getVal('cap-harimitsu');
-    const total = ippan + mintsuri + suiho + harimitsu;
-    const sumEl = document.getElementById('capacity-total-summary');
-    if (sumEl) sumEl.textContent = total;
-};
+
 
 window.confirmReset = async function () {
     if (confirm('全ての名簿データを削除します。本当によろしいですか？')) {
