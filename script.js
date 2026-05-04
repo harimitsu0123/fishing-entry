@@ -1,4 +1,4 @@
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzn9zkd4zXA8B7RQrHnqovBLahG3nZfUZyeuIRw7FrN8AZXOe9Z3KBbJFXboNZWuVw8/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbykDT-XvGhrZCQcCp_gCxZAToW3X4s_g_BPX7LBO4E-A84vUY0VE3nlqehITFOfp9f9/exec";
 
 let state = {
     entries: [],
@@ -3686,6 +3686,13 @@ function updateAppTitle() {
 
 window.triggerSettingsSave = function () {
     handleSettingsUpdate({ preventDefault: () => { } });
+};
+
+window.updateCapacityTotal = function() {
+    const getI = (id) => parseInt(document.getElementById(id)?.value) || 0;
+    const total = getI('cap-ippan') + getI('cap-mintsuri') + getI('cap-suiho') + getI('cap-harimitsu');
+    const totalEl = document.getElementById('cap-total');
+    if (totalEl) totalEl.value = total;
 };
 
 function handleSettingsUpdate(e) {
