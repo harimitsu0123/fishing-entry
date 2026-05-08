@@ -1543,9 +1543,10 @@ function syncSettingsUI() {
     const titleEl = document.getElementById('app-title');
     if (titleEl) titleEl.textContent = state.settings.competitionName || "釣り大会 受付";
 
-    if (document.getElementById('cap-total') && document.activeElement !== document.getElementById('cap-total')) {
-        document.getElementById('cap-total').value = state.settings.capacityTotal || 250;
-    }
+    updateIfInactive('cap-total', state.settings.capacityTotal || 250);
+    
+    // Force a recalculation of the live sum summary
+    if (typeof updateCapacityTotal === 'function') updateCapacityTotal();
 
     updateCapacityTotal();
     updateAppTitle();
