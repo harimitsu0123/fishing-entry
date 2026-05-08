@@ -1179,7 +1179,8 @@ function initApp() {
     updateBulkMailCount(); // Initial count
 
     // Admin Quota inputs live sum
-    ['cap-ippan', 'cap-mintsuri', 'cap-suiho', 'cap-harimitsu'].forEach(id => {
+    ['cap-ippan', 'cap-mintsuri', 'cap-suiho', 'cap-harimitsu', 'capacity-observers', 
+     'adj-suiho-fishers', 'adj-suiho-observers', 'adj-harimitsu-fishers', 'adj-harimitsu-observers'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', updateCapacityTotal);
     });
@@ -3690,7 +3691,8 @@ window.triggerSettingsSave = function () {
 
 function updateCapacityTotal() {
     const getI = (id) => parseInt(document.getElementById(id)?.value) || 0;
-    const total = getI('cap-ippan') + getI('cap-mintsuri') + getI('cap-suiho') + getI('cap-harimitsu');
+    const total = getI('cap-ippan') + getI('cap-mintsuri') + getI('cap-suiho') + getI('cap-harimitsu') + getI('capacity-observers') +
+                  getI('adj-suiho-fishers') + getI('adj-suiho-observers') + getI('adj-harimitsu-fishers') + getI('adj-harimitsu-observers');
     
     // Update the input field in settings
     const totalEl = document.getElementById('cap-total');
