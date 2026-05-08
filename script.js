@@ -1542,7 +1542,7 @@ function syncSettingsUI() {
     const titleEl = document.getElementById('app-title');
     if (titleEl) titleEl.textContent = state.settings.competitionName || "釣り大会 受付";
 
-    if (document.getElementById('cap-total')) {
+    if (document.getElementById('cap-total') && document.activeElement !== document.getElementById('cap-total')) {
         document.getElementById('cap-total').value = state.settings.capacityTotal || 250;
     }
 
@@ -3688,18 +3688,19 @@ window.triggerSettingsSave = function () {
     handleSettingsUpdate({ preventDefault: () => { } });
 };
 
-window.updateCapacityTotal = function() {
+function updateCapacityTotal() {
     const getI = (id) => parseInt(document.getElementById(id)?.value) || 0;
     const total = getI('cap-ippan') + getI('cap-mintsuri') + getI('cap-suiho') + getI('cap-harimitsu');
     
     // Update the input field in settings
     const totalEl = document.getElementById('cap-total');
-    if (totalEl) totalEl.value = total;
+    if (totalEl && document.activeElement !== totalEl) totalEl.value = total;
     
     // Update the summary text in settings
     const sumEl = document.getElementById('capacity-total-summary');
     if (sumEl) sumEl.textContent = total;
-};
+}
+window.updateCapacityTotal = updateCapacityTotal;
 
 async function handleSettingsUpdate(e) {
     if (e && e.preventDefault) e.preventDefault();
@@ -4752,3 +4753,174 @@ window.setDashboardFilter = function(filter) {
     });
     updateDashboard();
 };
+
+/**
+ * v8.9.50: Suiho Bulk Import from Excel
+ * 水宝枠の電話受付データ（Excel）をTSV形式で一括取り込みする機能
+ */
+window.openBulkImportModal = function() {
+    const modal = document.getElementById('bulk-import-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    document.getElementById('bulk-import-input').value = '';
+    document.getElementById('import-preview-area').classList.add('hidden');
+    document.getElementById('import-status-area').classList.add('hidden');
+    document.getElementById('import-status-area').innerHTML = '';
+};
+
+window.handleBulkImportExecute = async function() {
+    const input = document.getElementById('bulk-import-input').value.trim();
+    if (!input) {
+        alert("データを貼り付けてください。");
+        return;
+    }
+
+    const lines = input.split('\n');
+    const entries = [];
+    let currentEntry = null;
+
+    // 年代マッピング
+    const ageMap = {
+        '5': 'elementary', '10': 'elementary', '小学': 'elementary',
+        '20': '19_20s', '30': '30s', '40': '40s', '50': '50s', '60': '60s', '70': '70s', '80': '80s',
+        '中': 'middle_high', '高': 'middle_high'
+    };
+    
+    // Tシャツマッピング (v7.7.0準拠)
+    const tshirtMap = {
+        'LL': 'XL（2L）', '2L': 'XL（2L）', 'XL': 'XL（2L）',
+        '3L': '2XL（3L）', '2XL': '2XL（3L）',
+        '4L': '3XL（4L）', '3XL': '3XL（4L）',
+        '5L': '4XL（5L）', '4XL': '4XL（5L）'
+    };
+
+    lines.forEach((line) => {
+        const cols = line.split('\t').map(c => c.trim());
+        if (cols.length < 3) return; // 無効な行
+
+        const groupName = cols[0];
+        const fisherCountRaw = parseInt(cols[1]);
+        const pName = cols[2];
+        const pGenderRaw = cols[3];
+        const pAgeRaw = cols[4];
+        const pRegion = cols[5];
+        const pTshirtRaw = cols[6];
+        const repPhone = cols[7];
+
+        // グループ名がある場合は新しいグループを開始
+        if (groupName && groupName !== "") {
+            if (currentEntry) entries.push(currentEntry);
+            currentEntry = {
+                groupName: groupName,
+                representative: pName || groupName,
+                representativeName: pName || groupName,
+                phone: repPhone || "000-0000-0000",
+                repPhone: repPhone || "000-0000-0000",
+                email: "suiho-manual@example.com",
+                repEmail: "suiho-manual@example.com",
+                source: "水宝",
+                participants: [],
+                status: 'pending',
+                password: '0000',
+                memo: "Excel一括登録分",
+                expectedCount: fisherCountRaw || 1
+            };
+        }
+
+        if (currentEntry) {
+            // 名前が空でも「釣り人数」の行数分は追加を試みる
+            if (pName || pGenderRaw || pAgeRaw || pTshirtRaw || currentEntry.participants.length < currentEntry.expectedCount) {
+                const finalName = pName || `${currentEntry.groupName} 参加者${currentEntry.participants.length + 1}`;
+                
+                // 年代の正規化
+                let ageKey = '50s';
+                for (let k in ageMap) { if (pAgeRaw && pAgeRaw.includes(k)) { ageKey = ageMap[k]; break; } }
+                
+                // Tシャツの正規化
+                let size = pTshirtRaw || 'L';
+                if (tshirtMap[size.toUpperCase()]) size = tshirtMap[size.toUpperCase()];
+
+                currentEntry.participants.push({
+                    name: finalName,
+                    type: 'fisher',
+                    gender: (pGenderRaw === '女') ? 'female' : 'male',
+                    age: ageKey,
+                    region: pRegion || '',
+                    tshirtSize: size,
+                    status: 'pending'
+                });
+            }
+        }
+    });
+    if (currentEntry) entries.push(currentEntry);
+
+    if (entries.length === 0) {
+        alert("有効なデータを解析できませんでした。列の並びを確認してください。");
+        return;
+    }
+
+    // プレビュー表示
+    const previewContent = document.getElementById('import-preview-content');
+    const previewArea = document.getElementById('import-preview-area');
+    previewContent.innerHTML = entries.map(e => `
+        <div style="margin-bottom:8px; border-bottom:1px solid #ddd; padding-bottom:4px;">
+            <strong>${e.groupName}</strong> (${e.participants.length}名) - 代表: ${e.representative} / ${e.phone}
+            <div style="color:#666; font-size:0.7rem;">${e.participants.map(p => p.name).join(', ')}</div>
+        </div>
+    `).join('');
+    previewArea.classList.remove('hidden');
+
+    if (!confirm(`${entries.length} 件のグループ（計 ${entries.reduce((s, e) => s + e.participants.length, 0)} 名）を取り込みますか？\n※完了まで数分かかる場合があります。`)) return;
+
+    const btn = document.getElementById('btn-execute-import');
+    const statusArea = document.getElementById('import-status-area');
+    statusArea.classList.remove('hidden');
+    btn.disabled = true;
+
+    let successCount = 0;
+    for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i];
+        statusArea.innerHTML = `<div class="alert alert-info">登録中... (${i + 1}/${entries.length})<br><strong>${entry.groupName}</strong></div>`;
+        
+        try {
+            const entryData = {
+                ...entry,
+                fishers: entry.participants.filter(p => p.type === 'fisher').length,
+                observers: entry.participants.filter(p => p.type === 'observer').length,
+                timestamp: new Date().toLocaleString('ja-JP'),
+                lastUpdated: new Date().toLocaleString('ja-JP'),
+                lastModified: new Date().toLocaleString('ja-JP'),
+                _ts: Date.now(),
+                transactionId: "BULK-" + Date.now() + "-" + i
+            };
+
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'register', entry: entryData })
+            });
+            const result = await response.json();
+            if (result && result.status === 'success') {
+                successCount++;
+            } else {
+                console.warn("Server error for group:", entry.groupName, result);
+            }
+        } catch (err) {
+            console.error("Fetch error for group:", entry.groupName, err);
+        }
+    }
+
+    statusArea.innerHTML = `<div class="alert alert-success" style="background:#d1fae5; border:1px solid #10b981; color:#065f46; padding:15px; border-radius:8px;">
+        <h3>取り込み完了</h3>
+        <p>成功: ${successCount} / 全 ${entries.length} グループ</p>
+        <p style="font-size:0.8rem; margin-top:10px;">名簿を更新するため画面を再読み込みします...</p>
+    </div>`;
+    
+    showToast(`一括取り込み完了: ${successCount}件`, "success");
+    
+    setTimeout(() => {
+        location.reload();
+    }, 3000);
+};
+
