@@ -725,10 +725,10 @@ function finalizeLoad(isRefresh = false) {
 
         checkTimeframe();
         migrateTshirtSizes(); // v7.7.0: Data migration for new labels
+        syncSettingsUI();
         updateDashboard();
         updateReceptionList();
         updateSourceAvailability();
-        syncSettingsUI();
         applyMaintenanceMode();
 
         // v8.1.42: Ensure coordinator views also refresh automatically on sync
@@ -3701,6 +3701,9 @@ function updateCapacityTotal() {
     // Update the input field in settings
     const totalEl = document.getElementById('cap-total');
     if (totalEl && document.activeElement !== totalEl) totalEl.value = total;
+    
+    // v8.9.57: Persist to state so dashboard reflects this recalculated value
+    if (state.settings) state.settings.capacityTotal = total;
     
     // Update the summary text in settings
     const sumEl = document.getElementById('capacity-total-summary');
