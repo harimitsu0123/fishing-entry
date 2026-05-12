@@ -165,7 +165,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <h1 id="app-title" onclick="handleSecureClick(event)">釣り大会 受付</h1>
-            <span class="app-version">v8.9.57</span>
+            <span class="app-version">v8.9.58</span>
         </div>
     </nav>
 
@@ -834,9 +834,16 @@
             <div id="detail-modal-body" class="detail-viewer-body">
                 <!-- Content injected by JS -->
             </div>
-            <div class="modal-footer mt-4" style="display:flex; justify-content:flex-end; gap:0.5rem; border-top:1px solid #eee; padding-top:1rem;">
-                <button class="btn-text" onclick="document.getElementById('detail-modal').classList.add('hidden')">閉じる</button>
-                <button id="modal-edit-btn" class="btn-primary">編集する</button>
+            <div class="modal-footer mt-4" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:1rem;">
+                <div>
+                    <button id="modal-cancel-btn" class="btn-outline btn-small" style="border-color: #ff7675; color: #ff7675;">取消</button>
+                    <button id="modal-restore-btn" class="btn-outline btn-small hidden" style="border-color: #10b981; color: #10b981;">有効に戻す</button>
+                </div>
+                <div style="display:flex; gap:0.5rem;">
+                    <button id="modal-resend-btn" class="btn-outline btn-small">メール再送</button>
+                    <button class="btn-text" onclick="document.getElementById('detail-modal').classList.add('hidden')">閉じる</button>
+                    <button id="modal-edit-btn" class="btn-primary">編集する</button>
+                </div>
             </div>
         </div>
     </div>
@@ -870,6 +877,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=8.9.57"></script>
+    <script src="script.js?v=8.9.58"></script>
 </body>
 </html>

@@ -2126,6 +2126,10 @@ window.updateDashboard = function() {
                             <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
                             <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
                             <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
+                            ${e.status === 'cancelled' ? 
+                                `<button class="btn-outline btn-small" onclick="restoreEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap; border-color: #10b981; color: #10b981;">有効化</button>` : 
+                                `<button class="btn-outline btn-small" onclick="cancelEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">取消</button>`
+                            }
                             <button class="btn-outline btn-small" onclick="hardDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap; border-color: #ff7675; color: #ff7675;">削除</button>
                         </div>
                     </td>
@@ -3899,9 +3903,26 @@ window.showEntryDetails = function (id) {
             editBtn.classList.add('hidden');
         } else {
             editBtn.classList.remove('hidden');
-            // v8.8.7: Restore missing click listener
             editBtn.onclick = () => window.requestAdminEdit(entry.id);
         }
+    }
+
+    // v8.9.58: Toggle visibility and handlers for cancel/restore/resend buttons
+    const cancelBtn = document.getElementById('modal-cancel-btn');
+    const restoreBtn = document.getElementById('modal-restore-btn');
+    const resendBtn = document.getElementById('modal-resend-btn');
+
+    if (cancelBtn) {
+        cancelBtn.classList.toggle('hidden', !isAdminAuth || entry.status === 'cancelled');
+        cancelBtn.onclick = () => window.cancelEntry(entry.id);
+    }
+    if (restoreBtn) {
+        restoreBtn.classList.toggle('hidden', !isAdminAuth || entry.status !== 'cancelled');
+        restoreBtn.onclick = () => window.restoreEntry(entry.id);
+    }
+    if (resendBtn) {
+        resendBtn.classList.toggle('hidden', !isAdminAuth || entry.status === 'cancelled');
+        resendBtn.onclick = () => window.resendEmail(entry.id);
     }
 
     if (title) title.textContent = `[${entry.id}] ${entry.groupName} 詳細`;
