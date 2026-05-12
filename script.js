@@ -4970,9 +4970,14 @@ window.handleBulkImportExecute = async function() {
     btn.disabled = true;
 
     let successCount = 0;
+    let failedGroups = [];
+
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
-        statusArea.innerHTML = `<div class="alert alert-info">登録中... (${i + 1}/${entries.length})<br><strong>${entry.groupName}</strong></div>`;
+        statusArea.innerHTML = `<div class="alert alert-info">
+            <strong>${i + 1} / ${entries.length} グループ目を取り込み中...</strong><br>
+            [${entry.groupName}] (${entry.participants.length}名) を登録しています。
+        </div>`;
         
         try {
             const entryData = {
@@ -4986,33 +4991,63 @@ window.handleBulkImportExecute = async function() {
                 transactionId: "BULK-" + Date.now() + "-" + i
             };
 
+            // v8.9.62: Use a longer timeout for bulk operations
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout per group
+
             const response = await fetch(GAS_WEB_APP_URL, {
                 method: 'POST',
                 mode: 'cors',
                 headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({ action: 'register', entry: entryData })
+                body: JSON.stringify({ action: 'register', entry: entryData }),
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
+
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+            
             const result = await response.json();
             if (result && result.status === 'success') {
                 successCount++;
             } else {
                 console.warn("Server error for group:", entry.groupName, result);
+                failedGroups.push(`${entry.groupName} (サーバーエラー: ${result?.message || '不明'})`);
             }
+
+            // v8.9.62: Add a small delay between requests to avoid rate limits
+            await new Promise(resolve => setTimeout(resolve, 800));
+
         } catch (err) {
             console.error("Fetch error for group:", entry.groupName, err);
+            failedGroups.push(`${entry.groupName} (通信エラー: ${err.message})`);
         }
     }
 
-    statusArea.innerHTML = `<div class="alert alert-success" style="background:#d1fae5; border:1px solid #10b981; color:#065f46; padding:15px; border-radius:8px;">
-        <h3>取り込み完了</h3>
-        <p>成功: ${successCount} / 全 ${entries.length} グループ</p>
-        <p style="font-size:0.8rem; margin-top:10px;">名簿を更新するため画面を再読み込みします...</p>
-    </div>`;
+    // 最終結果の表示
+    btn.disabled = false;
+    let finalHtml = `<h3>取り込み完了</h3>
+        <p style="font-size:1.1rem; font-weight:bold;">成功: ${successCount} / 全 ${entries.length} グループ</p>`;
     
-    showToast(`一括取り込み完了: ${successCount}件`, "success");
+    if (failedGroups.length > 0) {
+        finalHtml += `<div class="alert alert-danger" style="background:#fee2e2; border:1px solid #ef4444; color:#991b1b; margin-top:10px; padding:10px; border-radius:6px;">
+            <strong>以下のグループの登録に失敗しました：</strong>
+            <ul style="margin:5px 0 0 20px; font-size:0.8rem;">
+                ${failedGroups.map(f => `<li>${f}</li>`).join('')}
+            </ul>
+            <p style="font-size:0.75rem; margin-top:5px;">※失敗した分だけを再度コピーしてやり直してください。</p>
+        </div>`;
+    }
+
+    finalHtml += `<div class="alert alert-success" style="background:#d1fae5; border:1px solid #10b981; color:#065f46; margin-top:10px; padding:10px; border-radius:6px;">
+        名簿を更新するため、3秒後に画面を再読み込みします...
+    </div>`;
+
+    statusArea.innerHTML = finalHtml;
+    showToast(`一括取り込み完了: ${successCount}件成功`, successCount === entries.length ? "success" : "warning");
     
     setTimeout(() => {
-        location.reload();
-    }, 3000);
+        if (successCount > 0) location.reload();
+    }, 4000);
 };
 
