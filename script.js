@@ -1598,8 +1598,8 @@ function addParticipantRow(data = null, shouldFocus = true) {
                 </select>
             </div>
             <div class="form-group" style="flex: 1; min-width: 140px;">
-                <label>地域 <span class="required">*</span></label>
-                <input type="text" class="p-region" required value="${data && data.region ? data.region : ''}" placeholder="例: 姫路市まで">
+                <label>住所・地域 <span class="required">*</span></label>
+                <input type="text" class="p-region" required value="${data && data.region ? data.region : ''}" placeholder="例: 姫路市など">
             </div>
             <div class="form-group" style="flex: 1; min-width: 100px;">
                 <label>Tシャツ <span class="required">*</span></label>
@@ -1854,8 +1854,9 @@ function showResult(entry) {
             const genderLabel = genderLabels[p.gender] || '';
             const ageLabel = ageLabels[p.age] || '';
             const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
+            const regionText = p.region ? `<span style="font-size:0.8rem; color:#666;">[${p.region}]</span>` : '';
             return `<li style="margin-bottom: 0.3rem;">
-                <span style="font-weight: bold;">${p.name}</span> (${genderLabel} / ${ageLabel} / ${p.tshirtSize || 'なし'}) - ${typeLabel}
+                <span style="font-weight: bold;">${p.name}</span> ${regionText} (${genderLabel} / ${ageLabel} / ${p.tshirtSize || 'なし'}) - ${typeLabel}
             </li>`;
         }).join('');
     }
@@ -2063,7 +2064,7 @@ window.updateDashboard = function() {
             const pNames = pArray.map(p => p.name).join(' ');
             const pRegions = pArray.map(p => p.region || "").join(' ');
             const pTshirts = pArray.map(p => p.tshirtSize || "").join(' ');
-            const pGenders = pArray.map(p => genderLabels[p.gender] || "").join(' ');
+            const pGenders = pArray.map(p => p.gender ? genderLabels[p.gender] || "" : "").join(' ');
             
             const combinedParticipantInfo = (pNames + " " + pRegions + " " + pTshirts + " " + pGenders).toLowerCase();
             const searchTermLower = searchTerm.toLowerCase();
@@ -3692,8 +3693,10 @@ window.triggerSettingsSave = function () {
 
 function updateCapacityTotal() {
     const getI = (id) => parseInt(document.getElementById(id)?.value) || 0;
-    const total = getI('cap-ippan') + getI('cap-mintsuri') + getI('cap-suiho') + getI('cap-harimitsu') + getI('capacity-observers') +
-                  getI('adj-suiho-fishers') + getI('adj-suiho-observers') + getI('adj-harimitsu-fishers') + getI('adj-harimitsu-observers');
+    
+    // v8.9.55: Separate Fisher Capacity from Observer Capacity for correct dashboard denominator
+    const total = getI('cap-ippan') + getI('cap-mintsuri') + getI('cap-suiho') + getI('cap-harimitsu') + 
+                  getI('adj-suiho-fishers') + getI('adj-harimitsu-fishers');
     
     // Update the input field in settings
     const totalEl = document.getElementById('cap-total');

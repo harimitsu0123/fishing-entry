@@ -2538,3 +2538,19 @@ table {
 .admin-tab-content:not(.active) {
     display: none !important;
 }
+
+/* v8.9.56: Footer Stability Fix */
+.main-footer {
+    font-size: 0.8rem;
+    padding: 2.5rem 0;
+    opacity: 0.7;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    margin-top: 4rem;
+    position: relative;
+    z-index: 10;
+    user-select: none;
+}
