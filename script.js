@@ -1811,13 +1811,21 @@ function fillFormForEdit(entry) {
 
         // v8.9.59: Admin destructive buttons in the edit form
         const adminCancelBtn = document.getElementById('admin-cancel-entry-btn');
+        const adminRestoreBtn = document.getElementById('admin-restore-entry-btn');
         const adminDeleteBtn = document.getElementById('admin-delete-entry-btn');
+        
+        const isActuallyAdmin = (isAdminAuth || isAdminAuthAction);
+
         if (adminCancelBtn) {
-            adminCancelBtn.classList.toggle('hidden', !(isAdminAuth || isAdminAuthAction) || entry.status === 'cancelled');
+            adminCancelBtn.classList.toggle('hidden', !isActuallyAdmin || entry.status === 'cancelled');
             adminCancelBtn.onclick = () => window.cancelEntry(entry.id);
         }
+        if (adminRestoreBtn) {
+            adminRestoreBtn.classList.toggle('hidden', !isActuallyAdmin || entry.status !== 'cancelled');
+            adminRestoreBtn.onclick = () => window.restoreEntry(entry.id);
+        }
         if (adminDeleteBtn) {
-            adminDeleteBtn.classList.toggle('hidden', !(isAdminAuth || isAdminAuthAction));
+            adminDeleteBtn.classList.toggle('hidden', !isActuallyAdmin);
             adminDeleteBtn.onclick = () => {
                 window.hardDeleteEntry(entry.id).then(() => {
                     window.resetForm();
@@ -4122,8 +4130,14 @@ window.cancelEntry = async function (id) {
         await saveData();
         updateDashboard();
         showToast('エントリーを無効化しました', 'info');
-        resetForm(); // Clear the form if we were editing
-        switchView(null, 'dashboard-view');
+        
+        // v8.9.60: Refresh modal or form if visible
+        if (document.getElementById('detail-modal')?.classList.contains('hidden') === false) {
+            window.showEntryDetails(id);
+        }
+        if (document.getElementById('edit-entry-id')?.value === id) {
+            fillFormForEdit(entry);
+        }
     }
 };
 
@@ -4138,7 +4152,14 @@ window.restoreEntry = async function (id) {
         await saveData();
         updateDashboard();
         showToast('エントリーを有効な状態（未受付）に復元しました', 'success');
-        fillFormForEdit(entry); // Refresh the edit view if active
+        
+        // v8.9.60: Refresh modal or form if visible
+        if (document.getElementById('detail-modal')?.classList.contains('hidden') === false) {
+            window.showEntryDetails(id);
+        }
+        if (document.getElementById('edit-entry-id')?.value === id) {
+            fillFormForEdit(entry);
+        }
     }
 };
 
