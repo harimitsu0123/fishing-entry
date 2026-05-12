@@ -1229,6 +1229,7 @@ function switchView(btnElement, targetId, skipPush = false, skipScroll = false) 
 
     // Auto-correction for legacy or incorrect names
     if (targetId === 'admin-view') targetId = 'dashboard-view';
+    if (targetId === 'day-view') targetId = 'reception-view';
 
     let targetView = document.getElementById(targetId);
     if (!targetView) {
@@ -1401,7 +1402,7 @@ function updateAdminToolbar() {
             <div class="toolbar-content">
                 <button class="btn-toolbar" data-target="registration-view">受付フォーム</button>
                 <button class="btn-toolbar" data-target="dashboard-view">大会準備・管理</button>
-                <button class="btn-toolbar" data-target="day-view">大会当日</button>
+                <button class="btn-toolbar" data-target="reception-view">大会当日</button>
                 <button class="btn-toolbar logout" id="admin-logout">ログアウト</button>
             </div>
         `;
