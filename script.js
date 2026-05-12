@@ -1809,6 +1809,23 @@ function fillFormForEdit(entry) {
         window.scrollTo(0, 0);
         if (typeof checkTimeframe === 'function') checkTimeframe();
 
+        // v8.9.59: Admin destructive buttons in the edit form
+        const adminCancelBtn = document.getElementById('admin-cancel-entry-btn');
+        const adminDeleteBtn = document.getElementById('admin-delete-entry-btn');
+        if (adminCancelBtn) {
+            adminCancelBtn.classList.toggle('hidden', !(isAdminAuth || isAdminAuthAction) || entry.status === 'cancelled');
+            adminCancelBtn.onclick = () => window.cancelEntry(entry.id);
+        }
+        if (adminDeleteBtn) {
+            adminDeleteBtn.classList.toggle('hidden', !(isAdminAuth || isAdminAuthAction));
+            adminDeleteBtn.onclick = () => {
+                window.hardDeleteEntry(entry.id).then(() => {
+                    window.resetForm();
+                    window.switchView(null, 'dashboard-view');
+                });
+            };
+        }
+
     } catch (e) {
         console.error("BORIJIN: fillFormForEdit failed:", e);
         showToast("フォームの読み込みに失敗しました", "error");
@@ -1907,6 +1924,15 @@ function resetForm() {
     
     document.getElementById('registration-status').classList.add('hidden');
     
+    // v8.9.59: Hide admin-only buttons
+    const adminCancelBtn = document.getElementById('admin-cancel-entry-btn');
+    const adminDeleteBtn = document.getElementById('admin-delete-entry-btn');
+    if (adminCancelBtn) adminCancelBtn.classList.add('hidden');
+    if (adminDeleteBtn) adminDeleteBtn.classList.add('hidden');
+
+    const submitBtn = document.getElementById('submit-registration');
+    if (submitBtn) submitBtn.textContent = "大会に参加を申し込む";
+
     updateAppTitle();
     document.getElementById('submit-registration').textContent = "この内容で登録する";
     
@@ -2126,11 +2152,6 @@ window.updateDashboard = function() {
                             <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
                             <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
                             <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
-                            ${e.status === 'cancelled' ? 
-                                `<button class="btn-outline btn-small" onclick="restoreEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap; border-color: #10b981; color: #10b981;">有効化</button>` : 
-                                `<button class="btn-outline btn-small" onclick="cancelEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">取消</button>`
-                            }
-                            <button class="btn-outline btn-small" onclick="hardDeleteEntry('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap; border-color: #ff7675; color: #ff7675;">削除</button>
                         </div>
                     </td>
                 </tr>
@@ -2642,10 +2663,16 @@ function sumCategoryFishers(category) {
         .filter(e => e.source === category && e.status !== 'cancelled')
         .reduce((sum, e) => sum + (parseInt(e.fishers) || 0), 0);
     
-    // v8.4.2: Add manual adjustment
+    // v8.4.2 & v8.9.59: Add manual adjustment (Try DOM first for real-time sync, then state)
     let adj = 0;
-    if (category === '水宝') adj = parseInt(state.settings.adjSuihoFishers || 0);
-    if (category === 'ハリミツ') adj = parseInt(state.settings.adjHarimitsuFishers || 0);
+    if (category === '水宝') {
+        const el = document.getElementById('adj-suiho-fishers');
+        adj = el ? (parseInt(el.value) || 0) : parseInt(state.settings.adjSuihoFishers || 0);
+    }
+    if (category === 'ハリミツ') {
+        const el = document.getElementById('adj-harimitsu-fishers');
+        adj = el ? (parseInt(el.value) || 0) : parseInt(state.settings.adjHarimitsuFishers || 0);
+    }
     return dbCount + adj;
 }
 
@@ -3698,9 +3725,11 @@ window.triggerSettingsSave = function () {
 function updateCapacityTotal() {
     const getI = (id) => parseInt(document.getElementById(id)?.value) || 0;
     
-    // v8.9.55: Separate Fisher Capacity from Observer Capacity for correct dashboard denominator
-    const total = getI('cap-ippan') + getI('cap-mintsuri') + getI('cap-suiho') + getI('cap-harimitsu') + 
-                  getI('adj-suiho-fishers') + getI('adj-harimitsu-fishers');
+    // v8.9.59: EXCLUDE adjustments from the base capacity total (denominator) as per user request
+    const total = getI('cap-ippan') + getI('cap-mintsuri') + getI('cap-suiho') + getI('cap-harimitsu');
+    
+    // v8.9.59: Log for debugging
+    console.log(`[Capacity] Recalculated denominator: ${total} (excludes adjustments)`);
     
     // Update the input field in settings
     const totalEl = document.getElementById('cap-total');
@@ -3907,10 +3936,10 @@ window.showEntryDetails = function (id) {
         }
     }
 
-    // v8.9.58: Toggle visibility and handlers for cancel/restore/resend buttons
     const cancelBtn = document.getElementById('modal-cancel-btn');
     const restoreBtn = document.getElementById('modal-restore-btn');
     const resendBtn = document.getElementById('modal-resend-btn');
+    const hardDeleteBtn = document.getElementById('modal-hard-delete-btn');
 
     if (cancelBtn) {
         cancelBtn.classList.toggle('hidden', !isAdminAuth || entry.status === 'cancelled');
@@ -3923,6 +3952,14 @@ window.showEntryDetails = function (id) {
     if (resendBtn) {
         resendBtn.classList.toggle('hidden', !isAdminAuth || entry.status === 'cancelled');
         resendBtn.onclick = () => window.resendEmail(entry.id);
+    }
+    if (hardDeleteBtn) {
+        hardDeleteBtn.classList.toggle('hidden', !isAdminAuth);
+        hardDeleteBtn.onclick = () => {
+            window.hardDeleteEntry(entry.id).then(() => {
+                document.getElementById('detail-modal').classList.add('hidden');
+            });
+        };
     }
 
     if (title) title.textContent = `[${entry.id}] ${entry.groupName} 詳細`;
