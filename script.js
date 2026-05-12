@@ -3726,8 +3726,27 @@ function updateAppTitle() {
     document.title = competitionName;
 }
 
-window.triggerSettingsSave = function () {
-    handleSettingsUpdate({ preventDefault: () => { } });
+window.triggerSettingsSave = async function () {
+    const btn = document.querySelector('button[onclick="triggerSettingsSave()"]');
+    const originalText = btn ? btn.textContent : "大会設定をすべて保存";
+    
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "保存中...";
+    }
+
+    try {
+        await handleSettingsUpdate({ preventDefault: () => { } });
+        showToast('設定を保存し、クラウドと同期しました', 'success');
+    } catch (err) {
+        console.error("BORIJIN: Save failed:", err);
+        showToast('保存に失敗しました', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
 };
 
 function updateCapacityTotal() {
@@ -3759,7 +3778,10 @@ async function handleSettingsUpdate(e) {
     if (e && e.preventDefault) e.preventDefault();
     
     const getVal = id => document.getElementById(id)?.value || "";
-    const getInt = id => parseInt(document.getElementById(id)?.value) || 0;
+    const getInt = id => {
+        const v = document.getElementById(id)?.value;
+        return (v === "" || v === undefined) ? 0 : parseInt(v) || 0;
+    };
 
     // 最新の合計を強制計算し、その値を保存に利用する
     const calculatedTotal = window.updateCapacityTotal();
@@ -3785,22 +3807,20 @@ async function handleSettingsUpdate(e) {
     state.settings.adjHarimitsuFishers = getInt('adj-harimitsu-fishers');
     state.settings.adjHarimitsuObservers = getInt('adj-harimitsu-observers');
     
-    console.log("BORIJIN: Saving and syncing settings...", state.settings);
+    console.log("BORIJIN: Updating state and syncing...", state.settings);
     
-    saveData();
+    // v8.9.63: Save locally first
+    localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+    
+    // v8.9.63: Then sync to cloud and wait for it
+    await syncToCloud();
+    
     syncSettingsUI();
     updateDashboard();
     checkTimeframe();
     updateAppTitle();
     
-    try {
-        await syncToCloud();
-        showToast('大会設定をクラウドに保存しました', 'success');
-        logChange({ groupName: '大会設定', id: 'SYSTEM' }, '設定変更(保存完了)');
-    } catch (err) {
-        console.error("Cloud sync failed:", err);
-        showToast('設定は保存されましたが、クラウド同期に失敗しました。', 'warning');
-    }
+    logChange({ groupName: '大会設定', id: 'SYSTEM' }, '設定変更');
 }
 
 /**
