@@ -3725,22 +3725,25 @@ window.triggerSettingsSave = function () {
 function updateCapacityTotal() {
     const getI = (id) => parseInt(document.getElementById(id)?.value) || 0;
     
-    // v8.9.59: EXCLUDE adjustments from the base capacity total (denominator) as per user request
+    // v8.9.60: STRICTLY sum only the 4 fisher categories for the denominator (Total Capacity)
+    // Excludes observers and manual adjustments as per user requirement.
     const total = getI('cap-ippan') + getI('cap-mintsuri') + getI('cap-suiho') + getI('cap-harimitsu');
     
-    // v8.9.59: Log for debugging
-    console.log(`[Capacity] Recalculated denominator: ${total} (excludes adjustments)`);
+    console.log(`[Capacity] Denominator calculation: ${getI('cap-ippan')} + ${getI('cap-mintsuri')} + ${getI('cap-suiho')} + ${getI('cap-harimitsu')} = ${total}`);
     
-    // Update the input field in settings
     const totalEl = document.getElementById('cap-total');
-    if (totalEl && document.activeElement !== totalEl) totalEl.value = total;
+    if (totalEl && document.activeElement !== totalEl) {
+        totalEl.value = total;
+    }
     
-    // v8.9.57: Persist to state so dashboard reflects this recalculated value
-    if (state.settings) state.settings.capacityTotal = total;
+    if (state.settings) {
+        state.settings.capacityTotal = total;
+    }
     
-    // Update the summary text in settings
     const sumEl = document.getElementById('capacity-total-summary');
     if (sumEl) sumEl.textContent = total;
+
+    return total;
 }
 window.updateCapacityTotal = updateCapacityTotal;
 
@@ -3750,8 +3753,8 @@ async function handleSettingsUpdate(e) {
     const getVal = id => document.getElementById(id)?.value || "";
     const getInt = id => parseInt(document.getElementById(id)?.value) || 0;
 
-    // 最新の合計を強制計算
-    window.updateCapacityTotal();
+    // 最新の合計を強制計算し、その値を保存に利用する
+    const calculatedTotal = window.updateCapacityTotal();
 
     state.settings.competitionName = getVal('competition-name');
     state.settings.capacityGeneral = getInt('cap-ippan');
@@ -3759,7 +3762,7 @@ async function handleSettingsUpdate(e) {
     state.settings.capacitySuiho = getInt('cap-suiho');
     state.settings.capacityHarimitsu = getInt('cap-harimitsu');
     state.settings.capacityObservers = getInt('capacity-observers');
-    state.settings.capacityTotal = getInt('cap-total');
+    state.settings.capacityTotal = calculatedTotal;
     
     state.settings.startTime = getVal('registration-start');
     state.settings.deadline = getVal('registration-deadline');
@@ -3796,12 +3799,13 @@ async function handleSettingsUpdate(e) {
  * v8.9.39: Apply maintenance mode class based on current settings
  */
 function applyMaintenanceMode() {
-    if (state.settings.maintenanceMode) {
+    // v8.9.60: Skip maintenance overlay if the user is an authenticated admin
+    if (state.settings.maintenanceMode && !isAdminAuth) {
         document.body.classList.add('maintenance-active');
-        console.log("BORIJIN: Maintenance Mode is ENABLED");
+        console.log("BORIJIN: Maintenance Mode is ENABLED (Overlay active for non-admins)");
     } else {
         document.body.classList.remove('maintenance-active');
-        console.log("BORIJIN: Maintenance Mode is DISABLED");
+        console.log(`BORIJIN: Maintenance Mode is ${state.settings.maintenanceMode ? 'ENABLED (but bypassed for admin)' : 'DISABLED'}`);
     }
 }
 
