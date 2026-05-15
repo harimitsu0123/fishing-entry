@@ -4651,7 +4651,7 @@ window.renderRankings = function() {
                         <tr style="background:#f1f5f9;">
                             <th style="padding:8px;">順位</th>
                             <th style="padding:8px;">イケス</th>
-                            <th style="padding:8px; text-align:center;">平均点</th>
+                            <th style="padding:8px; text-align:right;">平均点</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -4659,8 +4659,7 @@ window.renderRankings = function() {
                 const rank = idx + 1;
                 const membersHtml = (rank <= 3) ? `
                     <div style="margin-top:0.4rem; font-size:0.8rem; color:#475569; background:#f8fafc; padding:0.5rem; border-radius:6px; border-left:3px solid #059669;">
-                        <div style="font-weight:bold; margin-bottom:0.2rem; font-size:0.75rem; color:#059669;">Top Contributors:</div>
-                        ${ik.members.slice(0, 5).map(m => `<span>${m.group} - ${m.name}(${m.score}pt)</span>`).join('<br>')}
+                        ${ik.members.slice(0, 5).map(m => `<span>${m.group} - ${m.name}(${m.score}点)</span>`).join('<br>')}
                     </div>
                 ` : '';
                 
@@ -4668,11 +4667,11 @@ window.renderRankings = function() {
                     <tr style="border-bottom:1px solid #f1f5f9;">
                         <td style="padding:8px; vertical-align:top; width:40px;">${rank}</td>
                         <td style="padding:8px; vertical-align:top;">
-                            <strong>${ik.name}</strong><br>
-                            <small class="text-muted">${ik.count}名 / 計${ik.total}pt</small>
+                            <strong style="font-size:1.2rem;">${ik.name}</strong><br>
+                            <small class="text-muted">${ik.count}名 / 計${ik.total}点</small>
                             ${membersHtml}
                         </td>
-                        <td style="padding:8px; text-align:right; vertical-align:top; font-weight:bold; color:#059669; white-space:nowrap;">${ik.average} <small>avg</small></td>
+                        <td style="padding:8px; text-align:right; vertical-align:top; font-weight:bold; color:#059669; white-space:nowrap;">${ik.average}<small style="font-size:0.7rem; margin-left:2px;">点</small></td>
                     </tr>`;
             });
             html += '</tbody></table>';
