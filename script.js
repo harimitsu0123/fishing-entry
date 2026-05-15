@@ -2623,7 +2623,7 @@ window.renderGroupPrintView = function() {
                         <tr style="background: #eee; font-size: 0.85rem;">
                             <th style="border: 1px solid #000; padding: 0.5rem; width: 45px;">No</th>
                             <th style="border: 1px solid #000; padding: 0.5rem;">氏名</th>
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 100px;">Tシャツ</th>
+                            <th style="border: 1px solid #000; padding: 0.5rem; width: 150px;">Tシャツ</th>
                             <th style="border: 1px solid #000; padding: 0.5rem; width: 80px;">区分</th>
                         </tr>
                     </thead>
