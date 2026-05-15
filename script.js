@@ -2434,16 +2434,26 @@ window.renderIkesuPrintView = function() {
                     </thead>
                     <tbody style="font-size: 0.95rem;">
                         ${participants.map((p, idx) => `
-                            <tr style="height: 2.8rem;">
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.1rem;">${idx + 1}</td>
+                            <tr style="height: 3.2rem;">
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.2rem; font-weight: bold;">${idx + 1}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; overflow:hidden; font-size: 1.1rem;">${p.groupName}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: bold; font-size: 1.3rem;">${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.1rem;">${genderLabels[p.gender] || '-'}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-weight: bold; font-size: 1.2rem;">${p.tshirtSize || '-'}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: left; font-weight: bold; font-size: 0.95rem; color: ${p.isLeader ? '#d32f2f' : 'inherit'};">
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 1.5rem;">${p.name} ${p.nickname ? `<span style="font-size:0.9rem; font-weight:normal;">(${p.nickname})</span>` : ''}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.2rem;">${genderLabels[p.gender] || '-'}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-weight: bold; font-size: 1.3rem;">${p.tshirtSize || '-'}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: left; font-weight: bold; font-size: 1rem; color: ${p.isLeader ? '#d32f2f' : 'inherit'};">
                                     ${p.isLeader ? '★リーダー' : ''}
                                     ${p.type === 'observer' ? '（見学者）' : ''}
                                 </td>
+                            </tr>
+                        `).join('')}
+                        ${[1, 2, 3].map(n => `
+                            <tr style="height: 3.2rem;">
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.2rem; color: #ccc;">${participants.length + n}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; color: #ccc; font-size: 0.8rem;">（当日追加用）</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -2502,8 +2512,8 @@ window.renderIkesuResultView = function() {
                     </div>
                     <div style="text-align: right; min-width: 280px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end;">
                         <div style="font-weight: 800; font-size: 1rem; color: #666; margin-bottom: 6px;">イケス 釣果記入表</div>
-                        <div style="display: flex; gap: 15px; align-items: center; border: 3px solid #000; padding: 6px 12px; background: #fff;">
-                             <div id="qr-ikesu-${idx}" style="width: 90px; height: 90px; flex-shrink: 0; background: #fff;"></div>
+                        <div style="display: flex; gap: 10px; align-items: center; border: 3px solid #000; padding: 5px; background: #fff;">
+                             <div id="qr-ikesu-${idx}" style="width: 100px; height: 100px; flex-shrink: 0; background: #fff;"></div>
                              <div style="text-align: left; line-height: 1.1; min-width: 80px;">
                                  <div style="font-size: 0.75rem; font-weight: bold; color: #666;">WEB報告用</div>
                                  <div style="font-size: 0.7rem; font-weight: bold; color: #666; margin-top: 4px;">暗証番号</div>
@@ -2512,24 +2522,41 @@ window.renderIkesuResultView = function() {
                         </div>
                     </div>
                 </div>
-                <table style="width: 100%; border-collapse: collapse; border: 4px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0.5rem;">
+                    <div style="font-size: 0.9rem; font-weight: bold; color: #d32f2f;">※匹数（数字）で記入してください</div>
+                    <div style="font-size: 0.8rem; color: #666;">生成日: ${new Date().toLocaleString()} | 釣堀まつり 管理システム</div>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; border: 4px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; table-layout: fixed;">
                     <thead>
-                        <tr style="background: #000; color: #fff; font-size: 1.1rem; height: 3rem;">
-                            <th style="border: 2px solid #fff; padding: 0.4rem; width: 35px;">No</th>
-                            <th style="border: 2px solid #fff; padding: 0.4rem; width: 200px;">グループ名</th>
-                            <th style="border: 2px solid #fff; padding: 0.4rem;">氏名</th>
-                            <th style="border: 2px solid #fff; padding: 0.4rem; width: 85px; background: #d32f2f !important; color: #fff !important;">鯛等 (1)</th>
-                            <th style="border: 2px solid #fff; padding: 0.4rem; width: 85px; background: #1976d2 !important; color: #fff !important;">青等 (2)</th>
-                            <th style="border: 2px solid #fff; padding: 0.4rem; width: 85px; background: #388e3c !important; color: #fff !important;">備考</th>
-                            <th style="border: 2px solid #fff; padding: 0.4rem; width: 60px; color: #000 !important; background: #f0f0f0 !important;">小計</th>
+                        <tr style="background: #000; color: #fff; font-size: 1.1rem; height: 3.5rem;">
+                            <th style="border: 1px solid #fff; padding: 0.4rem; width: 45px; text-align: center;">No</th>
+                            <th style="border: 1px solid #fff; padding: 0.4rem; width: 160px; text-align: center;">グループ名</th>
+                            <th style="border: 1px solid #fff; padding: 0.4rem; text-align: center;">氏名</th>
+                            <th style="border: 1px solid #fff; padding: 0.4rem; width: 95px; background: #d32f2f !important; color: #fff !important; text-align: center;">鯛・その他</th>
+                            <th style="border: 1px solid #fff; padding: 0.4rem; width: 95px; background: #1976d2 !important; color: #fff !important; text-align: center;">青物</th>
+                            <th style="border: 1px solid #fff; padding: 0.4rem; width: 140px; background: #388e3c !important; color: #fff !important; text-align: center;">備考</th>
+                            <th style="border: 1px solid #fff; padding: 0.4rem; width: 60px; color: #000 !important; background: #f0f0f0 !important; text-align: center;">小計</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${participants.map((p, pIdx) => `
-                            <tr style="height: 2.8rem;">
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold; font-size: 1.1rem;">${pIdx + 1}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-size: 0.9rem; font-weight: bold; overflow: hidden; max-width: 200px;">${p.groupName}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 1.25rem; white-space: nowrap;">${p.name}</td>
+                            <tr style="height: 3.2rem;">
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold; font-size: 1.2rem;">${pIdx + 1}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-size: 0.95rem; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${p.groupName}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 1.4rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    ${p.name} ${p.nickname ? `<span style="font-size:0.9rem; font-weight:normal;">(${p.nickname})</span>` : ''}
+                                </td>
+                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; background: #fafafa;"></td>
+                            </tr>
+                        `).join('')}
+                        ${[1, 2, 3].map(n => `
+                            <tr style="height: 3.2rem; background: #fff;">
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold; font-size: 1.2rem;">${participants.length + n}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-size: 0.8rem; color: #ccc;">（当日追加用）</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
@@ -2538,9 +2565,6 @@ window.renderIkesuResultView = function() {
                         `).join('')}
                     </tbody>
                 </table>
-                <div style="margin-top: 10px; text-align: right; font-size: 0.7rem; color: #666;">
-                    生成日: ${new Date().toLocaleString()} | 釣堀まつり 管理システム
-                </div>
             </div>
         `;
     });
