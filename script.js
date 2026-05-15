@@ -2888,14 +2888,20 @@ window.toggleAwardWinner = async function(entryId, pIdx) {
 
 window.toggleAwardFilter = function() {
     const btn = document.getElementById('award-filter-btn');
+    const title = document.getElementById('ranking-title-text');
     if (!btn) return;
+    
     btn.classList.toggle('active');
     if (btn.classList.contains('active')) {
         btn.style.background = '#f1c40f';
         btn.style.color = '#fff';
+        btn.innerHTML = '👥 全員表示';
+        if (title) title.textContent = '表彰対象者';
     } else {
         btn.style.background = '';
         btn.style.color = '';
+        btn.innerHTML = '🏆 表彰者のみ';
+        if (title) title.textContent = '個人順位 (Top 100)';
     }
     renderRankings();
 };
@@ -4621,6 +4627,12 @@ window.renderRankings = function() {
     const awardFilterBtn = document.getElementById('award-filter-btn');
     const showOnlyAwards = awardFilterBtn && awardFilterBtn.classList.contains('active');
     const filteredData = showOnlyAwards ? individualData.filter(p => p.isAwardWinner) : individualData;
+    
+    // v8.10.0: Update title based on filter state
+    const titleText = document.getElementById('ranking-title-text');
+    if (titleText) {
+        titleText.textContent = showOnlyAwards ? '表彰対象者' : '個人順位 (Top 100)';
+    }
 
     if (filteredData.length === 0) {
         indContainer.innerHTML = `<p class="text-center p-4 text-muted">${showOnlyAwards ? '表彰対象者がまだ設定されていません' : 'データがありません'}</p>`;
