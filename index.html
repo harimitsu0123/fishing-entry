@@ -774,19 +774,25 @@
             </div>
 
             <div id="tab-day-rankings" class="day-tab-content">
-                <div class="breakdown-grid mt-4">
-                    <div class="breakdown-card">
-                        <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
-                            <span>個人順位 (Top 100)</span>
+                <div class="no-print" style="display: flex; justify-content: center; gap: 0.5rem; margin: 1rem 0; padding: 0.5rem; background: #f1f5f9; border-radius: 12px;">
+                    <button class="btn-toolbar active" id="btn-rank-ind" style="flex:1; padding:10px;" onclick="switchRankView('ind')">👤 個人順位</button>
+                    <button class="btn-toolbar" id="btn-rank-ik" style="flex:1; padding:10px;" onclick="switchRankView('ik')">🏠 イケス対抗</button>
+                </div>
+
+                <div id="rank-view-ind" class="rank-sub-view">
+                    <div class="card">
+                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                            <h2>個人順位 (Top 100)</h2>
                             <button id="award-filter-btn" class="btn-outline btn-small" onclick="toggleAwardFilter()">🏆 表彰者のみ</button>
                         </div>
-                        <div id="day-ranking-individual-list" class="stats-list ranking-container">
-                            <div id="ranking-list-container-day"></div>
-                        </div>
+                        <div id="ranking-list-container-day" class="ranking-container"></div>
                     </div>
-                    <div class="breakdown-card">
-                        <div class="section-title">イケス対抗順位 (平均点順)</div>
-                        <div id="day-ranking-ikesu-list" class="stats-list ranking-container"></div>
+                </div>
+
+                <div id="rank-view-ik" class="rank-sub-view" style="display:none;">
+                    <div class="card">
+                        <div class="card-header"><h2>イケス対抗順位 (平均点順)</h2></div>
+                        <div id="day-ranking-ikesu-list" class="ranking-container"></div>
                     </div>
                 </div>
             </div>

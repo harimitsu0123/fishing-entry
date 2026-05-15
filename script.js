@@ -2838,6 +2838,26 @@ window.renderRankings = function() {
     if (dayIndList) dayIndList.innerHTML = rankingHtml;
 };
 
+// v8.10.0: View switcher for rankings
+window.switchRankView = function(view) {
+    const indView = document.getElementById('rank-view-ind');
+    const ikView = document.getElementById('rank-view-ik');
+    const btnInd = document.getElementById('btn-rank-ind');
+    const btnIk = document.getElementById('btn-rank-ik');
+    
+    if (view === 'ind') {
+        if (indView) indView.style.display = 'block';
+        if (ikView) ikView.style.display = 'none';
+        btnInd?.classList.add('active');
+        btnIk?.classList.remove('active');
+    } else {
+        if (indView) indView.style.display = 'none';
+        if (ikView) ikView.style.display = 'block';
+        btnInd?.classList.remove('active');
+        btnIk?.classList.add('active');
+    }
+};
+
 window.toggleAwardWinner = async function(entryId, pIdx) {
     const entry = state.entries.find(e => e.id === entryId);
     if (!entry || !entry.participants[pIdx]) return;
@@ -4557,6 +4577,7 @@ window.renderRankings = function() {
                 
                 individualData.push({
                     name: p.name,
+                    nickname: p.nickname || '',
                     groupName: entry.groupName,
                     id: entry.id,
                     cA, cB, score
@@ -4566,10 +4587,11 @@ window.renderRankings = function() {
                 if (p.ikesuId) {
                     if (!ikesuScores[p.ikesuId]) {
                         const ikName = state.settings.ikesuList?.find(ik => ik.id === p.ikesuId)?.name || p.ikesuId;
-                        ikesuScores[p.ikesuId] = { total: 0, count: 0, name: ikName };
+                        ikesuScores[p.ikesuId] = { total: 0, count: 0, name: ikName, members: [] };
                     }
                     ikesuScores[p.ikesuId].total += score;
                     ikesuScores[p.ikesuId].count += 1;
+                    ikesuScores[p.ikesuId].members.push({ name: p.name, group: entry.groupName, score });
                 }
             }
         });
@@ -4596,9 +4618,15 @@ window.renderRankings = function() {
             const rankMark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
             html += `
                 <tr style="border-bottom:1px solid #f1f5f9;">
-                    <td style="padding:8px;">${rankMark}</td>
-                    <td style="padding:8px;"><strong>${p.name}</strong><br><small class="text-muted">${p.groupName}</small></td>
-                    <td style="padding:8px; text-align:center; font-weight:bold; color:var(--primary-color);">${p.score}pt</td>
+                    <td style="padding:8px; width:50px;">${rankMark}</td>
+                    <td style="padding:8px;">
+                        <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:8px;">
+                            <strong style="font-size:1.05rem;">${p.name}</strong>
+                            ${p.nickname ? `<span style="font-size:0.85rem; color:#64748b;">(${p.nickname})</span>` : ''}
+                            <span style="font-size:0.8rem; background:#f1f5f9; padding:2px 6px; border-radius:4px; color:#475569;">${p.groupName}</span>
+                        </div>
+                    </td>
+                    <td style="padding:8px; text-align:right; font-weight:bold; color:var(--primary-color); white-space:nowrap;">${p.score}pt</td>
                 </tr>`;
         });
         html += '</tbody></table>';
@@ -4609,7 +4637,9 @@ window.renderRankings = function() {
     if (ikesuContainer) {
         const ikesuData = Object.keys(ikesuScores).map(id => {
             const s = ikesuScores[id];
-            return { id, name: s.name, average: (s.total / s.count).toFixed(2), total: s.total, count: s.count };
+            // Sort members within each ikesu by score
+            const sortedMembers = s.members.sort((a,b) => b.score - a.score);
+            return { id, name: s.name, average: (s.total / s.count).toFixed(2), total: s.total, count: s.count, members: sortedMembers };
         }).sort((a, b) => b.average - a.average);
 
         if (ikesuData.length === 0) {
@@ -4627,11 +4657,22 @@ window.renderRankings = function() {
                     <tbody>`;
             ikesuData.forEach((ik, idx) => {
                 const rank = idx + 1;
+                const membersHtml = (rank <= 3) ? `
+                    <div style="margin-top:0.4rem; font-size:0.8rem; color:#475569; background:#f8fafc; padding:0.5rem; border-radius:6px; border-left:3px solid #059669;">
+                        <div style="font-weight:bold; margin-bottom:0.2rem; font-size:0.75rem; color:#059669;">Top Contributors:</div>
+                        ${ik.members.slice(0, 5).map(m => `<span>${m.group} - ${m.name}(${m.score}pt)</span>`).join('<br>')}
+                    </div>
+                ` : '';
+                
                 html += `
                     <tr style="border-bottom:1px solid #f1f5f9;">
-                        <td style="padding:8px;">${rank}</td>
-                        <td style="padding:8px;"><strong>${ik.name}</strong><br><small class="text-muted">${ik.count}名 / 計${ik.total}pt</small></td>
-                        <td style="padding:8px; text-align:center; font-weight:bold; color:#059669;">${ik.average}</td>
+                        <td style="padding:8px; vertical-align:top; width:40px;">${rank}</td>
+                        <td style="padding:8px; vertical-align:top;">
+                            <strong>${ik.name}</strong><br>
+                            <small class="text-muted">${ik.count}名 / 計${ik.total}pt</small>
+                            ${membersHtml}
+                        </td>
+                        <td style="padding:8px; text-align:right; vertical-align:top; font-weight:bold; color:#059669; white-space:nowrap;">${ik.average} <small>avg</small></td>
                     </tr>`;
             });
             html += '</tbody></table>';
