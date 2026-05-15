@@ -2526,16 +2526,16 @@ window.renderIkesuResultView = function() {
                     <div style="font-size: 0.9rem; font-weight: bold; color: #d32f2f;">※匹数（数字）で記入してください</div>
                     <div style="font-size: 0.8rem; color: #666;">生成日: ${new Date().toLocaleString()} | 釣堀まつり 管理システム</div>
                 </div>
-                <table style="width: 100%; border-collapse: collapse; border: 4px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; table-layout: fixed;">
+                <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 4px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; table-layout: fixed;">
                     <thead>
                         <tr style="background: #eee; color: #000; font-size: 1.1rem; height: 3.5rem;">
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 45px; text-align: center;">No</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 160px; text-align: center;">グループ名</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; text-align: center;">氏名</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 95px; background: #ffebee !important; color: #d32f2f !important; text-align: center;">鯛・その他</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 95px; background: #e3f2fd !important; color: #1976d2 !important; text-align: center;">青物</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 140px; background: #e8f5e9 !important; color: #388e3c !important; text-align: center;">備考</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 60px; color: #000 !important; background: #f8f9fa !important; text-align: center;">小計</th>
+                            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0.4rem; width: 45px; text-align: center;">No</th>
+                            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0.4rem; width: 160px; text-align: center;">グループ名</th>
+                            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0.4rem; text-align: center;">氏名</th>
+                            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0.4rem; width: 95px; background: #ffebee !important; color: #d32f2f !important; text-align: center;">鯛・その他</th>
+                            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0.4rem; width: 95px; background: #e3f2fd !important; color: #1976d2 !important; text-align: center;">青物</th>
+                            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0.4rem; width: 140px; background: #e8f5e9 !important; color: #388e3c !important; text-align: center;">備考</th>
+                            <th style="border-bottom: 1px solid #000; padding: 0.4rem; width: 60px; color: #000 !important; background: #f8f9fa !important; text-align: center;">小計</th>
                         </tr>
                     </thead>
                     <tbody>
