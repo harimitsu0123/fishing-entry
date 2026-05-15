@@ -712,7 +712,7 @@
                 <button class="day-tab-btn" data-tab="tab-day-rankings" onclick="switchDayTab('tab-day-rankings')">ランキング</button>
                 <button class="day-tab-btn" data-tab="tab-day-awards" onclick="switchDayTab('tab-day-awards')">表彰設定</button>
                 <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">
-                    <button class="btn-toolbar highlight" style="font-size:0.8rem; padding: 4px 12px; border-radius: 6px;" onclick="window.open('../../釣果/fishing-results-app/index.html', '_blank')">釣果入力(外部)</button>
+                    <button class="btn-toolbar highlight" style="font-size:0.8rem; padding: 4px 12px; border-radius: 6px;" onclick="handleResultsExternalLink()">釣果入力(外部)</button>
                     <button class="btn-text" style="font-size:0.8rem; color: #64748b;" onclick="switchView(null, 'registration-view')">管理ホームへ戻る</button>
                 </div>
             </nav>
@@ -783,7 +783,7 @@
                     <div class="card">
                         <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                             <h2>個人順位 (Top 100)</h2>
-                            <button id="award-filter-btn" class="btn-outline btn-small" onclick="toggleAwardFilter()">🏆 表彰者のみ</button>
+                            <button id="award-filter-btn" class="btn-outline btn-small active" style="background: #f1c40f; color: #fff;" onclick="toggleAwardFilter()">🏆 表彰者のみ</button>
                         </div>
                         <div id="ranking-list-container-day" class="ranking-container"></div>
                     </div>

@@ -2838,6 +2838,21 @@ window.renderRankings = function() {
     if (dayIndList) dayIndList.innerHTML = rankingHtml;
 };
 
+// v8.10.0: External link helper for results app
+window.handleResultsExternalLink = function() {
+    let url = window.location.href;
+    if (url.includes('github.io')) {
+        // fishing-entry -> fishing-results
+        url = url.replace('fishing-entry', 'fishing-results');
+        // Ensure it points to the root of the results repo
+        url = url.split('#')[0].split('?')[0]; // Remove hash/query
+        if (!url.endsWith('/')) url += '/';
+    } else {
+        url = '../../釣果/fishing-results-app/index.html';
+    }
+    window.open(url, '_blank');
+};
+
 // v8.10.0: View switcher for rankings
 window.switchRankView = function(view) {
     const indView = document.getElementById('rank-view-ind');
@@ -4580,7 +4595,8 @@ window.renderRankings = function() {
                     nickname: p.nickname || '',
                     groupName: entry.groupName,
                     id: entry.id,
-                    cA, cB, score
+                    cA, cB, score,
+                    isAwardWinner: !!p.isAwardWinner
                 });
 
                 // Aggregation for Ikesu
@@ -4598,35 +4614,47 @@ window.renderRankings = function() {
     });
 
     // --- Render Individual Table ---
-    individualData.sort((a, b) => (b.score - a.score) || a.id.localeCompare(b.id));
+    // v8.10.0: Tie-breaking rule (Score > Aomono > ID)
+    individualData.sort((a, b) => (b.score - a.score) || (b.cB - a.cB) || a.id.localeCompare(b.id));
     
-    if (individualData.length === 0) {
-        indContainer.innerHTML = '<p class="text-center p-4 text-muted">データがありません</p>';
+    // v8.10.0: Apply "Award Winners Only" filter if active
+    const awardFilterBtn = document.getElementById('award-filter-btn');
+    const showOnlyAwards = awardFilterBtn && awardFilterBtn.classList.contains('active');
+    const filteredData = showOnlyAwards ? individualData.filter(p => p.isAwardWinner) : individualData;
+
+    if (filteredData.length === 0) {
+        indContainer.innerHTML = `<p class="text-center p-4 text-muted">${showOnlyAwards ? '表彰対象者がまだ設定されていません' : 'データがありません'}</p>`;
     } else {
         let html = `
             <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
                 <thead>
                     <tr style="background:#f1f5f9;">
-                        <th style="padding:8px;">順位</th>
-                        <th style="padding:8px;">名前</th>
-                        <th style="padding:8px; text-align:center;">合計</th>
+                        <th style="padding:8px; width:50px;">順位</th>
+                        <th style="padding:8px;">名前 / チーム</th>
+                        <th style="padding:8px; text-align:right;">釣果 / 合計</th>
                     </tr>
                 </thead>
                 <tbody>`;
-        individualData.slice(0, 100).forEach((p, idx) => {
+        filteredData.slice(0, 100).forEach((p, idx) => {
             const rank = idx + 1;
             const rankMark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+            const awardStar = p.isAwardWinner ? '<span style="color:#f1c40f; margin-left:4px;">🏆</span>' : '';
+            
             html += `
                 <tr style="border-bottom:1px solid #f1f5f9;">
                     <td style="padding:8px; width:50px;">${rankMark}</td>
                     <td style="padding:8px;">
-                        <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:8px;">
+                        <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:6px;">
                             <strong style="font-size:1.05rem;">${p.name}</strong>
                             ${p.nickname ? `<span style="font-size:0.85rem; color:#64748b;">(${p.nickname})</span>` : ''}
-                            <span style="font-size:0.8rem; background:#f1f5f9; padding:2px 6px; border-radius:4px; color:#475569;">${p.groupName}</span>
+                            ${awardStar}
+                            <span style="font-size:0.75rem; background:#f1f5f9; padding:1px 5px; border-radius:4px; color:#475569; border:1px solid #e2e8f0;">${p.groupName}</span>
                         </div>
                     </td>
-                    <td style="padding:8px; text-align:right; font-weight:bold; color:var(--primary-color); white-space:nowrap;">${p.score}pt</td>
+                    <td style="padding:8px; text-align:right; font-weight:bold; white-space:nowrap;">
+                        <div style="font-size:1.1rem; color:var(--primary-color);">${p.score}<small style="font-size:0.7rem; margin-left:1px;">点</small></div>
+                        <div style="font-size:0.65rem; color:#94a3b8; margin-top:-2px;">鯛:${p.cA} / 青:${p.cB}</div>
+                    </td>
                 </tr>`;
         });
         html += '</tbody></table>';
@@ -4657,6 +4685,7 @@ window.renderRankings = function() {
                     <tbody>`;
             ikesuData.forEach((ik, idx) => {
                 const rank = idx + 1;
+                const rankMark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
                 const membersHtml = (rank <= 3) ? `
                     <div style="margin-top:0.4rem; font-size:0.8rem; color:#475569; background:#f8fafc; padding:0.5rem; border-radius:6px; border-left:3px solid #059669;">
                         ${ik.members.slice(0, 5).map(m => `<span>${m.group} - ${m.name}(${m.score}点)</span>`).join('<br>')}
@@ -4665,7 +4694,7 @@ window.renderRankings = function() {
                 
                 html += `
                     <tr style="border-bottom:1px solid #f1f5f9;">
-                        <td style="padding:8px; vertical-align:top; width:40px;">${rank}</td>
+                        <td style="padding:8px; vertical-align:top; width:40px;">${rankMark}</td>
                         <td style="padding:8px; vertical-align:top;">
                             <strong style="font-size:1.2rem;">${ik.name}</strong><br>
                             <small class="text-muted">${ik.count}名 / 計${ik.total}点</small>
