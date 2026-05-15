@@ -1,7 +1,7 @@
 /**
  * BORIJIN Fishing Entry System
- * Version: v8.9.83 (GitHub Synchronized)
- * Last Updated: 2026-05-13
+ * Version: v8.10.0 (GitHub Synchronized)
+ * Last Updated: 2026-05-15
  */
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbykDT-XvGhrZCQcCp_gCxZAToW3X4s_g_BPX7LBO4E-A84vUY0VE3nlqehITFOfp9f9/exec";
 
