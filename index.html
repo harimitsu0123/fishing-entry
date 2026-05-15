@@ -132,7 +132,7 @@
             }
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=8.1.95">
+    <link rel="stylesheet" href="style.css?v=8.9.79">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -163,8 +163,10 @@
 
     <nav class="navbar">
         <div class="nav-container">
-            <h1 id="app-title" onclick="handleSecureClick(event)">釣り大会 受付</h1>
-            <span class="app-version">v8.9.64</span>
+            <h1 id="app-title" onclick="handleSecureClick(event)">
+                BORIJIN FESTIVAL in 水宝 2026
+                <span class="version-badge">v8.9.79</span>
+            </h1>
         </div>
     </nav>
 
@@ -300,13 +302,22 @@
         <section id="dashboard-view" class="view">
             <nav class="admin-tab-nav">
                 <button class="admin-tab-btn active" data-tab="tab-list">申込一覧</button>
+                <button class="admin-tab-btn" data-tab="tab-stats">分析</button>
                 <button class="admin-tab-btn" data-tab="tab-ikesu">イケス割当</button>
+                <button class="admin-tab-btn" data-tab="tab-rankings">ランキング</button>
                 <button class="admin-tab-btn" data-tab="tab-print" onclick="window.updatePrintView()">印刷</button>
-                <button class="admin-tab-btn" data-tab="tab-logs">変更履歴</button>
                 <button class="admin-tab-btn" data-tab="tab-settings">大会設定</button>
             </nav>
 
             <div id="admin-tab-container">
+                <!-- Tab: Ranking -->
+                <div id="tab-rankings" class="admin-tab-content">
+                    <div class="card">
+                        <div class="card-header"><h2>釣果ランキング</h2></div>
+                        <div id="ranking-list-container"></div>
+                    </div>
+                </div>
+
                 <!-- Tab: List -->
                 <div id="tab-list" class="admin-tab-content active">
                     <div id="global-stats-summary-top"></div>
@@ -338,9 +349,7 @@
                         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                             <h2>申込名簿</h2>
                             <div style="display: flex; gap: 0.4rem; align-items: center;">
-                                <button onclick="window.openBulkImportModal()" class="btn-primary btn-small" style="background: #059669;">Excel一括(水宝)</button>
-                                <button id="export-csv" class="btn-text" style="font-size: 0.75rem; padding: 4px 8px; background: #f1f5f9; border-radius: 4px;">CSV(団体)</button>
-                                <button id="export-participants-csv" class="btn-text" style="font-size: 0.75rem; padding: 4px 8px; background: #f1f5f9; border-radius: 4px;">CSV(名簿)</button>
+                                <button id="export-participants-csv" class="btn-text" style="font-size: 0.75rem; padding: 4px 8px; background: #f1f5f9; border-radius: 4px;">名簿（CSV）書出し</button>
                             </div>
                         </div>
                         <div class="filter-group mb-3" style="display: flex; gap: 0.5rem; flex-wrap: wrap; padding: 0 1rem;">
@@ -350,20 +359,19 @@
                             <button class="filter-btn" data-filter="水宝" onclick="window.setDashboardFilter('水宝')">水宝</button>
                             <button class="filter-btn" data-filter="ハリミツ" onclick="window.setDashboardFilter('ハリミツ')">ハリミツ</button>
                         </div>
-                        <div class="search-box mb-3"><input type="text" id="dashboard-search" placeholder="検索..." autocomplete="off"></div>
+                        <div class="search-box mb-3"><input type="text" id="dashboard-search" placeholder="名前・IDで検索..." autocomplete="new-password"></div>
                         <div class="table-container">
                             <table id="entry-table">
                                 <thead>
                                     <tr>
-                                        <th>番号</th>
-                                        <th>区分</th>
-                                        <th>グループ</th>
-                                        <th>氏名</th>
+                                        <th onclick="sortDashboard('id')" style="cursor:pointer">番号 <span class="sort-icon"></span></th>
+                                        <th onclick="sortDashboard('source')" style="cursor:pointer">区分 <span class="sort-icon"></span></th>
+                                        <th onclick="sortDashboard('groupName')" style="cursor:pointer">グループ <span class="sort-icon"></span></th>
+                                        <th onclick="sortDashboard('representative')" style="cursor:pointer">氏名 <span class="sort-icon"></span></th>
                                         <th>釣り/見学</th>
                                         <th>イケス</th>
-                                        <th>得点</th>
-                                        <th>状態</th>
-                                        <th>登録時間</th>
+                                        <th onclick="sortDashboard('status')" style="cursor:pointer">状態 <span class="sort-icon"></span></th>
+                                        <th onclick="sortDashboard('time')" style="cursor:pointer">登録時間 <span class="sort-icon"></span></th>
                                         <th class="no-print">操作</th>
                                     </tr>
                                 </thead>
@@ -403,18 +411,7 @@
                     </div>
                 </div>
 
-                <!-- Tab: Change Log (NEW) -->
-                <div id="tab-logs" class="admin-tab-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2>変更履歴・ログ</h2>
-                            <button class="btn-text btn-small" onclick="renderChangeLog()">🔄 更新</button>
-                        </div>
-                        <div id="change-log-container" class="log-container">
-                            <div class="text-center py-5 text-muted">ログを読み込み中...</div>
-                        </div>
-                    </div>
-                </div>
+
 
                 <!-- Tab: Settings (Simplified) -->
                 <div id="tab-settings" class="admin-tab-content">
@@ -442,6 +439,7 @@
                                 <p
                                     style="font-size: 0.75rem; margin-top: 5px; font-weight: bold; color: var(--primary-color);">
                                     スキャンして受付を開く</p>
+                                <button onclick="window.openBulkImportModal()" class="btn-primary btn-small mt-3" style="background: #059669; width: 100%;">Excel一括登録(水宝)</button>
                             </div>
                         </div>
 
@@ -618,6 +616,17 @@
                         </div>
                         <p class="text-muted small mt-2">※全リセットはクラウド上の全データを削除します。慎重に操作してください。</p>
                     </div>
+
+                    <!-- Change Log (Moved from top-level tab) -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h2>変更履歴・ログ</h2>
+                            <button class="btn-text btn-small" onclick="renderChangeLog()">🔄 更新</button>
+                        </div>
+                        <div id="change-log-container" class="log-container">
+                            <div class="text-center py-5 text-muted">ログを読み込み中...</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Placeholder for other tabs -->
@@ -706,25 +715,126 @@
         
         <!-- Reception View (v8.1.56: High Performance Reception Desk) -->
         <section id="reception-view" class="view">
-            <div class="reception-layout">
-                <div class="reception-sidebar">
-                    <div class="reception-toolbar">
-                        <div class="search-box"><input type="text" id="reception-search" placeholder="名前・ID・グループ..." oninput="updateReceptionList()" autocomplete="off"></div>
-                        <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-                            <button class="btn-toolbar active" id="sort-reception-id" onclick="setReceptionSort('id')">ID順</button>
-                            <button class="btn-toolbar" id="sort-reception-source" onclick="setReceptionSort('source')">区分順</button>
-                            <label style="display:flex; align-items:center; gap:0.3rem; font-size:0.8rem; cursor:pointer;">
-                                <input type="checkbox" id="show-completed-toggle" onchange="updateReceptionList()"> 完了を表示
-                            </label>
+            <!-- v8.9.65: Day-of Tabs for Coordinator/Admin -->
+            <nav class="day-tab-nav no-print">
+                <button class="day-tab-btn active" data-tab="tab-day-reception" onclick="switchDayTab('tab-day-reception')">受付</button>
+                <button class="day-tab-btn" data-tab="tab-day-results" onclick="switchDayTab('tab-day-results')">釣果確認</button>
+                <button class="day-tab-btn" data-tab="tab-day-rankings" onclick="switchDayTab('tab-day-rankings')">ランキング</button>
+                <button class="day-tab-btn" data-tab="tab-day-awards" onclick="switchDayTab('tab-day-awards')">表彰設定</button>
+                <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">
+                    <button class="btn-toolbar highlight" style="font-size:0.8rem; padding: 4px 12px; border-radius: 6px;" onclick="window.open('../../釣果/fishing-results-app/index.html', '_blank')">釣果入力(外部)</button>
+                    <button class="btn-text" style="font-size:0.8rem; color: #64748b;" onclick="switchView(null, 'registration-view')">管理ホームへ戻る</button>
+                </div>
+            </nav>
+
+            <div id="tab-day-reception" class="day-tab-content active">
+                <div class="reception-layout">
+                    <div class="reception-sidebar">
+                        <div class="reception-toolbar">
+                            <div class="search-box"><input type="text" id="reception-search" placeholder="名前・ID・グループ..." oninput="updateReceptionList()" autocomplete="off"></div>
+                            <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+                                <button class="btn-toolbar active" id="sort-reception-id" onclick="setReceptionSort('id')">ID順</button>
+                                <button class="btn-toolbar" id="sort-reception-source" onclick="setReceptionSort('source')">区分順</button>
+                                <label style="display:flex; align-items:center; gap:0.3rem; font-size:0.8rem; cursor:pointer;">
+                                    <input type="checkbox" id="show-completed-toggle" onchange="updateReceptionList()"> 完了を表示
+                                </label>
+                            </div>
+                        </div>
+                        <div id="reception-group-list" class="reception-list"></div>
+                    </div>
+                    <div class="reception-main" style="flex-grow: 1;">
+                        <div id="reception-detail" class="reception-desk-card">
+                            <div class="reception-placeholder">
+                                <i class="icon-search">🔍</i>
+                                <p>左側のリストからグループを選択してください。</p>
+                            </div>
                         </div>
                     </div>
-                    <div id="reception-group-list" class="reception-list"></div>
                 </div>
-                <div class="reception-main">
-                    <div id="reception-detail" class="reception-desk-card">
-                        <div class="reception-placeholder">
-                            <i class="icon-search">🔍</i>
-                            <p>左側のリストからグループを選択してください。</p>
+            </div>
+
+            <div id="tab-day-results" class="day-tab-content">
+                <div class="card">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h2>釣果一覧（確認用）</h2>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <label style="font-size:0.8rem;">イケス絞込:</label>
+                            <select id="day-results-ikesu-filter" onchange="renderDayResults()" style="padding:4px; border-radius:4px; border:1px solid var(--border-color); font-size:0.85rem;">
+                                <option value="">すべて</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="day-results-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>イケス</th>
+                                    <th>氏名</th>
+                                    <th>マダイ等(1pt)</th>
+                                    <th>青物等(2pt)</th>
+                                    <th>合計pt</th>
+                                    <th class="no-print">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="day-results-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-day-rankings" class="day-tab-content">
+                <div class="breakdown-grid mt-4">
+                    <div class="breakdown-card">
+                        <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>個人順位 (Top 100)</span>
+                            <button id="award-filter-btn" class="btn-outline btn-small" onclick="toggleAwardFilter()">🏆 表彰者のみ</button>
+                        </div>
+                        <div id="day-ranking-individual-list" class="stats-list ranking-container">
+                            <div id="ranking-list-container-day"></div>
+                        </div>
+                    </div>
+                    <div class="breakdown-card">
+                        <div class="section-title">イケス対抗順位 (平均点順)</div>
+                        <div id="day-ranking-ikesu-list" class="stats-list ranking-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-day-awards" class="day-tab-content">
+                <div class="card mb-4 no-print">
+                    <div class="card-header"><h2>表彰・飛び賞設定</h2></div>
+                    <div class="card-body" style="padding: 1.5rem;">
+                        <div class="form-group mb-4">
+                            <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">🏆 入賞（上位）人数</label>
+                            <div style="display:flex; gap:0.5rem; align-items:center;">
+                                <input type="number" id="rank-top-count" value="3" min="1" max="50" style="width: 100px; padding: 10px; font-size:1.1rem; text-align:center;">
+                                <span style="font-size:1.1rem; font-weight:bold;">位まで</span>
+                            </div>
+                            <p class="text-muted small mt-1">※上位から順に入賞マーク（🏆）が自動付与されます。</p>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">🎯 飛び賞の設定 (順位をカンマ区切り)</label>
+                            <input type="text" id="rank-tobi-list" value="5,10,15,20,25,30" placeholder="例: 5, 10, 15, 20" style="width: 100%; padding: 12px; font-size:1.1rem; border: 2px solid #3b82f6; border-radius:8px;">
+                            <div id="tobi-quick-selector" style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.8rem;">
+                                <!-- JSでクイック選択ボタンを生成可能 -->
+                            </div>
+                            <p class="text-muted small mt-2">※特定の順位（例：5位、10位...）の人にマークを付けたい場合に数字を入力してください。</p>
+                        </div>
+
+                        <div style="border-top: 1px solid #eee; padding-top: 1.5rem; display: flex; justify-content: flex-end;">
+                            <button class="btn-primary btn-large" onclick="saveRankingSettings()" style="min-width: 200px;">設定を保存して同期する</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header"><h3>現在の入賞候補者</h3></div>
+                    <div class="card-body">
+                        <p class="text-muted small">※「ランキング」タブで現在の順位を確認し、必要に応じて手動でトロフィーマークを付けることも可能です。</p>
+                        <div id="awards-preview-list" class="mt-3">
+                            <!-- JSで入賞予定者を表示 -->
                         </div>
                     </div>
                 </div>
@@ -774,7 +884,6 @@
             </div>
         </section>
 
-    </main>
 
     <!-- Sync Status Footer (v8.6.0: Non-intrusive) -->
     <div id="sync-status-footer" class="sync-status-indicator">
@@ -792,7 +901,7 @@
             </div>
             <div id="admin-auth-error" class="alert alert-danger hidden mb-3">暗証番号が正しくありません</div>
             <div style="display:flex; gap:0.5rem;">
-                <button class="btn-primary flex-1" id="verify-admin">ログイン</button>
+                <button class="btn-primary flex-1" id="verify-admin" onclick="handleAdminLogin()">ログイン</button>
                 <button class="btn-text" onclick="document.getElementById('admin-auth-modal').classList.add('hidden')">キャンセル</button>
             </div>
         </div>
@@ -854,8 +963,10 @@
     </div>
 
     </main>
-    <footer id="main-footer" class="main-footer mt-5 mb-5 text-muted">
-        <p id="footer-reveal" style="cursor: default; margin: 0; user-select: none;" onclick="handleSecureClick(event)">&copy; 2026 釣り大会 実行委員会</p>
+    <footer class="main-footer no-print">
+        <p onclick="handleSecureClick(event)">© 2026 釣り大会 実行委員会</p>
+        <!-- v8.9.68: Login helper for local environments -->
+        <button onclick="showAdminAuth()" style="opacity:0.1; background:none; border:none; color:inherit; font-size:0.7rem; cursor:pointer; position:absolute; bottom:5px; right:5px;">[Admin]</button>
     </footer>
 
     <div id="toast-container" class="toast-container"></div>
@@ -882,6 +993,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=8.9.64"></script>
+    <script src="script.js?v=8.9.79"></script>
 </body>
 </html>

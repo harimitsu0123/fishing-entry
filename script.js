@@ -1,3 +1,8 @@
+/**
+ * BORIJIN Fishing Entry System
+ * Version: v8.9.83 (GitHub Synchronized)
+ * Last Updated: 2026-05-13
+ */
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbykDT-XvGhrZCQcCp_gCxZAToW3X4s_g_BPX7LBO4E-A84vUY0VE3nlqehITFOfp9f9/exec";
 
 let state = {
@@ -5,7 +10,7 @@ let state = {
     deletedIds: [], // v7.9.3: Tracking local hard-deletions
     changeLog: [], // v8.6.0: Announcement-style change log
     settings: {
-        competitionName: "第1回 釣り大会",
+        competitionName: "BORIJIN FESTIVAL in 水宝 2026",
         capacityGeneral: 100,
         capacityMintsuri: 100,
         capacitySuiho: 50,
@@ -35,7 +40,7 @@ let currentViewId = sessionStorage.getItem('currentViewId') || 'registration-vie
 let currentAdminTab = sessionStorage.getItem('currentAdminTab') || 'tab-list'; // Persistent tab
 let dashboardFilter = 'all';
 let currentSortField = 'time';
-let currentSortOrder = 'desc';
+let currentSortOrder = 'desc'; // v8.9.80: Reverted to newest first per user request
 let currentReceptionId = null;
 let isAdminAuthAction = false; // Flag for admin-led edits
 let activeReceptionEntryId = null; // Currently selected in reception desk
@@ -367,6 +372,7 @@ window.finalizeAdminEdit = async function() {
 
 // Age labels map - v4.8 Updated
 const ageLabels = {
+    "unknown": "？",
     "elementary": "小学生以下",
     "middle_high": "中・高校生",
     "19_20s": "19歳〜20代",
@@ -375,12 +381,49 @@ const ageLabels = {
 };
 
 const genderLabels = {
+    "unknown": "？",
     "male": "男性",
     "female": "女性",
     "other": "その他"
 };
 
-const tshirtSizes = ['140', '150', 'S', 'M', 'L', 'XL（2L）', '2XL（3L）', '3XL（4L）', '4XL（5L）'];
+const tshirtSizes = ['？', '140', '150', 'S', 'M', 'L', 'XL（2L）', '2XL（3L）', '3XL（4L）', '4XL（5L）'];
+
+/**
+ * v8.9.80: Robust T-shirt size normalization
+ * Handles full-width/half-width, variants (LL/XL), and whitespace
+ */
+function normalizeTshirtSize(size) {
+    if (!size) return '？';
+    
+    // 1. Basic normalization: Full-width to Half-width for alphanumeric and common parens
+    let n = size.toString()
+        .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+        .replace(/[（]/g, '(')
+        .replace(/[）]/g, ')')
+        .toUpperCase()
+        .trim();
+    
+    // 2. Explicit variant mapping to canonical labels used in tshirtSizes
+    const mapping = {
+        'LL': 'XL（2L）', '2L': 'XL（2L）', 'XL': 'XL（2L）', 'O': 'XL（2L）', 'XL(2L)': 'XL（2L）',
+        '3L': '2XL（3L）', '2XL': '2XL（3L）', 'XO': '2XL（3L）', '2XL(3L)': '2XL（3L）',
+        '4L': '3XL（4L）', '3XL': '3XL（4L）', '2XO': '3XL（4L）', '3XL(4L)': '3XL（4L）',
+        '5L': '4XL（5L）', '4XL': '4XL（5L）', '3XO': '4XL（5L）', '4XL(5L)': '4XL（5L）'
+    };
+    
+    if (mapping[n]) return mapping[n];
+
+    // 3. Direct matches (including "?")
+    if (n === '？' || n === '?') return '？';
+    if (['140', '150', 'S', 'M', 'L'].includes(n)) return n;
+    
+    // 4. Fallback: check if it already matches a canonical label exactly
+    const canonical = ['140', '150', 'S', 'M', 'L', 'XL（2L）', '2XL（3L）', '3XL（4L）', '4XL（5L）'];
+    if (canonical.includes(n)) return n;
+
+    return n;
+}
 
 /// Admin Registration Helper
 window.startAdminRegistration = function (source) {
@@ -464,6 +507,65 @@ window.quickAdminRegistration = function(source) {
         showToast(`${source}：釣り${fCount}名、見学${oCount}名をクイック入力しました。`, 'info');
     }, 300);
 };
+// v8.9.64: Admin Auth (Promoted to Top for availability)
+window.handleSecureClick = function (e) {
+    // 5 clicks within 3 seconds triggers admin login
+    if (!window._clickCount) window._clickCount = 0;
+    if (!window._lastClickTime) window._lastClickTime = 0;
+
+    const now = Date.now();
+    if (now - window._lastClickTime > 3000) {
+        window._clickCount = 0;
+    }
+
+    window._clickCount++;
+    window._lastClickTime = now;
+
+    if (window._clickCount >= 5) {
+        window._clickCount = 0;
+        showAdminLogin('dashboard-view');
+    }
+};
+
+window.showAdminLogin = function(targetView) {
+    pendingView = targetView;
+    const pwInput = document.getElementById('global-admin-password');
+    const errDiv = document.getElementById('admin-auth-error');
+    if (pwInput) pwInput.value = '';
+    if (errDiv) errDiv.classList.add('hidden');
+    
+    const modal = document.getElementById('admin-auth-modal');
+    if (modal) modal.classList.remove('hidden');
+    if (pwInput) setTimeout(() => pwInput.focus(), 100);
+};
+
+window.handleAdminLogin = function() {
+    const pwInput = document.getElementById('global-admin-password');
+    if (!pwInput) return;
+    const pw = pwInput.value.trim();
+    
+    // v8.9.92: Use state.settings.adminPassword or fallback to "admin"
+    const adminPw = (state.settings && state.settings.adminPassword) ? state.settings.adminPassword : 'admin';
+    if (pw === adminPw || pw === 'admin') {
+        isAdminAuth = true;
+        localStorage.setItem('isAdminAuth', 'true');
+        sessionStorage.setItem('isAdminAuth', 'true');
+        
+        // v8.9.67: Ensure we land on the dashboard after admin login
+        sessionStorage.setItem('currentViewId', 'dashboard-view');
+        sessionStorage.setItem('currentAdminTab', 'tab-list');
+        
+        document.getElementById('admin-auth-modal').classList.add('hidden');
+        showToast("管理者としてログインしました", "success");
+        setTimeout(() => location.reload(), 300);
+    } else {
+        const errDiv = document.getElementById('admin-auth-error');
+        if (errDiv) errDiv.classList.remove('hidden');
+        pwInput.value = '';
+        pwInput.focus();
+    }
+};
+
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     try {
@@ -730,6 +832,13 @@ function finalizeLoad(isRefresh = false) {
         updateReceptionList();
         updateSourceAvailability();
         applyMaintenanceMode();
+        
+        // v8.9.72 & v8.9.88: Auto-refresh day-of views on sync
+        const isDayView = document.getElementById('reception-view')?.style.display !== 'none' || currentAdminTab === 'tab-day';
+        if (isDayView) {
+            renderRankings();
+            renderDayResults();
+        }
 
         // v8.1.42: Ensure coordinator views also refresh automatically on sync
         renderActiveCoordinatorView();
@@ -765,12 +874,12 @@ function migrateTshirtSizes() {
     };
 
     state.entries.forEach(entry => {
-        entry.participants.forEach(p => {
-            if (!p.tshirtSize) return;
-            const normalized = p.tshirtSize.toString().toUpperCase().trim();
-            // Also handle if it's already partial match like "XL" -> "XL（2L）"
-            if (mapping[normalized]) {
-                p.tshirtSize = mapping[normalized];
+        (entry.participants || []).forEach(p => {
+            if (!p) return;
+            const original = p.tshirtSize;
+            const normalized = normalizeTshirtSize(p.tshirtSize);
+            if (original !== normalized) {
+                p.tshirtSize = normalized;
                 changed = true;
             }
         });
@@ -1039,6 +1148,9 @@ function initApp() {
         });
     };
     clearSearchBoxes();
+    // v8.9.65: Extra delayed clear to combat aggressive browser autofill
+    setTimeout(clearSearchBoxes, 500);
+    setTimeout(clearSearchBoxes, 1500);
 
     // v8.1.39: Critical Fix for entries flashing - Reset filter if it's set to hidden 'ippan'
 
@@ -1296,6 +1408,10 @@ function switchView(btnElement, targetId, skipPush = false, skipScroll = false) 
     if (targetId === 'reception-view') {
         updateReceptionList();
         renderReceptionDesk();
+        // v8.9.65: Default to reception tab when entering day-view
+        if (typeof window.switchDayTab === 'function') {
+            window.switchDayTab(currentDayTab || 'tab-day-reception');
+        }
     }
     if (targetId === 'public-stats-view') renderPublicStats();
     if (targetId === 'mintsuri-coordinator-view') renderMintsuriCoordinatorView();
@@ -1367,24 +1483,51 @@ function switchView(btnElement, targetId, skipPush = false, skipScroll = false) 
     }
 }
 
-window.switchDayTab = function(tabId) {
-    document.querySelectorAll('.day-tab-content').forEach(content => {
-        content.classList.remove('active');
+
+window.renderAwardsPreview = function() {
+    const container = document.getElementById('awards-preview-list');
+    if (!container) return;
+
+    let individuals = [];
+    state.entries.forEach(e => {
+        if (e.status === 'cancelled') return;
+        (e.participants || []).forEach((p, pIdx) => {
+            if (!p || p.type === 'observer') return;
+            const cA = parseInt(p.catchA || 0);
+            const cB = parseInt(p.catchB || 0);
+            const points = cA + (cB * 2);
+            individuals.push({ id: e.id, pIdx, name: p.name, group: e.groupName, points, cA, cB, isAwardWinner: !!p.isAwardWinner });
+        });
     });
-    document.querySelectorAll('.day-tab-btn').forEach(btn => {
-        btn.classList.remove('active');
+
+    individuals.sort((a, b) => b.points - a.points || b.cA - a.cA);
+
+    const config = state.settings.rankingConfig || { topCount: 3, tobiList: "5,10,15,20,25,30" };
+    const tobis = config.tobiList.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+
+    let html = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:1rem;">';
+    individuals.forEach((p, i) => {
+        const rank = i + 1;
+        const isTop = rank <= config.topCount;
+        const isTobi = tobis.includes(rank);
+        
+        if (isTop || isTobi || p.isAwardWinner) {
+            const badge = isTop ? '🏆 入賞' : (isTobi ? '🎯 飛び賞' : '🎖️ 特別賞');
+            const bg = isTop ? '#fef3c7' : (isTobi ? '#eff6ff' : '#f3f4f6');
+            const border = isTop ? '#f59e0b' : (isTobi ? '#3b82f6' : '#9ca3af');
+            html += `
+                <div class="card" style="padding:1rem; border:2px solid ${border}; background:${bg};">
+                    <div style="font-weight:900; font-size:1.2rem; color:#1e293b;">${rank}位: ${p.name} 様</div>
+                    <div style="font-size:0.8rem; color:#64748b; margin-bottom:0.5rem;">${p.group} / ${p.points}pt</div>
+                    <div><span class="badge" style="background:${border}; color:white; font-weight:bold; padding:4px 8px;">${badge}</span></div>
+                </div>
+            `;
+        }
     });
+    html += '</div>';
 
-    const targetContent = document.getElementById(tabId);
-    if (targetContent) targetContent.classList.add('active');
-
-    const targetBtn = document.querySelector(`.day-tab-btn[data-tab="${tabId}"]`);
-    if (targetBtn) targetBtn.classList.add('active');
-
-    // v8.3.25: Special handling for rankings
-    if (tabId === 'day-rankings') {
-        renderRankings();
-    }
+    if (individuals.length === 0) html = '<p class="text-muted p-8 text-center">データがありません</p>';
+    container.innerHTML = html;
 };
 
 function updateAdminToolbar() {
@@ -1421,7 +1564,7 @@ function updateAdminToolbar() {
             } else {
                 btn.onclick = () => {
                     const target = btn.getAttribute('data-target');
-                    switchView(btn, target);
+                    if (target) switchView(btn, target);
                 };
             }
         });
@@ -1443,73 +1586,10 @@ function checkTimeframe() {
     return;
 }
 
-// Admin Auth
-window.showAdminLogin = function(targetView) {
-    pendingView = targetView;
-    const pwInput = document.getElementById('global-admin-password');
-    const errDiv = document.getElementById('admin-auth-error');
-    if (pwInput) pwInput.value = '';
-    if (errDiv) errDiv.classList.add('hidden');
-    
-    document.getElementById('admin-auth-modal').classList.remove('hidden');
-    if (pwInput) setTimeout(() => pwInput.focus(), 100);
-};
+// Admin Auth functions moved to top
 
-window.handleAdminLogin = function() {
-    const pwInput = document.getElementById('global-admin-password');
-    if (!pwInput) return;
-    const pw = pwInput.value.trim();
-    
-    console.log("Admin Login Attempt:", { 
-        inputLength: pw.length, 
-        isDefaultMatched: pw === 'admin',
-        isStateMatched: (state.settings && pw === state.settings.adminPassword)
-    });
 
-    const adminPw = (state.settings && state.settings.adminPassword) ? state.settings.adminPassword : 'admin';
-    if (pw === adminPw || pw === 'admin') {
-        isAdminAuth = true;
-        localStorage.setItem('isAdminAuth', 'true'); // Persist
-        document.getElementById('admin-auth-modal').classList.add('hidden');
 
-        // Reveal admin elements globally
-        const params = new URLSearchParams(window.location.search);
-        const srcParam = params.get('src');
-        document.querySelectorAll('.admin-only').forEach(el => {
-            el.classList.remove('hidden');
-        });
-
-        // v8.1.33: Re-apply source restriction if in special window
-        if (srcParam) {
-            document.querySelectorAll('#main-source-selector .source-option').forEach(el => {
-                if (!el.classList.contains('forced-source')) {
-                    el.classList.add('hidden');
-                }
-            });
-        }
-
-        // Always go to dashboard-view / tab-list unless it's a specific pending view that isn't dashboard
-        currentAdminTab = 'tab-list';
-        sessionStorage.setItem('currentAdminTab', 'tab-list');
-
-        if (pendingView && pendingView !== 'dashboard-view') {
-            switchView(null, pendingView);
-        } else {
-            switchView(null, 'dashboard-view');
-            switchAdminTab('tab-list');
-        }
-        pendingView = null;
-
-        // ★ admin-only要素の表示後にDOMが更新されてからスクロール
-        setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
-        showToast("管理者としてログインしました", "success");
-    } else {
-        console.warn("Admin Auth Failed: Password mismatch.");
-        document.getElementById('admin-auth-error').classList.remove('hidden');
-        pwInput.value = '';
-        pwInput.focus();
-    }
-}
 
 function syncSettingsUI() {
     // Only update if the user isn't currently typing in the field
@@ -1542,7 +1622,7 @@ function syncSettingsUI() {
     
     // v8.1.10: Update the main heading to reflect the competition name
     const titleEl = document.getElementById('app-title');
-    if (titleEl) titleEl.textContent = state.settings.competitionName || "釣り大会 受付";
+    if (titleEl) titleEl.textContent = state.settings.competitionName || "BORIJIN FESTIVAL in 水宝 2026";
 
     updateIfInactive('cap-total', state.settings.capacityTotal || 250);
     
@@ -1554,7 +1634,34 @@ function syncSettingsUI() {
     generateAdminQRCode(); // Ensure QR is generated when UI syncs
 }
 
+// v8.9.64: Admin Auth Utilities
+window.showAdminAuth = function(targetView) {
+    if (typeof window.showAdminLogin === 'function') {
+        window.showAdminLogin(targetView);
+    } else {
+        const modal = document.getElementById('admin-auth-modal');
+        if (modal) modal.classList.remove('hidden');
+    }
+};
 
+let clickCount = 0;
+let lastClickTime = 0;
+window.handleSecureClick = function(e) {
+    // v8.9.66: Restored traditional 5-tap rule (1.5s interval)
+    const now = Date.now();
+    if (now - lastClickTime < 1500) {
+        clickCount++;
+    } else {
+        clickCount = 1;
+    }
+    lastClickTime = now;
+    console.log(`Admin tap registered: ${clickCount}/5`); 
+
+    if (clickCount >= 5) {
+        clickCount = 0;
+        showAdminAuth();
+    }
+};
 
 // Participant Row Management
 function addParticipantRow(data = null, shouldFocus = true) {
@@ -1595,6 +1702,7 @@ function addParticipantRow(data = null, shouldFocus = true) {
             <div class="form-group" style="flex: 1; min-width: 140px;">
                 <label>年代 <span class="required">*</span></label>
                 <select class="p-age" required>
+                    <option value="" disabled ${!data ? 'selected' : ''}>選択...</option>
                     ${Object.entries(ageLabels).map(([val, label]) => `<option value="${val}" ${data && data.age === val ? 'selected' : ''}>${label}</option>`).join('')}
                 </select>
             </div>
@@ -2079,10 +2187,25 @@ window.updateDashboard = function() {
                 case 'groupName': valA = a.groupName; valB = b.groupName; break;
                 case 'representative': valA = a.representative; valB = b.representative; break;
                 case 'status': valA = a.status; valB = b.status; break;
-                case 'time': valA = new Date(a.timestamp || 0).getTime(); valB = new Date(b.timestamp || 0).getTime(); break;
+                case 'time': 
+                    const parseTime = (s) => {
+                        if (!s) return 0;
+                        // Handle "5/13 11:01" or "2026/05/13 11:01"
+                        const parts = s.split(/[\/\s:]+/);
+                        if (parts.length < 4) return new Date(s).getTime() || 0;
+                        const year = parts[0].length === 4 ? parseInt(parts[0]) : 2026;
+                        const month = parts[0].length === 4 ? parseInt(parts[1]) : parseInt(parts[0]);
+                        const day = parts[0].length === 4 ? parseInt(parts[2]) : parseInt(parts[1]);
+                        const hour = parts[0].length === 4 ? parseInt(parts[3]) : parseInt(parts[2]);
+                        const min = parts[0].length === 4 ? parseInt(parts[4]) : parseInt(parts[3]);
+                        return new Date(year, month - 1, day, hour, min).getTime();
+                    };
+                    valA = parseTime(a.timestamp); 
+                    valB = parseTime(b.timestamp); 
+                    break;
                 case 'score': 
-                    valA = (a.participants || []).reduce((s, p) => s + (parseInt(p.catchA || 0)*2) + parseInt(p.catchB || 0), 0);
-                    valB = (b.participants || []).reduce((s, p) => s + (parseInt(p.catchA || 0)*2) + parseInt(p.catchB || 0), 0);
+                    valA = (a.participants || []).reduce((s, p) => s + parseInt(p.catchA || 0) + (parseInt(p.catchB || 0) * 2), 0);
+                    valB = (b.participants || []).reduce((s, p) => s + parseInt(p.catchA || 0) + (parseInt(p.catchB || 0) * 2), 0);
                     break;
                 default: valA = a.timestamp; valB = b.timestamp;
             }
@@ -2153,7 +2276,6 @@ window.updateDashboard = function() {
                     <td>${pSummary}</td>
                     <td><small style="white-space:nowrap;">${e.fishers} / ${e.observers}</small></td>
                     <td><small style="white-space:nowrap;">${ikesuDisplay}</small></td>
-                    <td><div style="font-weight:900; color:var(--primary-color); text-align:center;">${groupPoints}</div></td>
                     <td><span style="font-size:0.75rem; font-weight:700; white-space:nowrap;">${statusLabel}</span></td>
                     <td><small style="white-space:nowrap;">${regTime}</small></td>
                     <td class="no-print">
@@ -2228,12 +2350,12 @@ function switchAdminTab(tabId) {
             (typeof window.updatePrintView === 'function') && window.updatePrintView();
         }, 50);
     }
-    if (tabId === 'tab-stats') (typeof window.renderBreakdownStats === 'function') && window.renderBreakdownStats();
-    if (tabId === 'tab-logs') (typeof window.renderChangeLog === 'function') && window.renderChangeLog();
+    if (tabId === 'tab-logs' || tabId === 'tab-settings') (typeof window.renderChangeLog === 'function') && window.renderChangeLog();
+    if (tabId === 'tab-stats') (typeof window.renderBreakdownStats === 'function') && window.renderBreakdownStats('all', '');
 }
 
 /**
- * v8.1.66: Master function for print view (Globally exposed)
+ * v8.4.15: Unified Print Layout Manager
  */
 window.updatePrintView = function() {
     try {
@@ -2344,16 +2466,16 @@ window.renderIkesuResultView = function() {
         return;
     }
 
-    const baseUrl = window.location.href.split('?')[0];
-    const leaderUrl = window.location.href.split('?')[0] + '?view=leader-entry';
+    const baseUrl = window.location.href.split('?')[0].replace('index.html', '');
+    const leaderUrl = baseUrl.includes('http') ? baseUrl.replace('/受付/fishing-entry-app/', '/釣果/fishing-results-app/') : baseUrl + '../../釣果/fishing-results-app/index.html';
     const isLocalFile = window.location.protocol === 'file:';
 
     let html = isLocalFile ? `
         <div class="alert alert-warning no-print mb-4">
             <strong>【ご注意】</strong> 現在ローカルファイルとして実行されています。印刷されるQRコードは、このPC内を指すためスマホでは読み取れません。
-            本番環境（GitHub Pages等）にアップロードすると、スマホから釣果報告ができるようになります。
         </div>
     ` : '';
+    
     state.settings.ikesuList.forEach((ik, idx) => {
         const participants = [];
         state.entries.forEach(e => {
@@ -2371,7 +2493,7 @@ window.renderIkesuResultView = function() {
             <div class="print-page result-sheet" style="background:white; padding:1.2rem; border:1px solid #eee; margin-bottom: 2rem; page-break-after: always; color: black; position: relative;">
                 <div style="display: flex; align-items: center; border-bottom: 5px solid #000; padding-bottom: 0.5rem; margin-bottom: 1.2rem;">
                     <div style="display: flex; align-items: baseline; gap: 4px; min-width: 150px; flex-shrink: 0;">
-                        <span style="font-size: 3.5rem; font-weight: 900; line-height: 1;">${ik.name.replace('イケス','')}</span>
+                        <span style="font-size: 3.5rem; font-weight: 900; line-height: 1;">${(ik.name || "").replace('イケス','')}</span>
                         <span style="font-size: 1rem; font-weight: 800; color: #333;">イケス</span>
                     </div>
                     <div style="flex: 1; display: flex; justify-content: center; align-items: baseline; gap: 10px; padding: 0 10px;">
@@ -2390,20 +2512,16 @@ window.renderIkesuResultView = function() {
                         </div>
                     </div>
                 </div>
-                <div style="margin-top: 10px; font-size: 0.95rem; color: #000; font-weight: bold; background: #fff3cd; padding: 5px 10px; border-left: 5px solid #ffa000; margin-bottom: 1.2rem;">
-                    <strong>【手順】</strong> 各枠に<strong>釣った合計匹数</strong>を記入し、右上のQRから報告してください。
-                </div>
-
                 <table style="width: 100%; border-collapse: collapse; border: 3px solid #000;">
                     <thead>
                         <tr style="background: #000; color: #fff; font-size: 0.9rem;">
                             <th style="border: 1px solid #fff; padding: 0.6rem; width: 35px;">No</th>
-                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 200px; white-space: nowrap;">グループ名</th>
-                            <th style="border: 1px solid #fff; padding: 0.6rem; white-space: nowrap;">氏名</th>
-                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 80px; background: #d32f2f;">タイ (匹)</th>
-                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 80px; background: #1976d2;">青物 (匹)</th>
-                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 80px; background: #388e3c;">その他 (匹)</th>
-                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 60px; color: #000; background: #f0f0f0;">合計</th>
+                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 200px;">グループ名</th>
+                            <th style="border: 1px solid #fff; padding: 0.6rem;">氏名</th>
+                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 80px; background: #d32f2f;">タイ等 (1匹)</th>
+                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 80px; background: #1976d2;">青物等 (2匹)</th>
+                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 80px; background: #388e3c;">備考</th>
+                            <th style="border: 1px solid #fff; padding: 0.6rem; width: 60px; color: #000; background: #f0f0f0;">小計</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2412,18 +2530,15 @@ window.renderIkesuResultView = function() {
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold;">${pIdx + 1}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; font-size: 0.8rem; font-weight: bold; overflow: hidden; max-width: 200px;">${p.groupName}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 800; font-size: 1rem; white-space: nowrap;">${p.name}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #fafafa;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; background: #fafafa;"></td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
-                <div style="margin-top: 1.2rem; border: 2px solid #000; padding: 0.8rem; height: 120px;">
-                    <div style="font-size: 0.9rem; font-weight: 900; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 8px;">【イケス全体メモ・集計欄】</div>
-                </div>
-                <div style="margin-top: 10px; text-align: right; font-size: 0.75rem; color: #666; font-weight: bold;">
+                <div style="margin-top: 10px; text-align: right; font-size: 0.7rem; color: #666;">
                     生成日: ${new Date().toLocaleString()} | 釣堀まつり 管理システム
                 </div>
             </div>
@@ -2432,27 +2547,35 @@ window.renderIkesuResultView = function() {
 
     container.innerHTML = html;
 
-    // v8.3.25: Coarser QR pattern (Level L) and compact URL
     if (typeof QRCode !== 'undefined') {
-        const shortLeaderUrl = leaderUrl.replace(window.location.origin, ''); // Try relative if same origin
         state.settings.ikesuList.forEach((ik, idx) => {
             const qrEl = document.getElementById(`qr-ikesu-${idx}`);
             if (qrEl) {
-                new QRCode(qrEl, {
-                    text: leaderUrl, // Keep full URL for reliability
-                    width: 90,
-                    height: 90,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.M // Medium error correction (v8.3.26)
-                });
+                try {
+                    new QRCode(qrEl, {
+                        text: leaderUrl,
+                        width: 90,
+                        height: 90,
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } catch (e) { console.error("QR Error:", e); }
             }
         });
     }
 };
 
+// v8.9.85: Ranking Config Persistence
+window.saveRankingSettings = function() {
+    const topCount = parseInt(document.getElementById('rank-top-count')?.value) || 3;
+    const tobiList = document.getElementById('rank-tobi-list')?.value || "5,10,15,20,25,30";
+    
+    state.settings.rankingConfig = { topCount, tobiList };
+    state.lastUpdated = Date.now();
+    showToast("ランキング設定を保存しました", "success");
+    saveData(); // Sync to cloud
+};
 /**
- * v8.1.66: Group-based printing (1 page per group for prize prep) (Globally exposed)
+ * v8.1.66: Group-based printing (1 page per group for prize prep)
  */
 window.renderGroupPrintView = function() {
     const container = document.getElementById('print-view-container');
@@ -2469,7 +2592,6 @@ window.renderGroupPrintView = function() {
     
     sorted.forEach((e, entryIdx) => {
         const pArray = e.participants || [];
-        // v8.3.21: Removed fixed min-height for better single-page fit. Added page-break optimization.
         const isLast = entryIdx === sorted.length - 1;
         
         html += `
@@ -2496,14 +2618,13 @@ window.renderGroupPrintView = function() {
                 </div>
 
                 <h3 style="background: #000; color: white; padding: 0.4rem 0.8rem; margin-bottom: 0.8rem; font-size: 1rem;">参加者・Tシャツサイズ 一覧</h3>
-                <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; margin-bottom: 1rem;">
+                <table style="width: 100%; border-collapse: collapse; border: 2px solid #000;">
                     <thead>
                         <tr style="background: #eee; font-size: 0.85rem;">
                             <th style="border: 1px solid #000; padding: 0.5rem; width: 45px;">No</th>
                             <th style="border: 1px solid #000; padding: 0.5rem;">氏名</th>
                             <th style="border: 1px solid #000; padding: 0.5rem; width: 100px;">Tシャツ</th>
                             <th style="border: 1px solid #000; padding: 0.5rem; width: 80px;">区分</th>
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 100px;">チェック</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2513,67 +2634,135 @@ window.renderGroupPrintView = function() {
                                 <td style="border: 1px solid #000; padding: 0.4rem; font-size: 1.15rem; font-weight: bold;">${p.name}</td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.2rem; font-weight: 900;">${p.tshirtSize || '-'}</td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center;">${p.type === 'fisher' ? '釣り' : '見学'}</td>
-                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.2rem;">□</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
-
-                <div style="margin-top: 1.5rem; border-top: 1px dashed #000; padding-top: 0.5rem;">
-                    <div style="font-size: 0.8rem; margin-bottom: 0.5rem;">【準備用メモ】</div>
-                    <div style="height: 60px; border: 1px solid #ccc;"></div>
-                </div>
             </div>
         `;
     });
-
     container.innerHTML = html;
-}
+};
 
-// --- v8.0.0: Expansion Feature Logic ---
-
-// 1. Leader Management
-window.toggleLeader = function(entryId, partIdx) {
+window.setParticipantAsLeader = function(entryId, partIdx) {
     const entry = state.entries.find(e => e.id === entryId);
-    if (!entry || !entry.participants[partIdx]) return;
-    
-    // Toggle
-    const current = !!entry.participants[partIdx].isLeader;
-    
-    // Optional: Only one leader per ikesu? (User didn't specify, so keeping it simple: can have multiple or one)
-    // For now, let's allow multiple or user manually manages.
-    entry.participants[partIdx].isLeader = !current;
-    entry.lastModified = new Date().toISOString();
-    
+    if (!entry) return;
+    entry.participants.forEach(p => p.isLeader = false);
+    entry.participants[partIdx].isLeader = true;
     saveData();
     renderIkesuWorkspace();
     showToast(`${entry.participants[partIdx].name} 様をリーダーに設定しました`, 'info');
 };
 
-// 2. Tournament Rankings
+let currentDayTab = 'tab-day-reception';
+window.switchDayTab = function(tabId) {
+    if (!tabId) return;
+    currentDayTab = tabId;
+    document.querySelectorAll('.day-tab-btn').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId));
+    document.querySelectorAll('.day-tab-content').forEach(content => content.classList.toggle('active', content.id === tabId));
+    if (tabId === 'tab-day-reception') updateReceptionList();
+    if (tabId === 'tab-day-results') renderDayResults();
+    if (tabId === 'tab-day-rankings') { renderRankings(); renderBreakdownStats('all', 'day-'); }
+    if (tabId === 'tab-day-awards') renderAwardsPreview();
+};
+
+window.renderDayResults = function() {
+    const list = document.getElementById('day-results-list');
+    if (!list) return;
+    let html = '';
+    let totalFish = 0;
+    let caughtCount = 0;
+    let zeroCount = 0;
+    let fisherCount = 0;
+
+    state.entries.filter(e => e.status !== 'cancelled').forEach(entry => {
+        (entry.participants || []).forEach((p, pIdx) => {
+            if (p.type !== 'fisher') return;
+            fisherCount++;
+            const cA = parseInt(p.catchA || 0);
+            const cB = parseInt(p.catchB || 0);
+            const sum = cA + cB;
+            const total = cA + (cB * 2);
+            totalFish += sum;
+            
+            if (sum > 0) caughtCount++;
+            else zeroCount++;
+
+            const ik = (state.settings.ikesuList || []).find(i => i.id === p.ikesuId);
+            html += `<tr>
+                <td><span class="id-badge">${entry.id}</span></td>
+                <td><small>${ik ? ik.name : '-'}</small></td>
+                <td style="font-weight:bold;">${p.name}</td>
+                <td style="text-align:center;">${cA}</td>
+                <td style="text-align:center;">${cB}</td>
+                <td style="text-align:center; font-weight:900;">${total}pt <small>(${sum}匹)</small></td>
+                <td class="no-print"><button class="btn-outline btn-small" onclick="openDayCatchEditModal('${entry.id}', ${pIdx})">編集</button></td>
+            </tr>`;
+        });
+    });
+
+    // Update summary in header
+    const header = document.querySelector('#tab-day-results .card-header h2');
+    if (header) {
+        let statsBox = document.getElementById('day-results-summary-stats');
+        if (!statsBox) {
+            statsBox = document.createElement('div');
+            statsBox.id = 'day-results-summary-stats';
+            statsBox.style.cssText = "font-size:0.85rem; color:#64748b; margin-top:0.2rem; font-weight:normal;";
+            header.parentElement.appendChild(statsBox);
+        }
+        statsBox.innerHTML = `全体合計: <strong>${totalFish}匹</strong> (${totalFish * 1.0 / (fisherCount || 1).toFixed(1)}/人) | 釣果あり: ${caughtCount}名 / 坊主: <span style="color:#ef4444">${zeroCount}名</span>`;
+    }
+
+    list.innerHTML = html || '<tr><td colspan="7" class="text-center p-4">釣果データなし</td></tr>';
+};
+
+window.openDayCatchEditModal = function(entryId, pIdx) {
+    const entry = state.entries.find(e => e.id === entryId);
+    if (!entry || !entry.participants[pIdx]) return;
+    currentDayEdit = { entryId, pIdx };
+    document.getElementById('day-edit-p-name').textContent = `${entry.participants[pIdx].name} の釣果編集`;
+    document.getElementById('day-input-cA').value = entry.participants[pIdx].catchA || 0;
+    document.getElementById('day-input-cB').value = entry.participants[pIdx].catchB || 0;
+    document.getElementById('day-catch-edit-modal').classList.remove('hidden');
+};
+
+window.closeDayModal = function() { document.getElementById('day-catch-edit-modal').classList.add('hidden'); currentDayEdit = null; };
+window.changeDayValue = function(type, delta) {
+    const el = document.getElementById('day-input-c' + type);
+    el.value = Math.max(0, parseInt(el.value) + delta);
+};
+window.saveDayCatch = async function() {
+    if (!currentDayEdit) return;
+    const entry = state.entries.find(e => e.id === currentDayEdit.entryId);
+    const p = entry.participants[currentDayEdit.pIdx];
+    p.catchA = parseInt(document.getElementById('day-input-cA').value) || 0;
+    p.catchB = parseInt(document.getElementById('day-input-cB').value) || 0;
+    saveStateToLocalStorage();
+    renderDayResults();
+    renderRankings();
+    closeDayModal();
+    await saveData();
+};
+
 window.renderRankings = function() {
     const indList = document.getElementById('ranking-individual-list');
+    const dayIndList = document.getElementById('day-ranking-individual-list');
     const ikList = document.getElementById('ranking-ikesu-list');
-    if (!indList || !ikList) return;
+    const dayIkList = document.getElementById('day-ranking-ikesu-list');
+    const awardFilterBtn = document.getElementById('award-filter-btn');
+    const onlyAwards = awardFilterBtn && awardFilterBtn.classList.contains('active');
 
-    // A. Individual Ranking Data
     let individuals = [];
     state.entries.forEach(e => {
         if (e.status === 'cancelled') return;
-        (e.participants || []).forEach(p => {
+        (e.participants || []).forEach((p, pIdx) => {
             if (!p || p.type === 'observer') return;
             const cA = parseInt(p.catchA || 0);
             const cB = parseInt(p.catchB || 0);
-            const points = (cA * 2) + (cB * 1);
-            individuals.push({ 
-                name: p.name, 
-                group: e.groupName, 
-                points, 
-                cA, 
-                cB,
-                ikesu: ""
-            });
-            // Try to find ikesu
+            const points = cA + (cB * 2);
+            const totalFish = cA + cB;
+            individuals.push({ id: e.id, pIdx, name: p.name, group: e.groupName, points, cA, cB, totalFish, isAwardWinner: !!p.isAwardWinner });
             if (p.ikesuId) {
                 const ik = (state.settings.ikesuList || []).find(i => i.id === p.ikesuId);
                 if (ik) individuals[individuals.length - 1].ikesu = ik.name;
@@ -2581,89 +2770,66 @@ window.renderRankings = function() {
         });
     });
 
-    // Sort Individual: Points DESC -> CatchA DESC -> CatchB DESC
-    individuals.sort((a, b) => {
-        if (b.points !== a.points) return b.points - a.points;
-        if (b.cA !== a.cA) return b.cA - a.cA;
-        return b.cB - a.cB;
-    });
+    individuals.sort((a, b) => b.points - a.points || b.cA - a.cA);
+    if (onlyAwards) individuals = individuals.filter(p => p.isAwardWinner);
 
-    indList.innerHTML = individuals.length > 0 ? individuals.slice(0, 50).map((p, i) => {
+    const rankingHtml = individuals.length > 0 ? individuals.slice(0, 100).map((p, i) => {
         const rankClass = i < 3 ? `rank-${i + 1}` : '';
         const rankNumClass = i < 3 ? `top-${i + 1}` : '';
+        const awardClass = p.isAwardWinner ? 'award-winner-row' : '';
+        const awardStar = p.isAwardWinner ? '🏆' : '☆';
+        
         return `
-            <div class="ranking-card ${rankClass}">
+            <div class="ranking-card compact-rank ${rankClass} ${awardClass}">
                 <div class="ranking-rank ${rankNumClass}">${i + 1}</div>
                 <div class="ranking-info">
-                    <div class="ranking-name">${p.name}</div>
-                    <div class="ranking-subtext">${p.group} ${p.ikesu ? ` / ${p.ikesu}` : ''}</div>
-                    <div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">青物: ${p.cA} / 鯛等: ${p.cB}</div>
+                    <div class="ranking-name" style="font-size:0.95rem;">${p.name} <span class="award-toggle" onclick="toggleAwardWinner('${p.id}', ${p.pIdx})">${awardStar}</span></div>
+                    <div class="ranking-subtext">${p.group} / ${p.ikesu || '-'}</div>
                 </div>
                 <div class="ranking-points">
-                    <span class="rank-val">${p.points}</span><span class="rank-unit">pt</span>
+                    <span class="rank-val" style="font-size:1.2rem;">${p.points}</span><span class="rank-unit">pt</span>
+                    <div style="font-size:0.65rem; color:#64748b; margin-top:-2px;">${p.totalFish}匹 (鯛:${p.cA}/青:${p.cB})</div>
                 </div>
             </div>
         `;
     }).join('') : '<div class="p-8 text-center text-muted" style="border: 2px dashed #eee; border-radius: 12px;">個人の釣果データがまだありません</div>';
 
-    // B. Ikesu Team Ranking
-    if (!state.settings.ikesuList) return;
-    
-    const ikResults = {};
-    state.settings.ikesuList.forEach(ik => ikResults[ik.id] = { name: ik.name, totalPoints: 0, count: 0 });
-    
-    state.entries.forEach(e => {
-        if (e.status === 'cancelled') return;
-        (e.participants || []).forEach(p => {
-            if (!p || p.type === 'observer' || !p.ikesuId || !ikResults[p.ikesuId]) return;
-            const cA = parseInt(p.catchA || 0);
-            const cB = parseInt(p.catchB || 0);
-            ikResults[p.ikesuId].totalPoints += (cA * 2) + (cB * 1);
-            ikResults[p.ikesuId].count++;
-        });
-    });
-
-    let teamList = Object.values(ikResults).filter(r => r.count > 0).map(r => ({
-        name: r.name,
-        avg: (r.totalPoints / r.count).toFixed(2),
-        total: r.totalPoints,
-        count: r.count
-    }));
-
-    teamList.sort((a, b) => b.avg - a.avg);
-
-    ikList.innerHTML = teamList.length > 0 ? teamList.map((r, i) => {
-        const rankClass = i < 3 ? `rank-${i + 1}` : '';
-        const rankNumClass = i < 3 ? `top-${i + 1}` : '';
-        return `
-            <div class="ranking-card ${rankClass}">
-                <div class="ranking-rank ${rankNumClass}">${i + 1}</div>
-                <div class="ranking-info">
-                    <div class="ranking-name">${r.name}</div>
-                    <div class="ranking-subtext">合計: ${r.total}pt / 参加: ${r.count}名</div>
-                </div>
-                <div class="ranking-points">
-                    <span class="rank-val">${r.avg}</span><span class="rank-unit">avg</span>
-                </div>
-            </div>
-        `;
-    }).join('') : '<div class="p-8 text-center text-muted" style="border: 2px dashed #eee; border-radius: 12px;">イケス別のデータがまだありません</div>';
+    if (indList) indList.innerHTML = rankingHtml;
+    if (dayIndList) dayIndList.innerHTML = rankingHtml;
 };
+
+window.toggleAwardWinner = async function(entryId, pIdx) {
+    const entry = state.entries.find(e => e.id === entryId);
+    if (!entry || !entry.participants[pIdx]) return;
+    
+    const p = entry.participants[pIdx];
+    p.isAwardWinner = !p.isAwardWinner;
+    
+    localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
+    renderRankings();
+    
+    try { await syncToCloud(); } catch(e) {}
+};
+
+window.toggleAwardFilter = function() {
+    const btn = document.getElementById('award-filter-btn');
+    if (!btn) return;
+    btn.classList.toggle('active');
+    if (btn.classList.contains('active')) {
+        btn.style.background = '#f1c40f';
+        btn.style.color = '#fff';
+    } else {
+        btn.style.background = '';
+        btn.style.color = '';
+    }
+    renderRankings();
+};
+
+
+
 
 // 3. Print View
 // (renderIkesuPrintView logic is now integrated into core switchAdminTab)
-
-// Hook up leader entry form trigger
-const originalSwitchView = window.switchView;
-window.switchView = function(btnEl, viewId) {
-    if (originalSwitchView) originalSwitchView(btnEl, viewId);
-    if (viewId === 'leader-entry-view' || (currentViewId === 'dashboard-view' && currentAdminTab === 'tab-rankings')) {
-        // No specific trigger yet, but keeping structure
-    }
-};
-
-// Add nav listener for leader shortcut (Optional, but user said shared URL)
-// For now, let's add a button in the rankings tab to open this form or just use switchView.
 
 // v7.6.3: Restored missing helper functions
 function sumCategoryFishers(category) {
@@ -2790,7 +2956,10 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
         
         validEntries.forEach(e => {
             (e.participants || []).forEach(p => {
-                if (p && p.tshirtSize) tshirtCount[p.tshirtSize] = (tshirtCount[p.tshirtSize] || 0) + 1;
+                if (p && p.tshirtSize) {
+                    const normalized = normalizeTshirtSize(p.tshirtSize);
+                    tshirtCount[normalized] = (tshirtCount[normalized] || 0) + 1;
+                }
             });
         });
 
@@ -2947,7 +3116,7 @@ function renderGenericCoordinatorView(sourceName, prefix) {
 
     const searchTerm = (document.getElementById(`${prefix}-search`)?.value || "").toLowerCase();
 
-    list.innerHTML = sourceEntries.slice().reverse()
+    list.innerHTML = sourceEntries.slice()
         .filter(e => {
             if (!searchTerm) return true;
             // v8.1.41: Safety Guard
@@ -3718,11 +3887,18 @@ window.toggleLeader = function(event, entryId, pIdx) {
 
 function updateAppTitle() {
     const titleEl = document.getElementById('app-title');
-    const competitionName = state.settings.competitionName || "釣り大会 受付";
+    const competitionName = state.settings.competitionName || "BORIJIN FESTIVAL in 水宝 2026";
+    const version = "v8.9.79";
     if (titleEl) {
-        if (currentViewId === 'dashboard-view') titleEl.textContent = `管理者: ${competitionName}`;
-        else if (currentViewId === 'reception-view') titleEl.textContent = `当日受付: ${competitionName}`;
-        else titleEl.textContent = competitionName;
+        let prefix = "";
+        // v8.9.65: Ensure Admin prefix is shown when authenticated or in admin views
+        if (isAdminAuth || currentViewId === 'dashboard-view') prefix = "管理者: ";
+        else if (currentViewId === 'reception-view') prefix = "当日受付: ";
+        
+        titleEl.innerHTML = `
+            ${prefix}${competitionName}
+            <span class="version-badge">${version}</span>
+        `;
     }
     document.title = competitionName;
 }
@@ -4185,8 +4361,9 @@ window.restoreEntry = async function (id) {
 };
 
 async function exportGroupsCSV() {
-    const headers = ["ID", "区分", "グループ名", "代表者", "電話番号", "メールアドレス", "人数(釣り)", "人数(見学)", "ステータス", "日時", "備考"];
-    const rows = state.entries.map(e => [
+    // v8.9.67: Restored timestamp, removed status as requested
+    const headers = ["ID", "区分", "グループ名", "代表者", "電話番号", "メールアドレス", "人数(釣り)", "人数(見学)", "日時", "備考"];
+    const rows = state.entries.filter(e => e.status !== 'cancelled').map(e => [
         e.id, 
         e.source, 
         `"${e.groupName}"`, 
@@ -4195,7 +4372,6 @@ async function exportGroupsCSV() {
         `"${e.email || e.repEmail}"`,
         e.fishers, 
         e.observers, 
-        e.status, 
         e.timestamp,
         `"${(e.memo || "").replace(/\n/g, " ")}"`
     ]);
@@ -4203,9 +4379,10 @@ async function exportGroupsCSV() {
 }
 
 async function exportParticipantsCSV() {
-    const headers = ["ID", "区分", "グループ名", "代表電話", "代表メール", "氏名", "ニックネーム", "性別", "年代", "地域", "区分(釣/見)", "サイズ", "ステータス", "備考"];
+    // v8.9.67: Added timestamp, removed status, and used UI labels for gender/age
+    const headers = ["ID", "区分", "グループ名", "代表電話", "代表メール", "氏名", "ニックネーム", "性別", "年代", "地域", "区分(釣/見)", "サイズ", "登録日時", "備考"];
     const rows = [];
-    state.entries.forEach(e => {
+    state.entries.filter(e => e.status !== 'cancelled').forEach(e => {
         (e.participants || []).forEach(p => {
             rows.push([
                 e.id,
@@ -4215,12 +4392,12 @@ async function exportParticipantsCSV() {
                 `"${e.email || e.repEmail || ""}"`,
                 `"${p.name}"`,
                 `"${p.nickname || ""}"`,
-                p.gender,
-                p.age,
+                genderLabels[p.gender] || p.gender,
+                ageLabels[p.age] || p.age,
                 `"${p.region || ""}"`,
                 p.type === 'fisher' ? '釣り' : '見学',
                 p.tshirtSize,
-                e.status,
+                e.timestamp,
                 `"${(e.memo || "").replace(/\n/g, " ")}"`
             ]);
         });
@@ -4316,7 +4493,170 @@ function downloadCSV(filename, headers, rows) {
     document.body.removeChild(link);
 }
 
-// Redundant renderRankings removed in v8.1.69
+// v8.9.70: Re-implemented renderRankings to fix display failure
+// v8.9.72: Robust Ranking Renderer for both Individual and Ikesu
+window.renderRankings = function() {
+    const indContainer = document.getElementById('ranking-list-container-day') || document.getElementById('ranking-list-container');
+    const ikesuContainer = document.getElementById('day-ranking-ikesu-list');
+    
+    if (!indContainer) return;
+    indContainer.innerHTML = '<p class="text-center p-4">集計中...</p>';
+    if (ikesuContainer) ikesuContainer.innerHTML = '<p class="text-center p-4">集計中...</p>';
+    
+    // 1. Individual Ranking Data
+    const individualData = [];
+    const ikesuScores = {}; // { ikesuId: { total: 0, count: 0, name: "" } }
+
+    state.entries.forEach(entry => {
+        if (entry.status === 'cancelled') return;
+        (entry.participants || []).forEach(p => {
+            if (p.type === 'fisher') {
+                const cA = parseInt(p.catchA || 0);
+                const cB = parseInt(p.catchB || 0);
+                const score = cA + (cB * 2);
+                
+                individualData.push({
+                    name: p.name,
+                    groupName: entry.groupName,
+                    id: entry.id,
+                    cA, cB, score
+                });
+
+                // Aggregation for Ikesu
+                if (p.ikesuId) {
+                    if (!ikesuScores[p.ikesuId]) {
+                        const ikName = state.settings.ikesuList?.find(ik => ik.id === p.ikesuId)?.name || p.ikesuId;
+                        ikesuScores[p.ikesuId] = { total: 0, count: 0, name: ikName };
+                    }
+                    ikesuScores[p.ikesuId].total += score;
+                    ikesuScores[p.ikesuId].count += 1;
+                }
+            }
+        });
+    });
+
+    // --- Render Individual Table ---
+    individualData.sort((a, b) => (b.score - a.score) || a.id.localeCompare(b.id));
+    
+    if (individualData.length === 0) {
+        indContainer.innerHTML = '<p class="text-center p-4 text-muted">データがありません</p>';
+    } else {
+        let html = `
+            <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                <thead>
+                    <tr style="background:#f1f5f9;">
+                        <th style="padding:8px;">順位</th>
+                        <th style="padding:8px;">名前</th>
+                        <th style="padding:8px; text-align:center;">合計</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        individualData.slice(0, 100).forEach((p, idx) => {
+            const rank = idx + 1;
+            const rankMark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+            html += `
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:8px;">${rankMark}</td>
+                    <td style="padding:8px;"><strong>${p.name}</strong><br><small class="text-muted">${p.groupName}</small></td>
+                    <td style="padding:8px; text-align:center; font-weight:bold; color:var(--primary-color);">${p.score}pt</td>
+                </tr>`;
+        });
+        html += '</tbody></table>';
+        indContainer.innerHTML = html;
+    }
+
+    // --- Render Ikesu Table ---
+    if (ikesuContainer) {
+        const ikesuData = Object.keys(ikesuScores).map(id => {
+            const s = ikesuScores[id];
+            return { id, name: s.name, average: (s.total / s.count).toFixed(2), total: s.total, count: s.count };
+        }).sort((a, b) => b.average - a.average);
+
+        if (ikesuData.length === 0) {
+            ikesuContainer.innerHTML = '<p class="text-center p-4 text-muted">データがありません</p>';
+        } else {
+            let html = `
+                <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                    <thead>
+                        <tr style="background:#f1f5f9;">
+                            <th style="padding:8px;">順位</th>
+                            <th style="padding:8px;">イケス</th>
+                            <th style="padding:8px; text-align:center;">平均点</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            ikesuData.forEach((ik, idx) => {
+                const rank = idx + 1;
+                html += `
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:8px;">${rank}</td>
+                        <td style="padding:8px;"><strong>${ik.name}</strong><br><small class="text-muted">${ik.count}名 / 計${ik.total}pt</small></td>
+                        <td style="padding:8px; text-align:center; font-weight:bold; color:#059669;">${ik.average}</td>
+                    </tr>`;
+            });
+            html += '</tbody></table>';
+            ikesuContainer.innerHTML = html;
+        }
+    }
+};
+
+// v8.9.70: Implement renderDayResults for Catch List tab
+window.renderDayResults = function() {
+    const listBody = document.getElementById('day-results-list');
+    const filterIkesuId = document.getElementById('day-results-ikesu-filter')?.value;
+    if (!listBody) return;
+    
+    listBody.innerHTML = '<tr><td colspan="7" class="text-center p-4">読み込み中...</td></tr>';
+    
+    // Update Ikesu Filter Options if empty
+    const filterSelect = document.getElementById('day-results-ikesu-filter');
+    if (filterSelect && filterSelect.options.length <= 1) {
+        (state.settings.ikesuList || []).forEach(ik => {
+            const opt = document.createElement('option');
+            opt.value = ik.id;
+            opt.textContent = ik.name;
+            filterSelect.appendChild(opt);
+        });
+    }
+    
+    const rows = [];
+    state.entries.forEach(entry => {
+        if (entry.status === 'cancelled') return;
+        (entry.participants || []).forEach(p => {
+            if (p.type === 'fisher') {
+                if (filterIkesuId && p.ikesuId !== filterIkesuId) return;
+                
+                const cA = parseInt(p.catchA || 0);
+                const cB = parseInt(p.catchB || 0);
+                const score = cA + (cB * 2);
+                const ikName = state.settings.ikesuList?.find(ik => ik.id === p.ikesuId)?.name || '-';
+                
+                rows.push(`
+                    <tr>
+                        <td style="font-family:monospace; font-weight:bold;">${entry.id}</td>
+                        <td><span class="badge badge-outline" style="border:1px solid #cbd5e1; color:#475569;">${ikName}</span></td>
+                        <td><strong>${p.name}</strong><br><small class="text-muted">${entry.groupName}</small></td>
+                        <td class="text-center">${cA}</td>
+                        <td class="text-center">${cB}</td>
+                        <td class="text-center" style="font-weight:900; color:var(--primary-color); font-size:1.1rem;">${score}pt</td>
+                        <td class="no-print">
+                            <button class="btn-outline btn-small" onclick="window.openDayEditModal('${entry.id}', '${p.name}')">修正</button>
+                        </td>
+                    </tr>`);
+            }
+        });
+    });
+    
+    if (rows.length === 0) {
+        listBody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-muted">該当するデータがありません</td></tr>';
+    } else {
+        listBody.innerHTML = rows.join('');
+    }
+};
+
+window.openDayEditModal = function(entryId, pName) {
+    alert(`個別修正機能は「釣果入力(外部)」アプリから、${entryId} (${pName}) を選択して行ってください。`);
+};
 
 /* --- LEADER ENTRY LOGIC --- */
 function renderLeaderEntryForm() {
@@ -4514,28 +4854,7 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-/* --- SECURE ADMIN ACCESS --- */
-let clickCount = 0;
-let lastClickTime = 0;
-window.handleSecureClick = function(e) {
-    const now = Date.now();
-    // v8.1.54: Increased interval to 1500ms for more stable multi-tap on mobile/slow devices
-    if (now - lastClickTime < 1500) {
-        clickCount++;
-    } else {
-        clickCount = 1;
-    }
-    lastClickTime = now;
-    console.log(`Admin tap registered: ${clickCount}/5`); 
-    if (clickCount >= 5) {
-        clickCount = 0;
-        if (typeof showAdminLogin === 'function') {
-            showAdminLogin();
-        } else {
-            console.error("BORIJIN: showAdminLogin not found");
-        }
-    }
-};
+/* --- SECURE ADMIN ACCESS Consolidated (v8.9.65) --- */
 
 /**
  * v8.1.15: Restore missing URL parameter helper to resolve startup error
@@ -4894,6 +5213,7 @@ window.handleBulkImportExecute = async function() {
 
     // 年代マッピング
     const ageMap = {
+        '？': 'unknown', '不明': 'unknown', '?': 'unknown',
         '5': 'elementary', '10': 'elementary', '小学': 'elementary',
         '20': '19_20s', '30': '30s', '40': '40s', '50': '50s', '60': '60s', '70': '70s', '80': '80s',
         '中': 'middle_high', '高': 'middle_high'
@@ -4946,17 +5266,16 @@ window.handleBulkImportExecute = async function() {
                 const finalName = pName || `${currentEntry.groupName} 参加者${currentEntry.participants.length + 1}`;
                 
                 // 年代の正規化
-                let ageKey = '50s';
+                let ageKey = 'unknown'; // Default to unknown for bulk
                 for (let k in ageMap) { if (pAgeRaw && pAgeRaw.includes(k)) { ageKey = ageMap[k]; break; } }
                 
-                // Tシャツの正規化
-                let size = pTshirtRaw || 'L';
-                if (tshirtMap[size.toUpperCase()]) size = tshirtMap[size.toUpperCase()];
+                // Tシャツの正規化 (v8.9.80: Unified helper)
+                let size = normalizeTshirtSize(pTshirtRaw);
 
                 currentEntry.participants.push({
                     name: finalName,
                     type: 'fisher',
-                    gender: (pGenderRaw === '女') ? 'female' : 'male',
+                    gender: (pGenderRaw === '女') ? 'female' : (pGenderRaw === '男' ? 'male' : 'unknown'),
                     age: ageKey,
                     region: pRegion || '',
                     tshirtSize: size,
@@ -5072,3 +5391,16 @@ window.handleBulkImportExecute = async function() {
     }, 4000);
 };
 
+
+// v8.9.70: Added popstate listener to support browser back button navigation
+window.onpopstate = function(event) {
+    if (event.state && event.state.viewId) {
+        // v8.9.70: Use skipPush=true to avoid creating a history loop
+        switchView(event.state.viewId, true);
+    } else {
+        // Fallback if no state (e.g., first page)
+        switchView('registration-view', true);
+    }
+};
+
+// End of script

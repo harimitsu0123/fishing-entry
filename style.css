@@ -194,26 +194,31 @@ body {
 }
 
 #app-title {
-    font-size: 1.2rem;
-    font-weight: 800;
+    font-size: 1.3rem;
+    font-weight: 900;
     color: var(--primary-color);
     text-align: center;
     cursor: pointer;
     user-select: none;
+    letter-spacing: -0.02em;
 }
 
-.app-version {
+.version-badge {
     font-size: 0.7rem;
-    opacity: 0.5;
-    font-weight: 800;
-    margin-left: 10px;
-    background: #f0f7ff;
-    padding: 2px 6px;
-    border-radius: 4px;
-    border: 1px solid #cce5ff;
-    color: var(--primary-color);
-    white-space: nowrap;
+    padding: 2px 10px;
+    background: #f0f7ff; /* Light GitHub-style blue */
+    color: #0366d6;      /* Authentic GitHub link/label blue */
+    border: 1px solid #c8e1ff;
+    border-radius: 20px;
+    margin-left: 12px;
+    font-weight: 700;
+    display: inline-block;
+    vertical-align: middle;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+    font-family: 'Inter', sans-serif;
 }
+
+
 
 .nav-links {
     display: none;
@@ -1171,11 +1176,11 @@ textarea:focus {
 }
 
 /* Reception View Layout (v7.9.3 Fix) */
-.reception-container {
+.reception-layout {
     display: flex;
     gap: 1.5rem;
-    height: calc(100vh - 200px);
-    overflow: hidden;
+    min-height: 600px;
+    height: auto;
 }
 
 .reception-sidebar {
@@ -1188,26 +1193,26 @@ textarea:focus {
     border-radius: 8px;
 }
 
-.reception-group-list {
+.reception-main {
     flex: 1;
-    overflow-y: auto;
-    padding-right: 0.5rem;
+    min-width: 0;
+    padding: 0.5rem;
+    background: #f8fafc;
 }
 
 .reception-desk {
     flex: 1;
     background: #fff;
     border-radius: 16px;
-    padding: 0; /* Let inner desk-header/content handle padding */
+    padding: 0;
     border: 1px solid #e1e8ed;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 @media (max-width: 900px) {
-    .reception-container {
+    .reception-layout {
         flex-direction: column;
         height: auto;
         overflow: visible;
@@ -1509,13 +1514,49 @@ th {
     box-shadow: 0 4px 12px rgba(0, 91, 181, 0.3);
 }
 
-.admin-tab-content {
+.admin-tab-content, .day-tab-content {
     display: none;
 }
 
-.admin-tab-content.active {
+.admin-tab-content.active, .day-tab-content.active {
     display: block;
     animation: fadeIn 0.3s ease;
+}
+
+/* Day-of Specific Tab Nav (Premium Style) */
+.day-tab-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0.4rem;
+    background: #fff;
+    border: 1px solid #e1e8ed;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.day-tab-btn {
+    flex: 1;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #64748b;
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.day-tab-btn:hover {
+    background: #f1f5f9;
+    color: var(--primary-color);
+}
+
+.day-tab-btn.active {
+    background: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 91, 181, 0.2);
 }
 
 @media (max-width: 768px) {
@@ -2379,6 +2420,28 @@ table {
 .rank-val { font-size: 1.6rem; color: var(--primary-color); line-height: 1; }
 .rank-unit { font-size: 0.8rem; color: #94a3b8; margin-left: 2px; }
 
+/* v8.9.83: Compact & Award Highlighting */
+.compact-rank {
+    padding: 0.35rem 0.8rem !important;
+    margin-bottom: 4px !important;
+    border-radius: 8px !important;
+}
+.award-toggle {
+    cursor: pointer;
+    font-size: 1.1rem;
+    margin-left: 5px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+.award-toggle:hover { opacity: 1; }
+.award-winner-row {
+    background: #fff9db !important; /* Soft gold background */
+    border: 2px solid #f1c40f !important;
+    box-shadow: 0 4px 10px rgba(241, 196, 15, 0.2) !important;
+}
+.award-winner-row .award-toggle { opacity: 1; color: #f1c40f; text-shadow: 0 0 5px rgba(241, 196, 15, 0.5); }
+.award-winner-row .ranking-rank { color: #d4a017 !important; }
+
 /* Podium Layout for Print */
 .podium-container {
     display: flex;
@@ -2541,15 +2604,15 @@ table {
 
 /* v8.9.56: Footer Stability Fix */
 .main-footer {
-    font-size: 0.8rem;
-    padding: 2.5rem 0;
-    opacity: 0.7;
+    font-size: 0.9rem;
+    padding: 1.5rem 0;
+    opacity: 0.6;
     width: 100%;
     display: flex;
     justify-content: center;
     text-align: center;
     border-top: 1px solid rgba(0, 0, 0, 0.05);
-    margin-top: 4rem;
+    margin-top: 2rem;
     position: relative;
     z-index: 10;
     user-select: none;
