@@ -2272,7 +2272,7 @@ window.updateDashboard = function() {
                 <tr class="${rowClass}">
                     <td><span class="id-badge" style="white-space:nowrap;">${e.id}</span></td>
                     <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}" style="white-space:nowrap;">${e.source}</span></td>
-                    <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}${e.memo ? `\n\n【備考】\n${e.memo}` : ''}">${e.groupName}${e.memo ? ' 📝' : ''}</div></td>
+                    <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}${e.memo ? `\n\n【備考】\n${e.memo}` : ''}">${e.groupName}${e.memo ? '<span style="font-size:0.7rem; color:#e67e22; border:1px solid #e67e22; border-radius:2px; padding:0 2px; margin-left:4px; vertical-align:middle;">備</span>' : ''}</div></td>
                     <td>${pSummary}</td>
                     <td><small style="white-space:nowrap;">${e.fishers} / ${e.observers}</small></td>
                     <td><small style="white-space:nowrap;">${ikesuDisplay}</small></td>
@@ -2528,7 +2528,7 @@ window.renderIkesuResultView = function() {
                     </div>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0.5rem;">
-                    <div style="font-size: 0.8rem; color: #666;">生成日: ${new Date().toLocaleString()} | 釣堀まつり 管理システム</div>
+                    <div style="font-size: 0.8rem; color: #666;">生成日: ${new Date().toLocaleString()} | BORIJIN FESTIVAL 管理システム</div>
                     <div style="font-size: 1.1rem; font-weight: 900; color: #d32f2f; background: #fff; padding: 2px 10px; border: 2px solid #d32f2f; border-radius: 4px;">※匹数（数字）で記入してください</div>
                 </div>
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; table-layout: fixed;">
