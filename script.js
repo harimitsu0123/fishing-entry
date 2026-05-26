@@ -186,6 +186,7 @@ window.handleRegistration = async function() {
         const pRows = document.querySelectorAll('.participant-row');
         const participants = Array.from(pRows).map(row => {
             const getVal = (cls) => row.querySelector(cls)?.value || '';
+            const getCheck = (cls) => row.querySelector(cls)?.checked || false;
             return {
                 type: getVal('.p-type'),
                 name: getVal('.p-name'),
@@ -193,7 +194,8 @@ window.handleRegistration = async function() {
                 region: getVal('.p-region'),
                 age: getVal('.p-age'),
                 gender: getVal('.p-gender'),
-                tshirtSize: getVal('.p-tshirt')
+                tshirtSize: getVal('.p-tshirt'),
+                isCancelledEdit: getCheck('.p-cancel')
             };
         });
 
@@ -203,10 +205,17 @@ window.handleRegistration = async function() {
         const existingEntry = editId ? state.entries.find(en => en.id === editId) : null;
         const finalParticipants = participants.map((p, idx) => {
             const oldP = existingEntry && existingEntry.participants[idx];
+            let status = 'pending';
             if (oldP && oldP.name === p.name) {
-                return { ...p, ikesuId: oldP.ikesuId || null, isLeader: oldP.isLeader || false, status: oldP.status || 'pending' };
+                status = oldP.status || 'pending';
             }
-            return { ...p, ikesuId: null, isLeader: false, status: 'pending' };
+            if (p.isCancelledEdit) {
+                status = 'cancelled';
+            } else if (status === 'cancelled') {
+                status = 'pending';
+            }
+            const { isCancelledEdit, ...cleanP } = p;
+            return { ...cleanP, ikesuId: oldP ? oldP.ikesuId : null, isLeader: oldP ? oldP.isLeader : false, status };
         });
 
         const fisherCount = finalParticipants.filter(p => p.type === 'fisher' && p.status !== 'cancelled').length;
@@ -1743,6 +1752,13 @@ function addParticipantRow(data = null, shouldFocus = true) {
             <label>ニックネーム <span class="text-muted">(任意)</span></label>
             <input type="text" class="p-nick" value="${data && data.nickname ? data.nickname : ''}" placeholder="名簿用の愛称（空欄可）">
         </div>
+        ${document.getElementById('edit-entry-id')?.value ? `
+        <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
+            <label style="display:flex; align-items:center; gap:8px; color:#ef4444; font-weight:bold; cursor:pointer;">
+                <input type="checkbox" class="p-cancel" style="width:18px; height:18px;" ${data && data.status === 'cancelled' ? 'checked' : ''}>
+                この参加者をキャンセルする
+            </label>
+        </div>` : ''}
         <div class="row-actions">
             <button type="button" class="btn-icon remove-p" title="削除">&times;</button>
         </div>
