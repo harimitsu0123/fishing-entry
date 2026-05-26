@@ -4277,13 +4277,6 @@ window.showEntryDetails = function (id) {
     if (title) title.textContent = `[${entry.id}] ${entry.groupName} 詳細`;
 
     // Calculate Scores for display
-    let groupPoints = 0;
-    (entry.participants || []).forEach(p => {
-        const pA = parseInt(p.catchA || 0);
-        const pB = parseInt(p.catchB || 0);
-        groupPoints += (pA * 2) + pB;
-    });
-
     let participantsHtml = entry.participants.map((p, idx) => `
         <div style="padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; background: ${p.type === 'observer' ? '#f8f9fa' : '#fff'}">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -4293,10 +4286,6 @@ window.showEntryDetails = function (id) {
             <div style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">
                 ${genderLabels[p.gender] || '-'} / ${ageLabels[p.age] || '-'} / ${p.region || '地域不明'} / Tシャツ: ${p.tshirtSize || 'なし'}
             </div>
-            ${p.type === 'fisher' ? `
-            <div style="margin-top: 5px; font-weight: bold; color: var(--primary-color);">
-                ${p.catchA || 0}匹 (大物) / ${p.catchB || 0}匹 (その他)
-            </div>` : ''}
         </div>
     `).join('');
 
@@ -4307,7 +4296,6 @@ window.showEntryDetails = function (id) {
             <p><strong>メール:</strong> ${entry.email}</p>
             <p><strong>登録区分:</strong> <span class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}">${entry.source}</span></p>
             <p><strong>現在の状態:</strong> ${entry.status === 'checked-in' ? '✅ 受付済' : entry.status === 'cancelled' ? '🚫 キャンセル' : '⏳ 未受付'}</p>
-            <p><strong>得点合計:</strong> <span style="font-size: 1.2rem; font-weight: 900; color: var(--primary-color);">${groupPoints} pt</span></p>
         </div>
         <h4 style="margin-bottom: 0.8rem; font-size: 1rem; color: #475569;">参加者内訳 (${entry.participants.length}名)</h4>
         <div>${participantsHtml}</div>
