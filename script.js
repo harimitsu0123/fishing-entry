@@ -2249,11 +2249,12 @@ window.updateDashboard = function() {
             
             // Search logic using pArray
             const pNames = pArray.map(p => p.name).join(' ');
+            const pNicks = pArray.map(p => p.nickname || "").join(' ');
             const pRegions = pArray.map(p => p.region || "").join(' ');
             const pTshirts = pArray.map(p => p.tshirtSize || "").join(' ');
             const pGenders = pArray.map(p => p.gender ? genderLabels[p.gender] || "" : "").join(' ');
             
-            const combinedParticipantInfo = (pNames + " " + pRegions + " " + pTshirts + " " + pGenders).toLowerCase();
+            const combinedParticipantInfo = (pNames + " " + pNicks + " " + pRegions + " " + pTshirts + " " + pGenders).toLowerCase();
             const searchTermLower = searchTerm.toLowerCase();
             
             const safeId = e.id || "未採番";
@@ -3232,7 +3233,8 @@ function renderGenericCoordinatorView(sourceName, prefix) {
             // v8.1.41: Safety Guard
             const pArray = e.participants || [];
             const pNames = pArray.map(p => p.name).join(' ');
-            const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames}`.toLowerCase();
+            const pNicks = pArray.map(p => p.nickname || "").join(' ');
+            const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks}`.toLowerCase();
             return combined.includes(searchTerm);
         })
         .map(e => {
