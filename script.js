@@ -199,8 +199,6 @@ window.handleRegistration = async function() {
 
         const sourceEl = document.querySelector('input[name="reg-source"]:checked');
         const source = sourceEl ? sourceEl.value : '一般';
-        const fisherCount = participants.filter(p => p.type === 'fisher').length;
-        const observerCount = participants.filter(p => p.type === 'observer').length;
 
         const existingEntry = editId ? state.entries.find(en => en.id === editId) : null;
         const finalParticipants = participants.map((p, idx) => {
@@ -210,6 +208,9 @@ window.handleRegistration = async function() {
             }
             return { ...p, ikesuId: null, isLeader: false, status: 'pending' };
         });
+
+        const fisherCount = finalParticipants.filter(p => p.type === 'fisher' && p.status !== 'cancelled').length;
+        const observerCount = finalParticipants.filter(p => p.type === 'observer' && p.status !== 'cancelled').length;
 
         const entryData = {
             id: editId || null,
@@ -4278,10 +4279,17 @@ window.showEntryDetails = function (id) {
 
     // Calculate Scores for display
     let participantsHtml = entry.participants.map((p, idx) => `
-        <div style="padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; background: ${p.type === 'observer' ? '#f8f9fa' : '#fff'}">
+        <div style="padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; background: ${p.type === 'observer' ? '#f8f9fa' : '#fff'}; ${p.status === 'cancelled' ? 'opacity: 0.5;' : ''}">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <strong>${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}${p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '')}</strong>
-                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}">${p.type === 'fisher' ? '釣り' : '見学'}</span>
+                <strong style="${p.status === 'cancelled' ? 'text-decoration: line-through;' : ''}">${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}${p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '')}</strong>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}">${p.type === 'fisher' ? '釣り' : '見学'}</span>
+                    ${p.status === 'cancelled' ? 
+                        `<span class="badge" style="background:#f87171;">キャンセル済</span>
+                         <button class="btn-outline btn-small" style="padding: 2px 6px; font-size: 0.7rem; border-color: #10b981; color: #10b981;" onclick="restoreParticipant('${entry.id}', ${idx})">元に戻す</button>` :
+                        `<button class="btn-outline btn-small" style="padding: 2px 6px; font-size: 0.7rem; border-color: #f87171; color: #f87171;" onclick="cancelParticipant('${entry.id}', ${idx})">キャンセル</button>`
+                    }
+                </div>
             </div>
             <div style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">
                 ${genderLabels[p.gender] || '-'} / ${ageLabels[p.age] || '-'} / ${p.region || '地域不明'} / Tシャツ: ${p.tshirtSize || 'なし'}
@@ -4405,6 +4413,41 @@ window.resendEmail = async function (id) {
         console.error("Email resend failed:", e);
         showToast('❌ メールの再送に失敗しました。サーバー側のログを確認してください。', 'error');
     }
+};
+
+/**
+ * Individual Participant Cancellation
+ */
+window.cancelParticipant = async function(entryId, pIdx) {
+    if (!confirm('この参加者をキャンセルしますか？')) return;
+    const entry = state.entries.find(e => e.id === entryId);
+    if (!entry || !entry.participants[pIdx]) return;
+
+    entry.participants[pIdx].status = 'cancelled';
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled').length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled').length;
+    entry.lastModified = new Date().toLocaleString('ja-JP');
+    
+    await saveData();
+    showToast('参加者をキャンセルしました', 'success');
+    updateDashboard();
+    window.showEntryDetails(entryId);
+};
+
+window.restoreParticipant = async function(entryId, pIdx) {
+    if (!confirm('この参加者のキャンセルを取り消しますか？')) return;
+    const entry = state.entries.find(e => e.id === entryId);
+    if (!entry || !entry.participants[pIdx]) return;
+
+    entry.participants[pIdx].status = 'pending';
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled').length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled').length;
+    entry.lastModified = new Date().toLocaleString('ja-JP');
+    
+    await saveData();
+    showToast('参加者のキャンセルを取り消しました', 'success');
+    updateDashboard();
+    window.showEntryDetails(entryId);
 };
 
 /**
