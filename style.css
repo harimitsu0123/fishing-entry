@@ -201,6 +201,7 @@ body {
     cursor: pointer;
     user-select: none;
     letter-spacing: -0.02em;
+    touch-action: manipulation;
 }
 
 .version-badge {
@@ -2623,6 +2624,7 @@ table {
     opacity: 0.6;
     width: 100%;
     display: flex;
+    touch-action: manipulation;
     justify-content: center;
     text-align: center;
     border-top: 1px solid rgba(0, 0, 0, 0.05);

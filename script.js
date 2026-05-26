@@ -104,6 +104,11 @@ window.showConfirmation = function() {
     const repEmailConfirm = document.getElementById('rep-email-confirm').value;
     const memo = document.getElementById('entry-memo')?.value || '';
 
+    if (!groupName.trim() || !repName.trim() || !repPhone.trim() || !repEmail.trim()) {
+        showStatus("必須項目（グループ名、代表者名、電話番号、メールアドレス）を入力してください。", "error");
+        return;
+    }
+
     if (repEmail !== repEmailConfirm) {
         showStatus("メールアドレスが一致しません。もう一度ご確認ください。", "error");
         return;
@@ -514,7 +519,7 @@ window.handleSecureClick = function (e) {
     if (!window._lastClickTime) window._lastClickTime = 0;
 
     const now = Date.now();
-    if (now - window._lastClickTime > 3000) {
+    if (now - window._lastClickTime > 5000) {
         window._clickCount = 0;
     }
 
@@ -552,12 +557,17 @@ window.handleAdminLogin = function() {
         sessionStorage.setItem('isAdminAuth', 'true');
         
         // v8.9.67: Ensure we land on the dashboard after admin login
-        sessionStorage.setItem('currentViewId', 'dashboard-view');
-        sessionStorage.setItem('currentAdminTab', 'tab-list');
-        
         document.getElementById('admin-auth-modal').classList.add('hidden');
         showToast("管理者としてログインしました", "success");
-        setTimeout(() => location.reload(), 300);
+        
+        // Prevent mobile reload bugs by switching view directly without refresh
+        window.history.replaceState(null, '', window.location.pathname);
+        updateAdminToolbar();
+        const targetView = (typeof pendingView !== 'undefined' && pendingView) ? pendingView : 'dashboard-view';
+        sessionStorage.setItem('currentViewId', targetView);
+        sessionStorage.setItem('currentAdminTab', 'tab-list');
+        switchView(null, targetView);
+        if (typeof startAutoSync === 'function') startAutoSync();
     } else {
         const errDiv = document.getElementById('admin-auth-error');
         if (errDiv) errDiv.classList.remove('hidden');
@@ -1613,6 +1623,8 @@ function syncSettingsUI() {
     // v8.9.39: Sync maintenance mode checkbox
     const maintToggle = document.getElementById('maintenance-mode-toggle');
     if (maintToggle) maintToggle.checked = !!state.settings.maintenanceMode;
+    const soldoutToggle = document.getElementById('soldout-mode-toggle');
+    if (soldoutToggle) soldoutToggle.checked = !!state.settings.soldoutMode;
     
     // v8.4.2: Load manual adjustments
     updateIfInactive('adj-suiho-fishers', state.settings.adjSuihoFishers || 0);
@@ -4058,6 +4070,8 @@ async function handleSettingsUpdate(e) {
     
     const maintToggle = document.getElementById('maintenance-mode-toggle');
     if (maintToggle) state.settings.maintenanceMode = maintToggle.checked;
+    const soldoutToggle = document.getElementById('soldout-mode-toggle');
+    if (soldoutToggle) state.settings.soldoutMode = soldoutToggle.checked;
     applyMaintenanceMode();
 
     state.settings.adjSuihoFishers = getInt('adj-suiho-fishers');
@@ -4092,6 +4106,14 @@ function applyMaintenanceMode() {
     } else {
         document.body.classList.remove('maintenance-active');
         console.log(`BORIJIN: Maintenance Mode is ${state.settings.maintenanceMode ? 'ENABLED (but bypassed for admin)' : 'DISABLED'}`);
+    }
+
+    if (state.settings.soldoutMode && !isAdminAuth) {
+        document.body.classList.add('soldout-active');
+        console.log("BORIJIN: Sold Out Mode is ENABLED (Overlay active for non-admins)");
+    } else {
+        document.body.classList.remove('soldout-active');
+        console.log(`BORIJIN: Sold Out Mode is ${state.settings.soldoutMode ? 'ENABLED (but bypassed for admin)' : 'DISABLED'}`);
     }
 }
 

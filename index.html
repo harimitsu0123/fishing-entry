@@ -20,12 +20,14 @@
             color: #0f172a !important;
             line-height: 1.6;
         }
-        /* v8.9.8: Maintenance Mode Styles */
+        /* v8.9.8: Maintenance & Sold Out Mode Styles */
         body.maintenance-active .navbar,
-        body.maintenance-active main {
+        body.maintenance-active main,
+        body.soldout-active .navbar,
+        body.soldout-active main {
             display: none !important;
         }
-        .maintenance-overlay {
+        .maintenance-overlay, .soldout-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -35,7 +37,8 @@
             padding: 20px;
             font-family: 'Inter', sans-serif;
         }
-        body.maintenance-active .maintenance-overlay {
+        body.maintenance-active .maintenance-overlay,
+        body.soldout-active .soldout-overlay {
             display: flex;
         }
         .maintenance-card {
@@ -158,6 +161,27 @@
             </div>
             <!-- Bypass for admin: Click the footer small text to enter -->
             <button class="btn-text" style="opacity: 0.1; font-size: 0.7rem; margin-top: 2rem;" onclick="document.body.classList.remove('maintenance-active')">Admin Bypass</button>
+        </div>
+    </div>
+
+    <!-- v8.10.x: Sold Out Mode Overlay -->
+    <div id="soldout-mode" class="soldout-overlay">
+        <div class="maintenance-card">
+            <div class="maintenance-icon">🎉</div>
+            <h2>満員御礼</h2>
+            <p>
+                ご好評につき、<strong>現在の募集枠はすべて満員となりました</strong>。<br>
+                たくさんのお申し込み、誠にありがとうございます。
+            </p>
+            <div class="maintenance-info" style="background: #f0fdf4; color: #16a34a;">
+                キャンセル等による<strong>追加募集</strong>が発生した場合は、こちらのページまたは公式SNS等でご案内いたします。<br>
+                <small>※お問い合わせいただいても個別のご案内はできかねます。</small>
+            </div>
+            <div class="maintenance-footer">
+                釣り大会 実行委員会
+            </div>
+            <!-- Bypass for admin -->
+            <button class="btn-text" style="opacity: 0.1; font-size: 0.7rem; margin-top: 2rem;" onclick="document.body.classList.remove('soldout-active')">Admin Bypass</button>
         </div>
     </div>
 
@@ -586,6 +610,12 @@
                                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; background: #fff4e6; padding: 10px; border-radius: 8px; border: 1px solid #e67e22;">
                                     <input type="checkbox" id="maintenance-mode-toggle" style="width: 20px; height: 20px;">
                                     <span style="font-weight: bold; color: #e67e22;">メンテナンスモード（一般受付を停止する）</span>
+                                </label>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; background: #f0fdf4; padding: 10px; border-radius: 8px; border: 1px solid #22c55e;">
+                                    <input type="checkbox" id="soldout-mode-toggle" style="width: 20px; height: 20px;">
+                                    <span style="font-weight: bold; color: #16a34a;">満員御礼モード（一般受付を「満員御礼」表示にする）</span>
                                 </label>
                             </div>
                             <div class="form-group">
