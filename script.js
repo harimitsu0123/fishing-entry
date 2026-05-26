@@ -4296,6 +4296,7 @@ window.showEntryDetails = function (id) {
             <p><strong>メール:</strong> ${entry.email}</p>
             <p><strong>登録区分:</strong> <span class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}">${entry.source}</span></p>
             <p><strong>現在の状態:</strong> ${entry.status === 'checked-in' ? '✅ 受付済' : entry.status === 'cancelled' ? '🚫 キャンセル' : '⏳ 未受付'}</p>
+            ${entry.memo ? `<div style="margin-top: 0.8rem; padding: 0.8rem; background: #fff; border: 1px dashed #cbd5e1; border-radius: 6px;"><strong style="color:#64748b;">備考:</strong><br><span style="white-space: pre-wrap;">${entry.memo}</span></div>` : ''}
         </div>
         <h4 style="margin-bottom: 0.8rem; font-size: 1rem; color: #475569;">参加者内訳 (${entry.participants.length}名)</h4>
         <div>${participantsHtml}</div>
