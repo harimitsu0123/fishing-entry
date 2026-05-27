@@ -92,6 +92,13 @@ window.showConfirmation = function() {
         };
     });
 
+    for (let i = 0; i < participants.length; i++) {
+        if (!participants[i].name.trim()) {
+            showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+            return;
+        }
+    }
+
     if (participants.length === 0) {
         showStatus("参加者を1名以上登録してください。", "error");
         return;
@@ -114,8 +121,17 @@ window.showConfirmation = function() {
         return;
     }
 
-    const sourceEl = document.querySelector('input[name="reg-source"]:checked');
-    const source = sourceEl ? sourceEl.value : '一般';
+    for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
+        const sourceEl = document.querySelector('input[name="reg-source"]:checked');
+        const source = sourceEl ? sourceEl.value : '一般';
     const fisherCount = participants.filter(p => p.type === 'fisher').length;
 
     // v8.2.27: Capacity check in confirmation disabled per user request
@@ -198,6 +214,15 @@ window.handleRegistration = async function() {
                 isCancelledEdit: getCheck('.p-cancel')
             };
         });
+
+        for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
 
         const sourceEl = document.querySelector('input[name="reg-source"]:checked');
         const source = sourceEl ? sourceEl.value : '一般';
@@ -1717,7 +1742,7 @@ function addParticipantRow(data = null, shouldFocus = true) {
                 <label>性別 <span class="required">*</span></label>
                 <select class="p-gender" required>
                     <option value="" disabled ${!data ? 'selected' : ''}>選択...</option>
-                    ${Object.entries(genderLabels).map(([val, label]) => `<option value="${val}" ${data && data.gender === val ? 'selected' : ''}>${label}</option>`).join('')}
+                    ${Object.entries(genderLabels).filter(([val]) => val !== 'unknown' || (typeof isBypassAllowed === 'function' && isBypassAllowed()) || (data && data.gender === 'unknown')).map(([val, label]) => `<option value="${val}" ${data && data.gender === val ? 'selected' : ''}>${label}</option>`).join('')}
                 </select>
             </div>
         </div>
@@ -1726,7 +1751,7 @@ function addParticipantRow(data = null, shouldFocus = true) {
                 <label>年代 <span class="required">*</span></label>
                 <select class="p-age" required>
                     <option value="" disabled ${!data ? 'selected' : ''}>選択...</option>
-                    ${Object.entries(ageLabels).map(([val, label]) => `<option value="${val}" ${data && data.age === val ? 'selected' : ''}>${label}</option>`).join('')}
+                    ${Object.entries(ageLabels).filter(([val]) => val !== 'unknown' || (typeof isBypassAllowed === 'function' && isBypassAllowed()) || (data && data.age === 'unknown')).map(([val, label]) => `<option value="${val}" ${data && data.age === val ? 'selected' : ''}>${label}</option>`).join('')}
                 </select>
             </div>
             <div class="form-group" style="flex: 1; min-width: 140px;">
@@ -1740,7 +1765,8 @@ function addParticipantRow(data = null, shouldFocus = true) {
                     ${(() => {
                         // v7.8.6: Improved safety logic
                         const currentSize = data ? data.tshirtSize : '';
-                        let options = [...tshirtSizes];
+                        const isAdmin = typeof isBypassAllowed === 'function' && isBypassAllowed();
+                        let options = tshirtSizes.filter(s => s !== '？' || isAdmin || currentSize === '？');
                         if (currentSize && !options.includes(currentSize)) {
                             options.push(currentSize);
                         }
