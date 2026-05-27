@@ -2509,8 +2509,8 @@ window.renderIkesuPrintView = function() {
                             <tr style="height: 3.2rem;">
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.2rem;">${idx + 1}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; font-size: 1.1rem;">${p.groupName}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 2.2rem;">
-                                    ${p.name} ${p.nickname ? `<br><span style="font-size:1.3rem; font-weight:normal;">(${p.nickname})</span>` : ''}
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 2.6rem;">
+                                    ${p.name} ${p.nickname ? `<br><span style="font-size:1.0rem; font-weight:normal;">(${p.nickname})</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.1rem;">${genderLabels[p.gender] || '-'}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-weight: bold; font-size: 1.3rem;">${p.tshirtSize || '-'}</td>
@@ -2620,8 +2620,8 @@ window.renderIkesuResultView = function() {
                             <tr style="height: 3.2rem;">
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold; font-size: 1.2rem;">${pIdx + 1}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; font-size: 1rem; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${p.groupName}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 2.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    ${p.name} ${p.nickname ? `<br><span style="font-size:1.3rem; font-weight:normal;">(${p.nickname})</span>` : ''}
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 2.6rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    ${p.name} ${p.nickname ? `<br><span style="font-size:1.0rem; font-weight:normal;">(${p.nickname})</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
@@ -2733,8 +2733,8 @@ window.renderGroupPrintView = function() {
                         ${pArray.map((p, idx) => `
                         <tr style="height: 3.2rem;">
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.2rem;">${idx + 1}</td>
-                                <td style="border: 1px solid #000; padding: 0.4rem; font-size: 2.2rem; font-weight: 900;">
-                                    ${p.name} ${p.nickname ? `<br><span style="font-size:1.3rem; font-weight:normal;">(${p.nickname})</span>` : ''}
+                                <td style="border: 1px solid #000; padding: 0.4rem; font-size: 2.6rem; font-weight: 900;">
+                                    ${p.name} ${p.nickname ? `<br><span style="font-size:1.0rem; font-weight:normal;">(${p.nickname})</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.3rem; font-weight: 900;">${p.tshirtSize || '-'}</td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.1rem;">${p.type === 'fisher' ? '釣り' : '見学'}</td>
