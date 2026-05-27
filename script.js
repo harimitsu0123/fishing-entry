@@ -2497,10 +2497,10 @@ window.renderIkesuPrintView = function() {
                     <thead>
                         <tr style="background: #eee; color: #000; font-size: 1.1rem; height: 3.5rem;">
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 45px; text-align: center;">No</th>
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 180px; text-align: center;">グループ名</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 130px; text-align: center;">グループ名</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; text-align: center;">氏名</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 60px; text-align: center;">性別</th>
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 150px; text-align: center;">Tシャツ</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 120px; text-align: center;">Tシャツ</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; min-width: 120px; text-align: center;">備考</th>
                         </tr>
                     </thead>
@@ -2509,8 +2509,8 @@ window.renderIkesuPrintView = function() {
                             <tr style="height: 3.2rem;">
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.2rem;">${idx + 1}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; font-size: 1.1rem;">${p.groupName}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 1.5rem;">
-                                    ${p.name} ${p.nickname ? `<br><span style="font-size:0.9rem; font-weight:normal;">(${p.nickname})</span>` : ''}
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 1.8rem;">
+                                    ${p.name} ${p.nickname ? `<br><span style="font-size:1.1rem; font-weight:normal;">(${p.nickname})</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.1rem;">${genderLabels[p.gender] || '-'}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-weight: bold; font-size: 1.3rem;">${p.tshirtSize || '-'}</td>
@@ -2607,7 +2607,7 @@ window.renderIkesuResultView = function() {
                     <thead>
                         <tr style="background: #eee; color: #000; font-size: 1.1rem; height: 3.5rem;">
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 45px; text-align: center;">No</th>
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 160px; text-align: center;">グループ名</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 130px; text-align: center;">グループ名</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; text-align: center;">氏名</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 95px; background: #ffebee !important; color: #d32f2f !important; text-align: center;">鯛・その他</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 95px; background: #e3f2fd !important; color: #1976d2 !important; text-align: center;">青物</th>
@@ -2620,8 +2620,8 @@ window.renderIkesuResultView = function() {
                             <tr style="height: 3.2rem;">
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold; font-size: 1.2rem;">${pIdx + 1}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; font-size: 1rem; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${p.groupName}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 1.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    ${p.name} ${p.nickname ? `<br><span style="font-size:0.9rem; font-weight:normal;">(${p.nickname})</span>` : ''}
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 1.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    ${p.name} ${p.nickname ? `<br><span style="font-size:1.1rem; font-weight:normal;">(${p.nickname})</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
@@ -2733,8 +2733,8 @@ window.renderGroupPrintView = function() {
                         ${pArray.map((p, idx) => `
                         <tr style="height: 3.2rem;">
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.2rem;">${idx + 1}</td>
-                                <td style="border: 1px solid #000; padding: 0.4rem; font-size: 1.5rem; font-weight: 900;">
-                                    ${p.name} ${p.nickname ? `<br><span style="font-size:0.9rem; font-weight:normal;">(${p.nickname})</span>` : ''}
+                                <td style="border: 1px solid #000; padding: 0.4rem; font-size: 1.8rem; font-weight: 900;">
+                                    ${p.name} ${p.nickname ? `<br><span style="font-size:1.1rem; font-weight:normal;">(${p.nickname})</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.3rem; font-weight: 900;">${p.tshirtSize || '-'}</td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.1rem;">${p.type === 'fisher' ? '釣り' : '見学'}</td>
