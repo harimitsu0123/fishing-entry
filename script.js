@@ -218,8 +218,8 @@ window.handleRegistration = async function() {
             return { ...cleanP, ikesuId: oldP ? oldP.ikesuId : null, isLeader: oldP ? oldP.isLeader : false, status };
         });
 
-        const fisherCount = finalParticipants.filter(p => p.type === 'fisher' && p.status !== 'cancelled').length;
-        const observerCount = finalParticipants.filter(p => p.type === 'observer' && p.status !== 'cancelled').length;
+        const fisherCount = finalParticipants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
+        const observerCount = finalParticipants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
 
         const entryData = {
             id: editId || null,
@@ -1628,6 +1628,7 @@ function syncSettingsUI() {
     updateIfInactive('capacity-observers', state.settings.capacityObservers);
     updateIfInactive('registration-start', state.settings.startTime);
     updateIfInactive('registration-deadline', state.settings.deadline);
+    updateIfInactive('cancel-deadline', state.settings.cancelDeadline);
     updateIfInactive('admin-password-set', state.settings.adminPassword);
     
     // v8.9.39: Sync maintenance mode checkbox
@@ -1752,13 +1753,27 @@ function addParticipantRow(data = null, shouldFocus = true) {
             <label>ニックネーム <span class="text-muted">(任意)</span></label>
             <input type="text" class="p-nick" value="${data && data.nickname ? data.nickname : ''}" placeholder="名簿用の愛称（空欄可）">
         </div>
-        ${document.getElementById('edit-entry-id')?.value ? `
-        <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
-            <label style="display:flex; align-items:center; gap:8px; color:#ef4444; font-weight:bold; cursor:pointer;">
-                <input type="checkbox" class="p-cancel" style="width:18px; height:18px;" ${data && data.status === 'cancelled' ? 'checked' : ''}>
-                この参加者をキャンセルする
-            </label>
-        </div>` : ''}
+        ${(() => {
+            if (!document.getElementById('edit-entry-id')?.value) return '';
+            
+            const isCancelDeadlinePassed = state.settings.cancelDeadline && new Date() > new Date(state.settings.cancelDeadline);
+            const isAdmin = typeof isBypassAllowed === 'function' && isBypassAllowed();
+            
+            if (isCancelDeadlinePassed && !isAdmin) {
+                if (data && data.status === 'cancelled') {
+                    return `<div class="form-group" style="margin-top: 10px; margin-bottom: 0;"><span style="color:#ef4444; font-weight:bold;">※キャンセル済</span></div>`;
+                }
+                return '';
+            }
+
+            return `
+            <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
+                <label style="display:flex; align-items:center; gap:8px; color:#ef4444; font-weight:bold; cursor:pointer;">
+                    <input type="checkbox" class="p-cancel" style="width:18px; height:18px;" ${data && data.status === 'cancelled' ? 'checked' : ''}>
+                    この参加者をキャンセルする
+                </label>
+            </div>`;
+        })()}
         <div class="row-actions">
             <button type="button" class="btn-icon remove-p" title="削除">&times;</button>
         </div>
@@ -2274,11 +2289,12 @@ window.updateDashboard = function() {
             const rep = pArray[0] || { name: e.representative, nickname: '', gender: '' };
             const getGenderMark = (p) => p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
             
+            const repDecoration = rep.status === 'cancelled' ? 'text-decoration:line-through; opacity:0.6;' : '';
             const pSummary = `
                 <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:400px; font-size:0.95rem;">
-                    <strong style="font-weight:800; color:var(--text-color);">${rep.name}</strong>${rep.nickname ? `<small>(${rep.nickname})</small>` : ''}${getGenderMark(rep)}
+                    <strong style="font-weight:800; color:var(--text-color); ${repDecoration}">${rep.name}</strong>${rep.nickname ? `<small>(${rep.nickname})</small>` : ''}${getGenderMark(rep)}
                     <span style="color:#64748b; font-size:0.8rem; margin-left:4px;">
-                        ${pArray.length > 1 ? `+ ${pArray.slice(1).map(p => p.name).join(', ')}` : ''}
+                        ${pArray.length > 1 ? `+ ${pArray.slice(1).map(p => `<span style="${p.status === 'cancelled' ? 'text-decoration:line-through; opacity:0.6;' : ''}">${p.name}</span>`).join(', ')}` : ''}
                     </span>
                 </div>
             `;
@@ -3525,6 +3541,9 @@ window.updateParticipantStatus = function (entryId, pIdx, status) {
     // v7.9.3: Toggle logic - if already active, revert to pending
     const newStatus = isTogglingOff ? 'pending' : status;
     entry.participants[pIdx].status = newStatus;
+    
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
 
     // Sync group-level flags (for backward compatibility and stats)
     syncGroupStatusFromParticipants(entry);
@@ -3553,6 +3572,10 @@ window.updateGroupStatus = function (entryId, status) {
         }
         p.status = status;
     });
+
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
+
     syncGroupStatusFromParticipants(entry);
 
     if (status === 'checked-in') {
@@ -4085,6 +4108,7 @@ async function handleSettingsUpdate(e) {
     
     state.settings.startTime = getVal('registration-start');
     state.settings.deadline = getVal('registration-deadline');
+    state.settings.cancelDeadline = getVal('cancel-deadline');
     state.settings.adminPassword = getVal('admin-password-set');
     
     const maintToggle = document.getElementById('maintenance-mode-toggle');
@@ -4442,8 +4466,8 @@ window.cancelParticipant = async function(entryId, pIdx) {
     if (!entry || !entry.participants[pIdx]) return;
 
     entry.participants[pIdx].status = 'cancelled';
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled').length;
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
     entry.lastModified = new Date().toLocaleString('ja-JP');
     
     await saveData();
@@ -4458,8 +4482,8 @@ window.restoreParticipant = async function(entryId, pIdx) {
     if (!entry || !entry.participants[pIdx]) return;
 
     entry.participants[pIdx].status = 'pending';
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled').length;
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
     entry.lastModified = new Date().toLocaleString('ja-JP');
     
     await saveData();
@@ -4661,9 +4685,9 @@ window.renderRankings = function() {
     const ikesuScores = {}; // { ikesuId: { total: 0, count: 0, name: "" } }
 
     state.entries.forEach(entry => {
-        if (entry.status === 'cancelled') return;
+        if (entry.status === 'cancelled' || entry.status === 'absent') return;
         (entry.participants || []).forEach(p => {
-            if (p.type === 'fisher') {
+            if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
                 const cA = parseInt(p.catchA || 0);
                 const cB = parseInt(p.catchB || 0);
                 const score = cA + (cB * 2);
@@ -4693,7 +4717,7 @@ window.renderRankings = function() {
 
     // --- Render Individual Table ---
     // v8.10.0: Tie-breaking rule (Score > Aomono > ID)
-    individualData.sort((a, b) => (b.score - a.score) || (b.cB - a.cB) || a.id.localeCompare(b.id));
+    individualData.sort((a, b) => (b.cB - a.cB) || (b.cA - a.cA));
     
     // v8.10.0: Apply "Award Winners Only" filter if active
     const awardFilterBtn = document.getElementById('award-filter-btn');
@@ -4719,8 +4743,17 @@ window.renderRankings = function() {
                     </tr>
                 </thead>
                 <tbody>`;
+        let currentRank = 1;
+        let lastP = null;
+
         filteredData.slice(0, 100).forEach((p, idx) => {
-            const rank = idx + 1;
+            if (lastP && p.cB === lastP.cB && p.cA === lastP.cA) {
+                // currentRank はそのまま
+            } else {
+                currentRank = idx + 1;
+            }
+            lastP = p;
+            const rank = currentRank;
             const rankMark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
             const awardStar = p.isAwardWinner ? '<span style="color:#f1c40f; margin-left:4px;">🏆</span>' : '';
             
@@ -4814,9 +4847,9 @@ window.renderDayResults = function() {
     
     const rows = [];
     state.entries.forEach(entry => {
-        if (entry.status === 'cancelled') return;
+        if (entry.status === 'cancelled' || entry.status === 'absent') return;
         (entry.participants || []).forEach(p => {
-            if (p.type === 'fisher') {
+            if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
                 if (filterIkesuId && p.ikesuId !== filterIkesuId) return;
                 
                 const cA = parseInt(p.catchA || 0);
@@ -5259,7 +5292,7 @@ window.logChange = function(entry, type, oldEntry = null) {
         
         if ((oldEntry.phone || oldEntry.repPhone) !== (entry.phone || entry.repPhone)) details.push(`電話番号を変更`);
         if ((oldEntry.email || oldEntry.repEmail) !== (entry.email || entry.repEmail)) details.push(`メールアドレスを変更`);
-        if (oldEntry.memo !== entry.memo) details.push(`備考欄を更新`);
+        if ((oldEntry.memo || '') !== (entry.memo || '')) details.push(`備考欄を更新`);
         
         const oldPCount = (oldEntry.participants || []).length;
         const newPCount = (entry.participants || []).length;
@@ -5274,6 +5307,11 @@ window.logChange = function(entry, type, oldEntry = null) {
                 if (oldP.gender !== p.gender) details.push(`参加者${i+1}性別の変更`);
                 if (oldP.tshirtSize !== p.tshirtSize) details.push(`参加者${i+1}Tシャツサイズ: ${oldP.tshirtSize} → ${p.tshirtSize}`);
                 if (oldP.type !== p.type) details.push(`参加者${i+1}種別: ${oldP.type === 'fisher' ? '釣り' : '見学'} → ${p.type === 'fisher' ? '釣り' : '見学'}`);
+                if ((oldP.status || 'pending') !== (p.status || 'pending')) {
+                    if (p.status === 'cancelled') details.push(`参加者${i+1}をキャンセル`);
+                    else if (oldP.status === 'cancelled') details.push(`参加者${i+1}のキャンセルを取り消し`);
+                    else details.push(`参加者${i+1}ステータス変更: ${oldP.status || 'pending'} → ${p.status}`);
+                }
             } else {
                 details.push(`参加者追加: ${p.name}`);
             }
@@ -5310,6 +5348,21 @@ window.deleteLogItem = function(logId) {
 window.renderChangeLog = function() {
     const container = document.getElementById('change-log-container');
     if (!container) return;
+
+    state.changeLog = (state.changeLog || []).filter(log => {
+        if (log.details && log.details.length === 1 && log.details[0] === '備考欄を更新') {
+            const currentEntry = state.entries.find(e => e.id === log.entryId);
+            if (currentEntry && (!currentEntry.memo || currentEntry.memo.trim() === '')) {
+                const hasCancelled = currentEntry.participants && currentEntry.participants.some(p => p.status === 'cancelled');
+                if (hasCancelled) {
+                    log.details[0] = '一部参加者をキャンセル';
+                    return true;
+                }
+                return false;
+            }
+        }
+        return true;
+    });
 
     if (!state.changeLog || state.changeLog.length === 0) {
         container.innerHTML = '<div class="text-center py-5 text-muted">変更履歴はありません</div>';
