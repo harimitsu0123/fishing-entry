@@ -3047,9 +3047,13 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
 
     validEntries.forEach(e => {
         (e.participants || []).forEach(p => {
-            if (p.age) ageCount[p.age] = (ageCount[p.age] || 0) + 1;
-            if (p.gender) genderCount[p.gender] = (genderCount[p.gender] || 0) + 1;
-            if (p.region) regionCount[p.region] = (regionCount[p.region] || 0) + 1;
+            if (p.status === 'cancelled' || p.status === 'absent') return;
+            const a = p.age || 'unknown';
+            ageCount[a] = (ageCount[a] || 0) + 1;
+            const g = p.gender || 'unknown';
+            genderCount[g] = (genderCount[g] || 0) + 1;
+            const r = p.region ? p.region.trim() : '未入力';
+            regionCount[r] = (regionCount[r] || 0) + 1;
         });
     });
 
@@ -3092,7 +3096,7 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
     if (regionList) {
         regionList.innerHTML = Object.entries(regionCount)
             .sort((a,b) => b[1] - a[1])
-            .slice(0, 15)
+
             .map(([reg, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${reg}</span>
@@ -3109,7 +3113,7 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
         
         validEntries.forEach(e => {
             (e.participants || []).forEach(p => {
-                if (p && p.tshirtSize) {
+                if (p && p.tshirtSize && p.status !== 'cancelled' && p.status !== 'absent') {
                     const normalized = normalizeTshirtSize(p.tshirtSize);
                     tshirtCount[normalized] = (tshirtCount[normalized] || 0) + 1;
                 }

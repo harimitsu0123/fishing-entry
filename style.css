@@ -870,6 +870,9 @@ textarea:focus {
     display: flex;
     flex-direction: column;
     gap: 0.2rem; /* Extremely tight gap (v7.8.3) */
+    max-height: 350px;
+    overflow-y: auto;
+    padding-right: 0.3rem;
 }
 
 .breakdown-grid {
