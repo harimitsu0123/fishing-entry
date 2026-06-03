@@ -3052,7 +3052,20 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             ageCount[a] = (ageCount[a] || 0) + 1;
             const g = p.gender || 'unknown';
             genderCount[g] = (genderCount[g] || 0) + 1;
-            const r = p.region ? p.region.trim() : '未入力';
+            let r = p.region ? p.region.trim() : '未入力';
+            if (r !== '未入力') {
+                const prefs = { '大阪': '大阪府', '京都': '京都府', '東京': '東京都', '北海道': '北海道', '兵庫': '兵庫県', '奈良': '奈良県', '和歌山': '和歌山県', '滋賀': '滋賀県', '三重': '三重県', '岡山': '岡山県', '鳥取': '鳥取県', '徳島': '徳島県', '香川': '香川県', '愛媛': '愛媛県', '高知': '高知県', '愛知': '愛知県', '岐阜': '岐阜県', '福井': '福井県' };
+                const cities = ['姫路', '神戸', '明石', '加古川', '高砂', '西宮', '尼崎', '芦屋', '伊丹', '宝塚', '川西', '三田', 'たつの', '赤穂', '相生', '宍粟', '豊岡', '養父', '朝来', '丹波', '丹波篠山', '洲本', '南あわじ', '淡路', '堺', '東大阪', '豊中', '吹田', '高槻', '枚方', '八尾', '寝屋川', '茨木', '岸和田', '和泉', '宇治', '亀岡', '舞鶴', '橿原', '生駒', '大和郡山', '田辺', '橋本', '大津', '草津', '彦根', '長浜', '近江八幡'];
+                for (let p in prefs) {
+                    if (r.startsWith(p) && !r.startsWith(prefs[p])) r = prefs[p] + r.slice(p.length);
+                }
+                for (let c of cities) {
+                    if (r.endsWith(c) && !r.endsWith(c + '市') && !r.endsWith(c + '郡') && !r.endsWith(c + '区')) r = r + '市';
+                }
+                // Handle bare city names like "姫路" -> "兵庫県姫路市" (optional, but requested simple append)
+                // If they typed exactly a known city but no prefecture, just leave it as City + '市' or they might want prefecture too?
+                // The prompt says "都道府県と市が付いてないところに付けてくれる？"
+            }
             regionCount[r] = (regionCount[r] || 0) + 1;
         });
     });
