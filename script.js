@@ -1661,6 +1661,8 @@ function syncSettingsUI() {
     if (maintToggle) maintToggle.checked = !!state.settings.maintenanceMode;
     const soldoutToggle = document.getElementById('soldout-mode-toggle');
     if (soldoutToggle) soldoutToggle.checked = !!state.settings.soldoutMode;
+    const closedToggle = document.getElementById('closed-mode-toggle');
+    if (closedToggle) closedToggle.checked = !!state.settings.closedMode;
     
     // v8.4.2: Load manual adjustments
     updateIfInactive('adj-suiho-fishers', state.settings.adjSuihoFishers || 0);
@@ -4166,6 +4168,8 @@ async function handleSettingsUpdate(e) {
     if (maintToggle) state.settings.maintenanceMode = maintToggle.checked;
     const soldoutToggle = document.getElementById('soldout-mode-toggle');
     if (soldoutToggle) state.settings.soldoutMode = soldoutToggle.checked;
+    const closedToggle = document.getElementById('closed-mode-toggle');
+    if (closedToggle) state.settings.closedMode = closedToggle.checked;
     applyMaintenanceMode();
 
     state.settings.adjSuihoFishers = getInt('adj-suiho-fishers');
@@ -4208,6 +4212,14 @@ function applyMaintenanceMode() {
     } else {
         document.body.classList.remove('soldout-active');
         console.log(`BORIJIN: Sold Out Mode is ${state.settings.soldoutMode ? 'ENABLED (but bypassed for admin)' : 'DISABLED'}`);
+    }
+
+    if (state.settings.closedMode && !isAdminAuth) {
+        document.body.classList.add('closed-active');
+        console.log("BORIJIN: Closed Mode is ENABLED (Overlay active for non-admins)");
+    } else {
+        document.body.classList.remove('closed-active');
+        console.log(`BORIJIN: Closed Mode is ${state.settings.closedMode ? 'ENABLED (but bypassed for admin)' : 'DISABLED'}`);
     }
 }
 

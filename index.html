@@ -24,10 +24,12 @@
         body.maintenance-active .navbar,
         body.maintenance-active main,
         body.soldout-active .navbar,
-        body.soldout-active main {
+        body.soldout-active main,
+        body.closed-active .navbar,
+        body.closed-active main {
             display: none !important;
         }
-        .maintenance-overlay, .soldout-overlay {
+        .maintenance-overlay, .soldout-overlay, .closed-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -38,7 +40,8 @@
             font-family: 'Inter', sans-serif;
         }
         body.maintenance-active .maintenance-overlay,
-        body.soldout-active .soldout-overlay {
+        body.soldout-active .soldout-overlay,
+        body.closed-active .closed-overlay {
             display: flex;
         }
         .maintenance-card {
@@ -182,6 +185,27 @@
             </div>
             <!-- Bypass for admin -->
             <button class="btn-text" style="opacity: 0.1; font-size: 0.7rem; margin-top: 2rem;" onclick="document.body.classList.remove('soldout-active')">Admin Bypass</button>
+        </div>
+    </div>
+
+    <!-- v8.12.x: Closed Mode Overlay -->
+    <div id="closed-mode" class="closed-overlay">
+        <div class="maintenance-card">
+            <div class="maintenance-icon">🏁</div>
+            <h2>受付終了</h2>
+            <p>
+                本大会の<strong>参加受付は終了いたしました</strong>。<br>
+                たくさんのお申し込み、誠にありがとうございました。
+            </p>
+            <div class="maintenance-info" style="background: #f8fafc; color: #475569;">
+                大会に関する最新情報やご案内については、公式SNS等で随時お知らせいたします。<br>
+                <small>※すでにエントリー済みの方へは、別途ご案内メールをお送りしております。</small>
+            </div>
+            <div class="maintenance-footer">
+                釣り大会 実行委員会
+            </div>
+            <!-- Bypass for admin -->
+            <button class="btn-text" style="opacity: 0.1; font-size: 0.7rem; margin-top: 2rem;" onclick="document.body.classList.remove('closed-active')">Admin Bypass</button>
         </div>
     </div>
 
@@ -625,6 +649,12 @@
                                     <span style="font-weight: bold; color: #16a34a;">満員御礼モード（一般受付を「満員御礼」表示にする）</span>
                                 </label>
                             </div>
+                            <div class="form-group mb-3">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #94a3b8;">
+                                    <input type="checkbox" id="closed-mode-toggle" style="width: 20px; height: 20px;">
+                                    <span style="font-weight: bold; color: #475569;">受付終了モード（一般受付を「受付終了」表示にする）</span>
+                                </label>
+                            </div>
                             <div class="form-group">
                                 <label for="admin-password-set">管理画面パスワード</label>
                                 <input type="text" id="admin-password-set">
@@ -1025,6 +1055,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=8.11.5"></script>
+    <script src="script.js?v=8.12.0"></script>
 </body>
 </html>
