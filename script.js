@@ -4800,6 +4800,14 @@ window.renderRankings = function() {
         let currentRank = 1;
         let lastP = null;
 
+        // v8.10.1: Pre-calculate ties for warning badge
+        for (let i = 0; i < filteredData.length; i++) {
+            let isTie = false;
+            if (i > 0 && filteredData[i].cA === filteredData[i-1].cA && filteredData[i].cB === filteredData[i-1].cB) isTie = true;
+            if (i < filteredData.length - 1 && filteredData[i].cA === filteredData[i+1].cA && filteredData[i].cB === filteredData[i+1].cB) isTie = true;
+            filteredData[i].isTie = isTie;
+        }
+
         filteredData.slice(0, 100).forEach((p, idx) => {
             if (lastP && p.cB === lastP.cB && p.cA === lastP.cA) {
                 // currentRank はそのまま
@@ -4810,6 +4818,7 @@ window.renderRankings = function() {
             const rank = currentRank;
             const rankMark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
             const awardStar = p.isAwardWinner ? '<span style="color:#f1c40f; margin-left:4px;">🏆</span>' : '';
+            const tieBadge = p.isTie ? '<span style="font-size:0.75rem; color:#eab308; margin-left:4px; font-weight:bold;" title="完全同点（ジャンケン等で決定してください）">⚠️同着</span>' : '';
             
             html += `
                 <tr style="border-bottom:1px solid #f1f5f9;">
@@ -4819,12 +4828,15 @@ window.renderRankings = function() {
                             <strong style="font-size:1.05rem;">${p.name}</strong>
                             ${p.nickname ? `<span style="font-size:0.85rem; color:#64748b;">(${p.nickname})</span>` : ''}
                             ${awardStar}
+                            ${tieBadge}
                             <span style="font-size:0.75rem; background:#f1f5f9; padding:1px 5px; border-radius:4px; color:#475569; border:1px solid #e2e8f0;">${p.groupName}</span>
                         </div>
                     </td>
                     <td style="padding:8px; text-align:right; font-weight:bold; white-space:nowrap;">
-                        <div style="font-size:1.1rem; color:var(--primary-color);">${p.score}<small style="font-size:0.7rem; margin-left:1px;">点</small></div>
-                        <div style="font-size:0.65rem; color:#94a3b8; margin-top:-2px;">鯛:${p.cA} / 青:${p.cB}</div>
+                        <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px;">
+                            <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">(マダイ${p.cA} 青物${p.cB})</span>
+                            <span style="font-size:1.1rem; color:var(--primary-color);">${p.score}<small style="font-size:0.7rem; margin-left:1px;">点</small></span>
+                        </div>
                     </td>
                 </tr>`;
         });
