@@ -4919,9 +4919,6 @@ window.renderDayResults = function() {
                         <td class="text-center">${cA}</td>
                         <td class="text-center">${cB}</td>
                         <td class="text-center" style="font-weight:900; color:var(--primary-color); font-size:1.1rem;">${score}pt</td>
-                        <td class="no-print">
-                            <button class="btn-outline btn-small" onclick="window.openDayEditModal('${entry.id}', '${p.name}')">修正</button>
-                        </td>
                     </tr>`);
             }
         });
@@ -4934,9 +4931,7 @@ window.renderDayResults = function() {
     }
 };
 
-window.openDayEditModal = function(entryId, pName) {
-    alert(`個別修正機能は「釣果入力(外部)」アプリから、${entryId} (${pName}) を選択して行ってください。`);
-};
+// window.openDayEditModal removed as edit is now fully external
 
 /* --- LEADER ENTRY LOGIC --- */
 function renderLeaderEntryForm() {

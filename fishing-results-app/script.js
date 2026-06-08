@@ -155,11 +155,20 @@ function renderParticipantList() {
                     </div>
                     <div class="p-scores-row">
                         <div class="p-input-group">
-                            <input type="number" class="inline-input red" value="${cA}" min="0" 
-                                onchange="updateInlineScore('${entry.id}', ${idx}, 'catchA', this.value)">
-                            <input type="number" class="inline-input blue" value="${cB}" min="0" 
-                                onchange="updateInlineScore('${entry.id}', ${idx}, 'catchB', this.value)">
-                            <span class="score-badge total">${points}pt</span>
+                            <div style="display:flex; flex-direction:column; align-items:center;">
+                                <span style="font-size:0.65rem; color:#ef4444; font-weight:bold; margin-bottom:2px;">マダイ等</span>
+                                <input type="number" class="inline-input red" value="${cA}" min="0" 
+                                    onchange="updateInlineScore('${entry.id}', ${idx}, 'catchA', this.value)">
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:center;">
+                                <span style="font-size:0.65rem; color:#3b82f6; font-weight:bold; margin-bottom:2px;">青物等</span>
+                                <input type="number" class="inline-input blue" value="${cB}" min="0" 
+                                    onchange="updateInlineScore('${entry.id}', ${idx}, 'catchB', this.value)">
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:center;">
+                                <span style="font-size:0.65rem; color:#64748b; font-weight:bold; margin-bottom:2px;">合計</span>
+                                <span class="score-badge total" style="height:40px; display:flex; align-items:center;">${points}pt</span>
+                            </div>
                         </div>
                     </div>
                 `;
