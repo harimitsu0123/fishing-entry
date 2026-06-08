@@ -364,6 +364,7 @@ function showToast(msg, type = "info") {
     toast.className = `toast ${type}`;
     toast.textContent = msg;
     container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
 }
 
 window.generateMockCatchData = async function() {
