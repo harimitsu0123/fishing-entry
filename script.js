@@ -1551,22 +1551,32 @@ window.renderAwardsPreview = function() {
     const tobis = config.tobiList.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
 
     let html = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:1rem;">';
+    
+    let currentRank = 1;
     individuals.forEach((p, i) => {
-        const rank = i + 1;
-        const isTop = rank <= config.topCount;
-        const isTobi = tobis.includes(rank);
+        if (i > 0 && individuals[i].points === individuals[i-1].points && individuals[i].cA === individuals[i-1].cA) {
+            // same rank
+        } else {
+            currentRank = i + 1;
+        }
+        const rank = currentRank;
         
-        if (isTop || isTobi || p.isAwardWinner) {
-            const badge = isTop ? '🏆 入賞' : (isTobi ? '🎯 飛び賞' : '🎖️ 特別賞');
-            const bg = isTop ? '#fef3c7' : (isTobi ? '#eff6ff' : '#f3f4f6');
-            const border = isTop ? '#f59e0b' : (isTobi ? '#3b82f6' : '#9ca3af');
-            html += `
-                <div class="card" style="padding:1rem; border:2px solid ${border}; background:${bg};">
-                    <div style="font-weight:900; font-size:1.2rem; color:#1e293b;">${rank}位: ${p.name} 様</div>
-                    <div style="font-size:0.8rem; color:#64748b; margin-bottom:0.5rem;">${p.group} / ${p.points}pt</div>
-                    <div><span class="badge" style="background:${border}; color:white; font-weight:bold; padding:4px 8px;">${badge}</span></div>
-                </div>
-            `;
+        if (p.points > 0 || p.isAwardWinner) {
+            const isTop = (p.points > 0 && rank <= config.topCount);
+            const isTobi = (p.points > 0 && tobis.includes(rank));
+            
+            if (isTop || isTobi || p.isAwardWinner) {
+                const badge = isTop ? '🏆 入賞' : (isTobi ? '🎯 飛び賞' : '🎖️ 特別賞');
+                const bg = isTop ? '#fef3c7' : (isTobi ? '#eff6ff' : '#f3f4f6');
+                const border = isTop ? '#f59e0b' : (isTobi ? '#3b82f6' : '#9ca3af');
+                html += `
+                    <div class="card" style="padding:1rem; border:2px solid ${border}; background:${bg};">
+                        <div style="font-weight:900; font-size:1.2rem; color:#1e293b;">${rank}位: ${p.name} 様</div>
+                        <div style="font-size:0.8rem; color:#64748b; margin-bottom:0.5rem;">${p.group} / ${p.points}pt</div>
+                        <div><span class="badge" style="background:${border}; color:white; font-weight:bold; padding:4px 8px;">${badge}</span></div>
+                    </div>
+                `;
+            }
         }
     });
     html += '</div>';
@@ -4606,7 +4616,9 @@ async function exportGroupsCSV() {
         e.timestamp,
         `"${(e.memo || "").replace(/\n/g, " ")}"`
     ]);
-    downloadCSV("groups_export.csv", headers, rows);
+    const d = new Date();
+    const dateStr = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    downloadCSV(`グループ名簿_${dateStr}.csv`, headers, rows);
 }
 
 async function exportParticipantsCSV() {
@@ -4633,7 +4645,9 @@ async function exportParticipantsCSV() {
             ]);
         });
     });
-    downloadCSV("participants_export.csv", headers, rows);
+    const d = new Date();
+    const dateStr = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    downloadCSV(`参加者名簿_${dateStr}.csv`, headers, rows);
 }
 
 // v8.4.3: Bulk Email Helpers
@@ -4772,11 +4786,27 @@ window.renderRankings = function() {
     // --- Render Individual Table ---
     // v8.10.0: Tie-breaking rule (Score > Aomono > ID)
     individualData.sort((a, b) => (b.cB - a.cB) || (b.cA - a.cA));
+
+    const config = state.settings.rankingConfig || { topCount: 3, tobiList: "5,10,15,20,25,30" };
+    const tobis = config.tobiList.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+    let tmpRank = 1;
+    for (let i = 0; i < individualData.length; i++) {
+        if (i > 0 && individualData[i].cB === individualData[i-1].cB && individualData[i].cA === individualData[i-1].cA) {
+            // keep tmpRank
+        } else {
+            tmpRank = i + 1;
+        }
+        if (individualData[i].score > 0 && (tmpRank <= config.topCount || tobis.includes(tmpRank))) {
+            individualData[i].isAutoAward = true;
+        } else {
+            individualData[i].isAutoAward = false;
+        }
+    }
     
     // v8.10.0: Apply "Award Winners Only" filter if active
     const awardFilterBtn = document.getElementById('award-filter-btn');
     const showOnlyAwards = awardFilterBtn && awardFilterBtn.classList.contains('active');
-    const filteredData = showOnlyAwards ? individualData.filter(p => p.isAwardWinner) : individualData;
+    const filteredData = showOnlyAwards ? individualData.filter(p => p.isAwardWinner || p.isAutoAward) : individualData;
     
     // v8.10.0: Update title based on filter state
     const titleText = document.getElementById('ranking-title-text');
@@ -4819,7 +4849,7 @@ window.renderRankings = function() {
             lastP = p;
             const rank = currentRank;
             const rankMark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
-            const awardStar = p.isAwardWinner ? '<span style="color:#f1c40f; margin-left:4px;">🏆</span>' : '';
+            const awardStar = (p.isAwardWinner || p.isAutoAward) ? '<span style="color:#f1c40f; margin-left:4px;">🏆</span>' : '';
             const tieBadge = p.isTie ? '<span style="font-size:0.75rem; color:#eab308; margin-left:4px; font-weight:bold;" title="完全同点（ジャンケン等で決定してください）">⚠️同着</span>' : '';
             
             html += `
@@ -4837,7 +4867,7 @@ window.renderRankings = function() {
                     <td style="padding:8px; text-align:right; font-weight:bold; white-space:nowrap;">
                         <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px;">
                             <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">(マダイ${p.cA} 青物${p.cB})</span>
-                            <span style="font-size:1.1rem; color:var(--primary-color);">${p.score}<small style="font-size:0.7rem; margin-left:1px;">点</small></span>
+                            <span style="font-size:1.6rem; font-weight:900; line-height:1; color:var(--primary-color);">${p.score}<small style="font-size:0.8rem; margin-left:1px;">点</small></span>
                         </div>
                     </td>
                 </tr>`;
