@@ -265,7 +265,8 @@ window.handleRegistration = async function() {
             timestamp: existingEntry ? existingEntry.timestamp : new Date().toLocaleString('ja-JP'),
             lastUpdated: new Date().toLocaleString('ja-JP'),
             lastModified: new Date().toLocaleString('ja-JP'),
-            _ts: Date.now()
+            _ts: Date.now(),
+            userModified: (editId && !isAdminAuth && !isAdminAuthAction) ? true : (existingEntry ? existingEntry.userModified : false)
         };
 
         // v8.9.41: Pre-submission capacity check
@@ -2354,7 +2355,7 @@ window.updateDashboard = function() {
 
             html += `
                 <tr class="${rowClass}">
-                    <td><span class="id-badge" style="white-space:nowrap;">${e.id}</span></td>
+                    <td><span class="id-badge" style="white-space:nowrap;">${e.id}</span>${e.userModified ? '<span class="badge" style="background:#eab308; color:#000; font-size:0.6rem; margin-left:4px; font-weight:bold;">変更あり</span>' : ''}</td>
                     <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}" style="white-space:nowrap;">${e.source}</span></td>
                     <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}${e.memo ? `\n\n【備考】\n${e.memo}` : ''}">${e.groupName}${e.memo ? '<span style="font-size:0.7rem; color:#e67e22; border:1px solid #e67e22; border-radius:2px; padding:0 2px; margin-left:4px; vertical-align:middle;">備</span>' : ''}</div></td>
                     <td>${pSummary}</td>
@@ -4335,6 +4336,13 @@ window.showEntryDetails = function (id) {
     const entry = state.entries.find(e => e.id === id);
     if (!entry) return;
 
+    // v8.10.x: Clear userModified flag when admin reviews the entry
+    if (entry.userModified) {
+        entry.userModified = false;
+        saveData(); // Persist the cleared flag
+        updateDashboard(); // Remove the badge from the list
+    }
+
     const modal = document.getElementById('detail-modal');
     const body = document.getElementById('detail-modal-body');
     const title = document.getElementById('detail-modal-title');
@@ -5527,7 +5535,7 @@ window.renderChangeLog = function() {
         if (log.type === '新規登録') { badgeClass = 'log-badge-new'; itemClass = 'log-new'; }
         else if (log.type === '削除') { badgeClass = 'log-badge-delete'; itemClass = 'log-delete'; }
         
-        const adminMark = log.isAdmin ? '<span class="admin-badge" style="background:#6366f1; color:white; padding:1px 4px; border-radius:3px; font-size:0.65rem; margin-right:4px;">管理者</span>' : '';
+        const adminMark = log.isAdmin ? '<span class="admin-badge" style="background:#6366f1; color:white; padding:1px 4px; border-radius:3px; font-size:0.65rem; margin-right:0;">管理者</span>' : '<span class="user-badge" style="background:#eab308; color:black; padding:1px 4px; border-radius:3px; font-size:0.65rem; margin-right:0; font-weight:bold;">一般操作</span>';
         
         let detailsHtml = '';
         if (log.details && log.details.length > 0) {
@@ -5541,7 +5549,7 @@ window.renderChangeLog = function() {
                 <div style="display: flex; align-items: center; flex-wrap: nowrap; gap: 5px; font-size: 0.82rem; overflow: hidden;">
                     <span class="log-badge ${badgeClass}" style="font-size: 0.65rem; padding: 1px 4px; flex-shrink: 0;">${log.type}</span>
                     <span class="log-time" style="font-size: 0.7rem; color: #64748b; flex-shrink: 0;">${log.dateStr}</span>
-                    ${adminMark ? adminMark.replace('margin-right:4px;', 'margin-right:0;') : ''}
+                    ${adminMark}
                     <span class="log-group" style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">${log.groupName}</span> 
                     <span class="text-muted" style="font-size:0.7rem; flex-shrink: 0;">(ID: ${log.entryId})</span>
                     <span style="flex-shrink: 0; color: #475569;">${log.type === '新規登録' ? '登録' : log.type === '削除' ? '削除' : '修正'}</span>
