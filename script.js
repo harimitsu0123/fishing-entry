@@ -875,6 +875,7 @@ function finalizeLoad(isRefresh = false) {
         migrateTshirtSizes(); // v7.7.0: Data migration for new labels
         syncSettingsUI();
         updateDashboard();
+        if (typeof window.checkForUserModifications === 'function') window.checkForUserModifications();
         updateReceptionList();
         updateSourceAvailability();
         applyMaintenanceMode();
@@ -2188,6 +2189,72 @@ function clearLocalCache() {
 /**
  * v8.1.67: Unified Dashboard Update (Globally exposed)
  */
+/* --- NOTIFICATION POPUP --- */
+window.checkForUserModifications = function() {
+    if (!isAdminAuth) return;
+    
+    let seenMods = [];
+    try {
+        seenMods = JSON.parse(localStorage.getItem('seenModifiedIds') || '[]');
+    } catch(e) {}
+    
+    const unseenMods = state.entries.filter(e => e.userModified && !seenMods.includes(e.id));
+    
+    if (unseenMods.length > 0) {
+        let popup = document.getElementById('user-mod-popup');
+        if (!popup) {
+            popup = document.createElement('div');
+            popup.id = 'user-mod-popup';
+            popup.style.cssText = 'position:fixed; top:20px; right:20px; z-index:9999; background:white; border-left:5px solid #eab308; box-shadow:0 10px 25px rgba(0,0,0,0.2); padding:15px; border-radius:8px; width:300px; animation: slideInRight 0.3s ease-out;';
+            document.body.appendChild(popup);
+        }
+        
+        const groupNames = unseenMods.map(e => e.groupName).join('、');
+        
+        popup.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:8px;">
+                <h4 style="margin:0; color:#b45309; font-size:1rem; display:flex; align-items:center; gap:5px;">
+                    <span style="font-size:1.2rem;">⚠️</span> 変更通知
+                </h4>
+                <button onclick="dismissUserModPopup()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#9ca3af; line-height:1; padding:0;">&times;</button>
+            </div>
+            <p style="margin:0 0 12px 0; font-size:0.85rem; color:#374151; line-height:1.4;">
+                一般参加者からの登録内容の追加・変更がありました。<br>
+                <strong style="color:#000;">対象: ${groupNames.length > 30 ? groupNames.substring(0,30) + '...' : groupNames}</strong>
+            </p>
+            <button onclick="dismissUserModPopup(); if(typeof switchView==='function') switchView(null, 'dashboard-view'); setTimeout(()=>window.scrollTo({top:0, behavior:'smooth'}), 100);" style="background:#eab308; color:black; border:none; padding:8px 12px; border-radius:4px; font-size:0.9rem; cursor:pointer; width:100%; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                申込一覧で確認する
+            </button>
+        `;
+        
+        window.dismissUserModPopup = function() {
+            unseenMods.forEach(e => {
+                if (!seenMods.includes(e.id)) seenMods.push(e.id);
+            });
+            localStorage.setItem('seenModifiedIds', JSON.stringify(seenMods));
+            const p = document.getElementById('user-mod-popup');
+            if (p) {
+                p.style.opacity = '0';
+                p.style.transform = 'translateX(20px)';
+                p.style.transition = 'all 0.3s';
+                setTimeout(() => p.remove(), 300);
+            }
+        };
+        
+        if (!document.getElementById('popup-styles')) {
+            const style = document.createElement('style');
+            style.id = 'popup-styles';
+            style.textContent = `
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+};
+
 window.updateDashboard = function() {
     try {
         if (!state || !state.entries) return;
@@ -5548,7 +5615,12 @@ window.renderChangeLog = function() {
         if (log.type === '新規登録') { badgeClass = 'log-badge-new'; itemClass = 'log-new'; }
         else if (log.type === '削除') { badgeClass = 'log-badge-delete'; itemClass = 'log-delete'; }
         
-        const adminMark = log.isAdmin ? '<span class="admin-badge" style="background:#6366f1; color:white; padding:1px 4px; border-radius:3px; font-size:0.65rem; margin-right:0;">管理者</span>' : '<span class="user-badge" style="background:#eab308; color:black; padding:1px 4px; border-radius:3px; font-size:0.65rem; margin-right:0; font-weight:bold;">一般操作</span>';
+        let adminMark = '';
+        if (log.isAdmin === true) {
+            adminMark = '<span class="admin-badge" style="background:#6366f1; color:white; padding:1px 4px; border-radius:3px; font-size:0.65rem; margin-right:0;">管理者</span>';
+        } else if (log.isAdmin === false) {
+            adminMark = '<span class="user-badge" style="background:#eab308; color:black; padding:1px 4px; border-radius:3px; font-size:0.65rem; margin-right:0; font-weight:bold;">一般操作</span>';
+        }
         
         let detailsHtml = '';
         if (log.details && log.details.length > 0) {
