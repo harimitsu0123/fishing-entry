@@ -1665,6 +1665,7 @@ function syncSettingsUI() {
     updateIfInactive('registration-start', state.settings.startTime);
     updateIfInactive('registration-deadline', state.settings.deadline);
     updateIfInactive('cancel-deadline', state.settings.cancelDeadline);
+    updateIfInactive('edit-deadline', state.settings.editDeadline);
     updateIfInactive('admin-password-set', state.settings.adminPassword);
     
     // v8.9.39: Sync maintenance mode checkbox
@@ -1885,6 +1886,17 @@ function handleEditAuth() {
     const rawId = document.getElementById('auth-entry-id').value.toUpperCase().trim();
     const cred = document.getElementById('auth-credential').value.trim();
     
+    // v8.11: Check edit deadline first
+    const isEditDeadlinePassed = state.settings.editDeadline && new Date() > new Date(state.settings.editDeadline);
+    const isAdmin = typeof isBypassAllowed === 'function' && isBypassAllowed();
+
+    if (isEditDeadlinePassed && !isAdmin) {
+        const err = document.getElementById('auth-error');
+        err.textContent = "追加・変更の受付期間は終了しました。";
+        err.classList.remove('hidden');
+        return;
+    }
+
     // v8.9.40: Flexible matching (ignore hyphens, spaces, and auto-pad numbers)
     const clean = (s) => (s || "").replace(/[^A-Z0-9]/g, '');
     const cleanCred = (s) => (s || "").replace(/[^a-zA-Z0-9@.]/g, '');
@@ -4164,6 +4176,7 @@ async function handleSettingsUpdate(e) {
     state.settings.startTime = getVal('registration-start');
     state.settings.deadline = getVal('registration-deadline');
     state.settings.cancelDeadline = getVal('cancel-deadline');
+    state.settings.editDeadline = getVal('edit-deadline');
     state.settings.adminPassword = getVal('admin-password-set');
     
     const maintToggle = document.getElementById('maintenance-mode-toggle');
