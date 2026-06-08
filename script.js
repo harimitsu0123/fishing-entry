@@ -4229,6 +4229,8 @@ async function handleSettingsUpdate(e) {
         return (v === "" || v === undefined) ? 0 : parseInt(v) || 0;
     };
 
+    const oldSettings = JSON.parse(JSON.stringify(state.settings || {}));
+
     // 最新の合計を強制計算し、その値を保存に利用する
     const calculatedTotal = window.updateCapacityTotal();
 
@@ -4272,7 +4274,7 @@ async function handleSettingsUpdate(e) {
     checkTimeframe();
     updateAppTitle();
     
-    logChange({ groupName: '大会設定', id: 'SYSTEM' }, '設定変更');
+    logChange({ groupName: '大会設定', id: 'SYSTEM', settings: state.settings }, '設定変更', { settings: oldSettings });
 }
 
 /**
@@ -5556,7 +5558,23 @@ window.logChange = function(entry, type, oldEntry = null) {
             }
         });
         
+        
         if (details.length === 0) details.push("登録内容の更新（詳細なし）");
+    } else if (type === '新規登録') {
+        details.push(`代表者: ${entry.representative || entry.representativeName || '不明'}`);
+        details.push(`人数: ${(entry.participants || []).length}名`);
+        if (entry.source) details.push(`受付先: ${entry.source}`);
+    } else if (type === '設定変更' && oldEntry && oldEntry.settings && entry.settings) {
+        const oSet = oldEntry.settings;
+        const nSet = entry.settings;
+        if (oSet.competitionName !== nSet.competitionName) details.push(`大会名: ${oSet.competitionName} → ${nSet.competitionName}`);
+        if (oSet.capacityTotal !== nSet.capacityTotal) details.push(`全体定員: ${oSet.capacityTotal} → ${nSet.capacityTotal}`);
+        if (oSet.startTime !== nSet.startTime) details.push(`開始日時更新`);
+        if (oSet.deadline !== nSet.deadline) details.push(`終了日時更新`);
+        if (oSet.maintenanceMode !== nSet.maintenanceMode) details.push(`準備中モード: ${nSet.maintenanceMode ? 'ON' : 'OFF'}`);
+        if (oSet.soldoutMode !== nSet.soldoutMode) details.push(`満員モード: ${nSet.soldoutMode ? 'ON' : 'OFF'}`);
+        if (oSet.closedMode !== nSet.closedMode) details.push(`受付終了モード: ${nSet.closedMode ? 'ON' : 'OFF'}`);
+        if (details.length === 0) details.push('設定の更新（詳細なし）');
     }
 
     const logEntry = {
@@ -5577,11 +5595,13 @@ window.logChange = function(entry, type, oldEntry = null) {
     saveStateToLocalStorage();
 };
 
-window.deleteLogItem = function(logId) {
+window.deleteLogItem = async function(logId) {
     if (!confirm("この履歴を削除しますか？")) return;
     state.changeLog = state.changeLog.filter(l => l.id !== logId);
     saveStateToLocalStorage();
     window.renderChangeLog();
+    showToast("ログを削除し、同期しています...", "info");
+    await saveData();
 };
 
 window.renderChangeLog = function() {
