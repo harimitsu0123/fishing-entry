@@ -2966,7 +2966,7 @@ window.toggleAwardFilter = function() {
         btn.style.background = '';
         btn.style.color = '';
         btn.innerHTML = '🏆 表彰者のみ';
-        if (title) title.textContent = '個人順位 (Top 100)';
+        if (title) title.textContent = '個人順位 (全参加者)';
     }
     renderRankings();
 };
@@ -4781,7 +4781,7 @@ window.renderRankings = function() {
     // v8.10.0: Update title based on filter state
     const titleText = document.getElementById('ranking-title-text');
     if (titleText) {
-        titleText.textContent = showOnlyAwards ? '表彰対象者' : '個人順位 (Top 100)';
+        titleText.textContent = showOnlyAwards ? '表彰対象者' : '個人順位 (全参加者)';
     }
 
     if (filteredData.length === 0) {
@@ -4803,12 +4803,14 @@ window.renderRankings = function() {
         // v8.10.1: Pre-calculate ties for warning badge
         for (let i = 0; i < filteredData.length; i++) {
             let isTie = false;
-            if (i > 0 && filteredData[i].cA === filteredData[i-1].cA && filteredData[i].cB === filteredData[i-1].cB) isTie = true;
-            if (i < filteredData.length - 1 && filteredData[i].cA === filteredData[i+1].cA && filteredData[i].cB === filteredData[i+1].cB) isTie = true;
+            if (filteredData[i].score > 0) {
+                if (i > 0 && filteredData[i].cA === filteredData[i-1].cA && filteredData[i].cB === filteredData[i-1].cB) isTie = true;
+                if (i < filteredData.length - 1 && filteredData[i].cA === filteredData[i+1].cA && filteredData[i].cB === filteredData[i+1].cB) isTie = true;
+            }
             filteredData[i].isTie = isTie;
         }
 
-        filteredData.slice(0, 100).forEach((p, idx) => {
+        filteredData.forEach((p, idx) => {
             if (lastP && p.cB === lastP.cB && p.cA === lastP.cA) {
                 // currentRank はそのまま
             } else {
