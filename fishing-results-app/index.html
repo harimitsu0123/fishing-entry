@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>釣果報告システム - BORIJIN FESTIVAL</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@500;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app-container">
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="overlay">
+            <div class="spinner"></div>
+            <p>同期中...</p>
+        </div>
+
+        <!-- Auth View -->
+        <section id="auth-view" class="view active">
+            <div class="glass-card auth-card">
+                <div class="auth-header">
+                    <div class="logo">🎣</div>
+                    <h1>釣果報告システム</h1>
+                    <p>イケスリーダー・スタッフ専用</p>
+                </div>
+                <div class="form-group">
+                    <label for="login-ikesu-id">イケスを選択</label>
+                    <select id="login-ikesu-id">
+                        <option value="" disabled selected>イケスを選択してください</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ikesu-passcode">暗証番号</label>
+                    <input type="tel" id="ikesu-passcode" maxlength="8" placeholder="••••" autocomplete="off">
+                </div>
+                <div id="auth-error" class="error-message hidden">イケス名または暗証番号が正しくありません</div>
+                <button id="login-btn" class="btn-primary btn-large">ログイン</button>
+            </div>
+        </section>
+
+        <!-- Admin View (Global Aggregation) -->
+        <section id="admin-view" class="view hidden">
+            <header class="app-header">
+                <div class="header-left">
+                    <span class="pond-badge admin">管理者</span>
+                    <h2>全体集計・修正</h2>
+                </div>
+                <button class="btn-icon-text logout-btn">
+                    <span>ログアウト</span>
+                </button>
+            </header>
+            <main class="scroll-area">
+                <div class="admin-stats glass-card">
+                <div class="stat-item">
+                    <label>全体合計</label>
+                    <div id="admin-total-points" class="stat-value">0<span>pt</span></div>
+                </div>
+                <div class="stat-item">
+                    <label>マダイ等</label>
+                    <div id="admin-total-cA" class="stat-value">0<span>尾</span></div>
+                </div>
+                <div class="stat-item">
+                    <label>青物等</label>
+                    <div id="admin-total-cB" class="stat-value">0<span>尾</span></div>
+                </div>
+            </div>
+
+            <div class="card glass-card" style="margin-bottom: 2rem;">
+                <div class="card-header">
+                    <h3>🏆 ランキング・入賞設定</h3>
+                </div>
+                <div style="display: grid; gap: 1rem; padding: 0.5rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>表彰対象（上位何名）</span>
+                        <input type="number" id="rank-top-count" value="3" style="width: 60px; padding: 4px;">
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>飛び賞（例: 5,10,15... カンマ区切り）</span>
+                        <input type="text" id="rank-tobi-list" value="5,10,15,20,25,30" style="width: 120px; padding: 4px;">
+                    </div>
+                    <button class="btn-primary" onclick="saveRankingSettings()" style="background: #059669; margin-top: 0.5rem;">設定を保存</button>
+                </div>
+            </div>
+
+            <div class="ikesu-grid" id="admin-ikesu-list">
+                <!-- Ikesu cards will be injected here -->
+            </div>
+            </main>
+        </section>
+
+        <!-- Main View (Pond Selection / Participant List) -->
+        <section id="main-view" class="view hidden">
+            <header class="app-header">
+                <div class="header-left">
+                    <span id="display-ikesu-name" class="pond-badge">--</span>
+                    <h2 id="app-title">釣果記録</h2>
+                </div>
+                <div class="header-right">
+                    <button id="admin-back-btn" class="btn-icon-text hidden" onclick="showAdminDashboard()">
+                        <span>戻る(管理者)</span>
+                    </button>
+                    <button id="logout-btn" class="btn-icon-text">
+                        <span>ログアウト</span>
+                    </button>
+                </div>
+            </header>
+
+            <main class="scroll-area">
+                <div id="participant-list" class="participant-grid">
+                    <!-- Dynamic Content -->
+                </div>
+            </main>
+
+            <footer class="app-footer">
+                <div class="footer-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">イケス合計</span>
+                        <span id="ikesu-total-points" class="stat-value">0</span>
+                        <span class="stat-unit">pt</span>
+                    </div>
+                </div>
+                <button id="save-btn" class="btn-primary">
+                    <span class="icon">💾</span> 変更を保存
+                </button>
+            </footer>
+        </section>
+
+<!-- Modal system deprecated in v1.2.0 -->
+
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="script.js?v=1.0.0"></script>
+</body>
+</html>

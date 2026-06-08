@@ -2554,9 +2554,7 @@ window.renderIkesuResultView = function() {
 
     const baseUrl = window.location.href.split('?')[0].replace('index.html', '');
     // v8.9.84: Robust URL replacement for both local and GitHub environments
-    const leaderUrl = baseUrl.includes('http') 
-        ? baseUrl.replace(/fishing-entry(-app)?/, 'fishing-results-app').replace('/受付/', '/釣果/') 
-        : baseUrl + '../../釣果/fishing-results-app/index.html';
+    const leaderUrl = baseUrl + 'fishing-results-app/index.html';
     const isLocalFile = window.location.protocol === 'file:';
 
     let html = isLocalFile ? `
@@ -2914,16 +2912,9 @@ window.renderRankings = function() {
 
 // v8.10.0: External link helper for results app
 window.handleResultsExternalLink = function() {
-    let url = window.location.href;
-    if (url.includes('github.io')) {
-        // fishing-entry -> fishing-results-app
-        url = url.replace(/fishing-entry(-app)?/, 'fishing-results-app');
-        // Ensure it points to the root of the results repo
-        url = url.split('#')[0].split('?')[0]; // Remove hash/query
-        if (!url.endsWith('/')) url += '/';
-    } else {
-        url = '../../釣果/fishing-results-app/index.html';
-    }
+    let baseUrl = window.location.href.split('#')[0].split('?')[0].replace('index.html', '');
+    if (!baseUrl.endsWith('/')) baseUrl += '/';
+    const url = baseUrl + 'fishing-results-app/index.html';
     window.open(url, '_blank');
 };
 
