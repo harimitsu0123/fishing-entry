@@ -4650,6 +4650,64 @@ async function exportParticipantsCSV() {
     downloadCSV(`参加者名簿_${dateStr}.csv`, headers, rows);
 }
 
+// --- v8.10.2: Mock Data Tools for Testing ---
+window.generateMockCatchData = async function() {
+    if (!confirm("テスト用の仮データ（約9割が釣果あり）を生成しますか？\n※現在の釣果データは上書きされます。")) return;
+    
+    let updated = false;
+    state.entries.forEach(e => {
+        if (e.status === 'cancelled') return;
+        (e.participants || []).forEach(p => {
+            if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
+                if (Math.random() < 0.9) {
+                    p.catchA = Math.floor(Math.random() * 5); // 0-4 Bream
+                    p.catchB = Math.floor(Math.random() * 3); // 0-2 Blue
+                    if (p.catchA === 0 && p.catchB === 0) p.catchA = 1;
+                } else {
+                    p.catchA = 0;
+                    p.catchB = 0;
+                }
+                updated = true;
+            }
+        });
+    });
+    
+    if (updated) {
+        await saveData();
+        if (window.renderDayResults) window.renderDayResults();
+        if (window.renderRankings) window.renderRankings();
+        if (window.renderAwardsPreview) window.renderAwardsPreview();
+        showToast("テストデータを生成しました", "success");
+    }
+};
+
+window.clearCatchData = async function() {
+    if (!confirm("⚠️ 本当にすべての釣果データを「0」にリセットしますか？\n※この操作は元に戻せません！")) return;
+    
+    let updated = false;
+    state.entries.forEach(e => {
+        (e.participants || []).forEach(p => {
+            if (p.catchA > 0 || p.catchB > 0 || p.isAwardWinner) {
+                p.catchA = 0;
+                p.catchB = 0;
+                p.isAwardWinner = false;
+                updated = true;
+            }
+        });
+    });
+    
+    if (updated) {
+        await saveData();
+        if (window.renderDayResults) window.renderDayResults();
+        if (window.renderRankings) window.renderRankings();
+        if (window.renderAwardsPreview) window.renderAwardsPreview();
+        showToast("すべての釣果をリセットしました", "info");
+    } else {
+        showToast("リセットするデータがありません", "info");
+    }
+};
+// ---------------------------------------------
+
 // v8.4.3: Bulk Email Helpers
 window.insertMailVar = function(tag) {
     const textarea = document.getElementById('bulk-mail-body');

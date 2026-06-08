@@ -813,8 +813,12 @@
 
             <div id="tab-day-results" class="day-tab-content">
                 <div class="card">
-                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                        <h2>釣果一覧（確認用）</h2>
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <h2 style="margin:0;">釣果一覧（確認用）</h2>
+                            <button class="btn-outline btn-small" onclick="generateMockCatchData()" style="font-size:0.75rem; padding:4px 8px;">🎲 テストデータ</button>
+                            <button class="btn-danger btn-small" onclick="clearCatchData()" style="font-size:0.75rem; padding:4px 8px;">🗑️ 全リセット</button>
+                        </div>
                         <div style="display:flex; gap:0.5rem; align-items:center;">
                             <label style="font-size:0.8rem;">イケス絞込:</label>
                             <select id="day-results-ikesu-filter" onchange="renderDayResults()" style="padding:4px; border-radius:4px; border:1px solid var(--border-color); font-size:0.85rem;">
