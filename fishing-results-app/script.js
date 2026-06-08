@@ -375,8 +375,16 @@ window.generateMockCatchData = async function() {
         (e.participants || []).forEach(p => {
             if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
                 if (Math.random() < 0.9) {
-                    p.catchA = Math.floor(Math.random() * 5); // 0-4 Bream
-                    p.catchB = Math.floor(Math.random() * 3); // 0-2 Blue
+                    // 基本の釣果
+                    p.catchA = Math.floor(Math.random() * 8); // 0-7匹 (マダイ等)
+                    p.catchB = Math.floor(Math.random() * 4); // 0-3匹 (青物等)
+                    
+                    // 10%の確率で「爆釣」状態にする（ランキング上位用）
+                    if (Math.random() < 0.1) {
+                        p.catchA += Math.floor(Math.random() * 10) + 5; // +5〜14匹追加
+                        p.catchB += Math.floor(Math.random() * 5) + 2;  // +2〜6匹追加
+                    }
+                    
                     if (p.catchA === 0 && p.catchB === 0) p.catchA = 1;
                 } else {
                     p.catchA = 0;
