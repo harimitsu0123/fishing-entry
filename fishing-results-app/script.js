@@ -375,6 +375,7 @@ window.generateMockCatchData = async function() {
         if (e.status === 'cancelled') return;
         (e.participants || []).forEach(p => {
             if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
+                p.isAwardWinner = false;
                 if (Math.random() < 0.9) {
                     // 基本の釣果
                     p.catchA = Math.floor(Math.random() * 8); // 0-7匹 (マダイ等)

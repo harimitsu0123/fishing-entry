@@ -4908,11 +4908,17 @@ window.renderRankings = function() {
                 const cB = parseInt(p.catchB || 0);
                 const score = cA + (cB * 2);
                 
+                let ikName = '';
+                if (p.ikesuId) {
+                    ikName = state.settings.ikesuList?.find(ik => ik.id === p.ikesuId)?.name || p.ikesuId;
+                }
+
                 individualData.push({
                     name: p.name,
                     nickname: p.nickname || '',
                     groupName: entry.groupName,
                     id: entry.id,
+                    ikName,
                     cA, cB, score,
                     isAwardWinner: !!p.isAwardWinner
                 });
@@ -4933,13 +4939,13 @@ window.renderRankings = function() {
 
     // --- Render Individual Table ---
     // v8.10.0: Tie-breaking rule (Score > Aomono > ID)
-    individualData.sort((a, b) => (b.cB - a.cB) || (b.cA - a.cA));
+    individualData.sort((a, b) => (b.score - a.score) || (b.cB - a.cB) || (b.cA - a.cA));
 
     const config = state.settings.rankingConfig || { topCount: 3, tobiList: "5,10,15,20,25,30" };
     const tobis = config.tobiList.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
     let tmpRank = 1;
     for (let i = 0; i < individualData.length; i++) {
-        if (i > 0 && individualData[i].cB === individualData[i-1].cB && individualData[i].cA === individualData[i-1].cA) {
+        if (i > 0 && individualData[i].score === individualData[i-1].score && individualData[i].cB === individualData[i-1].cB && individualData[i].cA === individualData[i-1].cA) {
             // keep tmpRank
         } else {
             tmpRank = i + 1;
@@ -4989,7 +4995,7 @@ window.renderRankings = function() {
         }
 
         filteredData.forEach((p, idx) => {
-            if (lastP && p.cB === lastP.cB && p.cA === lastP.cA) {
+            if (lastP && p.score === lastP.score && p.cB === lastP.cB && p.cA === lastP.cA) {
                 // currentRank はそのまま
             } else {
                 currentRank = idx + 1;
@@ -5010,6 +5016,7 @@ window.renderRankings = function() {
                             ${awardStar}
                             ${tieBadge}
                             <span style="font-size:0.75rem; background:#f1f5f9; padding:1px 5px; border-radius:4px; color:#475569; border:1px solid #e2e8f0;">${p.groupName}</span>
+                            ${p.ikName ? `<span style="font-size:0.75rem; background:#dbeafe; padding:1px 5px; border-radius:4px; color:#1e40af; border:1px solid #bfdbfe;">イケス${p.ikName}</span>` : ''}
                         </div>
                     </td>
                     <td style="padding:8px; text-align:right; font-weight:bold; white-space:nowrap;">
