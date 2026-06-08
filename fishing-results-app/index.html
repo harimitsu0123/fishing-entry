@@ -84,6 +84,16 @@
                 </div>
             </div>
 
+            <div class="card glass-card" style="margin-bottom: 2rem; border: 1px solid #e2e8f0; border-top: 4px solid #ef4444;">
+                <div class="card-header">
+                    <h3 style="color:#ef4444;">⚙️ テストデータ管理</h3>
+                </div>
+                <div style="display: flex; gap: 1rem; padding: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn-outline btn-small" onclick="generateMockCatchData()" style="flex:1; border-color:#3b82f6; color:#3b82f6; font-size: 0.9rem; padding: 8px;">🎲 仮釣果データ生成</button>
+                    <button class="btn-outline btn-small" onclick="clearCatchData()" style="flex:1; border-color:#ef4444; color:#ef4444; font-size: 0.9rem; padding: 8px;">🗑️ 釣果データリセット</button>
+                </div>
+            </div>
+
             <div class="ikesu-grid" id="admin-ikesu-list">
                 <!-- Ikesu cards will be injected here -->
             </div>
