@@ -72,8 +72,8 @@
 
             <form id="survey-form">
                 <div class="alert" style="background:#fff3cd; border:1px solid #ffeeba; color:#856404; padding:15px; border-radius:8px; margin-bottom:1.5rem; font-size:0.9rem; line-height:1.5;">
-                    <strong>🎁 抽選でWEBクーポンをプレゼント！</strong><br>
-                    ご回答いただいた方の中から抽選で、ハリミツWEBショップで使えるクーポンをプレゼントいたします！<br>
+                    <strong>🎁 抽選で10名様に500円分WEBクーポンをプレゼント！</strong><br>
+                    ご回答いただいた方の中から抽選で、ハリミツWEBショップで使える500円分のクーポンをプレゼントいたします！<br>
                     <span style="color:#d9534f; font-weight:bold;">※WEBショップの会員登録（必須）と同じ「お名前」と「メールアドレス」をご入力ください。</span>
                 </div>
 
@@ -93,6 +93,17 @@
                 </div>
 
                 <hr style="margin: 2rem 0; border: none; border-top: 1px dashed #cbd5e1;">
+
+                <div class="form-group">
+                    <label>今回の大会の総合的な満足度を教えてください <span class="required">(※必須)</span></label>
+                    <div class="radio-group">
+                        <label class="radio-label" style="flex-direction:column; gap:0.2rem; font-size:0.8rem;"><input type="radio" name="satisfaction" value="5" required> <span style="color:#eab308; font-size:1.2rem;">★★★★★</span><br>大変満足</label>
+                        <label class="radio-label" style="flex-direction:column; gap:0.2rem; font-size:0.8rem;"><input type="radio" name="satisfaction" value="4"> <span style="color:#eab308; font-size:1.2rem;">★★★★☆</span><br>満足</label>
+                        <label class="radio-label" style="flex-direction:column; gap:0.2rem; font-size:0.8rem;"><input type="radio" name="satisfaction" value="3"> <span style="color:#eab308; font-size:1.2rem;">★★★☆☆</span><br>普通</label>
+                        <label class="radio-label" style="flex-direction:column; gap:0.2rem; font-size:0.8rem;"><input type="radio" name="satisfaction" value="2"> <span style="color:#eab308; font-size:1.2rem;">★★☆☆☆</span><br>やや不満</label>
+                        <label class="radio-label" style="flex-direction:column; gap:0.2rem; font-size:0.8rem;"><input type="radio" name="satisfaction" value="1"> <span style="color:#eab308; font-size:1.2rem;">★☆☆☆☆</span><br>不満</label>
+                    </div>
+                </div>
                 
                 <div class="form-group">
                     <label>本日の釣果はいかがでしたか？ <span class="required">(※必須)</span></label>
@@ -101,18 +112,6 @@
                         <label class="radio-label"><input type="radio" name="catch-result" value="まあまあ"> まあまあ</label>
                         <label class="radio-label"><input type="radio" name="catch-result" value="厳しかった"> 厳しかった</label>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="satisfaction">今回の大会の総合的な満足度を教えてください <span class="required">(※必須)</span></label>
-                    <select id="satisfaction" required>
-                        <option value="" disabled selected>選択してください</option>
-                        <option value="5">★★★★★ (大変満足)</option>
-                        <option value="4">★★★★☆ (満足)</option>
-                        <option value="3">★★★☆☆ (普通)</option>
-                        <option value="2">★★☆☆☆ (やや不満)</option>
-                        <option value="1">★☆☆☆☆ (不満)</option>
-                    </select>
                 </div>
 
                 <div class="form-group">
@@ -183,8 +182,8 @@
             const participantTel = document.getElementById('participant-tel').value;
             const participantEmail = document.getElementById('participant-email').value;
             
+            const satisfaction = document.querySelector('input[name="satisfaction"]:checked')?.value || '';
             const catchResult = document.querySelector('input[name="catch-result"]:checked')?.value || '';
-            const satisfaction = document.getElementById('satisfaction').value;
             const operationsScore = document.querySelector('input[name="operations-score"]:checked')?.value || '';
             const participationCount = document.querySelector('input[name="participation-count"]:checked')?.value || '';
             const favoriteProduct = document.getElementById('favorite-product').value;
