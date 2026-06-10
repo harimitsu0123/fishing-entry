@@ -6032,10 +6032,12 @@ window.renderSurveys = function() {
     let html = '';
     [...surveys].reverse().forEach(s => {
         const dateStr = s.timestamp ? new Date(s.timestamp).toLocaleString() : '-';
+        // For backwards compatibility, if they have groupName we show it, else participantName
+        const nameToShow = s.participantName || s.groupName || '';
         html += `
             <tr>
                 <td>${dateStr}</td>
-                <td>${s.groupName || ''}</td>
+                <td>${nameToShow}</td>
                 <td>${s.satisfaction || ''}</td>
                 <td>${s.catchResult || ''}</td>
                 <td>${s.nextTime || ''}</td>
@@ -6065,11 +6067,15 @@ window.exportPreordersToCSV = function() {
 window.exportSurveysToCSV = function() {
     const surveys = state.surveys || [];
     if (surveys.length === 0) return alert('データがありません');
-    let csv = '\uFEFF日時,グループ名,満足度,釣果,次回参加,コメント\n';
+    let csv = '\uFEFF日時,氏名(旧グループ名),電話番号,メールアドレス,釣果,満足度,運営評価,参加回数,お気に入り製品,試釣会参加,試釣会感想,次回参加,コメント\n';
     surveys.forEach(s => {
         const dateStr = s.timestamp ? new Date(s.timestamp).toLocaleString() : '';
         const safeComment = (s.comments || '').replace(/"/g, '""');
-        csv += `"${dateStr}","${s.groupName || ''}","${s.satisfaction || ''}","${s.catchResult || ''}","${s.nextTime || ''}","${safeComment}"\n`;
+        const safeFavProduct = (s.favoriteProduct || '').replace(/"/g, '""');
+        const safeTestComments = (s.testEventComments || '').replace(/"/g, '""');
+        const nameToExport = s.participantName || s.groupName || '';
+        
+        csv += `"${dateStr}","${nameToExport}","${s.participantTel || ''}","${s.participantEmail || ''}","${s.catchResult || ''}","${s.satisfaction || ''}","${s.operationsScore || ''}","${s.participationCount || ''}","${safeFavProduct}","${s.testEventParticipation || ''}","${safeTestComments}","${s.nextTime || ''}","${safeComment}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');

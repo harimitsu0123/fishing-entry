@@ -71,11 +71,38 @@
             </div>
 
             <form id="survey-form">
+                <div class="alert" style="background:#fff3cd; border:1px solid #ffeeba; color:#856404; padding:15px; border-radius:8px; margin-bottom:1.5rem; font-size:0.9rem; line-height:1.5;">
+                    <strong>🎁 抽選でWEBクーポンをプレゼント！</strong><br>
+                    ご回答いただいた方の中から抽選で、ハリミツWEBショップで使えるクーポンをプレゼントいたします！<br>
+                    <span style="color:#d9534f; font-weight:bold;">※WEBショップの会員登録（必須）と同じ「お名前」と「メールアドレス」をご入力ください。</span>
+                </div>
+
                 <div class="form-group">
-                    <label for="group-name">グループ名 / 代表者名 <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(※任意)</span></label>
-                    <input type="text" id="group-name" placeholder="例：チーム・ゼブラ / 山田 太郎">
+                    <label for="participant-name">お名前 <span class="required">(※必須)</span></label>
+                    <input type="text" id="participant-name" required placeholder="例：山田 太郎">
                 </div>
                 
+                <div class="form-group">
+                    <label for="participant-tel">電話番号 <span class="required">(※必須)</span></label>
+                    <input type="tel" id="participant-tel" required placeholder="例：090-1234-5678">
+                </div>
+
+                <div class="form-group">
+                    <label for="participant-email">メールアドレス <span class="required">(※必須)</span></label>
+                    <input type="email" id="participant-email" required placeholder="例：example@harimitsu.co.jp">
+                </div>
+
+                <hr style="margin: 2rem 0; border: none; border-top: 1px dashed #cbd5e1;">
+                
+                <div class="form-group">
+                    <label>本日の釣果はいかがでしたか？ <span class="required">(※必須)</span></label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="catch-result" value="大満足" required> 大満足！</label>
+                        <label class="radio-label"><input type="radio" name="catch-result" value="まあまあ"> まあまあ</label>
+                        <label class="radio-label"><input type="radio" name="catch-result" value="厳しかった"> 厳しかった</label>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="satisfaction">今回の大会の総合的な満足度を教えてください <span class="required">(※必須)</span></label>
                     <select id="satisfaction" required>
@@ -89,38 +116,54 @@
                 </div>
 
                 <div class="form-group">
-                    <label>本日の釣果はいかがでしたか？ <span class="required">(※必須)</span></label>
+                    <label>大会前の案内や、当日の運営・ルール説明は分かりやすかったですか？ <span class="required">(※必須)</span></label>
                     <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="catch-result" value="大満足" required> 大満足！
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="catch-result" value="まあまあ"> まあまあ
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="catch-result" value="厳しかった"> 厳しかった
-                        </label>
+                        <label class="radio-label"><input type="radio" name="operations-score" value="とても分かりやすかった" required> とても分かりやすかった</label>
+                        <label class="radio-label"><input type="radio" name="operations-score" value="分かりやすかった"> 分かりやすかった</label>
+                        <label class="radio-label"><input type="radio" name="operations-score" value="普通"> 普通</label>
+                        <label class="radio-label"><input type="radio" name="operations-score" value="分かりにくかった"> 分かりにくかった</label>
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label>ボリフェス（ハリミツイベント）への参加は何回目ですか？ <span class="required">(※必須)</span></label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="participation-count" value="今回が初めて" required> 今回が初めて</label>
+                        <label class="radio-label"><input type="radio" name="participation-count" value="2回目"> 2回目</label>
+                        <label class="radio-label"><input type="radio" name="participation-count" value="3回以上"> 3回以上</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="favorite-product">ハリミツ製品で一番よく使っている（お気に入りの）アイテムがあれば教えてください <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(※任意)</span></label>
+                    <input type="text" id="favorite-product" placeholder="例：墨族、海上釣堀シリーズ など">
+                </div>
+
+                <div class="form-group">
+                    <label>本日の「試釣会（新製品の試し釣りなど）」には参加されましたか？ <span class="required">(※必須)</span></label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="test-event" value="はい" required> はい</label>
+                        <label class="radio-label"><input type="radio" name="test-event" value="いいえ"> いいえ</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="test-event-comments">試釣会の感想や、今後試してみたい製品があれば教えてください <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(※任意)</span></label>
+                    <textarea id="test-event-comments" rows="3" placeholder="試釣会の感想をご自由にご記入ください。"></textarea>
                 </div>
 
                 <div class="form-group">
                     <label>次回もこのような大会があれば参加したいですか？ <span class="required">(※必須)</span></label>
                     <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="next-time" value="はい" required> はい
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="next-time" value="いいえ"> いいえ
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="next-time" value="わからない"> わからない
-                        </label>
+                        <label class="radio-label"><input type="radio" name="next-time" value="はい" required> はい</label>
+                        <label class="radio-label"><input type="radio" name="next-time" value="いいえ"> いいえ</label>
+                        <label class="radio-label"><input type="radio" name="next-time" value="わからない"> わからない</label>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="comments">イベント運営やルールについてのご意見・ご感想 <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(※任意)</span></label>
-                    <textarea id="comments" rows="5" placeholder="良かった点や、改善してほしい点などご自由にご記入ください。"></textarea>
+                    <label for="comments">イベント運営やルールについてのご意見・ご要望 <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(※任意)</span></label>
+                    <textarea id="comments" rows="4" placeholder="良かった点や、改善してほしい点などご自由にご記入ください。"></textarea>
                 </div>
 
                 <div class="form-actions" style="margin-top: 2rem;">
@@ -136,15 +179,28 @@
         document.getElementById('survey-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const groupName = document.getElementById('group-name').value;
-            const satisfaction = document.getElementById('satisfaction').value;
+            const participantName = document.getElementById('participant-name').value;
+            const participantTel = document.getElementById('participant-tel').value;
+            const participantEmail = document.getElementById('participant-email').value;
+            
             const catchResult = document.querySelector('input[name="catch-result"]:checked')?.value || '';
+            const satisfaction = document.getElementById('satisfaction').value;
+            const operationsScore = document.querySelector('input[name="operations-score"]:checked')?.value || '';
+            const participationCount = document.querySelector('input[name="participation-count"]:checked')?.value || '';
+            const favoriteProduct = document.getElementById('favorite-product').value;
+            const testEventParticipation = document.querySelector('input[name="test-event"]:checked')?.value || '';
+            const testEventComments = document.getElementById('test-event-comments').value;
             const nextTime = document.querySelector('input[name="next-time"]:checked')?.value || '';
             const comments = document.getElementById('comments').value;
             
             const payload = {
                 action: 'submit_survey',
-                data: { groupName, satisfaction, catchResult, nextTime, comments }
+                data: { 
+                    participantName, participantTel, participantEmail, 
+                    catchResult, satisfaction, operationsScore, participationCount,
+                    favoriteProduct, testEventParticipation, testEventComments,
+                    nextTime, comments 
+                }
             };
 
             const form = document.getElementById('survey-form');
