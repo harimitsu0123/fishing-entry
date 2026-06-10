@@ -5934,8 +5934,30 @@ window.onpopstate = function(event) {
 // Standalone form admin dashboard features
 window.renderPreorders = function() {
     const list = document.getElementById('preorder-list');
-    if (!list) return;
+    const statsList = document.getElementById('preorder-stats-list');
     const preorders = state.preorders || [];
+    
+    if (statsList) {
+        if (preorders.length === 0) {
+            statsList.innerHTML = '<div>データなし</div>';
+        } else {
+            const counts = {};
+            preorders.forEach(p => {
+                (p.items || []).forEach(item => {
+                    counts[item.name] = (counts[item.name] || 0) + parseInt(item.quantity || 0, 10);
+                });
+            });
+            let statsHtml = '';
+            for (const [name, qty] of Object.entries(counts)) {
+                if (qty > 0) {
+                    statsHtml += `<div class="stat-item" style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid #e2e8f0;"><span>${name}</span><span class="stat-value" style="font-weight:bold;">${qty} 個</span></div>`;
+                }
+            }
+            statsList.innerHTML = statsHtml || '<div>予約商品なし</div>';
+        }
+    }
+
+    if (!list) return;
     if (preorders.length === 0) {
         list.innerHTML = '<tr><td colspan="5" style="text-align:center;">予約データがありません</td></tr>';
         return;
@@ -5960,8 +5982,48 @@ window.renderPreorders = function() {
 
 window.renderSurveys = function() {
     const list = document.getElementById('survey-list');
-    if (!list) return;
+    const satList = document.getElementById('survey-satisfaction-list');
+    const nextList = document.getElementById('survey-next-list');
     const surveys = state.surveys || [];
+    
+    if (satList && nextList) {
+        if (surveys.length === 0) {
+            satList.innerHTML = '<div>データなし</div>';
+            nextList.innerHTML = '<div>データなし</div>';
+        } else {
+            const satCounts = {};
+            const nextCounts = {};
+            surveys.forEach(s => {
+                if (s.satisfaction) satCounts[s.satisfaction] = (satCounts[s.satisfaction] || 0) + 1;
+                if (s.nextTime) nextCounts[s.nextTime] = (nextCounts[s.nextTime] || 0) + 1;
+            });
+            
+            const renderStat = (counts, total) => {
+                let html = '';
+                // Sort by count descending
+                const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+                for (const [key, val] of sorted) {
+                    const pct = Math.round((val / total) * 100);
+                    html += `
+                        <div class="stat-item" style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                                <span>${key}</span>
+                                <span class="stat-value" style="font-weight:bold;">${val} 件 <small style="color:#64748b; font-weight:normal;">(${pct}%)</small></span>
+                            </div>
+                            <div class="progress-bar" style="height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden;">
+                                <div class="progress" style="width:${pct}%; background:var(--primary-color); height:100%;"></div>
+                            </div>
+                        </div>`;
+                }
+                return html || '<div>データなし</div>';
+            };
+            
+            satList.innerHTML = renderStat(satCounts, surveys.length);
+            nextList.innerHTML = renderStat(nextCounts, surveys.length);
+        }
+    }
+
+    if (!list) return;
     if (surveys.length === 0) {
         list.innerHTML = '<tr><td colspan="6" style="text-align:center;">アンケート結果がありません</td></tr>';
         return;

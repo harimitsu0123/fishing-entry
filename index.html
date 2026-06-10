@@ -769,9 +769,17 @@
                 <div id="tab-preorders" class="admin-tab-content">
                     <div style="margin-bottom: 3rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h2 style="margin: 0; color: var(--color-suiho);">試釣会商品 予約一覧</h2>
+                            <h2 style="margin: 0; color: var(--color-suiho);">試釣会商品 予約状況</h2>
                             <button class="btn-primary" onclick="if(window.exportPreordersToCSV) window.exportPreordersToCSV()">📥 CSV書き出し</button>
                         </div>
+                        
+                        <div class="breakdown-grid mb-3" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                            <div class="breakdown-card">
+                                <div class="section-title">商品別 予約数（自動集計）</div>
+                                <div id="preorder-stats-list" class="stats-list">集計中...</div>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
                             <table class="table-striped">
                                 <thead>
@@ -790,9 +798,21 @@
 
                     <div>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h2 style="margin: 0; color: var(--color-mintsuri);">終了後アンケート結果</h2>
+                            <h2 style="margin: 0; color: var(--color-mintsuri);">終了後アンケート 分析結果</h2>
                             <button class="btn-primary" onclick="if(window.exportSurveysToCSV) window.exportSurveysToCSV()">📥 CSV書き出し</button>
                         </div>
+
+                        <div class="breakdown-grid mb-3" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                            <div class="breakdown-card">
+                                <div class="section-title">大会満足度</div>
+                                <div id="survey-satisfaction-list" class="stats-list">集計中...</div>
+                            </div>
+                            <div class="breakdown-card">
+                                <div class="section-title">次回も参加したいですか？</div>
+                                <div id="survey-next-list" class="stats-list">集計中...</div>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
                             <table class="table-striped">
                                 <thead>
@@ -1136,6 +1156,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=8.13.3"></script>
+    <script src="script.js?v=8.13.4"></script>
 </body>
 </html>
