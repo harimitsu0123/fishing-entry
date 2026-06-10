@@ -376,19 +376,22 @@ window.generateMockCatchData = async function() {
         (e.participants || []).forEach(p => {
             if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
                 p.isAwardWinner = false;
-                if (Math.random() < 0.9) {
-                    // 基本の釣果
-                    p.catchA = Math.floor(Math.random() * 8); // 0-7匹 (マダイ等)
-                    p.catchB = Math.floor(Math.random() * 4); // 0-3匹 (青物等)
-                    
-                    // 10%の確率で「爆釣」状態にする（ランキング上位用）
-                    if (Math.random() < 0.1) {
-                        p.catchA += Math.floor(Math.random() * 10) + 5; // +5〜14匹追加
-                        p.catchB += Math.floor(Math.random() * 5) + 2;  // +2〜6匹追加
-                    }
-                    
+                let r = Math.random();
+                if (r < 0.1) {
+                    // 10% 爆釣 (Top tier: Max Bream 15, Max Blue 5)
+                    p.catchA = Math.floor(Math.random() * 10) + 6; // 6-15
+                    p.catchB = Math.floor(Math.random() * 4) + 2;  // 2-5
+                } else if (r < 0.4) {
+                    // 30% 上位層 (Upper-mid)
+                    p.catchA = Math.floor(Math.random() * 7) + 3;  // 3-9
+                    p.catchB = Math.floor(Math.random() * 3);      // 0-2
+                } else if (r < 0.85) {
+                    // 45% 中・下位層 (Lower-mid)
+                    p.catchA = Math.floor(Math.random() * 4);      // 0-3
+                    p.catchB = Math.floor(Math.random() * 2);      // 0-1
                     if (p.catchA === 0 && p.catchB === 0) p.catchA = 1;
                 } else {
+                    // 15% ボウズ (No catch)
                     p.catchA = 0;
                     p.catchB = 0;
                 }
