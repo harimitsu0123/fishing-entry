@@ -4758,28 +4758,23 @@ window.generateMockCatchData = async function() {
         if (e.status === 'cancelled') return;
         (e.participants || []).forEach(p => {
             if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
-                // 鯛 (Bream)
-                let rA = Math.random();
-                if (rA < 0.15) {
-                    p.catchA = Math.floor(Math.random() * 7) + 12; // 12-18 (Top 15%)
-                } else if (rA < 0.5) {
-                    p.catchA = Math.floor(Math.random() * 3) + 9;  // 9-11 (Next 35%)
-                } else if (rA < 0.9) {
-                    p.catchA = Math.floor(Math.random() * 4) + 5;  // 5-8 (Next 40%)
-                } else {
-                    p.catchA = Math.floor(Math.random() * 4);      // 0-3 (Bottom 10%)
-                }
+                // 鯛 (Bream) - 滑らかな山型の分布（0〜20、平均10）にして被りを減らす
+                p.catchA = Math.floor(Math.random() * 14) + Math.floor(Math.random() * 8);
 
-                // 青物 (Blue)
+                // 青物 (Blue) - 少し分散させて被りを減らす
                 let rB = Math.random();
                 if (rB < 0.01) {
-                    p.catchB = 5; // 1% (約1〜2人)
-                } else if (rB < 0.16) { // 0.01 + 0.15 = 0.16
-                    p.catchB = Math.floor(Math.random() * 2) + 2; // 2-3 (15%: イケスに2人くらい)
-                } else if (rB < 0.66) { // 0.16 + 0.50 = 0.66
-                    p.catchB = 1; // 1 (50%: 半分くらい)
+                    p.catchB = 5;       // 1%
+                } else if (rB < 0.03) {
+                    p.catchB = 4;       // 2%
+                } else if (rB < 0.18) {
+                    p.catchB = 3;       // 15% (イケスに2人くらい)
+                } else if (rB < 0.33) {
+                    p.catchB = 2;       // 15%
+                } else if (rB < 0.78) {
+                    p.catchB = 1;       // 45% (約半分)
                 } else {
-                    p.catchB = 0; // 0 (残り約34%)
+                    p.catchB = 0;       // 22%
                 }
                 updated = true;
             }
