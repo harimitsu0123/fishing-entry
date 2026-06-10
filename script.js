@@ -5118,20 +5118,26 @@ window.renderRankings = function() {
                 const rank = idx + 1;
                 const rankMark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
                 const membersHtml = (rank <= 3) ? `
-                    <div style="margin-top:0.4rem; font-size:0.8rem; color:#475569; background:#f8fafc; padding:0.5rem; border-radius:6px; border-left:3px solid #059669;">
-                        ${ik.members.slice(0, 5).map(m => `<span>${m.group} - ${m.name}(${m.score}点)</span>`).join('<br>')}
+                    <div style="margin-top:0.3rem; font-size:0.85rem; color:#475569; background:#f8fafc; padding:0.3rem 0.5rem; border-radius:6px; border-left:3px solid #059669; line-height:1.4;">
+                        ${ik.members.slice(0, 5).map(m => `<span style="display:inline-block; margin-right:8px; white-space:nowrap;">${m.group} - <strong>${m.name}</strong>(${m.score}点)</span>`).join('')}
                     </div>
                 ` : '';
                 
                 html += `
                     <tr style="border-bottom:1px solid #f1f5f9;">
-                        <td style="padding:8px; vertical-align:top; width:40px;">${rankMark}</td>
-                        <td style="padding:8px; vertical-align:top;">
-                            <strong style="font-size:1.2rem;">${ik.name}</strong><br>
-                            <small class="text-muted">${ik.count}名 / 計${ik.total}点</small>
+                        <td style="padding:6px 8px; vertical-align:top; width:50px;">
+                            <span style="font-weight:900; font-size:1.3rem; color:#1e293b;">${rankMark}</span>
+                        </td>
+                        <td style="padding:6px 8px; vertical-align:top;">
+                            <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+                                <strong style="font-size:1.3rem;">${ik.name}</strong>
+                                <small class="text-muted" style="font-size:0.85rem;">${ik.count}名 / 計${ik.total}点</small>
+                            </div>
                             ${membersHtml}
                         </td>
-                        <td style="padding:8px; text-align:right; vertical-align:top; font-weight:bold; color:#059669; white-space:nowrap;">${ik.average}<small style="font-size:0.7rem; margin-left:2px;">点</small></td>
+                        <td style="padding:6px 8px; text-align:right; vertical-align:top; white-space:nowrap;">
+                            <span style="font-size:1.6rem; font-weight:900; color:#059669;">${ik.average}<small style="font-size:0.8rem; margin-left:2px; font-weight:normal;">点</small></span>
+                        </td>
                     </tr>`;
             });
             html += '</tbody></table>';
