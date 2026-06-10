@@ -4760,18 +4760,18 @@ window.generateMockCatchData = async function() {
             if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
                 let r = Math.random();
                 if (r < 0.1) {
-                    // 10% 爆釣 (Top tier: Max Bream 15, Max Blue 5)
-                    p.catchA = Math.floor(Math.random() * 10) + 6; // 6-15
-                    p.catchB = Math.floor(Math.random() * 4) + 2;  // 2-5
+                    // 10% 爆釣 (Top tier: Bream 8-15, Blue rare)
+                    p.catchA = Math.floor(Math.random() * 8) + 8; // 8-15
+                    p.catchB = Math.random() < 0.2 ? 1 : 0;       // 20% for 1 blue
                 } else if (r < 0.4) {
-                    // 30% 上位層 (Upper-mid)
-                    p.catchA = Math.floor(Math.random() * 7) + 3;  // 3-9
-                    p.catchB = Math.floor(Math.random() * 3);      // 0-2
+                    // 30% 上位層 (Upper-mid: Bream 4-8)
+                    p.catchA = Math.floor(Math.random() * 5) + 4; // 4-8
+                    p.catchB = Math.random() < 0.1 ? 1 : 0;       // 10% for 1 blue
                 } else if (r < 0.85) {
-                    // 45% 中・下位層 (Lower-mid)
-                    p.catchA = Math.floor(Math.random() * 4);      // 0-3
-                    p.catchB = Math.floor(Math.random() * 2);      // 0-1
-                    if (p.catchA === 0 && p.catchB === 0) p.catchA = 1;
+                    // 45% 中・下位層 (Lower-mid: Bream 0-3)
+                    p.catchA = Math.floor(Math.random() * 4);     // 0-3
+                    p.catchB = 0;                                 // 0 blue
+                    if (p.catchA === 0) p.catchA = 1;
                 } else {
                     // 15% ボウズ (No catch)
                     p.catchA = 0;
@@ -4965,6 +4965,7 @@ window.renderRankings = function() {
     // Handle full-width numbers and commas
     const tobiStr = (config.tobiList || "").replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/、|，/g, ',');
     const tobis = tobiStr.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+    // 1. Assign finalRank and strictRank
     let tmpRank = 1;
     for (let i = 0; i < individualData.length; i++) {
         if (i > 0 && individualData[i].score === individualData[i-1].score && individualData[i].cB === individualData[i-1].cB && individualData[i].cA === individualData[i-1].cA) {
@@ -4972,14 +4973,31 @@ window.renderRankings = function() {
         } else {
             tmpRank = i + 1;
         }
-        individualData[i].finalRank = tmpRank; // Store the absolute rank
+        individualData[i].finalRank = tmpRank;
+        individualData[i].strictRank = i + 1;
+    }
+
+    // 2. Identify if a tie block covers a tobi target
+    const tobiTargetsByRank = {};
+    for (let i = 0; i < individualData.length; i++) {
         if (individualData[i].score > 0) {
-            if (tmpRank <= config.topCount) {
+            if (tobis.includes(individualData[i].strictRank)) {
+                // This absolute rank is a tobi, record it for the whole tie block
+                tobiTargetsByRank[individualData[i].finalRank] = individualData[i].strictRank;
+            }
+        }
+    }
+
+    // 3. Assign awards
+    for (let i = 0; i < individualData.length; i++) {
+        if (individualData[i].score > 0) {
+            if (individualData[i].finalRank <= config.topCount) {
                 individualData[i].isAutoAward = true;
                 individualData[i].awardType = 'top';
-            } else if (tobis.includes(tmpRank)) {
+            } else if (tobiTargetsByRank[individualData[i].finalRank]) {
                 individualData[i].isAutoAward = true;
                 individualData[i].awardType = 'tobi';
+                individualData[i].tobiTarget = tobiTargetsByRank[individualData[i].finalRank];
             } else {
                 individualData[i].isAutoAward = false;
             }
@@ -5035,7 +5053,11 @@ window.renderRankings = function() {
                 if (p.awardType === 'top') {
                     awardIcon = '<span style="color:#f1c40f; margin-left:4px;" title="上位入賞">🏆</span>';
                 } else if (p.awardType === 'tobi') {
-                    awardIcon = '<span style="color:#10b981; margin-left:4px;" title="飛び賞">🎁<span style="font-size:0.65rem; color:#10b981;">(飛)</span></span>';
+                    if (p.tobiTarget && p.tobiTarget !== p.finalRank) {
+                        awardIcon = `<span style="color:#10b981; margin-left:4px;" title="${p.tobiTarget}位の飛び賞対象（同着から選出）">🎁<span style="font-size:0.65rem; color:#10b981;">(${p.tobiTarget}位対象)</span></span>`;
+                    } else {
+                        awardIcon = '<span style="color:#10b981; margin-left:4px;" title="飛び賞">🎁<span style="font-size:0.65rem; color:#10b981;">(飛)</span></span>';
+                    }
                 }
             }
             const awardStar = awardIcon;
