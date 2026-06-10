@@ -129,6 +129,24 @@ function doPost(e) {
       return createJsonResponse({ status: 'success' });
     }
     
+    // --- 【アクション: 予約送信 (submit_preorder)】 ---
+    else if (action === 'submit_preorder') {
+      if (!db.preorders) db.preorders = [];
+      request.data.timestamp = new Date().getTime();
+      db.preorders.push(request.data);
+      saveToDb(db, props);
+      return createJsonResponse({ status: 'success' });
+    }
+
+    // --- 【アクション: アンケート送信 (submit_survey)】 ---
+    else if (action === 'submit_survey') {
+      if (!db.surveys) db.surveys = [];
+      request.data.timestamp = new Date().getTime();
+      db.surveys.push(request.data);
+      saveToDb(db, props);
+      return createJsonResponse({ status: 'success' });
+    }
+    
   } catch (error) {
     return createJsonResponse({ status: 'error', message: error.toString() });
   } finally {

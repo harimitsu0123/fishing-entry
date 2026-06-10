@@ -355,6 +355,7 @@
                 <button class="admin-tab-btn" data-tab="tab-ikesu">イケス割当</button>
                 <button class="admin-tab-btn" data-tab="tab-print" onclick="window.updatePrintView()">印刷</button>
                 <button class="admin-tab-btn" data-tab="tab-settings">大会設定</button>
+                <button class="admin-tab-btn" data-tab="tab-preorders" onclick="if(window.renderPreorders) window.renderPreorders(); if(window.renderSurveys) window.renderSurveys();">独立フォーム管理</button>
             </nav>
 
             <div id="admin-tab-container">
@@ -404,8 +405,8 @@
                             <table id="entry-table">
                                 <thead>
                                     <tr>
-                                        <th onclick="sortDashboard('id')" style="cursor:pointer">番号 <span class="sort-icon"></span></th>
-                                        <th onclick="sortDashboard('source')" style="cursor:pointer">区分 <span class="sort-icon"></span></th>
+                                        <th>番号</th>
+                                        <th>区分</th>
                                         <th onclick="sortDashboard('groupName')" style="cursor:pointer">グループ <span class="sort-icon"></span></th>
                                         <th onclick="sortDashboard('representative')" style="cursor:pointer">氏名 <span class="sort-icon"></span></th>
                                         <th>釣り/見学</th>
@@ -549,6 +550,33 @@
                                         <input type="text" id="url-leader-input" readonly class="form-control" placeholder="自動生成中...">
                                         <button class="btn-primary btn-copy-wide" onclick="copyShareUrl('url-leader-input')">コピー</button>
                                         <button class="btn-open-link" onclick="openShareUrl('url-leader-input')">開く</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Group C: Standalone Forms -->
+                            <div class="url-section-title mt-4">独立フォーム (当日案内用)</div>
+                            <div class="url-grid">
+                                <div class="url-tile">
+                                    <div class="url-tile-header">
+                                        <span class="url-tile-title">試釣会商品 予約</span>
+                                        <span class="badge" style="background:#e67e22; color:white;">予約用</span>
+                                    </div>
+                                    <div class="url-tile-body">
+                                        <input type="text" id="url-preorder" readonly class="form-control" placeholder="自動生成中...">
+                                        <button class="btn-primary btn-copy-wide" onclick="copyShareUrl('url-preorder')">コピー</button>
+                                        <button class="btn-open-link" onclick="openShareUrl('url-preorder')">開く</button>
+                                    </div>
+                                </div>
+                                <div class="url-tile">
+                                    <div class="url-tile-header">
+                                        <span class="url-tile-title">終了後アンケート</span>
+                                        <span class="badge" style="background:#0984e3; color:white;">アンケート</span>
+                                    </div>
+                                    <div class="url-tile-body">
+                                        <input type="text" id="url-survey" readonly class="form-control" placeholder="自動生成中...">
+                                        <button class="btn-primary btn-copy-wide" onclick="copyShareUrl('url-survey')">コピー</button>
+                                        <button class="btn-open-link" onclick="openShareUrl('url-survey')">開く</button>
                                     </div>
                                 </div>
                             </div>
@@ -736,6 +764,51 @@
                         <button class="btn-primary w-100" onclick="window.print()">🖨️ 印刷実行 (A4サイズ推奨)</button>
                     </div>
                     <div id="print-view-container"></div>
+                </div>
+
+                <div id="tab-preorders" class="admin-tab-content">
+                    <div style="margin-bottom: 3rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h2 style="margin: 0; color: var(--color-suiho);">試釣会商品 予約一覧</h2>
+                            <button class="btn-primary" onclick="if(window.exportPreordersToCSV) window.exportPreordersToCSV()">📥 CSV書き出し</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>日時</th>
+                                        <th>受取店舗</th>
+                                        <th>氏名</th>
+                                        <th>電話番号</th>
+                                        <th>予約商品と数量</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="preorder-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h2 style="margin: 0; color: var(--color-mintsuri);">終了後アンケート結果</h2>
+                            <button class="btn-primary" onclick="if(window.exportSurveysToCSV) window.exportSurveysToCSV()">📥 CSV書き出し</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>日時</th>
+                                        <th>グループ名</th>
+                                        <th>満足度</th>
+                                        <th>釣果</th>
+                                        <th>次回参加</th>
+                                        <th>コメント</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="survey-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="tab-stats" class="admin-tab-content">
@@ -1063,6 +1136,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=8.13.1"></script>
+    <script src="script.js?v=8.13.3"></script>
 </body>
 </html>

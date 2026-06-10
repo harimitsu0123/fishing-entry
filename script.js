@@ -890,14 +890,14 @@ function finalizeLoad(isRefresh = false) {
         // v8.1.42: Ensure coordinator views also refresh automatically on sync
         renderActiveCoordinatorView();
 
+        // Always generate URLs so they don't get stuck on "自動生成中..."
+        generateSpecialUrls();
+
         // v8.1.52: ONLY run startup helpers if this is NOT a standard auto-sync refresh
         if (!isRefresh) {
             // v7.6.1: Run URL parameter check AFTER loading is fully settled
             // v8.1.56: Skip scroll when refreshing data
             checkUrlParams(true); 
-
-            // v7.6.1: Initialize specialized URL display in Admin Tab
-            generateSpecialUrls();
 
             // v7.0: 自動復旧チェック（再読み込み時）
             setTimeout(checkPendingRegistration, 500);
@@ -942,6 +942,7 @@ function migrateTshirtSizes() {
 
 function generateSpecialUrls() {
     const baseUrl = window.location.href.split('?')[0];
+    const dirUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/') + 1);
     
     const setVal = (id, url) => {
         const el = document.getElementById(id);
@@ -955,6 +956,11 @@ function generateSpecialUrls() {
     setVal('url-mintsuri-admin', `${baseUrl}?view=mintsuri`);
     setVal('url-harimitsu-admin', `${baseUrl}?view=harimitsu`);
     setVal('url-suiho-admin', `${baseUrl}?view=suiho`);
+    setVal('url-leader-input', `${baseUrl}?view=leader-entry`);
+    
+    // Standalone forms
+    setVal('url-preorder', `${dirUrl}preorder.html`);
+    setVal('url-survey', `${dirUrl}survey.html`);
 }
 
 
@@ -2388,16 +2394,15 @@ window.updateDashboard = function() {
             const pGenders = pArray.map(p => p.gender ? genderLabels[p.gender] || "" : "").join(' ');
             
             const combinedParticipantInfo = (pNames + " " + pNicks + " " + pRegions + " " + pTshirts + " " + pGenders).toLowerCase();
-            const searchTermLower = searchTerm.toLowerCase();
-            
             const safeId = e.id || "未採番";
-            const matchesEntrySearch = safeId.toLowerCase().includes(searchTermLower) || 
-                                     (e.groupName && e.groupName.toLowerCase().includes(searchTermLower)) || 
-                                     (e.representative && e.representative.toLowerCase().includes(searchTermLower));
             
-            const matchesParticipantSearch = combinedParticipantInfo.includes(searchTermLower);
-
-            if (!matchesEntrySearch && !matchesParticipantSearch) return;
+            const fullString = [safeId, e.groupName || "", e.representative || "", combinedParticipantInfo].join(' ').toLowerCase();
+            const searchTerms = searchTerm.replace(/　/g, ' ').split(/\s+/).filter(Boolean);
+            
+            if (searchTerms.length > 0) {
+                const isMatch = searchTerms.every(term => fullString.includes(term));
+                if (!isMatch) return;
+            }
             if (dashboardFilter !== 'all' && e.source !== dashboardFilter) return;
 
             const badgeMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
@@ -3559,7 +3564,11 @@ function updateReceptionList() {
         const pGenders = pArray.map(p => p ? (genderLabels[p.gender] || "") : "").join(' ');
         const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks} ${pTshirts} ${pGenders}`.toLowerCase();
         
-        if (searchTerm && !combined.includes(searchTerm)) return;
+        const searchTerms = searchTerm.replace(/　/g, ' ').split(/\s+/).filter(Boolean);
+        if (searchTerms.length > 0) {
+            const isMatch = searchTerms.every(term => combined.includes(term));
+            if (!isMatch) return;
+        }
 
         // Completion Filter
         if (!showCompleted && e.isCompleted) return;
@@ -5921,3 +5930,88 @@ window.onpopstate = function(event) {
 };
 
 // End of script
+
+// Standalone form admin dashboard features
+window.renderPreorders = function() {
+    const list = document.getElementById('preorder-list');
+    if (!list) return;
+    const preorders = state.preorders || [];
+    if (preorders.length === 0) {
+        list.innerHTML = '<tr><td colspan="5" style="text-align:center;">予約データがありません</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    [...preorders].reverse().forEach(p => {
+        const dateStr = p.timestamp ? new Date(p.timestamp).toLocaleString() : '-';
+        const itemsStr = (p.items || []).map(i => `${i.name}(${i.quantity})`).join('<br>');
+        html += `
+            <tr>
+                <td>${dateStr}</td>
+                <td>${p.storeName || ''}</td>
+                <td>${p.customerName || ''}</td>
+                <td>${p.customerPhone || ''}</td>
+                <td>${itemsStr}</td>
+            </tr>
+        `;
+    });
+    list.innerHTML = html;
+};
+
+window.renderSurveys = function() {
+    const list = document.getElementById('survey-list');
+    if (!list) return;
+    const surveys = state.surveys || [];
+    if (surveys.length === 0) {
+        list.innerHTML = '<tr><td colspan="6" style="text-align:center;">アンケート結果がありません</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    [...surveys].reverse().forEach(s => {
+        const dateStr = s.timestamp ? new Date(s.timestamp).toLocaleString() : '-';
+        html += `
+            <tr>
+                <td>${dateStr}</td>
+                <td>${s.groupName || ''}</td>
+                <td>${s.satisfaction || ''}</td>
+                <td>${s.catchResult || ''}</td>
+                <td>${s.nextTime || ''}</td>
+                <td><div style="max-width:200px; max-height:60px; overflow-y:auto; font-size:0.8rem;">${s.comments || ''}</div></td>
+            </tr>
+        `;
+    });
+    list.innerHTML = html;
+};
+
+window.exportPreordersToCSV = function() {
+    const preorders = state.preorders || [];
+    if (preorders.length === 0) return alert('データがありません');
+    let csv = '\uFEFF日時,受取店舗,氏名,電話番号,予約商品\n';
+    preorders.forEach(p => {
+        const dateStr = p.timestamp ? new Date(p.timestamp).toLocaleString() : '';
+        const itemsStr = (p.items || []).map(i => `${i.name}(${i.quantity})`).join(' / ');
+        csv += `"${dateStr}","${p.storeName || ''}","${p.customerName || ''}","${p.customerPhone || ''}","${itemsStr}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `予約一覧_${new Date().getTime()}.csv`;
+    link.click();
+};
+
+window.exportSurveysToCSV = function() {
+    const surveys = state.surveys || [];
+    if (surveys.length === 0) return alert('データがありません');
+    let csv = '\uFEFF日時,グループ名,満足度,釣果,次回参加,コメント\n';
+    surveys.forEach(s => {
+        const dateStr = s.timestamp ? new Date(s.timestamp).toLocaleString() : '';
+        const safeComment = (s.comments || '').replace(/"/g, '""');
+        csv += `"${dateStr}","${s.groupName || ''}","${s.satisfaction || ''}","${s.catchResult || ''}","${s.nextTime || ''}","${safeComment}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `アンケート結果_${new Date().getTime()}.csv`;
+    link.click();
+};

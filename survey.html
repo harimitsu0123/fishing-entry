@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大会終了後アンケート</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        .survey-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .survey-header h2 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .survey-header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: normal;
+            cursor: pointer;
+            background: #f8fafc;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            flex: 1;
+            min-width: 120px;
+            justify-content: center;
+        }
+        .radio-label:hover {
+            background: #f1f5f9;
+        }
+        .radio-label input[type="radio"] {
+            width: auto;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 id="app-title">BORIJIN FESTIVAL in 水宝 2026</h1>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
+            <div class="survey-header">
+                <h2>📝 大会終了後アンケート</h2>
+                <p>本日はご参加いただきありがとうございました。<br>今後のイベント運営の参考とするため、アンケートにご協力をお願いいたします。</p>
+            </div>
+
+            <div id="loading-spinner" style="display: none; text-align: center; padding: 2rem;">
+                <div class="spinner" style="border: 4px solid rgba(0, 91, 181, 0.1); border-top: 4px solid #005bb5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                <p style="margin-top: 1rem; color: #5a6a7a; font-weight: bold;">送信中...</p>
+            </div>
+
+            <form id="survey-form">
+                <div class="form-group">
+                    <label for="group-name">グループ名 / 代表者名 <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(※任意)</span></label>
+                    <input type="text" id="group-name" placeholder="例：チーム・ゼブラ / 山田 太郎">
+                </div>
+                
+                <div class="form-group">
+                    <label for="satisfaction">今回の大会の総合的な満足度を教えてください <span class="required">(※必須)</span></label>
+                    <select id="satisfaction" required>
+                        <option value="" disabled selected>選択してください</option>
+                        <option value="5">★★★★★ (大変満足)</option>
+                        <option value="4">★★★★☆ (満足)</option>
+                        <option value="3">★★★☆☆ (普通)</option>
+                        <option value="2">★★☆☆☆ (やや不満)</option>
+                        <option value="1">★☆☆☆☆ (不満)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>本日の釣果はいかがでしたか？ <span class="required">(※必須)</span></label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="catch-result" value="大満足" required> 大満足！
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="catch-result" value="まあまあ"> まあまあ
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="catch-result" value="厳しかった"> 厳しかった
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>次回もこのような大会があれば参加したいですか？ <span class="required">(※必須)</span></label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="next-time" value="はい" required> はい
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="next-time" value="いいえ"> いいえ
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="next-time" value="わからない"> わからない
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="comments">イベント運営やルールについてのご意見・ご感想 <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(※任意)</span></label>
+                    <textarea id="comments" rows="5" placeholder="良かった点や、改善してほしい点などご自由にご記入ください。"></textarea>
+                </div>
+
+                <div class="form-actions" style="margin-top: 2rem;">
+                    <button type="submit" class="btn-primary btn-large w-100" style="width: 100%;">アンケートを送信する</button>
+                </div>
+            </form>
+        </div>
+    </main>
+    
+    <script>
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbykDT-XvGhrZCQcCp_gCxZAToW3X4s_g_BPX7LBO4E-A84vUY0VE3nlqehITFOfp9f9/exec";
+
+        document.getElementById('survey-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const groupName = document.getElementById('group-name').value;
+            const satisfaction = document.getElementById('satisfaction').value;
+            const catchResult = document.querySelector('input[name="catch-result"]:checked')?.value || '';
+            const nextTime = document.querySelector('input[name="next-time"]:checked')?.value || '';
+            const comments = document.getElementById('comments').value;
+            
+            const payload = {
+                action: 'submit_survey',
+                data: { groupName, satisfaction, catchResult, nextTime, comments }
+            };
+
+            const form = document.getElementById('survey-form');
+            const spinner = document.getElementById('loading-spinner');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            
+            submitBtn.disabled = true;
+            form.style.display = 'none';
+            spinner.style.display = 'block';
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(payload)
+                });
+                
+                alert('アンケートにご協力いただき、誠にありがとうございました！');
+                form.reset();
+            } catch (err) {
+                console.error(err);
+                alert('送信に失敗しました。時間をおいて再度お試しください。');
+            } finally {
+                submitBtn.disabled = false;
+                form.style.display = 'block';
+                spinner.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
