@@ -4972,6 +4972,7 @@ window.renderRankings = function() {
         } else {
             tmpRank = i + 1;
         }
+        individualData[i].finalRank = tmpRank; // Store the absolute rank
         if (individualData[i].score > 0) {
             if (tmpRank <= config.topCount) {
                 individualData[i].isAutoAward = true;
@@ -5024,14 +5025,8 @@ window.renderRankings = function() {
             filteredData[i].isTie = isTie;
         }
 
-        filteredData.forEach((p, idx) => {
-            if (lastP && p.score === lastP.score && p.cB === lastP.cB && p.cA === lastP.cA) {
-                // currentRank はそのまま
-            } else {
-                currentRank = idx + 1;
-            }
-            lastP = p;
-            const rank = currentRank;
+        filteredData.forEach((p) => {
+            const rank = p.finalRank;
             const rankMark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
             let awardIcon = '';
             if (p.isAwardWinner) {
