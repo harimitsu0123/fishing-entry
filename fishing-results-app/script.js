@@ -378,9 +378,18 @@ window.generateMockCatchData = async function() {
                 p.isAwardWinner = false;
                 let r = Math.random();
                 if (r < 0.15) {
-                    // 15% 爆釣 (Top tier: 12-18 Bream, ~30% chance for 1-2 Blue)
+                    // 15% 爆釣 (Top tier: 12-18 Bream)
                     p.catchA = Math.floor(Math.random() * 7) + 12; // 12-18
-                    p.catchB = Math.random() < 0.3 ? (Math.floor(Math.random() * 2) + 1) : 0; // 0-2
+                    let bRand = Math.random();
+                    if (bRand < 0.05) {
+                        p.catchB = Math.floor(Math.random() * 2) + 4; // 4-5 blue (extremely rare, ~1-2 people)
+                    } else if (bRand < 0.15) {
+                        p.catchB = Math.floor(Math.random() * 2) + 2; // 2-3 blue
+                    } else if (bRand < 0.3) {
+                        p.catchB = 1; // 1 blue
+                    } else {
+                        p.catchB = 0; // 0 blue
+                    }
                 } else if (r < 0.5) {
                     // 35% 上位層 (Upper-mid: 9-11 Bream)
                     p.catchA = Math.floor(Math.random() * 3) + 9;  // 9-11
