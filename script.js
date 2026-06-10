@@ -4759,22 +4759,21 @@ window.generateMockCatchData = async function() {
         (e.participants || []).forEach(p => {
             if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
                 let r = Math.random();
-                if (r < 0.1) {
-                    // 10% 爆釣 (Top tier: Bream 8-15, Blue rare)
-                    p.catchA = Math.floor(Math.random() * 8) + 8; // 8-15
-                    p.catchB = Math.random() < 0.2 ? 1 : 0;       // 20% for 1 blue
-                } else if (r < 0.4) {
-                    // 30% 上位層 (Upper-mid: Bream 4-8)
-                    p.catchA = Math.floor(Math.random() * 5) + 4; // 4-8
-                    p.catchB = Math.random() < 0.1 ? 1 : 0;       // 10% for 1 blue
-                } else if (r < 0.85) {
-                    // 45% 中・下位層 (Lower-mid: Bream 0-3)
-                    p.catchA = Math.floor(Math.random() * 4);     // 0-3
-                    p.catchB = 0;                                 // 0 blue
-                    if (p.catchA === 0) p.catchA = 1;
+                if (r < 0.15) {
+                    // 15% 爆釣 (Top tier: 12-18 Bream, ~30% chance for 1-2 Blue)
+                    p.catchA = Math.floor(Math.random() * 7) + 12; // 12-18
+                    p.catchB = Math.random() < 0.3 ? (Math.floor(Math.random() * 2) + 1) : 0; // 0-2
+                } else if (r < 0.5) {
+                    // 35% 上位層 (Upper-mid: 9-11 Bream)
+                    p.catchA = Math.floor(Math.random() * 3) + 9;  // 9-11
+                    p.catchB = Math.random() < 0.15 ? 1 : 0;       // 0-1
+                } else if (r < 0.9) {
+                    // 40% 中・下位層 (Lower-mid: 5-8 Bream) - around 100th place
+                    p.catchA = Math.floor(Math.random() * 4) + 5;  // 5-8
+                    p.catchB = Math.random() < 0.1 ? 1 : 0;        // 0-1
                 } else {
-                    // 15% ボウズ (No catch)
-                    p.catchA = 0;
+                    // 10% 渋い〜ボウズ (Tough: 0-3 Bream)
+                    p.catchA = Math.floor(Math.random() * 4);      // 0-3
                     p.catchB = 0;
                 }
                 updated = true;
