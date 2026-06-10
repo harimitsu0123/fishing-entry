@@ -119,15 +119,18 @@ body {
 input[type="tel"], input[type="number"], input[type="text"] {
     width: 100%;
     background: white;
-    border: 2px solid var(--card-border);
+    border: 2px solid #cbd5e1;
     border-radius: 12px;
     padding: 1rem;
     color: var(--text-white);
     font-size: 1.25rem;
     text-align: center;
-    letter-spacing: 0.5rem;
     outline: none;
     transition: all 0.2s;
+}
+
+#ikesu-passcode {
+    letter-spacing: 0.5rem;
 }
 
 input:focus {
@@ -677,6 +680,7 @@ input:focus {
 
 .pond-badge.admin {
     background: #7c3aed; /* Purple for admin */
+    color: white;
 }
 
 select {
