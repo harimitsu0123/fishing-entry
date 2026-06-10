@@ -4951,7 +4951,9 @@ window.renderRankings = function() {
     individualData.sort((a, b) => (b.score - a.score) || (b.cB - a.cB) || (b.cA - a.cA));
 
     const config = state.settings.rankingConfig || { topCount: 3, tobiList: "5,10,15,20,25,30" };
-    const tobis = config.tobiList.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+    // Handle full-width numbers and commas
+    const tobiStr = (config.tobiList || "").replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/、|，/g, ',');
+    const tobis = tobiStr.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
     let tmpRank = 1;
     for (let i = 0; i < individualData.length; i++) {
         if (i > 0 && individualData[i].score === individualData[i-1].score && individualData[i].cB === individualData[i-1].cB && individualData[i].cA === individualData[i-1].cA) {
@@ -4959,8 +4961,16 @@ window.renderRankings = function() {
         } else {
             tmpRank = i + 1;
         }
-        if (individualData[i].score > 0 && (tmpRank <= config.topCount || tobis.includes(tmpRank))) {
-            individualData[i].isAutoAward = true;
+        if (individualData[i].score > 0) {
+            if (tmpRank <= config.topCount) {
+                individualData[i].isAutoAward = true;
+                individualData[i].awardType = 'top';
+            } else if (tobis.includes(tmpRank)) {
+                individualData[i].isAutoAward = true;
+                individualData[i].awardType = 'tobi';
+            } else {
+                individualData[i].isAutoAward = false;
+            }
         } else {
             individualData[i].isAutoAward = false;
         }
@@ -5012,7 +5022,17 @@ window.renderRankings = function() {
             lastP = p;
             const rank = currentRank;
             const rankMark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
-            const awardStar = (p.isAwardWinner || p.isAutoAward) ? '<span style="color:#f1c40f; margin-left:4px;">🏆</span>' : '';
+            let awardIcon = '';
+            if (p.isAwardWinner) {
+                awardIcon = '<span style="color:#f1c40f; margin-left:4px;" title="特別賞/手動付与">🏆</span>';
+            } else if (p.isAutoAward) {
+                if (p.awardType === 'top') {
+                    awardIcon = '<span style="color:#f1c40f; margin-left:4px;" title="上位入賞">🏆</span>';
+                } else if (p.awardType === 'tobi') {
+                    awardIcon = '<span style="color:#10b981; margin-left:4px;" title="飛び賞">🎁<span style="font-size:0.65rem; color:#10b981;">(飛)</span></span>';
+                }
+            }
+            const awardStar = awardIcon;
             const tieBadge = p.isTie ? '<span style="font-size:0.75rem; color:#eab308; margin-left:4px; font-weight:bold;" title="完全同点（ジャンケン等で決定してください）">⚠️同着</span>' : '';
             
             html += `
