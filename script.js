@@ -5037,12 +5037,16 @@ window.renderRankings = function() {
             
             html += `
                 <tr style="border-bottom:1px solid #f1f5f9;">
-                    <td style="padding:8px; width:50px;">${rankMark}</td>
+                    <td style="padding:8px; width:75px;">
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <span style="font-weight:900; font-size:1.3rem; color:#1e293b;">${rankMark}</span>
+                            <div style="display:flex; flex-direction:column; line-height:1;">${awardStar}</div>
+                        </div>
+                    </td>
                     <td style="padding:8px;">
                         <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:6px;">
                             <strong style="font-size:1.05rem;">${p.name}</strong>
                             ${p.nickname ? `<span style="font-size:0.85rem; color:#64748b;">(${p.nickname})</span>` : ''}
-                            ${awardStar}
                             ${tieBadge}
                             <span style="font-size:0.75rem; background:#f1f5f9; padding:1px 5px; border-radius:4px; color:#475569; border:1px solid #e2e8f0;">${p.groupName}</span>
                             ${p.ikName ? `<span style="font-size:0.75rem; background:#dbeafe; padding:1px 5px; border-radius:4px; color:#1e40af; border:1px solid #bfdbfe;">イケス${p.ikName}</span>` : ''}
