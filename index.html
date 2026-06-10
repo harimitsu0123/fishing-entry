@@ -878,7 +878,6 @@
                 <button class="day-tab-btn active" data-tab="tab-day-reception" onclick="switchDayTab('tab-day-reception')">受付</button>
                 <button class="day-tab-btn" data-tab="tab-day-results" onclick="switchDayTab('tab-day-results')">釣果確認</button>
                 <button class="day-tab-btn" data-tab="tab-day-rankings" onclick="switchDayTab('tab-day-rankings')">ランキング</button>
-                <button class="day-tab-btn" data-tab="tab-day-awards" onclick="switchDayTab('tab-day-awards')">表彰設定</button>
                 <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">
                     <button class="btn-toolbar highlight" style="font-size:0.8rem; padding: 4px 12px; border-radius: 6px;" onclick="handleResultsExternalLink()">釣果入力(外部)</button>
                     <button class="btn-text" style="font-size:0.8rem; color: #64748b;" onclick="switchView(null, 'registration-view')">管理ホームへ戻る</button>
@@ -962,45 +961,6 @@
                     <div class="card">
                         <div class="card-header"><h2>イケス対抗順位 (平均点順)</h2></div>
                         <div id="day-ranking-ikesu-list" class="ranking-container"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="tab-day-awards" class="day-tab-content">
-                <div class="card mb-4 no-print">
-                    <div class="card-header"><h2>表彰・飛び賞設定</h2></div>
-                    <div class="card-body" style="padding: 1.5rem;">
-                        <div class="form-group mb-4">
-                            <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">🏆 入賞（上位）人数</label>
-                            <div style="display:flex; gap:0.5rem; align-items:center;">
-                                <input type="number" id="rank-top-count" value="3" min="1" max="50" style="width: 100px; padding: 10px; font-size:1.1rem; text-align:center;">
-                                <span style="font-size:1.1rem; font-weight:bold;">位まで</span>
-                            </div>
-                            <p class="text-muted small mt-1">※上位から順に入賞マーク（🏆）が自動付与されます。</p>
-                        </div>
-
-                        <div class="form-group mb-4">
-                            <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">🎯 飛び賞の設定 (順位をカンマ区切り)</label>
-                            <input type="text" id="rank-tobi-list" value="5,10,15,20,25,30" placeholder="例: 5, 10, 15, 20" style="width: 100%; padding: 12px; font-size:1.1rem; border: 2px solid #3b82f6; border-radius:8px;">
-                            <div id="tobi-quick-selector" style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.8rem;">
-                                <!-- JSでクイック選択ボタンを生成可能 -->
-                            </div>
-                            <p class="text-muted small mt-2">※特定の順位（例：5位、10位...）の人にマークを付けたい場合に数字を入力してください。</p>
-                        </div>
-
-                        <div style="border-top: 1px solid #eee; padding-top: 1.5rem; display: flex; justify-content: flex-end;">
-                            <button class="btn-primary btn-large" onclick="saveRankingSettings()" style="min-width: 200px;">設定を保存して同期する</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header"><h3>現在の入賞候補者</h3></div>
-                    <div class="card-body">
-                        <p class="text-muted small">※「ランキング」タブで現在の順位を確認し、必要に応じて手動でトロフィーマークを付けることも可能です。</p>
-                        <div id="awards-preview-list" class="mt-3">
-                            <!-- JSで入賞予定者を表示 -->
-                        </div>
                     </div>
                 </div>
             </div>
