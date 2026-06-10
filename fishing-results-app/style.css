@@ -1,15 +1,18 @@
 :root {
-    --primary-color: #2563eb;
-    --primary-light: #3b82f6;
-    --accent-color: #f59e0b;
-    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    --card-bg: #ffffff;
-    --card-border: #cbd5e1;
-    --text-white: #0f172a;
-    --text-muted: #475569;
+    --primary-color: #0284c7; /* Ocean Blue */
+    --primary-light: #38bdf8; /* Sky Blue */
+    --accent-color: #f59e0b;  /* Golden Amber */
+    --bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --card-border: rgba(255, 255, 255, 0.6);
+    --text-white: #0f172a;    /* Dark slate for high contrast */
+    --text-muted: #64748b;
     --success: #059669;
-    --danger: #dc2626;
-    --glass-blur: blur(8px);
+    --danger: #e11d48;
+    --glass-blur: blur(16px);
+    --shadow-sm: 0 4px 6px -1px rgba(2, 132, 199, 0.05), 0 2px 4px -2px rgba(2, 132, 199, 0.05);
+    --shadow-md: 0 10px 25px -5px rgba(2, 132, 199, 0.1), 0 8px 10px -6px rgba(2, 132, 199, 0.05);
+    --shadow-lg: 0 20px 25px -5px rgba(2, 132, 199, 0.1), 0 8px 10px -6px rgba(2, 132, 199, 0.05);
 }
 
 * {
@@ -58,8 +61,13 @@ body {
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--card-border);
-    border-radius: 24px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+    box-shadow: var(--shadow-lg);
 }
 
 /* Auth View */
@@ -306,20 +314,35 @@ input:focus {
 
 /* Buttons */
 .btn-primary {
-    background: linear-gradient(to right, var(--primary-color), var(--primary-light));
+    background: linear-gradient(135deg, var(--primary-color), #0ea5e9);
     border: none;
-    border-radius: 14px;
+    border-radius: 12px;
     color: white;
     font-weight: 800;
     padding: 1rem 1.5rem;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-    transition: opacity 0.2s, transform 0.1s;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(2, 132, 199, 0.3);
 }
 
 .btn-primary:active {
-    transform: translateY(2px);
-    opacity: 0.9;
+    transform: translateY(1px);
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.2);
 }
 
 .btn-small {
@@ -337,6 +360,25 @@ input:focus {
     width: 100%;
     font-size: 1.1rem;
     padding: 1.25rem;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--primary-light);
+    color: var(--primary-color);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-outline:hover {
+    background: #f0f9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.1);
+}
+
+.btn-outline:active {
+    transform: translateY(0);
 }
 
 .btn-icon-text {
@@ -535,63 +577,85 @@ input:focus {
 .admin-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    gap: 1.5rem;
     margin-bottom: 2rem;
-    padding: 1.5rem;
+    padding: 2rem 1.5rem;
+    background: white;
 }
 
 .stat-item {
     text-align: center;
+    position: relative;
+}
+
+.stat-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: -0.75rem;
+    top: 10%;
+    height: 80%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, #e2e8f0, transparent);
 }
 
 .stat-item label {
     display: block;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 700;
     color: #64748b;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.05em;
 }
 
 .stat-value {
-    font-size: 1.5rem;
+    font-size: 2.5rem;
     font-weight: 900;
     color: var(--primary-color);
+    line-height: 1;
+    font-family: 'Outfit', sans-serif;
+    text-shadow: 1px 1px 0 rgba(255,255,255,1);
 }
 
 .stat-value span {
-    font-size: 0.9rem;
-    margin-left: 0.2rem;
+    font-size: 1.1rem;
+    margin-left: 0.25rem;
+    color: #475569;
+    font-weight: 700;
 }
 
 .ikesu-summary-list {
     display: grid;
-    gap: 0.75rem;
+    gap: 1rem;
 }
 
 .ikesu-summary-card {
     background: white;
-    border: 1px solid var(--card-border);
+    border: 1px solid #e2e8f0;
     border-radius: 16px;
-    padding: 1.25rem;
+    padding: 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    transition: all 0.2s;
-    border-left: 6px solid #e2e8f0;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+    border-left: 6px solid #cbd5e1;
 }
 
 .ikesu-summary-card.checked {
     border-left-color: #10b981;
     background: #f0fdf4;
+    border-color: #bbf7d0;
 }
 
 .ikesu-summary-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: var(--shadow-md);
+    border-color: #cbd5e1;
 }
 
 .ikesu-summary-card:active {
-    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(0) scale(0.99);
 }
 
 .ik-info .ik-name {

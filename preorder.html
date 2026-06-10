@@ -61,6 +61,11 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="customer-email">メールアドレス <span class="required">(※必須)</span></label>
+                    <input type="email" id="customer-email" required placeholder="例：example@harimitsu.co.jp">
+                </div>
+
+                <div class="form-group">
                     <label>ご予約商品・数量 <span class="required">(※必須)</span></label>
                     <p class="text-muted small mb-2" style="font-size: 0.8rem;">ご希望の商品の数量を入力してください（※商品名は仮のものです）</p>
                     
@@ -119,6 +124,7 @@
             const storeName = document.getElementById('store-name').value;
             const customerName = document.getElementById('customer-name').value;
             const customerPhone = document.getElementById('customer-phone').value;
+            const customerEmail = document.getElementById('customer-email').value;
             
             // Get item quantities
             const items = [];
@@ -137,7 +143,7 @@
 
             const payload = {
                 action: 'submit_preorder',
-                data: { storeName, customerName, customerPhone, items }
+                data: { storeName, customerName, customerPhone, customerEmail, items }
             };
 
             const form = document.getElementById('preorder-form');

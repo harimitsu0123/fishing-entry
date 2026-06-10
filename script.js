@@ -5997,6 +5997,7 @@ window.renderPreorders = function() {
                 <td>${p.storeName || ''}</td>
                 <td>${p.customerName || ''}</td>
                 <td>${p.customerPhone || ''}</td>
+                <td>${p.customerEmail || ''}</td>
                 <td>${itemsStr}</td>
             </tr>
         `;
@@ -6075,11 +6076,11 @@ window.renderSurveys = function() {
 window.exportPreordersToCSV = function() {
     const preorders = state.preorders || [];
     if (preorders.length === 0) return alert('データがありません');
-    let csv = '\uFEFF日時,受取店舗,氏名,電話番号,予約商品\n';
+    let csv = '\uFEFF日時,受取店舗,氏名,電話番号,メールアドレス,予約商品\n';
     preorders.forEach(p => {
         const dateStr = p.timestamp ? new Date(p.timestamp).toLocaleString() : '';
         const itemsStr = (p.items || []).map(i => `${i.name}(${i.quantity})`).join(' / ');
-        csv += `"${dateStr}","${p.storeName || ''}","${p.customerName || ''}","${p.customerPhone || ''}","${itemsStr}"\n`;
+        csv += `"${dateStr}","${p.storeName || ''}","${p.customerName || ''}","${p.customerPhone || ''}","${p.customerEmail || ''}","${itemsStr}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
