@@ -4758,8 +4758,17 @@ window.generateMockCatchData = async function() {
         if (e.status === 'cancelled') return;
         (e.participants || []).forEach(p => {
             if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
-                // 鯛 (Bream) - 滑らかな山型の分布（0〜20、平均10）にして被りを減らす
-                p.catchA = Math.floor(Math.random() * 14) + Math.floor(Math.random() * 8);
+                // 鯛 (Bream) - 1〜4匹を多めにし、青物だけの人や鯛だけで入賞する人を出やすくする
+                let rA = Math.random();
+                if (rA < 0.10) {
+                    p.catchA = Math.floor(Math.random() * 6) + 12; // 12-17匹 (10%: 鯛のみでも入賞の可能性あり)
+                } else if (rA < 0.40) {
+                    p.catchA = Math.floor(Math.random() * 6) + 6;  // 6-11匹 (30%)
+                } else if (rA < 0.80) {
+                    p.catchA = Math.floor(Math.random() * 4) + 1;  // 1-4匹 (40%: 要望に合わせて大幅増)
+                } else {
+                    p.catchA = 0;                                  // 0匹 (20%: 青物だけ釣る人の母数になる)
+                }
 
                 // 青物 (Blue) - 少し分散させて被りを減らす
                 let rB = Math.random();
