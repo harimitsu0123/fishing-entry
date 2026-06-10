@@ -4758,32 +4758,28 @@ window.generateMockCatchData = async function() {
         if (e.status === 'cancelled') return;
         (e.participants || []).forEach(p => {
             if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
-                let r = Math.random();
-                if (r < 0.15) {
-                    // 15% 爆釣 (Top tier: 12-18 Bream)
-                    p.catchA = Math.floor(Math.random() * 7) + 12; // 12-18
-                    let bRand = Math.random();
-                    if (bRand < 0.05) {
-                        p.catchB = Math.floor(Math.random() * 2) + 4; // 4-5 blue (extremely rare, ~1-2 people)
-                    } else if (bRand < 0.15) {
-                        p.catchB = Math.floor(Math.random() * 2) + 2; // 2-3 blue
-                    } else if (bRand < 0.3) {
-                        p.catchB = 1; // 1 blue
-                    } else {
-                        p.catchB = 0; // 0 blue
-                    }
-                } else if (r < 0.5) {
-                    // 35% 上位層 (Upper-mid: 9-11 Bream)
-                    p.catchA = Math.floor(Math.random() * 3) + 9;  // 9-11
-                    p.catchB = Math.random() < 0.15 ? 1 : 0;       // 0-1
-                } else if (r < 0.9) {
-                    // 40% 中・下位層 (Lower-mid: 5-8 Bream) - around 100th place
-                    p.catchA = Math.floor(Math.random() * 4) + 5;  // 5-8
-                    p.catchB = Math.random() < 0.1 ? 1 : 0;        // 0-1
+                // 鯛 (Bream)
+                let rA = Math.random();
+                if (rA < 0.15) {
+                    p.catchA = Math.floor(Math.random() * 7) + 12; // 12-18 (Top 15%)
+                } else if (rA < 0.5) {
+                    p.catchA = Math.floor(Math.random() * 3) + 9;  // 9-11 (Next 35%)
+                } else if (rA < 0.9) {
+                    p.catchA = Math.floor(Math.random() * 4) + 5;  // 5-8 (Next 40%)
                 } else {
-                    // 10% 渋い〜ボウズ (Tough: 0-3 Bream)
-                    p.catchA = Math.floor(Math.random() * 4);      // 0-3
-                    p.catchB = 0;
+                    p.catchA = Math.floor(Math.random() * 4);      // 0-3 (Bottom 10%)
+                }
+
+                // 青物 (Blue)
+                let rB = Math.random();
+                if (rB < 0.01) {
+                    p.catchB = 5; // 1% (約1〜2人)
+                } else if (rB < 0.16) { // 0.01 + 0.15 = 0.16
+                    p.catchB = Math.floor(Math.random() * 2) + 2; // 2-3 (15%: イケスに2人くらい)
+                } else if (rB < 0.66) { // 0.16 + 0.50 = 0.66
+                    p.catchB = 1; // 1 (50%: 半分くらい)
+                } else {
+                    p.catchB = 0; // 0 (残り約34%)
                 }
                 updated = true;
             }
