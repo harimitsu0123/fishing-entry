@@ -3211,9 +3211,23 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             "愛知", "岐阜", "香川", "徳島", "島根", "三重", "広島", "鳥取",
             "滋賀", "和歌山", "奈良", "京都", "大阪", "岡山", "兵庫"
         ];
+        const cityToPref = {
+            "名古屋": "愛知", "豊田": "愛知", "一宮": "愛知", "豊橋": "愛知", "岡崎": "愛知", "春日井": "愛知",
+            "四日市": "三重", "津": "三重", "鈴鹿": "三重", "松阪": "三重", "桑名": "三重", "伊勢": "三重",
+            "神戸": "兵庫", "姫路": "兵庫", "尼崎": "兵庫", "明石": "兵庫", "西宮": "兵庫", "芦屋": "兵庫", "宝塚": "兵庫", "伊丹": "兵庫", "加古川": "兵庫",
+            "堺": "大阪", "東大阪": "大阪", "枚方": "大阪", "豊中": "大阪", "吹田": "大阪", "高槻": "大阪", "茨木": "大阪", "八尾": "大阪",
+            "横浜": "神奈川", "川崎": "神奈川", "相模原": "神奈川",
+            "浜松": "静岡", "倉敷": "岡山", "福山": "広島", "呉": "広島", "高松": "香川", "丸亀": "香川"
+        };
         const getDistRank = (name) => {
-            const clean = name.replace(/(都|道|府|県)$/, '');
-            const idx = distanceOrder.findIndex(p => clean.startsWith(p));
+            let clean = name;
+            for (const [city, pref] of Object.entries(cityToPref)) {
+                if (name.includes(city)) {
+                    clean = pref;
+                    break;
+                }
+            }
+            const idx = distanceOrder.findIndex(p => clean.includes(p) || name.includes(p));
             return idx === -1 ? 999 : idx;
         };
 
