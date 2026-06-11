@@ -2704,8 +2704,8 @@ window.renderIkesuResultView = function() {
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 45px; text-align: center;">No</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 130px; text-align: center;">グループ名</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; text-align: center;">氏名</th>
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 95px; background: #ffebee !important; color: #d32f2f !important; text-align: center;">鯛・その他</th>
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 95px; background: #e3f2fd !important; color: #1976d2 !important; text-align: center;">青物</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 95px; background: #fff3e0 !important; color: #e65100 !important; text-align: center;">鯛等</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 95px; background: #e3f2fd !important; color: #1976d2 !important; text-align: center;">青物、クエ</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 140px; background: #e8f5e9 !important; color: #388e3c !important; text-align: center;">備考</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 60px; color: #000 !important; background: #f8f9fa !important; text-align: center;">小計</th>
                         </tr>
@@ -4059,10 +4059,11 @@ window.renderLeaderEntryTable = function() {
     });
 
     container.innerHTML = `
-        <table class="leader-table">
-            <thead><tr><th>氏名</th><th>青物(2pt)</th><th>鯛等(1pt)</th><th>小計</th></tr></thead>
-            <tbody>
-                ${members.map(m => `
+        <div style="font-size:0.8rem;">
+            <table class="table-striped" style="margin-bottom:0;">
+                <thead><tr><th>氏名</th><th>青物、クエ(2pt)</th><th>鯛等(1pt)</th><th>小計</th></tr></thead>
+                <tbody>
+                    ${members.map(m => `
                     <tr data-entry="${m.entry.id}" data-idx="${m.idx}">
                         <td><strong>${m.p.name}</strong><br><small>${m.entry.groupName}</small></td>
                         <td><input type="number" class="catch-a" value="${m.p.catchA || 0}" min="0" oninput="window.updateLeaderLiveTotals()"></td>
@@ -5090,7 +5091,7 @@ window.renderRankings = function() {
                     </td>
                     <td style="padding:8px; text-align:right; font-weight:bold; white-space:nowrap;">
                         <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px;">
-                            <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">(マダイ${p.cA} 青物${p.cB})</span>
+                            <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">(マダイ${p.cA} 青物、クエ${p.cB})</span>
                             <span style="font-size:1.6rem; font-weight:900; line-height:1; color:var(--primary-color);">${p.score}<small style="font-size:0.8rem; margin-left:1px;">点</small></span>
                         </div>
                     </td>

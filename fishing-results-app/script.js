@@ -161,7 +161,7 @@ function renderParticipantList() {
                                     onchange="updateInlineScore('${entry.id}', ${idx}, 'catchA', this.value)">
                             </div>
                             <div style="display:flex; flex-direction:column; align-items:center;">
-                                <span style="font-size:0.65rem; color:#3b82f6; font-weight:bold; margin-bottom:2px;">青物等</span>
+                                <span style="font-size:0.65rem; color:#3b82f6; font-weight:bold; margin-bottom:2px;">青物、クエ</span>
                                 <input type="number" class="inline-input blue" value="${cB}" min="0" 
                                     onchange="updateInlineScore('${entry.id}', ${idx}, 'catchB', this.value)">
                             </div>
@@ -279,7 +279,7 @@ function renderAdminView() {
         <div class="ikesu-summary-card ${ik.checked ? 'checked' : ''}">
             <div class="ik-info" onclick="jumpToIkesu('${ik.id}')">
                 <span class="ik-name">${ik.name} ${ik.checked ? '✅' : ''}</span>
-                <span class="ik-details">マダイ: ${ik.ikA} / 青物: ${ik.ikB} (計 ${ik.ikFish}匹)</span>
+                <span class="ik-details">マダイ: ${ik.ikA} / 青物、クエ: ${ik.ikB} (計 ${ik.ikFish}匹)</span>
             </div>
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
                 <div class="ik-pts">${ik.pts}pt</div>
