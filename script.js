@@ -6050,18 +6050,35 @@ window.renderPreorders = function() {
 window.renderSurveys = function() {
     const list = document.getElementById('survey-list');
     const satList = document.getElementById('survey-satisfaction-list');
+    const catchList = document.getElementById('survey-catch-result-list');
+    const opList = document.getElementById('survey-operations-score-list');
+    const partCountList = document.getElementById('survey-participation-count-list');
+    const testEventList = document.getElementById('survey-test-event-list');
     const nextList = document.getElementById('survey-next-list');
     const surveys = state.surveys || [];
     
     if (satList && nextList) {
         if (surveys.length === 0) {
             satList.innerHTML = '<div>データなし</div>';
+            if (catchList) catchList.innerHTML = '<div>データなし</div>';
+            if (opList) opList.innerHTML = '<div>データなし</div>';
+            if (partCountList) partCountList.innerHTML = '<div>データなし</div>';
+            if (testEventList) testEventList.innerHTML = '<div>データなし</div>';
             nextList.innerHTML = '<div>データなし</div>';
         } else {
             const satCounts = {};
+            const catchCounts = {};
+            const opCounts = {};
+            const partCounts = {};
+            const testCounts = {};
             const nextCounts = {};
+            
             surveys.forEach(s => {
                 if (s.satisfaction) satCounts[s.satisfaction] = (satCounts[s.satisfaction] || 0) + 1;
+                if (s.catchResult) catchCounts[s.catchResult] = (catchCounts[s.catchResult] || 0) + 1;
+                if (s.operationsScore) opCounts[s.operationsScore] = (opCounts[s.operationsScore] || 0) + 1;
+                if (s.participationCount) partCounts[s.participationCount] = (partCounts[s.participationCount] || 0) + 1;
+                if (s.testEventParticipation) testCounts[s.testEventParticipation] = (testCounts[s.testEventParticipation] || 0) + 1;
                 if (s.nextTime) nextCounts[s.nextTime] = (nextCounts[s.nextTime] || 0) + 1;
             });
             
@@ -6086,6 +6103,10 @@ window.renderSurveys = function() {
             };
             
             satList.innerHTML = renderStat(satCounts, surveys.length);
+            if (catchList) catchList.innerHTML = renderStat(catchCounts, surveys.length);
+            if (opList) opList.innerHTML = renderStat(opCounts, surveys.length);
+            if (partCountList) partCountList.innerHTML = renderStat(partCounts, surveys.length);
+            if (testEventList) testEventList.innerHTML = renderStat(testCounts, surveys.length);
             nextList.innerHTML = renderStat(nextCounts, surveys.length);
         }
     }
