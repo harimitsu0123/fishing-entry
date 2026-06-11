@@ -3203,9 +3203,27 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
     // Render Regions
     const regionList = document.getElementById(prefix + 'region-breakdown-list');
     if (regionList) {
-        regionList.innerHTML = Object.entries(regionCount)
-            .sort((a,b) => b[1] - a[1])
+        const distanceOrder = [
+            "北海道", "沖縄", "青森", "岩手", "秋田", "宮城", "山形", "鹿児島",
+            "福島", "宮崎", "長崎", "熊本", "大分", "佐賀", "新潟", "茨城",
+            "栃木", "群馬", "福岡", "千葉", "埼玉", "東京", "神奈川", "富山",
+            "長野", "山梨", "石川", "静岡", "愛媛", "高知", "福井", "山口",
+            "愛知", "岐阜", "香川", "徳島", "島根", "三重", "広島", "鳥取",
+            "滋賀", "和歌山", "奈良", "京都", "大阪", "岡山", "兵庫"
+        ];
+        const getDistRank = (name) => {
+            const clean = name.replace(/(都|道|府|県)$/, '');
+            const idx = distanceOrder.findIndex(p => clean.startsWith(p));
+            return idx === -1 ? 999 : idx;
+        };
 
+        regionList.innerHTML = Object.entries(regionCount)
+            .sort((a,b) => {
+                const rankA = getDistRank(a[0]);
+                const rankB = getDistRank(b[0]);
+                if (rankA !== rankB) return rankA - rankB;
+                return b[1] - a[1]; // 同じ都道府県なら人数の多い順
+            })
             .map(([reg, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${reg}</span>
