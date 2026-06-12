@@ -3048,7 +3048,7 @@ window.renderRankings = function() {
                 </div>
                 <div class="ranking-points">
                     <span class="rank-val" style="font-size:1.2rem;">${p.points}</span><span class="rank-unit">pt</span>
-                    <div style="font-size:0.65rem; color:#64748b; margin-top:-2px;">${p.totalFish}匹 (鯛:${p.cA}/青:${p.cB})</div>
+                    <div style="font-size:0.65rem; color:#64748b; margin-top:-2px;">${p.totalFish}匹 (鯛 <strong style="color:#ef4444; margin-right:2px;">${p.cA}</strong> / 青 <strong style="color:#3b82f6;">${p.cB}</strong>)</div>
                 </div>
             </div>
         `;
@@ -5193,7 +5193,7 @@ window.renderRankings = function() {
                     </td>
                     <td style="padding:8px; text-align:right; font-weight:bold; white-space:nowrap;">
                         <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px;">
-                            <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">(マダイ${p.cA} 青物、クエ${p.cB})</span>
+                            <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">(マダイ <strong style="color:#ef4444; margin-right:6px; font-size:0.9rem;">${p.cA}</strong> 青物、クエ <strong style="color:#3b82f6; font-size:0.9rem;">${p.cB}</strong>)</span>
                             <span style="font-size:1.6rem; font-weight:900; line-height:1; color:var(--primary-color);">${p.score}<small style="font-size:0.8rem; margin-left:1px;">点</small></span>
                         </div>
                     </td>
