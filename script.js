@@ -4036,6 +4036,7 @@ window.renderIkesuWorkspace = function () {
 
         const unassignedParts = [];
         e.participants.forEach((p, idx) => {
+            if (p.status === 'cancelled') return;
             if (p.ikesuId && assignedData[p.ikesuId]) {
                 assignedData[p.ikesuId].items.push({ entry: e, p, idx });
                 if (p.type === 'fisher') assignedData[p.ikesuId].fishers++;
@@ -4046,7 +4047,8 @@ window.renderIkesuWorkspace = function () {
         });
 
         if (unassignedParts.length > 0 && matchesSearch) {
-            const isFull = unassignedParts.length === e.participants.length;
+            const activeParticipants = e.participants.filter(p => p.status !== 'cancelled');
+            const isFull = unassignedParts.length === activeParticipants.length && activeParticipants.length > 0;
             const fishers = unassignedParts.filter(i => i.p.type === 'fisher').length;
             const observers = unassignedParts.filter(i => i.p.type === 'observer').length;
             
