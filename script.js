@@ -3798,7 +3798,7 @@ window.updateParticipantStatus = function (entryId, pIdx, status) {
         showToast(`${entry.participants[pIdx].name} 様を「${statusLabel}」に更新しました`, 'info');
     }
 
-    entry.lastModified = new Date().toLocaleString('ja-JP');
+    entry.lastModified = new Date().toISOString();
     saveData();
 
     renderReceptionDesk();
@@ -3827,7 +3827,7 @@ window.updateGroupStatus = function (entryId, status) {
         showToast('グループ全員を受付しました', 'success');
     }
 
-    entry.lastModified = new Date().toLocaleString('ja-JP');
+    entry.lastModified = new Date().toISOString();
     saveData();
 
     renderReceptionDesk();
@@ -4533,6 +4533,7 @@ window.showEntryDetails = function (id) {
     // v8.10.x: Clear userModified flag when admin reviews the entry
     if (entry.userModified) {
         entry.userModified = false;
+        entry.lastModified = new Date().toISOString();
         saveData(); // Persist the cleared flag
         updateDashboard(); // Remove the badge from the list
     }
@@ -4685,7 +4686,7 @@ window.quickCheckIn = async function (id) {
         p.status = newStatus;
     });
 
-    entry.lastModified = new Date().toLocaleString('ja-JP');
+    entry.lastModified = new Date().toISOString();
     if (newStatus === 'checked-in') entry.checkedIn = true;
     
     showToast(`${entry.groupName} の状態を「${newStatus === 'checked-in' ? '受付済' : '未受付'}」に更新中...`, 'info');
@@ -4734,7 +4735,7 @@ window.cancelParticipant = async function(entryId, pIdx) {
     entry.participants[pIdx].status = 'cancelled';
     entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
     entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
-    entry.lastModified = new Date().toLocaleString('ja-JP');
+    entry.lastModified = new Date().toISOString();
     
     await saveData();
     showToast('参加者をキャンセルしました', 'success');
@@ -4750,7 +4751,7 @@ window.restoreParticipant = async function(entryId, pIdx) {
     entry.participants[pIdx].status = 'pending';
     entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
     entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
-    entry.lastModified = new Date().toLocaleString('ja-JP');
+    entry.lastModified = new Date().toISOString();
     
     await saveData();
     showToast('参加者のキャンセルを取り消しました', 'success');
@@ -4766,7 +4767,7 @@ window.cancelEntry = async function (id) {
     const entry = state.entries.find(e => e.id === id);
     if (entry) {
         entry.status = 'cancelled';
-        entry.lastModified = new Date().toLocaleString('ja-JP');
+        entry.lastModified = new Date().toISOString();
         await saveData();
         updateDashboard();
         showToast('エントリーを無効化しました', 'info');
@@ -4788,7 +4789,7 @@ window.restoreEntry = async function (id) {
     const entry = state.entries.find(e => e.id === id);
     if (entry) {
         entry.status = 'pending';
-        entry.lastModified = new Date().toLocaleString('ja-JP');
+        entry.lastModified = new Date().toISOString();
         await saveData();
         updateDashboard();
         showToast('エントリーを有効な状態（未受付）に復元しました', 'success');
@@ -5368,7 +5369,7 @@ window.commitLeaderResultsSave = async function() {
     if (!confirm(`${entry.groupName} の得点を ${score} pt で登録しますか？`)) return;
 
     entry.totalScore = score;
-    entry.lastModified = new Date().toLocaleString('ja-JP');
+    entry.lastModified = new Date().toISOString();
     showToast("保存中...", "info");
     const success = await syncToCloud();
     if (success) {
