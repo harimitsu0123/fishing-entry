@@ -162,10 +162,11 @@ input:focus {
 
 .pond-badge {
     background: var(--primary-color);
-    padding: 0.25rem 0.75rem;
+    color: #ffffff;
+    padding: 0.4rem 1.2rem;
     border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 800;
+    font-size: 1.2rem;
+    font-weight: 900;
     margin-bottom: 0.25rem;
     display: inline-block;
 }
