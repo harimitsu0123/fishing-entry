@@ -855,11 +855,20 @@ function mergeData(local, cloud) {
         }
     });
 
-    // --- 2. 設定のマージ: クラウド側の設定を常に優先する ---
-    if (cloud.settings && Object.keys(cloud.settings).length > 0) {
-        merged.settings = { ...local.settings, ...cloud.settings };
+    // --- 2. 設定のマージ: タイムスタンプで優先度を決定 ---
+    const localSetTime = new Date(local.settingsLastModified || 0).getTime();
+    const cloudSetTime = new Date(cloud.settingsLastModified || 0).getTime();
+
+    if (localSetTime > cloudSetTime) {
+        merged.settings = { ...cloud.settings, ...local.settings };
+        merged.settingsLastModified = local.settingsLastModified;
     } else {
-        merged.settings = { ...local.settings };
+        if (cloud.settings && Object.keys(cloud.settings).length > 0) {
+            merged.settings = { ...local.settings, ...cloud.settings };
+        } else {
+            merged.settings = { ...local.settings };
+        }
+        merged.settingsLastModified = cloud.settingsLastModified || local.settingsLastModified;
     }
     
     // --- 3. 重複排除、削除済みフィルタ、ソート ---
@@ -3920,13 +3929,16 @@ window.handleIkesuSave = function (event) {
         });
     }
 
+    state.settingsLastModified = new Date().toISOString();
     state.lastUpdated = Date.now();
     saveData();
     closeIkesuModal();
     renderIkesuWorkspace();
 };
 
-window.deleteIkesu = function (id) {
+window.handleIkesuDelete = function () {
+    const id = document.getElementById('ikesu-id-hidden').value;
+    if (!id) return;
     if (!confirm('本当にこのイケスを削除しますか？\n割り当てられていた人は未割り当てに戻ります。')) return;
     state.settings.ikesuList = state.settings.ikesuList.filter(i => i.id !== id);
     state.entries.forEach(e => {
@@ -3934,8 +3946,10 @@ window.deleteIkesu = function (id) {
             if (p.ikesuId === id) p.ikesuId = null;
         });
     });
+    state.settingsLastModified = new Date().toISOString();
     state.lastUpdated = Date.now();
     saveData();
+    closeIkesuModal();
     renderIkesuWorkspace();
 };
 
@@ -4381,6 +4395,8 @@ async function handleSettingsUpdate(e) {
     state.settings.adjHarimitsuObservers = getInt('adj-harimitsu-observers');
     
     console.log("BORIJIN: Updating state and syncing...", state.settings);
+    
+    state.settingsLastModified = new Date().toISOString();
     
     // v8.9.63: Save locally first
     localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
