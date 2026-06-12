@@ -2502,7 +2502,7 @@ window.updateDashboard = function() {
                     <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}" style="white-space:nowrap;">${e.source}</span></td>
                     <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}${e.memo ? `\n\n【備考】\n${e.memo}` : ''}">${e.groupName}${e.memo ? '<span style="font-size:0.7rem; color:#e67e22; border:1px solid #e67e22; border-radius:2px; padding:0 2px; margin-left:4px; vertical-align:middle;">備</span>' : ''}</div></td>
                     <td>${pSummary}</td>
-                    <td><small style="white-space:nowrap;">${e.fishers} / ${e.observers}</small></td>
+                    <td><small style="white-space:nowrap;">${e.status === 'cancelled' ? '0 / 0' : `${e.fishers} / ${e.observers}`}</small></td>
                     <td><small style="white-space:nowrap;">${ikesuDisplay}</small></td>
                     <td><span style="font-size:0.75rem; font-weight:700; white-space:nowrap;">${statusLabel}</span></td>
                     <td><small style="white-space:nowrap;">${regTime}</small></td>
