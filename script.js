@@ -3863,31 +3863,38 @@ window.openIkesuModal = function (id = null) {
         const ikesu = state.settings.ikesuList.find(i => i.id === id);
         if (ikesu) {
             document.getElementById('ikesu-modal-title').textContent = "イケスの編集";
-            document.getElementById('ikesu-edit-id').value = ikesu.id;
-            document.getElementById('ikesu-name').value = ikesu.name;
-            document.getElementById('ikesu-capacity').value = ikesu.capacity;
-            const passEl = document.getElementById('ikesu-passcode');
+            document.getElementById('ikesu-id-hidden').value = ikesu.id;
+            document.getElementById('ikesu-name-input').value = ikesu.name;
+            document.getElementById('ikesu-capacity-input').value = ikesu.capacity;
+            const passEl = document.getElementById('ikesu-passcode-input');
             if (passEl) passEl.value = ikesu.passcode || "";
+            const delBtn = document.getElementById('delete-ikesu-btn');
+            if (delBtn) delBtn.classList.remove('hidden');
             return;
         }
     }
     document.getElementById('ikesu-modal-title').textContent = "イケスの追加";
-    document.getElementById('ikesu-edit-id').value = '';
-    document.getElementById('ikesu-name').value = '';
-    document.getElementById('ikesu-capacity').value = '15';
-    const passEl = document.getElementById('ikesu-passcode');
-    if (passEl) passEl.value = '';
+    document.getElementById('ikesu-id-hidden').value = '';
+    document.getElementById('ikesu-name-input').value = '';
+    document.getElementById('ikesu-capacity-input').value = '15';
+    const passEl = document.getElementById('ikesu-passcode-input');
+    if (passEl) {
+        passEl.value = Math.floor(1000 + Math.random() * 9000).toString();
+    }
+    const delBtn = document.getElementById('delete-ikesu-btn');
+    if (delBtn) delBtn.classList.add('hidden');
 };
 
 window.closeIkesuModal = function () {
     document.getElementById('ikesu-modal').classList.add('hidden');
 };
 
-window.saveIkesu = function () {
-    const id = document.getElementById('ikesu-edit-id').value;
-    const name = document.getElementById('ikesu-name').value.trim();
-    const capacity = parseInt(document.getElementById('ikesu-capacity').value, 10);
-    const passEl = document.getElementById('ikesu-passcode');
+window.handleIkesuSave = function (event) {
+    if (event) event.preventDefault();
+    const id = document.getElementById('ikesu-id-hidden').value;
+    const name = document.getElementById('ikesu-name-input').value.trim();
+    const capacity = parseInt(document.getElementById('ikesu-capacity-input').value, 10);
+    const passEl = document.getElementById('ikesu-passcode-input');
     const passcode = passEl ? passEl.value.trim() : "";
 
     if (!name || isNaN(capacity) || capacity < 1) {
