@@ -2936,6 +2936,7 @@ window.renderDayResults = function() {
 
     state.entries.filter(e => e.status !== 'cancelled').forEach(entry => {
         (entry.participants || []).forEach((p, pIdx) => {
+            if (p.status === 'cancelled') return;
             if (p.type !== 'fisher') return;
             fisherCount++;
             const cA = parseInt(p.catchA || 0);
@@ -3016,7 +3017,7 @@ window.renderRankings = function() {
     state.entries.forEach(e => {
         if (e.status === 'cancelled') return;
         (e.participants || []).forEach((p, pIdx) => {
-            if (!p || p.type === 'observer') return;
+            if (!p || p.type === 'observer' || p.status === 'cancelled') return;
             const cA = parseInt(p.catchA || 0);
             const cB = parseInt(p.catchB || 0);
             const points = cA + (cB * 2);

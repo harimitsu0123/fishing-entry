@@ -139,6 +139,7 @@ function renderParticipantList() {
         if (entry.status === 'cancelled') return;
 
         (entry.participants || []).forEach((p, idx) => {
+            if (p.status === 'cancelled') return;
             if (p.ikesuId === currentIkesu.id && p.type === 'fisher') {
                 foundAny = true;
                 const cA = parseInt(p.catchA || 0);
@@ -221,6 +222,7 @@ function renderAdminView() {
     state.entries.forEach(e => {
         if (e.status === 'cancelled') return;
         (e.participants || []).forEach(p => {
+            if (p.status === 'cancelled') return;
             if (p.type === 'fisher') {
                 const cA = parseInt(p.catchA || 0);
                 const cB = parseInt(p.catchB || 0);
@@ -242,6 +244,7 @@ function renderAdminView() {
         state.entries.forEach(e => {
             if (e.status === 'cancelled') return;
             (e.participants || []).forEach(p => {
+                if (p.status === 'cancelled') return;
                 if (p.ikesuId === ik.id && p.type === 'fisher') {
                     ikA += parseInt(p.catchA || 0);
                     ikB += parseInt(p.catchB || 0);
