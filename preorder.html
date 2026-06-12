@@ -43,6 +43,7 @@
                 <p style="margin-top: 1rem; color: #5a6a7a; font-weight: bold;">送信中...</p>
             </div>
 
+            <div id="step-input">
             <form id="preorder-form">
                 <div class="form-group">
                     <label for="store-name">受取（購入）店舗 <span class="required">(※必須)</span></label>
@@ -109,16 +110,58 @@
                 </div>
 
                 <div class="form-actions" style="margin-top: 2rem;">
-                    <button type="submit" class="btn-primary btn-large w-100" style="width: 100%;">予約を申し込む</button>
+                    <button type="submit" class="btn-primary btn-large w-100" style="width: 100%;">入力内容を確認する</button>
                 </div>
             </form>
+            </div>
+
+            <div id="step-confirm" style="display: none;">
+                <h3 style="color: var(--primary-color); margin-bottom: 1.5rem; text-align: center;">入力内容の確認</h3>
+                <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+                    <dl style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 0;">
+                        <div>
+                            <dt style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.2rem;">受取（購入）店舗</dt>
+                            <dd id="confirm-store" style="margin: 0; font-weight: 600; font-size: 1.1rem;"></dd>
+                        </div>
+                        <div>
+                            <dt style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.2rem;">お名前</dt>
+                            <dd id="confirm-name" style="margin: 0; font-weight: 600; font-size: 1.1rem;"></dd>
+                        </div>
+                        <div>
+                            <dt style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.2rem;">電話番号</dt>
+                            <dd id="confirm-phone" style="margin: 0; font-weight: 600; font-size: 1.1rem;"></dd>
+                        </div>
+                        <div>
+                            <dt style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.2rem;">メールアドレス</dt>
+                            <dd id="confirm-email" style="margin: 0; font-weight: 600; font-size: 1.1rem;"></dd>
+                        </div>
+                        <div>
+                            <dt style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.5rem;">ご予約商品・数量</dt>
+                            <dd id="confirm-items" style="margin: 0; font-weight: 600; font-size: 1.1rem; background: white; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 4px; line-height: 1.5;"></dd>
+                        </div>
+                    </dl>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button id="btn-back" type="button" class="btn-outline" style="flex: 1; padding: 1rem; font-size: 1.1rem; border-radius: 8px;">戻る</button>
+                    <button id="btn-submit" type="button" class="btn-primary" style="flex: 2; padding: 1rem; font-size: 1.1rem; border-radius: 8px; border: none; font-weight: bold;">送信する</button>
+                </div>
+            </div>
+
+            <div id="step-success" style="display: none; text-align: center; padding: 2rem 1rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+                <h3 style="color: var(--primary-color); margin-bottom: 1.5rem; font-size: 1.5rem;">予約受付完了</h3>
+                <p style="color: #334155; line-height: 1.6; margin-bottom: 2rem; font-weight: 600;">ご予約を受け付けました。<br>ご指定の店舗にご予約情報を共有させていただきます。<br>入荷案内があるまで少々お待ちください。</p>
+                <button type="button" class="btn-outline" onclick="location.reload()" style="padding: 0.8rem 2rem; border-radius: 8px; font-weight: bold;">トップへ戻る</button>
+            </div>
         </div>
     </main>
     
     <script>
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbykDT-XvGhrZCQcCp_gCxZAToW3X4s_g_BPX7LBO4E-A84vUY0VE3nlqehITFOfp9f9/exec";
 
-        document.getElementById('preorder-form').addEventListener('submit', async function(e) {
+        let currentPayload = null;
+
+        document.getElementById('preorder-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const storeName = document.getElementById('store-name').value;
@@ -128,11 +171,13 @@
             
             // Get item quantities
             const items = [];
-            document.querySelectorAll('.item-row').forEach((row, idx) => {
+            let itemsHtml = '';
+            document.querySelectorAll('.item-row').forEach((row) => {
                 const itemName = row.querySelector('span').textContent;
                 const qty = parseInt(row.querySelector('input').value, 10) || 0;
                 if (qty > 0) {
                     items.push({ name: itemName, quantity: qty });
+                    itemsHtml += `<div style="margin-bottom: 0.3rem;">${itemName} × <strong style="color: #d32f2f;">${qty}個</strong></div>`;
                 }
             });
             
@@ -141,17 +186,36 @@
                 return;
             }
 
-            const payload = {
+            currentPayload = {
                 action: 'submit_preorder',
                 data: { storeName, customerName, customerPhone, customerEmail, items }
             };
 
-            const form = document.getElementById('preorder-form');
+            // Populate confirm screen
+            document.getElementById('confirm-store').textContent = storeName;
+            document.getElementById('confirm-name').textContent = customerName;
+            document.getElementById('confirm-phone').textContent = customerPhone;
+            document.getElementById('confirm-email').textContent = customerEmail;
+            document.getElementById('confirm-items').innerHTML = itemsHtml;
+
+            // Switch to confirm screen
+            document.getElementById('step-input').style.display = 'none';
+            document.getElementById('step-confirm').style.display = 'block';
+            window.scrollTo(0, 0);
+        });
+
+        document.getElementById('btn-back').addEventListener('click', function() {
+            document.getElementById('step-confirm').style.display = 'none';
+            document.getElementById('step-input').style.display = 'block';
+            window.scrollTo(0, 0);
+        });
+
+        document.getElementById('btn-submit').addEventListener('click', async function() {
             const spinner = document.getElementById('loading-spinner');
-            const submitBtn = form.querySelector('button[type="submit"]');
+            const submitBtn = document.getElementById('btn-submit');
             
             submitBtn.disabled = true;
-            form.style.display = 'none';
+            document.getElementById('step-confirm').style.display = 'none';
             spinner.style.display = 'block';
 
             try {
@@ -159,18 +223,18 @@
                     method: 'POST',
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(currentPayload)
                 });
                 
-                alert('ご予約を受け付けました。ご指定の店舗にてお待ちしております。');
-                form.reset();
+                spinner.style.display = 'none';
+                document.getElementById('step-success').style.display = 'block';
+                document.getElementById('preorder-form').reset();
             } catch (err) {
                 console.error(err);
                 alert('送信に失敗しました。時間をおいて再度お試しください。');
-            } finally {
-                submitBtn.disabled = false;
-                form.style.display = 'block';
                 spinner.style.display = 'none';
+                document.getElementById('step-confirm').style.display = 'block';
+                submitBtn.disabled = false;
             }
         });
     </script>
