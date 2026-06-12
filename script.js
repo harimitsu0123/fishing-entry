@@ -99,6 +99,20 @@ window.showConfirmation = function() {
         }
     }
 
+    for (let i = 0; i < participants.length; i++) {
+        if (!participants[i].name.trim()) {
+            showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+            return;
+        }
+    }
+
+    for (let i = 0; i < participants.length; i++) {
+        if (!participants[i].name.trim()) {
+            showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+            return;
+        }
+    }
+
     if (participants.length === 0) {
         showStatus("参加者を1名以上登録してください。", "error");
         return;
@@ -122,6 +136,24 @@ window.showConfirmation = function() {
     }
 
     for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
+        for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
+        for (let i = 0; i < participants.length; i++) {
             if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
                 showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
                 submitBtn.disabled = false;
@@ -214,6 +246,24 @@ window.handleRegistration = async function() {
                 isCancelledEdit: getCheck('.p-cancel')
             };
         });
+
+        for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
+        for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
 
         for (let i = 0; i < participants.length; i++) {
             if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
@@ -2566,6 +2616,7 @@ window.renderIkesuPrintView = function() {
         state.entries.forEach(e => {
             if (e.status === 'cancelled') return;
             (e.participants || []).forEach(p => {
+                if (p.status === 'cancelled') return;
                 if (p.ikesuId === ik.id) {
                     participants.push({ ...p, groupId: e.id, groupName: e.groupName });
                 }
@@ -2663,6 +2714,7 @@ window.renderIkesuResultView = function() {
         state.entries.forEach(e => {
             if (e.status === 'cancelled') return;
             (e.participants || []).forEach(p => {
+                if (p.status === 'cancelled') return;
                 if (p.ikesuId === ik.id && p.type === 'fisher') {
                     participants.push({ ...p, groupName: e.groupName });
                 }
@@ -2788,7 +2840,7 @@ window.renderGroupPrintView = function() {
     const sorted = [...validEntries].sort((a,b) => a.source.localeCompare(b.source) || a.id.localeCompare(b.id));
     
     sorted.forEach((e, entryIdx) => {
-        const pArray = e.participants || [];
+        const pArray = (e.participants || []).filter(p => p.status !== 'cancelled');
         const isLast = entryIdx === sorted.length - 1;
         
         html += `
