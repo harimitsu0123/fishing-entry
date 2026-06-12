@@ -240,7 +240,7 @@ function renderAdminView() {
     });
 
     const ikesuStats = ikesuList.map(ik => {
-        let ikA = 0, ikB = 0, ikFish = 0;
+        let ikA = 0, ikB = 0, ikFish = 0, memberCount = 0;
         state.entries.forEach(e => {
             if (e.status === 'cancelled') return;
             (e.participants || []).forEach(p => {
@@ -249,11 +249,12 @@ function renderAdminView() {
                     ikA += parseInt(p.catchA || 0);
                     ikB += parseInt(p.catchB || 0);
                     ikFish += (parseInt(p.catchA || 0) + parseInt(p.catchB || 0));
+                    memberCount++;
                 }
             });
         });
         const pts = ikA + (ikB * 2);
-        return { ...ik, ikA, ikB, ikFish, pts };
+        return { ...ik, ikA, ikB, ikFish, pts, memberCount };
     });
 
     // v1.3.1: Change overall total from PT to Fish count per user request
@@ -281,7 +282,7 @@ function renderAdminView() {
     listContainer.innerHTML = ikesuStats.map(ik => `
         <div class="ikesu-summary-card ${ik.checked ? 'checked' : ''}">
             <div class="ik-info" onclick="jumpToIkesu('${ik.id}')">
-                <span class="ik-name">${ik.name} ${ik.checked ? '✅' : ''}</span>
+                <span class="ik-name">${ik.name} <small style="color:#64748b; font-size:0.85rem; margin-left:4px;">(${ik.memberCount}名)</small> ${ik.checked ? '✅' : ''}</span>
                 <span class="ik-details">マダイ: ${ik.ikA} / 青物、クエ: ${ik.ikB} (計 ${ik.ikFish}匹)</span>
             </div>
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
