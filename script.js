@@ -4373,25 +4373,30 @@ window.toggleLeader = function(event, entryId, pIdx) {
     const targetIkesuId = entry.participants[pIdx].ikesuId;
     const isNowLeader = !entry.participants[pIdx].isLeader;
     
-    // Clear leaders in SAME IKESU or SAME TEAM (Exclusive)
     if (isNowLeader) {
         state.entries.forEach(e => {
+            let modified = false;
             // Clear within the same team
             if (e.id === entryId) {
-                e.participants.forEach(p => p.isLeader = false);
+                e.participants.forEach(p => {
+                    if (p.isLeader) { p.isLeader = false; modified = true; }
+                });
             }
             // Clear within the same ikesu
             if (targetIkesuId) {
                 e.participants.forEach(p => {
-                    if (p.ikesuId === targetIkesuId) p.isLeader = false;
+                    if (p.ikesuId === targetIkesuId && p.isLeader) { p.isLeader = false; modified = true; }
                 });
+            }
+            if (modified) {
+                e.lastModified = new Date().toISOString();
             }
         });
     }
     
     entry.participants[pIdx].isLeader = isNowLeader;
+    entry.lastModified = new Date().toISOString();
     saveStateToLocalStorage();
-    saveData();
     renderIkesuWorkspace();
 };
 
