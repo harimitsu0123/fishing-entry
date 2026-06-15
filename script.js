@@ -3860,6 +3860,35 @@ window.updateGroupStatus = function (entryId, status) {
     updateDashboard();
 };
 
+window.resetAllReceptions = async function() {
+    if (!confirm('【テスト用】すべての参加者の受付状況を「未受付」に戻しますか？\n※この操作はシミュレーション後のリセット用です。')) {
+        return;
+    }
+    state.entries.forEach(entry => {
+        if (entry.participants) {
+            let changed = false;
+            entry.participants.forEach(p => {
+                if (p && (p.status === 'checked-in' || p.status === 'absent')) {
+                    p.status = 'pending';
+                    changed = true;
+                }
+            });
+            if (changed) {
+                entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
+                entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
+                syncGroupStatusFromParticipants(entry);
+                entry.lastModified = new Date().toISOString();
+            }
+        }
+    });
+    
+    showToast('すべての受付状況をリセットしました', 'success');
+    await saveData();
+    if(typeof renderReceptionDesk === 'function') renderReceptionDesk();
+    if(typeof updateReceptionList === 'function') updateReceptionList();
+    if(typeof updateDashboard === 'function') updateDashboard();
+};
+
 function syncGroupStatusFromParticipants(entry) {
     const hasCheckedIn = entry.participants.some(p => p.status === 'checked-in');
     const allAbsent = entry.participants.every(p => p.status === 'absent');
