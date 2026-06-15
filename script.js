@@ -2900,7 +2900,7 @@ window.renderGroupPrintView = function() {
                         <tr style="height: 3.2rem;">
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.2rem;">${idx + 1}</td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; font-size: 2.6rem; font-weight: 900;">
-                                    ${p.name} ${p.nickname ? `<br><span style="font-size:1.0rem; font-weight:normal;">(${p.nickname})</span>` : ''}
+                                    ${p.name} ${p.nickname ? `<span style="font-size:1.4rem; font-weight:normal; margin-left:0.5rem;">(${p.nickname})</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.3rem; font-weight: 900;">${p.tshirtSize || '-'}</td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.1rem;">${p.type === 'fisher' ? '釣り' : '見学'}</td>
