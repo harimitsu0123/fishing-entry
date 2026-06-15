@@ -4729,7 +4729,7 @@ window.showEntryDetails = function (id) {
     let participantsHtml = entry.participants.map((p, idx) => `
         <div style="padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; background: ${p.type === 'observer' ? '#f8f9fa' : '#fff'}; ${p.status === 'cancelled' ? 'opacity: 0.5;' : ''}">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <strong style="${p.status === 'cancelled' ? 'text-decoration: line-through;' : ''}">${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}${p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '')}</strong>
+                <strong style="${p.status === 'cancelled' ? 'text-decoration: line-through;' : ''}">${p.isLeader ? '<span style="color:#d32f2f; margin-right:4px;">★</span>' : ''}${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}${p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '')}</strong>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}">${p.type === 'fisher' ? '釣り' : '見学'}</span>
                     ${p.status === 'cancelled' ? 
