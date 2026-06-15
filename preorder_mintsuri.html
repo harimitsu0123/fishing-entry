@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>試釣会商品 予約フォーム（みん釣り専用）</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        .preorder-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .preorder-header h2 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .preorder-header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 id="app-title">BORIJIN FESTIVAL in 水宝 2026</h1>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
+            <div class="preorder-header">
+                <h2>🎣 試釣会商品 予約フォーム（みん釣り専用）</h2>
+                <p>ご希望の商品を事前予約し、指定の店舗にてお受け取り（ご購入）いただけます。</p>
+                <div style="background-color: #fff8e1; border-left: 4px solid #ffc107; padding: 10px; margin-top: 15px; text-align: left; border-radius: 4px;">
+                    <p style="margin: 0; color: #d97706; font-weight: bold; font-size: 0.95rem;">🎁 期間中に申込していただいた方にWEBクーポン3,000円分をプレゼント！</p>
+                    <p style="margin: 5px 0 0; font-size: 0.8rem; color: #555;">注文確定（商品納品後）にメールでコードをお送りいたします。</p>
+                </div>
+            </div>
+
+            <div id="loading-spinner" style="display: none; text-align: center; padding: 2rem;">
+                <div class="spinner" style="border: 4px solid rgba(0, 91, 181, 0.1); border-top: 4px solid #005bb5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                <p style="margin-top: 1rem; color: #5a6a7a; font-weight: bold;">送信中...</p>
+            </div>
+
+            <div id="step-input">
+            <form id="preorder-form">
+                <div class="form-group">
+                    <label for="store-name">受取（購入）店舗 <span class="required">(※必須)</span></label>
+                    <p class="text-muted small mb-1" style="font-size: 0.8rem; margin-bottom: 0.5rem; color: #e67e22;">※チェーン店の場合は、必ず「○○店」までご記入ください。</p>
+                    <input type="text" id="store-name" required placeholder="例：〇〇釣具　〇〇店">
+                </div>
+                
+                <div class="form-group">
+                    <label for="customer-name">お名前 <span class="required">(※必須)</span></label>
+                    <input type="text" id="customer-name" required placeholder="例：山田 太郎">
+                </div>
+
+                <div class="form-group">
+                    <label for="customer-phone">電話番号 <span class="required">(※必須)</span></label>
+                    <input type="tel" id="customer-phone" required placeholder="090-0000-0000">
+                </div>
+
+                <div class="form-group">
+                    <label for="customer-email">メールアドレス <span class="required">(※必須)</span></label>
+                    <input type="email" id="customer-email" required placeholder="例：example@harimitsu.co.jp">
+                </div>
+
+                <div class="form-group">
+                    <label>ご予約商品・数量 <span class="required">(※必須)</span></label>
+                    <p class="text-muted small mb-2" style="font-size: 0.8rem;">ご希望の商品の数量を入力してください（※価格は定価です）</p>
+                    
+                    <div class="item-list" style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        <div class="item-row" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <span style="font-weight: 600; flex: 1;">誘い掛Ⅱ 赤250 (￥27,500)</span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="number" min="0" value="0" style="width: 70px; padding: 0.4rem; text-align: right;">
+                                <span>個</span>
+                            </div>
+                        </div>
+                        <div class="item-row" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <span style="font-weight: 600; flex: 1;">誘い掛Ⅱ 青270 (￥28,500)</span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="number" min="0" value="0" style="width: 70px; padding: 0.4rem; text-align: right;">
+                                <span>個</span>
+                            </div>
+                        </div>
+                        <div class="item-row" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <span style="font-weight: 600; flex: 1;">誘い掛Ⅱ 脈240 (￥27,000)</span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="number" min="0" value="0" style="width: 70px; padding: 0.4rem; text-align: right;">
+                                <span>個</span>
+                            </div>
+                        </div>
+                        <div class="item-row" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <span style="font-weight: 600; flex: 1;">SAGURI-GAKE B350 (￥39,500)</span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="number" min="0" value="0" style="width: 70px; padding: 0.4rem; text-align: right;">
+                                <span>個</span>
+                            </div>
+                        </div>
+                        <div class="item-row" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <span style="font-weight: 600; flex: 1;">BORI NET MULTI 85-210 (￥18,500)</span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="number" min="0" value="0" style="width: 70px; padding: 0.4rem; text-align: right;">
+                                <span>個</span>
+                            </div>
+                        </div>
+                        <div class="item-row" style="display: flex; align-items: center; justify-content: space-between; background: #fee2e2; padding: 0.8rem; border-radius: 8px; border: 1px solid #fca5a5;">
+                            <span style="font-weight: 600; flex: 1; color: #b91c1c;">BORINET みん釣りレッド (￥18,500)</span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="number" min="0" value="0" style="width: 70px; padding: 0.4rem; text-align: right; border-color: #fca5a5;">
+                                <span>個</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions" style="margin-top: 2rem;">
+                    <button type="submit" class="btn-primary btn-large w-100" style="width: 100%;">入力内容を確認する</button>
+                </div>
+            </form>
+            </div>
+
+            <div id="step-confirm" style="display: none;">
+                <h3 style="color: var(--primary-color); margin-bottom: 1.5rem; text-align: center;">入力内容の確認</h3>
+                <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+                    <dl style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 0;">
+                        <div>
+                            <dt style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.2rem;">受取（購入）店舗</dt>
+                            <dd id="confirm-store" style="margin: 0; font-weight: 600; font-size: 1.1rem;"></dd>
+                        </div>
+                        <div>
+                            <dt style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.2rem;">お名前</dt>
+                            <dd id="confirm-name" style="margin: 0; font-weight: 600; font-size: 1.1rem;"></dd>
+                        </div>
+                        <div>
+                            <dt style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.2rem;">電話番号</dt>
+                            <dd id="confirm-phone" style="margin: 0; font-weight: 600; font-size: 1.1rem;"></dd>
+                        </div>
+                        <div>
+                            <dt style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.2rem;">メールアドレス</dt>
+                            <dd id="confirm-email" style="margin: 0; font-weight: 600; font-size: 1.1rem;"></dd>
+                        </div>
+                        <div>
+                            <dt style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.5rem;">ご予約商品・数量</dt>
+                            <dd id="confirm-items" style="margin: 0; font-weight: 600; font-size: 1.1rem; background: white; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 4px; line-height: 1.5;"></dd>
+                        </div>
+                    </dl>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button id="btn-back" type="button" class="btn-outline" style="flex: 1; padding: 1rem; font-size: 1.1rem; border-radius: 8px;">戻る</button>
+                    <button id="btn-submit" type="button" class="btn-primary" style="flex: 2; padding: 1rem; font-size: 1.1rem; border-radius: 8px; border: none; font-weight: bold;">送信する</button>
+                </div>
+            </div>
+
+            <div id="step-success" style="display: none; text-align: center; padding: 2rem 1rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+                <h3 style="color: var(--primary-color); margin-bottom: 1.5rem; font-size: 1.5rem;">予約受付完了</h3>
+                <p style="color: #334155; line-height: 1.6; margin-bottom: 1.5rem; font-weight: 600;">ご予約を受け付けました。<br>ご指定の店舗にご予約情報を共有させていただきます。<br>入荷案内があるまで少々お待ちください。</p>
+                <div style="background-color: #fff1f2; border: 2px solid #fda4af; border-radius: 8px; padding: 1rem; margin-bottom: 2rem; display: inline-block; text-align: left;">
+                    <p style="margin: 0; color: #e11d48; font-weight: bold; font-size: 0.95rem; text-align: center;">📸 念のため、この完了画面をスクリーンショットして保存してください。</p>
+                </div>
+                <br>
+                <button type="button" class="btn-outline" onclick="location.reload()" style="padding: 0.8rem 2rem; border-radius: 8px; font-weight: bold;">トップへ戻る</button>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbykDT-XvGhrZCQcCp_gCxZAToW3X4s_g_BPX7LBO4E-A84vUY0VE3nlqehITFOfp9f9/exec";
+
+        let currentPayload = null;
+
+        document.getElementById('preorder-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const storeName = document.getElementById('store-name').value;
+            const customerName = document.getElementById('customer-name').value;
+            const customerPhone = document.getElementById('customer-phone').value;
+            const customerEmail = document.getElementById('customer-email').value;
+            
+            // Get item quantities
+            const items = [];
+            let itemsHtml = '';
+            document.querySelectorAll('.item-row').forEach((row) => {
+                const itemName = row.querySelector('span').textContent;
+                const qty = parseInt(row.querySelector('input').value, 10) || 0;
+                if (qty > 0) {
+                    items.push({ name: itemName, quantity: qty });
+                    itemsHtml += `<div style="margin-bottom: 0.3rem;">${itemName} × <strong style="color: #d32f2f;">${qty}個</strong></div>`;
+                }
+            });
+            
+            if (items.length === 0) {
+                alert("1つ以上の商品の数量を入力してください。");
+                return;
+            }
+
+            currentPayload = {
+                action: 'submit_preorder',
+                data: { storeName, customerName, customerPhone, customerEmail, items }
+            };
+
+            // Populate confirm screen
+            document.getElementById('confirm-store').textContent = storeName;
+            document.getElementById('confirm-name').textContent = customerName;
+            document.getElementById('confirm-phone').textContent = customerPhone;
+            document.getElementById('confirm-email').textContent = customerEmail;
+            document.getElementById('confirm-items').innerHTML = itemsHtml;
+
+            // Switch to confirm screen
+            document.getElementById('step-input').style.display = 'none';
+            document.getElementById('step-confirm').style.display = 'block';
+            window.scrollTo(0, 0);
+        });
+
+        document.getElementById('btn-back').addEventListener('click', function() {
+            document.getElementById('step-confirm').style.display = 'none';
+            document.getElementById('step-input').style.display = 'block';
+            window.scrollTo(0, 0);
+        });
+
+        document.getElementById('btn-submit').addEventListener('click', async function() {
+            const spinner = document.getElementById('loading-spinner');
+            const submitBtn = document.getElementById('btn-submit');
+            
+            submitBtn.disabled = true;
+            document.getElementById('step-confirm').style.display = 'none';
+            spinner.style.display = 'block';
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(currentPayload)
+                });
+                
+                spinner.style.display = 'none';
+                document.getElementById('step-success').style.display = 'block';
+                document.getElementById('preorder-form').reset();
+            } catch (err) {
+                console.error(err);
+                alert('送信に失敗しました。時間をおいて再度お試しください。');
+                spinner.style.display = 'none';
+                document.getElementById('step-confirm').style.display = 'block';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
