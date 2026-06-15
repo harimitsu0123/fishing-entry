@@ -4391,6 +4391,7 @@ window.toggleLeader = function(event, entryId, pIdx) {
     
     entry.participants[pIdx].isLeader = isNowLeader;
     saveStateToLocalStorage();
+    saveData();
     renderIkesuWorkspace();
 };
 
