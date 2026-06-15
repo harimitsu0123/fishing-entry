@@ -2498,7 +2498,7 @@ window.updateDashboard = function() {
 
             html += `
                 <tr class="${rowClass}">
-                    <td><span class="id-badge" style="white-space:nowrap;">${e.id}</span>${e.userModified ? '<span class="badge" style="background:#eab308; color:#000; font-size:0.6rem; margin-left:4px; font-weight:bold;">変更あり</span>' : ''}</td>
+                    <td><span class="id-badge" style="white-space:nowrap;">${e.id}</span>${e.userModified ? '<span class="badge" style="background:#eab308; color:#000; font-size:0.6rem; margin-left:4px; font-weight:bold;">変更あり</span>' : ''}${e.hasDropIn ? '<span class="badge" style="background:#ef4444; color:#fff; font-size:0.6rem; margin-left:4px; font-weight:bold;">当日追加</span>' : ''}</td>
                     <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}" style="white-space:nowrap;">${e.source}</span></td>
                     <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}${e.memo ? `\n\n【備考】\n${e.memo}` : ''}">${e.groupName}${e.memo ? '<span style="font-size:0.7rem; color:#e67e22; border:1px solid #e67e22; border-radius:2px; padding:0 2px; margin-left:4px; vertical-align:middle;">備</span>' : ''}</div></td>
                     <td>${pSummary}</td>
@@ -3706,7 +3706,7 @@ function updateReceptionList() {
             <div class="reception-group-item ${activeReceptionEntryId === e.id ? 'active' : ''} ${e.isCompleted ? 'completed' : ''}" 
                  onclick="selectReceptionEntry('${e.id}')">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
-                    <strong style="font-size:1.1rem; color:#2d3436;">${e.id} | ${e.groupName}</strong>
+                    <strong style="font-size:1.1rem; color:#2d3436;">${e.id} | ${e.groupName}${e.hasDropIn ? '<span class="badge" style="background:#ef4444; color:#fff; font-size:0.6rem; margin-left:4px; font-weight:bold; vertical-align:middle;">当日追加</span>' : ''}</strong>
                     <span class="badge ${badgeClass}" style="font-size:0.7rem; padding:0.1rem 0.4rem;">${e.source}</span>
                 </div>
                 <div class="item-meta" style="display:flex; justify-content:space-between; align-items:center;">
@@ -3760,7 +3760,10 @@ function renderReceptionDesk() {
         </div>
 
         <div class="participant-check-list" style="padding: 1.5rem; background: white;">
-            <div class="section-title" style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; border-left-width: 4px;">参加メンバー個別の受付状況</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div class="section-title" style="margin-top: 0; margin-bottom: 0; font-size: 1.1rem; border-left-width: 4px;">参加メンバー個別の受付状況</div>
+                <button class="btn-outline btn-small" onclick="window.openAddParticipantModal('${entry.id}')">+ 飛び入り参加を追加</button>
+            </div>
             
             ${(entry.participants || []).map((p, idx) => {
                 if (!p) return '';
@@ -3888,6 +3891,63 @@ window.resetAllReceptions = async function() {
     if(typeof updateReceptionList === 'function') updateReceptionList();
     if(typeof updateDashboard === 'function') updateDashboard();
 };
+
+window.openAddParticipantModal = function(entryId) {
+    document.getElementById('add-p-entry-id').value = entryId;
+    document.getElementById('add-p-name').value = '';
+    document.getElementById('add-p-nickname').value = '';
+    document.getElementById('add-p-type').value = 'fisher';
+    document.getElementById('add-p-gender').value = 'male';
+    document.getElementById('add-p-age').value = 'adult';
+    document.getElementById('add-p-tshirt').value = '';
+    document.getElementById('add-p-checkin').checked = true;
+    
+    document.getElementById('add-participant-modal').classList.remove('hidden');
+};
+
+window.closeAddParticipantModal = function() {
+    document.getElementById('add-participant-modal').classList.add('hidden');
+};
+
+window.submitAddParticipant = async function(e) {
+    e.preventDefault();
+    const entryId = document.getElementById('add-p-entry-id').value;
+    const entry = state.entries.find(en => en.id === entryId);
+    if (!entry) return;
+
+    const newP = {
+        name: document.getElementById('add-p-name').value.trim(),
+        nickname: document.getElementById('add-p-nickname').value.trim(),
+        type: document.getElementById('add-p-type').value,
+        gender: document.getElementById('add-p-gender').value,
+        age: document.getElementById('add-p-age').value,
+        tshirtSize: document.getElementById('add-p-tshirt').value,
+        status: document.getElementById('add-p-checkin').checked ? 'checked-in' : 'pending',
+        isDropIn: true
+    };
+
+    if (!entry.participants) entry.participants = [];
+    entry.participants.push(newP);
+    entry.hasDropIn = true;
+
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    
+    syncGroupStatusFromParticipants(entry);
+    entry.lastModified = new Date().toISOString();
+
+    showToast('参加者を追加しました', 'success');
+    window.closeAddParticipantModal();
+
+    await saveData();
+    
+    if (activeReceptionEntryId === entry.id) {
+        renderReceptionDesk();
+    }
+    updateReceptionList();
+    updateDashboard();
+};
+
 
 function syncGroupStatusFromParticipants(entry) {
     const hasCheckedIn = entry.participants.some(p => p.status === 'checked-in');
