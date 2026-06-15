@@ -2653,7 +2653,7 @@ window.renderIkesuPrintView = function() {
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
                     <thead>
                         <tr style="background: #eee; color: #000; font-size: 1.1rem; height: 3.5rem;">
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 45px; text-align: center;">No</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 35px; text-align: center;">No</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 130px; text-align: center;">グループ名</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; text-align: center;">氏名</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 60px; text-align: center;">性別</th>
@@ -2671,7 +2671,7 @@ window.renderIkesuPrintView = function() {
                                     ${p.nickname ? `<span style="font-size:12pt; font-weight:normal; margin-left:10px;">(${p.nickname})</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.1rem;">${genderLabels[p.gender] || '-'}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-weight: bold; font-size: 1.3rem;">${p.tshirtSize || '-'}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-weight: bold; font-size: 17pt;">${p.tshirtSize || '-'}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: left; font-weight: bold; font-size: 1rem; color: ${p.isLeader ? '#d32f2f' : 'inherit'};">
                                     ${p.isLeader ? '★リーダー' : ''}
                                     ${p.type === 'observer' ? '（見学者）' : ''}
@@ -2890,10 +2890,10 @@ window.renderGroupPrintView = function() {
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid #000;">
                     <thead>
                         <tr style="background: #eee; color: #000; font-size: 1.1rem; height: 3.5rem;">
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.5rem; width: 45px; text-align: center;">No</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.5rem; width: 35px; text-align: center;">No</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.5rem; text-align: center;">氏名</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.5rem; width: 80px; text-align: center;">Tシャツ</th>
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.5rem; width: 100px; text-align: center;">区分</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.5rem; width: 65px; text-align: center;">区分</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2904,7 +2904,7 @@ window.renderGroupPrintView = function() {
                                     <span style="font-size: 24pt;">${p.name}</span>
                                     ${p.nickname ? `<span style="font-size:14pt; font-weight:normal; margin-left:12px;">(${p.nickname})</span>` : ''}
                                 </td>
-                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.3rem; font-weight: 900;">${p.tshirtSize || '-'}</td>
+                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 17pt; font-weight: 900;">${p.tshirtSize || '-'}</td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.1rem;">${p.type === 'fisher' ? '釣り' : '見学'}</td>
                             </tr>
                         `).join('')}
