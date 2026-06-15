@@ -2455,7 +2455,7 @@ window.updateDashboard = function() {
             const combinedParticipantInfo = (pNames + " " + pNicks + " " + pRegions + " " + pTshirts + " " + pGenders).toLowerCase();
             const safeId = e.id || "未採番";
             
-            const fullString = [safeId, e.groupName || "", e.representative || "", combinedParticipantInfo].join(' ').toLowerCase();
+            const fullString = [safeId, e.groupName || "", e.representative || "", e.phone || "", e.repPhone || "", combinedParticipantInfo].join(' ').toLowerCase();
             const searchTerms = searchTerm.replace(/　/g, ' ').split(/\s+/).filter(Boolean);
             
             if (searchTerms.length > 0) {
@@ -2852,15 +2852,25 @@ window.renderGroupPrintView = function() {
         const pArray = (e.participants || []).filter(p => p.status !== 'cancelled');
         const isLast = entryIdx === sorted.length - 1;
         
+        const ikesuNames = new Set();
+        pArray.forEach(p => {
+            if (p.ikesuId) {
+                const ik = (state.settings.ikesuList || []).find(i => i.id === p.ikesuId);
+                if (ik) ikesuNames.add(ik.name);
+            }
+        });
+        const ikesuDisplay = Array.from(ikesuNames).join(', ') || '未割当';
+
         html += `
             <div class="print-page group-sheet" style="background:white; padding:1.2rem; border:1px solid #eee; margin-bottom: 1rem; ${isLast ? '' : 'page-break-after: always;'} color: black;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #000; border-left: 8px solid #000; padding-left: 15px; padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 4px solid #000; border-left: 8px solid #000; padding-left: 15px; padding-bottom: 0.5rem; margin-bottom: 1rem;">
                     <div>
                         <div style="font-size: 1rem; font-weight: bold; margin-bottom: 0.2rem;">[${e.source}]</div>
                         <h1 style="margin:0; font-size: 2rem;">${e.groupName}</h1>
                     </div>
-                    <div style="text-align: right;">
+                    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
                         <div style="font-size: 1.2rem; font-weight: bold; border: 1px solid #000; padding: 0.3rem 0.8rem;">${e.id}</div>
+                        <div style="font-size: 1.6rem; font-weight: 900; color: #000; border: 2px solid #000; padding: 0.2rem 0.6rem; background: #fff;">イケス: ${ikesuDisplay}</div>
                     </div>
                 </div>
 
@@ -3500,7 +3510,7 @@ function renderGenericCoordinatorView(sourceName, prefix) {
             const pArray = e.participants || [];
             const pNames = pArray.map(p => p.name).join(' ');
             const pNicks = pArray.map(p => p.nickname || "").join(' ');
-            const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks}`.toLowerCase();
+            const combined = `${e.id} ${e.groupName} ${e.representative} ${e.phone || ""} ${e.repPhone || ""} ${pNames} ${pNicks}`.toLowerCase();
             return combined.includes(searchTerm);
         })
         .map(e => {
@@ -3673,7 +3683,7 @@ function updateReceptionList() {
         const pNicks = pArray.map(p => p ? (p.nickname || "") : "").join(' ');
         const pTshirts = pArray.map(p => p ? (p.tshirtSize || "") : "").join(' ');
         const pGenders = pArray.map(p => p ? (genderLabels[p.gender] || "") : "").join(' ');
-        const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks} ${pTshirts} ${pGenders}`.toLowerCase();
+        const combined = `${e.id} ${e.groupName} ${e.representative} ${e.phone || ""} ${e.repPhone || ""} ${pNames} ${pNicks} ${pTshirts} ${pGenders}`.toLowerCase();
         
         const searchTerms = searchTerm.replace(/　/g, ' ').split(/\s+/).filter(Boolean);
         if (searchTerms.length > 0) {
@@ -4032,7 +4042,9 @@ window.renderIkesuWorkspace = function () {
         const matchesSearch = !searchTerm || 
             e.id.toLowerCase().includes(searchTerm) || 
             e.groupName.toLowerCase().includes(searchTerm) ||
-            e.representative.toLowerCase().includes(searchTerm);
+            e.representative.toLowerCase().includes(searchTerm) ||
+            (e.phone && e.phone.includes(searchTerm)) ||
+            (e.repPhone && e.repPhone.includes(searchTerm));
 
         const unassignedParts = [];
         e.participants.forEach((p, idx) => {
