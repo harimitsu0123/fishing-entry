@@ -750,7 +750,10 @@
                         <div class="ikesu-main-area" style="flex: 1; display: flex; flex-direction: column; background: #fff; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                                 <h3 style="margin:0; font-size: 1.1rem; color: var(--primary-color);">イケス配置図</h3>
-                                <button class="btn-primary btn-small" onclick="window.openIkesuModal()">+ イケス追加</button>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button class="btn-primary btn-small" style="background: #10b981; border-color: #10b981;" onclick="saveData().then(() => showToast('保存しました', 'success'))">💾 変更を保存</button>
+                                    <button class="btn-primary btn-small" onclick="window.openIkesuModal()">+ イケス追加</button>
+                                </div>
                             </div>
                             <div id="ikesu-grid" class="ikesu-grid" style="flex: 1; overflow-y: auto; padding: 0.5rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
                                 <!-- JSによる挿入 -->
@@ -1221,6 +1224,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=8.24.0"></script>
+    <script src="script.js?v=8.25.0"></script>
 </body>
 </html>
