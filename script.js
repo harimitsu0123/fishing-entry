@@ -1019,6 +1019,7 @@ function generateSpecialUrls() {
     
     // Standalone forms
     setVal('url-preorder', `${dirUrl}preorder.html`);
+    setVal('url-preorder-mintsuri', `${dirUrl}preorder_mintsuri.html`);
     setVal('url-survey', `${dirUrl}survey.html`);
 }
 
