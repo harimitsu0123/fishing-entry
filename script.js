@@ -2672,7 +2672,7 @@ window.renderIkesuPrintView = function() {
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.1rem;">${genderLabels[p.gender] || '-'}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-weight: bold;">
-                                    <span style="font-size: 22pt;">${p.tshirtSize || '-'}</span>
+                                    <span style="font-size: 22pt; white-space: nowrap;">${p.tshirtSize || '-'}</span>
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: left; font-weight: bold; font-size: 1rem; color: ${p.isLeader ? '#d32f2f' : 'inherit'};">
                                     ${p.isLeader ? '★リーダー' : ''}
@@ -2907,7 +2907,7 @@ window.renderGroupPrintView = function() {
                                     ${p.nickname ? `<span style="font-size:14pt; font-weight:normal; margin-left:12px;">(${p.nickname})</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-weight: 900;">
-                                    <span style="font-size: 24pt;">${p.tshirtSize || '-'}</span>
+                                    <span style="font-size: 22pt; white-space: nowrap;">${p.tshirtSize || '-'}</span>
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.1rem;">${p.type === 'fisher' ? '釣り' : '見学'}</td>
                             </tr>
