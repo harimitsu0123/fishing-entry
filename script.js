@@ -2699,7 +2699,9 @@ window.renderIkesuPrintView = function() {
             });
         });
 
-        if (participants.length === 0) return;
+        // v8.10.4: Allow printing empty Ikesus as spares with 12 blank rows
+        const extraRowsCount = participants.length === 0 ? 12 : 3;
+        const extraRows = Array.from({length: extraRowsCount}, (_, i) => i + 1);
 
         html += `
             <div class="print-page ikesu-sheet" style="background:white; padding:1rem; border:1px solid #eee; margin-bottom: 2rem; page-break-after: always; color: black;">
@@ -2747,7 +2749,7 @@ window.renderIkesuPrintView = function() {
                                 </td>
                             </tr>
                         `).join('')}
-                        ${[1, 2, 3].map(n => `
+                        ${extraRows.map(n => `
                             <tr style="height: 3.2rem;">
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; color: #ccc;">${participants.length + n}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
@@ -2805,7 +2807,9 @@ window.renderIkesuResultView = function() {
             });
         });
 
-        if (participants.length === 0) return;
+        // v8.10.4: Allow printing empty Ikesus as spares with 12 blank rows
+        const extraRowsCount = participants.length === 0 ? 12 : 3;
+        const extraRows = Array.from({length: extraRowsCount}, (_, i) => i + 1);
 
         html += `
             <div class="print-page result-sheet" style="background:white; padding:1.2rem; border:1px solid #eee; margin-bottom: 2rem; page-break-after: always; color: black; position: relative;">
@@ -2856,7 +2860,7 @@ window.renderIkesuResultView = function() {
                                 <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt !important; color: #999;">匹</span></td>
                             </tr>
                         `).join('')}
-                        ${[1, 2, 3].map(n => `
+                        ${extraRows.map(n => `
                             <tr style="height: 3.8rem; background: #fff;">
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0;"><span style="font-weight: bold; font-size: 14pt !important;">${participants.length + n}</span></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
