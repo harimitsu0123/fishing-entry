@@ -3769,7 +3769,6 @@ function updateReceptionList() {
                     <div style="font-size:1rem; color:#636e72;">${e.representative}</div>
                     <div style="display:flex; align-items:center; gap:0.5rem;">
                         <span style="font-size:0.9rem; font-weight:700; color: #0984e3;">${e.isCompleted ? '✅ 受付済' : `${e.finishedCount}/${e.totalCount}`}</span>
-                        ${!e.isCompleted ? `<button onclick="event.stopPropagation(); updateGroupStatus('${e.id}', 'checked-in')" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: var(--primary-color); border: none; border-radius: 4px; color: white; cursor: pointer;">全員受付</button>` : ''}
                     </div>
                 </div>
             </div>
