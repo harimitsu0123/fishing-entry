@@ -2734,12 +2734,12 @@ window.renderIkesuPrintView = function() {
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.2rem;">${idx + 1}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; font-size: 1.1rem;">${p.groupName}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; white-space: nowrap;">
-                                    <span style="font-size: 16pt;">${p.name}</span>
-                                    ${p.nickname ? `<span style="font-size:12pt; font-weight:normal; margin-left:10px;">(${p.nickname})</span>` : ''}
+                                    <span style="font-size: 24pt !important;">${p.name}</span>
+                                    ${p.nickname ? `<span style="font-size:16pt !important; font-weight:normal; margin-left:10px;">(${p.nickname})</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.1rem;">${genderLabels[p.gender] || '-'}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-weight: bold;">
-                                    <span style="font-size: 22pt; white-space: nowrap;">${(p.tshirtSize || '-').replace(/\s*[\(（].*/, '').trim()}</span>
+                                    <span style="font-size: 22pt !important; white-space: nowrap;">${(p.tshirtSize || '-').replace(/\s*[\(（].*/, '').trim()}</span>
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: left; font-weight: bold; font-size: 1rem; color: ${p.isLeader ? '#d32f2f' : 'inherit'};">
                                     ${p.isLeader ? '★リーダー' : ''}
