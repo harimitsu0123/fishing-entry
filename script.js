@@ -2846,22 +2846,23 @@ window.renderIkesuResultView = function() {
                     <tbody>
                         ${participants.map((p, pIdx) => `
                             <tr style="height: 3.8rem;">
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold; font-size: 14pt;">${pIdx + 1}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-size: 12pt; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${p.groupName}<br><span style="font-size:10pt; color:#666;">(${p.entryId})</span></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 24pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    ${p.name} ${p.nickname ? `(${p.nickname})` : ''}
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0;"><span style="font-weight: bold; font-size: 14pt !important;">${pIdx + 1}</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"><span style="font-size: 12pt !important; font-weight: bold;">${p.groupName}</span><br><span style="font-size: 10pt !important; color:#666;">(${p.entryId})</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    <span style="font-size: 24pt !important;">${p.name}</span>
+                                    ${p.nickname ? `<span style="font-size:16pt !important; font-weight:normal; margin-left:8px;">(${p.nickname})</span>` : ''}
                                 </td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt; color: #999;">匹</span></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt; color: #999;">匹</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt !important; color: #999;">匹</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt !important; color: #999;">匹</span></td>
                             </tr>
                         `).join('')}
                         ${[1, 2, 3].map(n => `
                             <tr style="height: 3.8rem; background: #fff;">
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold; font-size: 14pt;">${participants.length + n}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0;"><span style="font-weight: bold; font-size: 14pt !important;">${participants.length + n}</span></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt; color: #999;">匹</span></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt; color: #999;">匹</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt !important; color: #999;">匹</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt !important; color: #999;">匹</span></td>
                             </tr>
                         `).join('')}
                     </tbody>
