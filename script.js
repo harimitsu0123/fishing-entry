@@ -3773,10 +3773,10 @@ function renderReceptionDesk() {
     }
 
     desk.innerHTML = `
-        <div class="desk-header" style="background: #eef2ff; border-bottom: 2px solid var(--primary-color); padding: 1.5rem; border-radius: 8px 8px 0 0;">
-            <div class="desk-title-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <div class="desk-group-name" style="font-size: 1.8rem; font-weight: 900; color: var(--primary-color);">${entry.groupName}</div>
-                <div class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}" style="font-size: 1.2rem; padding: 0.5rem 1rem;">${entry.source}</div>
+        <div class="desk-header" style="background: #eef2ff; border-bottom: 2px solid var(--primary-color); padding: 0.8rem 1rem; border-radius: 8px 8px 0 0;">
+            <div class="desk-title-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                <div class="desk-group-name" style="font-size: 1.6rem; font-weight: 900; color: var(--primary-color);">${entry.groupName}</div>
+                <div class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}" style="font-size: 1.1rem; padding: 0.4rem 0.8rem;">${entry.source}</div>
             </div>
             <div class="desk-meta" style="font-size: 1rem; color: #475569; font-weight: 600;">
                 <span style="background: white; padding: 2px 8px; border-radius: 4px; border: 1px solid #cbd5e1;">ID: ${entry.id}</span>
@@ -3785,10 +3785,10 @@ function renderReceptionDesk() {
             </div>
         </div>
 
-        <div class="participant-check-list" style="padding: 1.5rem; background: white;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div class="participant-check-list" style="padding: 0.8rem 1rem; background: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
                 <div class="section-title" style="margin-top: 0; margin-bottom: 0; font-size: 1.1rem; border-left-width: 4px;">参加メンバー個別の受付状況</div>
-                <button class="btn-outline btn-small" onclick="window.openAddParticipantModal('${entry.id}')">+ 飛び入り参加を追加</button>
+                <button class="btn-outline btn-small" onclick="window.openAddParticipantModal('${entry.id}')" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">+ 飛び入り参加</button>
             </div>
             
             ${(entry.participants || []).map((p, idx) => {
@@ -3798,22 +3798,22 @@ function renderReceptionDesk() {
                 const rowStatusClass = p.status === 'checked-in' ? 'checked-in' : (p.status === 'absent' ? 'absent' : '');
                 
                 return `
-                <div class="participant-check-row ${rowStatusClass}" style="margin-bottom: 12px; padding: 1rem; border-radius: 12px; border: 2px solid ${p.status === 'checked-in' ? '#10b981' : (p.status === 'absent' ? '#ef4444' : '#e2e8f0')}; display: flex; align-items: center; justify-content: space-between; background: ${p.status === 'checked-in' ? '#f0fdf4' : (p.status === 'absent' ? '#fef2f2' : 'white')}; transition: all 0.2s;">
-                    <div class="p-info" style="display: flex; align-items: center; gap: 1rem; flex: 1;">
-                        <div style="font-size: 1.5rem; width: 40px; text-align: center;">${p.status === 'checked-in' ? '✅' : (p.status === 'absent' ? '❌' : '⬜')}</div>
-                        <div>
-                            <div class="p-name" style="font-size: 1.25rem; font-weight: 800; color: #1e293b;">
-                                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}" style="margin-right: 8px;">${typeLabel}</span>
+                <div class="participant-check-row ${rowStatusClass}" style="margin-bottom: 8px; padding: 0.6rem 0.8rem; border-radius: 12px; border: 2px solid ${p.status === 'checked-in' ? '#10b981' : (p.status === 'absent' ? '#ef4444' : '#e2e8f0')}; display: flex; align-items: center; justify-content: space-between; background: ${p.status === 'checked-in' ? '#f0fdf4' : (p.status === 'absent' ? '#fef2f2' : 'white')}; transition: all 0.2s;">
+                    <div class="p-info" style="display: flex; align-items: center; gap: 0.6rem; flex: 1; min-width: 0;">
+                        <div style="font-size: 1.2rem; width: 30px; text-align: center; flex-shrink: 0;">${p.status === 'checked-in' ? '✅' : (p.status === 'absent' ? '❌' : '⬜')}</div>
+                        <div style="min-width: 0; flex: 1;">
+                            <div class="p-name" style="font-size: 1.15rem; font-weight: 800; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}" style="margin-right: 4px; padding: 0.2rem 0.4rem; font-size: 0.8rem;">${typeLabel}</span>
                                 ${p.name} <small style="font-weight: normal; color: #64748b;">(${p.nickname || 'ニックネーム無'})</small>
                             </div>
-                            <div class="p-meta" style="font-size: 0.9rem; color: #64748b; margin-top: 4px;">
+                            <div class="p-meta" style="font-size: 0.85rem; color: #64748b; margin-top: 2px;">
                                 ${p.region || '地域不明'} | ${genderLabels[p.gender] || '-'} | ${ageLabels[p.age] || '-'} | Tシャツ: [<strong>${p.tshirtSize || '不明'}</strong>]
                             </div>
                         </div>
                     </div>
-                    <div class="p-status-actions" style="display: flex; gap: 8px;">
-                        <button class="btn-status in ${p.status === 'checked-in' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'checked-in')" style="padding: 1rem 1.5rem; font-size: 1rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #10b981; background: ${p.status === 'checked-in' ? '#10b981' : 'white'}; color: ${p.status === 'checked-in' ? 'white' : '#10b981'}; min-width: 100px;">来場</button>
-                        <button class="btn-status out ${p.status === 'absent' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'absent')" style="padding: 1rem 1.5rem; font-size: 1rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #ef4444; background: ${p.status === 'absent' ? '#ef4444' : 'white'}; color: ${p.status === 'absent' ? 'white' : '#ef4444'}; min-width: 100px;">欠席</button>
+                    <div class="p-status-actions" style="display: flex; gap: 4px; flex-shrink: 0;">
+                        <button class="btn-status in ${p.status === 'checked-in' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'checked-in')" style="padding: 0.6rem 0.8rem; font-size: 0.9rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #10b981; background: ${p.status === 'checked-in' ? '#10b981' : 'white'}; color: ${p.status === 'checked-in' ? 'white' : '#10b981'}; min-width: 60px;">来場</button>
+                        <button class="btn-status out ${p.status === 'absent' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'absent')" style="padding: 0.6rem 0.8rem; font-size: 0.9rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #ef4444; background: ${p.status === 'absent' ? '#ef4444' : 'white'}; color: ${p.status === 'absent' ? 'white' : '#ef4444'}; min-width: 60px;">欠席</button>
                     </div>
                 </div>
                 `;
