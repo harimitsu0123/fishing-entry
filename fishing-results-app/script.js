@@ -313,10 +313,13 @@ function renderAdminView() {
         <div class="ikesu-summary-card ${bgClass}" onclick="jumpToIkesu('${ik.id}')" style="flex-direction: column; align-items: stretch; gap: 0.8rem; padding: 1.2rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.8rem;">
                 <div style="font-size: 1.6rem; font-weight: 900; color: #1e293b;">${ik.name} <span style="font-size: 1rem; color: #64748b; font-weight: 600;">(${ik.leaderName} 様)</span></div>
-                <button class="btn-check ${ik.checked ? 'checked' : ''}" style="padding: 6px 12px; font-size: 0.9rem; font-weight: bold; border-radius: 8px;"
-                    onclick="event.stopPropagation(); toggleIkesuCheck('${ik.id}')">
-                    ${ik.checked ? '済' : '未'}
-                </button>
+                ${ik.checked ? 
+                    `<button style="background: transparent; border: 2px solid #10b981; border-radius: 8px; padding: 6px 12px; font-size: 1rem; color: #10b981; font-weight: bold; cursor: pointer;" onclick="event.stopPropagation(); toggleIkesuCheck('${ik.id}')">✅ 確認済</button>` :
+                    `<div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="color: #ef4444; font-weight: 900; font-size: 1.4rem;">未</span>
+                        <button style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" onclick="event.stopPropagation(); toggleIkesuCheck('${ik.id}')">確認済にする</button>
+                    </div>`
+                }
             </div>
             <div style="display: flex; justify-content: space-between; align-items: flex-end;">
                 <div>
