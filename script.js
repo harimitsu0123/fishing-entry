@@ -3922,6 +3922,12 @@ window.updateParticipantStatus = function (entryId, pIdx, status) {
     entry.lastModified = new Date().toISOString();
     saveData();
 
+    // Auto-close right pane if group is now fully completed
+    const validP = entry.participants.filter(p => p.status !== 'cancelled');
+    if (validP.length > 0 && validP.every(p => p.status === 'checked-in' || p.status === 'absent')) {
+        activeReceptionEntryId = null;
+    }
+
     renderReceptionDesk();
     updateReceptionList();
     updateDashboard();
@@ -3950,6 +3956,12 @@ window.updateGroupStatus = function (entryId, status) {
 
     entry.lastModified = new Date().toISOString();
     saveData();
+
+    // Auto-close right pane if group is now fully completed
+    const validP = entry.participants.filter(p => p.status !== 'cancelled');
+    if (validP.length > 0 && validP.every(p => p.status === 'checked-in' || p.status === 'absent')) {
+        activeReceptionEntryId = null;
+    }
 
     renderReceptionDesk();
     updateReceptionList();
