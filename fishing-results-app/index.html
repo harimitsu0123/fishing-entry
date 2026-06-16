@@ -124,7 +124,6 @@
                 <div id="participant-list" class="participant-grid">
                     <!-- Dynamic Content -->
                 </div>
-                <div id="admin-verify-container" class="hidden" style="margin-top: 1.5rem;"></div>
             </main>
 
             <footer class="app-footer">
@@ -135,9 +134,12 @@
                         <span class="stat-unit">pt</span>
                     </div>
                 </div>
-                <button id="save-btn" class="btn-primary">
-                    <span class="icon">💾</span> 変更を保存
-                </button>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div id="admin-verify-container" class="hidden"></div>
+                    <button id="save-btn" class="btn-primary">
+                        <span class="icon">💾</span> 変更を保存
+                    </button>
+                </div>
             </footer>
         </section>
 

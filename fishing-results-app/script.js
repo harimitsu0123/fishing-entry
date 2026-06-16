@@ -188,14 +188,11 @@ function renderParticipantList() {
     if (adminBackBtn && !adminBackBtn.classList.contains('hidden') && verifyContainer) {
         verifyContainer.classList.remove('hidden');
         verifyContainer.innerHTML = `
-            <div style="background: white; border: 2px solid ${currentIkesu.checked ? '#10b981' : '#ef4444'}; border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow-sm); margin-bottom: 2rem;">
-                <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.8rem; color: #475569; text-align: center;">管理者確認</div>
-                <button onclick="toggleIkesuCheck('${currentIkesu.id}')" 
-                    style="width: 100%; padding: 16px; font-size: 1.4rem; font-weight: 900; border-radius: 8px; border: none; cursor: pointer; color: white;
-                    background: ${currentIkesu.checked ? '#10b981' : '#ef4444'}; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    ${currentIkesu.checked ? '✅ 確認済 (元に戻す)' : '確認済にする'}
-                </button>
-            </div>
+            <button onclick="toggleIkesuCheck('${currentIkesu.id}')" 
+                style="padding: 1rem 1.2rem; font-size: 1.1rem; font-weight: 800; border-radius: 12px; border: none; cursor: pointer; color: white;
+                background: ${currentIkesu.checked ? '#10b981' : '#ef4444'}; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.2s; white-space: nowrap;">
+                ${currentIkesu.checked ? '✅ 確認済(戻す)' : '確認済にする'}
+            </button>
         `;
     } else if (verifyContainer) {
         verifyContainer.classList.add('hidden');
