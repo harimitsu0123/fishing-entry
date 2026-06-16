@@ -1162,6 +1162,10 @@ async function syncToCloud() {
             const fetchResult = await fetchRes.json();
             if (fetchResult.status === 'success' && fetchResult.data) {
                 const serverState = fetchResult.data;
+                
+                // v8.9.91: Merge server state to preserve status updates from other devices
+                state = mergeData(state, serverState);
+                
                 state.entries.forEach(localEntry => {
                     const serverEntry = serverState.entries.find(e => e.id === localEntry.id);
                     if (serverEntry) {
@@ -3719,11 +3723,11 @@ function updateReceptionList() {
     const scrollPos = list.scrollTop;
 
     const processedEntries = state.entries.filter(e => e.status !== 'cancelled').map(e => {
-        const pArray = e.participants || [];
-        const finishedCount = pArray.filter(p => p && (p.status === 'checked-in' || p.status === 'absent')).length;
+        const pArray = (e.participants || []).filter(p => p && p.status !== 'cancelled');
+        const finishedCount = pArray.filter(p => p.status === 'checked-in' || p.status === 'absent').length;
         const totalCount = pArray.length;
         const isCompleted = finishedCount === totalCount && totalCount > 0;
-        return { ...e, isCompleted, finishedCount, totalCount };
+        return { ...e, isCompleted, finishedCount, totalCount, validPArray: pArray };
     });
 
     // Sort: isCompleted false first, then logic
@@ -3741,11 +3745,11 @@ function updateReceptionList() {
     let html = '';
     processedEntries.forEach(e => {
         // Search Filter (v8.1.58: Safety guarded)
-        const pArray = e.participants || [];
-        const pNames = pArray.map(p => p ? p.name : "").join(' ');
-        const pNicks = pArray.map(p => p ? (p.nickname || "") : "").join(' ');
-        const pTshirts = pArray.map(p => p ? (p.tshirtSize || "") : "").join(' ');
-        const pGenders = pArray.map(p => p ? (genderLabels[p.gender] || "") : "").join(' ');
+        const pArray = e.validPArray || [];
+        const pNames = pArray.map(p => p.name).join(' ');
+        const pNicks = pArray.map(p => p.nickname || "").join(' ');
+        const pTshirts = pArray.map(p => p.tshirtSize || "").join(' ');
+        const pGenders = pArray.map(p => genderLabels[p.gender] || "").join(' ');
         const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks} ${pTshirts} ${pGenders}`.toLowerCase();
         
         const searchTerms = searchTerm.replace(/　/g, ' ').split(/\s+/).filter(Boolean);
@@ -3836,7 +3840,7 @@ function renderReceptionDesk() {
             </div>
             
             ${(entry.participants || []).map((p, idx) => {
-                if (!p) return '';
+                if (!p || p.status === 'cancelled') return '';
                 const typeClass = p.type === 'fisher' ? 'p-badge-fisher' : 'p-badge-observer';
                 const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
                 const rowStatusClass = p.status === 'checked-in' ? 'checked-in' : (p.status === 'absent' ? 'absent' : '');
