@@ -2654,3 +2654,9 @@ table {
     background: #64748b;
 }
 
+
+html, body {
+    scrollbar-width: thin;
+    scrollbar-color: #3b82f6 #f1f5f9;
+}
+
