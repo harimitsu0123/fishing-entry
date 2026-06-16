@@ -2833,7 +2833,7 @@ window.renderIkesuResultView = function() {
                 <div style="display: flex; justify-content: flex-end; align-items: flex-end; margin-bottom: 0.5rem;">
                     <div style="font-size: 14pt; font-weight: 900; color: #d32f2f; background: #fff; padding: 2px 10px; border: 2px solid #d32f2f; border-radius: 4px;">※<span style="font-size: 18pt;">匹数</span>（数字）で記入してください</div>
                 </div>
-                <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; table-layout: fixed;">
+                <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
                     <thead>
                         <tr style="background: #eee; color: #000; font-size: 14pt; height: 3.5rem;">
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 45px; text-align: center;">No</th>
@@ -2847,8 +2847,8 @@ window.renderIkesuResultView = function() {
                         ${participants.map((p, pIdx) => `
                             <tr style="height: 3.8rem;">
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0;"><span style="font-weight: bold; font-size: 14pt !important;">${pIdx + 1}</span></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"><span style="font-size: 12pt !important; font-weight: bold;">${p.groupName}</span><br><span style="font-size: 10pt !important; color:#666;">(${p.entryId})</span></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <td style="border: 1px solid #000; padding: 0.3rem;"><span style="font-size: 12pt !important; font-weight: bold;">${p.groupName}</span><br><span style="font-size: 10pt !important; color:#666;">(${p.entryId})</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; white-space: nowrap;">
                                     <span style="font-size: 24pt !important;">${p.name}</span>
                                     ${p.nickname ? `<span style="font-size:16pt !important; font-weight:normal; margin-left:8px;">(${p.nickname})</span>` : ''}
                                 </td>
