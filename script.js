@@ -2376,8 +2376,19 @@ window.updateDashboard = function() {
         const absentCount = state.entries.filter(e => e.status === 'absent').length;
         const validEntriesCount = state.entries.filter(e => e.status !== 'cancelled').length;
 
+        let fisherCheckedIn = 0;
+        let fisherAbsent = 0;
+        state.entries.forEach(e => {
+            if (e.status !== 'cancelled') {
+                (e.participants || []).forEach(p => {
+                    if (p.type === 'fisher' && p.status === 'checked-in') fisherCheckedIn++;
+                    if (p.type === 'fisher' && p.status === 'absent') fisherAbsent++;
+                });
+            }
+        });
+
         // Global Stats Summary Cards (v5.4 Compact)
-        renderGlobalStatsSummary(validEntriesCount, totalFishers, totalObservers, checkedInCount, absentCount);
+        renderGlobalStatsSummary(validEntriesCount, totalFishers, totalObservers, checkedInCount, absentCount, fisherCheckedIn, fisherAbsent);
 
         // Email count
         updateBulkMailCount();
@@ -3654,7 +3665,7 @@ function exportGenericCSV(sourceName, fileName) {
 }
 
 // Global Stats Rendering (v7.3.0 Global Scope)
-function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent) {
+function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent, fisherCheckedIn = 0, fisherAbsent = 0) {
     const containers = [
         document.getElementById('global-stats-summary-top')
     ].filter(el => el);
@@ -3677,9 +3688,9 @@ function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent)
             </div>
             <div class="summary-card" style="border-top: 5px solid #10b981;">
                 <div class="summary-label">当日受付状況</div>
-                <div class="summary-value" style="font-size: 1.1rem; line-height: 1.4;">
-                    <span style="color: var(--primary-color)">来場: <span class="checked-in-count">${checkedIn}</span></span> / 
-                    <span style="color: var(--error-color)">欠席: <span class="absent-count">${absent}</span></span>
+                <div class="summary-value" style="font-size: 0.95rem; line-height: 1.4; display:flex; flex-direction:column; gap:2px; font-weight:bold;">
+                    <span style="color: var(--primary-color)">来場: ${checkedIn}組 <span style="font-size:0.8rem;">(釣り人${fisherCheckedIn}名)</span></span>
+                    <span style="color: var(--error-color)">欠席: ${absent}組 <span style="font-size:0.8rem;">(釣り人${fisherAbsent}名)</span></span>
                 </div>
                 <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">全 <span class="total-groups-count">${groups}</span> 組</div>
             </div>
@@ -3792,6 +3803,7 @@ function updateReceptionList() {
 
 function selectReceptionEntry(id) {
     activeReceptionEntryId = id;
+    window.justCompleted = false;
     updateReceptionList();
     renderReceptionDesk();
 }
@@ -3803,12 +3815,21 @@ function renderReceptionDesk() {
     const entry = state.entries.find(e => e.id === activeReceptionEntryId);
 
     if (!entry) {
-        desk.innerHTML = `
-            <div class="reception-placeholder">
-                <i class="icon-search">🔍</i>
-                <p>左側のリストからグループを選択してください。</p>
-            </div>
-        `;
+        if (window.justCompleted) {
+            desk.innerHTML = `
+                <div class="reception-placeholder" style="color: #10b981;">
+                    <i class="icon-search" style="font-style: normal; font-size: 5rem; margin-bottom: 1rem; display: block;">🎉</i>
+                    <p style="font-size: 1.5rem; font-weight: bold;">全員受付完了しました！</p>
+                </div>
+            `;
+        } else {
+            desk.innerHTML = `
+                <div class="reception-placeholder">
+                    <i class="icon-search">🔍</i>
+                    <p>左側のリストからグループを選択してください。</p>
+                </div>
+            `;
+        }
         return;
     }
 
@@ -3935,6 +3956,7 @@ window.updateParticipantStatus = function (entryId, pIdx, status) {
     const validP = entry.participants.filter(p => p.status !== 'cancelled');
     if (validP.length > 0 && validP.every(p => p.status === 'checked-in' || p.status === 'absent')) {
         activeReceptionEntryId = null;
+        window.justCompleted = true;
     }
 
     renderReceptionDesk();
@@ -3970,6 +3992,7 @@ window.updateGroupStatus = function (entryId, status) {
     const validP = entry.participants.filter(p => p.status !== 'cancelled');
     if (validP.length > 0 && validP.every(p => p.status === 'checked-in' || p.status === 'absent')) {
         activeReceptionEntryId = null;
+        window.justCompleted = true;
     }
 
     renderReceptionDesk();
