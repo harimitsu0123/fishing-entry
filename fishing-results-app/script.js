@@ -310,25 +310,30 @@ function renderAdminView() {
         const hasCatch = ik.ikFish > 0;
         const bgClass = ik.checked ? 'checked' : (hasCatch ? 'has-catch' : '');
         return `
-        <div class="ikesu-summary-card ${bgClass}" onclick="jumpToIkesu('${ik.id}')" style="flex-direction: column; align-items: stretch; gap: 0.8rem; padding: 1.2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.8rem;">
-                <div style="font-size: 1.6rem; font-weight: 900; color: #1e293b;">${ik.name} <span style="font-size: 1rem; color: #64748b; font-weight: 600;">(${ik.leaderName} 様)</span></div>
+        <div class="ikesu-summary-card ${bgClass}" onclick="jumpToIkesu('${ik.id}')" style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1rem; gap: 0.5rem; flex-wrap: wrap;">
+            
+            <div style="display: flex; align-items: baseline; gap: 0.8rem; min-width: 150px;">
+                <span style="font-size: 1.4rem; font-weight: 900; color: #1e293b; line-height: 1;">${ik.name}</span>
+                <span style="font-size: 1rem; color: #475569; font-weight: 700;">${ik.leaderName} 様</span>
+            </div>
+
+            <div style="display: flex; align-items: baseline; gap: 1rem; flex: 1; justify-content: center; min-width: 250px;">
+                <span style="font-size: 1.2rem; font-weight: bold; color: #ef4444;">マダイ: ${ik.ikA}</span>
+                <span style="font-size: 1.2rem; font-weight: bold; color: #3b82f6;">青物: ${ik.ikB}</span>
+                <span style="font-size: 0.9rem; color: #64748b; font-weight: 600;">(計 ${ik.ikFish}匹 / ${ik.memberCount}名)</span>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 1rem; min-width: 200px; justify-content: flex-end;">
+                <div style="font-size: 1.6rem; font-weight: 900; color: #0f172a;">${ik.pts}<span style="font-size: 1rem; color: #64748b;">pt</span></div>
+                
                 ${ik.checked ? 
-                    `<button style="background: transparent; border: 2px solid #10b981; border-radius: 8px; padding: 6px 12px; font-size: 1rem; color: #10b981; font-weight: bold; cursor: pointer;" onclick="event.stopPropagation(); toggleIkesuCheck('${ik.id}')">✅ 確認済</button>` :
-                    `<div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="color: #ef4444; font-weight: 900; font-size: 1.4rem;">未</span>
-                        <button style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" onclick="event.stopPropagation(); toggleIkesuCheck('${ik.id}')">確認済にする</button>
+                    `<button style="background: transparent; border: 2px solid #10b981; border-radius: 6px; padding: 4px 8px; font-size: 0.9rem; color: #10b981; font-weight: bold; cursor: pointer; white-space: nowrap;" onclick="event.stopPropagation(); toggleIkesuCheck('${ik.id}')">✅ 確認済</button>` :
+                    `<div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="color: #ef4444; font-weight: 900; font-size: 1.2rem;">未</span>
+                        <button style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); white-space: nowrap;" onclick="event.stopPropagation(); toggleIkesuCheck('${ik.id}')">確認済にする</button>
                     </div>`
                 }
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                <div>
-                    <div style="font-size: 1.2rem; font-weight: bold; color: #475569; margin-bottom: 0.3rem;">マダイ等: <span style="color:#ef4444; font-size: 1.4rem;">${ik.ikA}</span>匹 / 青物: <span style="color:#3b82f6; font-size: 1.4rem;">${ik.ikB}</span>匹</div>
-                    <div style="font-size: 1rem; color: #64748b;">(合計: ${ik.ikFish}匹 / ${ik.memberCount}名)</div>
-                </div>
-                <div style="font-size: 2.2rem; font-weight: 900; color: #0f172a; line-height: 1;">${ik.pts}<span style="font-size: 1rem; font-weight: bold; color: #64748b; margin-left: 4px;">pt</span></div>
-            </div>
-            ${hasCatch && !ik.checked ? '<div style="background: #ef4444; color: white; text-align: center; font-size: 0.9rem; font-weight: bold; padding: 6px; border-radius: 6px; margin-top: 6px;">釣果が入力されています！（未確認）</div>' : ''}
         </div>
     `}).join('');
 }
