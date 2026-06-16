@@ -331,6 +331,8 @@ async function handleSave() {
     try {
         const response = await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({
                 action: 'save',
                 data: state

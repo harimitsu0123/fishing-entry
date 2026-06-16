@@ -116,7 +116,7 @@ body {
     color: var(--text-muted);
 }
 
-input[type="tel"], input[type="number"], input[type="text"] {
+input[type="tel"], input[type="number"], input[type="text"], select {
     width: 100%;
     background: white;
     border: 2px solid #cbd5e1;
@@ -386,13 +386,15 @@ input:focus {
 }
 
 .btn-icon-text {
-    background: transparent;
-    border: 1px solid var(--card-border);
-    padding: 0.5rem 1rem;
-    border-radius: 10px;
-    color: var(--text-muted);
+    background: white;
+    border: 2px solid #cbd5e1;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    color: #475569;
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 /* Modals */
