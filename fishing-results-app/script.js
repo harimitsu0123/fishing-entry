@@ -139,7 +139,7 @@ function renderParticipantList() {
         if (entry.status === 'cancelled') return;
 
         (entry.participants || []).forEach((p, idx) => {
-            if (p.status === 'cancelled') return;
+            if (p.status === 'cancelled' || p.status === 'absent') return;
             if (p.ikesuId === currentIkesu.id && p.type === 'fisher') {
                 foundAny = true;
                 const cA = parseInt(p.catchA || 0);
@@ -222,7 +222,7 @@ window.updateInlineScore = function(entryId, partIdx, field, value, element) {
             state.entries.forEach(e => {
                 if (e.status === 'cancelled') return;
                 (e.participants || []).forEach(pp => {
-                    if (pp.status === 'cancelled') return;
+                    if (pp.status === 'cancelled' || pp.status === 'absent') return;
                     if (pp.ikesuId === currentIkesu.id && pp.type === 'fisher') {
                         totalPoints += parseInt(pp.catchA || 0) + (parseInt(pp.catchB || 0) * 2);
                     }

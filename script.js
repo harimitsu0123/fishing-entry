@@ -2479,7 +2479,7 @@ window.updateDashboard = function() {
 
         sortedEntries.forEach(e => {
             // v8.1.58: Comprehensive Safety Guard for missing participants
-            const pArray = e.participants || [];
+            const pArray = (e.participants || []).filter(p => p && p.status !== 'cancelled');
             
             // Search logic using pArray
             const pNames = pArray.map(p => p.name).join(' ');
