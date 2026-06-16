@@ -2853,7 +2853,9 @@ window.renderGroupPrintView = function() {
     const sorted = [...validEntries].sort((a,b) => a.source.localeCompare(b.source) || a.id.localeCompare(b.id));
     
     sorted.forEach((e, entryIdx) => {
-        const pArray = (e.participants || []).filter(p => p.status !== 'cancelled');
+        const pArray = (e.participants || []).filter(p => p.status !== 'cancelled' && p.status !== 'absent');
+        if (pArray.length === 0) return;
+        
         const isLast = entryIdx === sorted.length - 1;
         
         const ikesuNames = new Set();
@@ -2864,6 +2866,9 @@ window.renderGroupPrintView = function() {
             }
         });
         const ikesuDisplay = Array.from(ikesuNames).join(', ') || '未割当';
+
+        const activeFishers = pArray.filter(p => p.type === 'fisher').length;
+        const activeObservers = pArray.filter(p => p.type === 'observer').length;
 
         html += `
             <div class="print-page group-sheet" style="background:white; padding:1.2rem; border:1px solid #eee; margin-bottom: 1rem; ${isLast ? '' : 'page-break-after: always;'} color: black;">
@@ -2885,7 +2890,7 @@ window.renderGroupPrintView = function() {
                     </div>
                     <div style="border: 2px solid #000; padding: 0.6rem;">
                         <div style="font-size: 0.8rem; border-bottom: 1px solid #000; margin-bottom: 0.3rem;">合計人数</div>
-                        <div style="font-size: 1.2rem; font-weight: bold;">釣り: ${e.fishers}名 / 見学: ${e.observers}名</div>
+                        <div style="font-size: 1.2rem; font-weight: bold;">釣り: ${activeFishers}名 / 見学: ${activeObservers}名</div>
                     </div>
                 </div>
 

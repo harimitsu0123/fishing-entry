@@ -266,7 +266,7 @@ function renderAdminView() {
     });
 
     const ikesuStats = ikesuList.map(ik => {
-        let ikA = 0, ikB = 0, ikFish = 0, memberCount = 0;
+        let ikA = 0, ikB = 0, ikFish = 0, memberCount = 0, leaderName = '未設定';
         state.entries.forEach(e => {
             if (e.status === 'cancelled') return;
             (e.participants || []).forEach(p => {
@@ -276,11 +276,12 @@ function renderAdminView() {
                     ikB += parseInt(p.catchB || 0);
                     ikFish += (parseInt(p.catchA || 0) + parseInt(p.catchB || 0));
                     memberCount++;
+                    if (p.isLeader) leaderName = p.name;
                 }
             });
         });
         const pts = ikA + (ikB * 2);
-        return { ...ik, ikA, ikB, ikFish, pts, memberCount };
+        return { ...ik, ikA, ikB, ikFish, pts, memberCount, leaderName };
     });
 
     // v1.3.1: Change overall total from PT to Fish count per user request
@@ -305,21 +306,28 @@ function renderAdminView() {
         `;
     }
 
-    listContainer.innerHTML = ikesuStats.map(ik => `
-        <div class="ikesu-summary-card ${ik.checked ? 'checked' : ''}" onclick="jumpToIkesu('${ik.id}')">
-            <div class="ik-info">
-                <span class="ik-name">${ik.name} <small style="color:#64748b; font-size:0.85rem; margin-left:4px;">(${ik.memberCount}名)</small> ${ik.checked ? '✅' : ''}</span>
-                <span class="ik-details">マダイ: ${ik.ikA} / 青物、クエ: ${ik.ikB} (計 ${ik.ikFish}匹)</span>
-            </div>
-            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
-                <div class="ik-pts">${ik.pts}pt</div>
-                <button class="btn-check ${ik.checked ? 'checked' : ''}" style="padding: 4px 8px; font-size: 0.7rem;"
+    listContainer.innerHTML = ikesuStats.map(ik => {
+        const hasCatch = ik.ikFish > 0;
+        const bgClass = ik.checked ? 'checked' : (hasCatch ? 'has-catch' : '');
+        return `
+        <div class="ikesu-summary-card ${bgClass}" onclick="jumpToIkesu('${ik.id}')" style="flex-direction: column; align-items: stretch; gap: 0.8rem; padding: 1.2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.8rem;">
+                <div style="font-size: 1.6rem; font-weight: 900; color: #1e293b;">${ik.name} <span style="font-size: 1rem; color: #64748b; font-weight: 600;">(${ik.leaderName} 様)</span></div>
+                <button class="btn-check ${ik.checked ? 'checked' : ''}" style="padding: 6px 12px; font-size: 0.9rem; font-weight: bold; border-radius: 8px;"
                     onclick="event.stopPropagation(); toggleIkesuCheck('${ik.id}')">
                     ${ik.checked ? '済' : '未'}
                 </button>
             </div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: #475569; margin-bottom: 0.3rem;">マダイ等: <span style="color:#ef4444; font-size: 1.4rem;">${ik.ikA}</span>匹 / 青物: <span style="color:#3b82f6; font-size: 1.4rem;">${ik.ikB}</span>匹</div>
+                    <div style="font-size: 1rem; color: #64748b;">(合計: ${ik.ikFish}匹 / ${ik.memberCount}名)</div>
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 900; color: #0f172a; line-height: 1;">${ik.pts}<span style="font-size: 1rem; font-weight: bold; color: #64748b; margin-left: 4px;">pt</span></div>
+            </div>
+            ${hasCatch && !ik.checked ? '<div style="background: #ef4444; color: white; text-align: center; font-size: 0.9rem; font-weight: bold; padding: 6px; border-radius: 6px; margin-top: 6px;">釣果が入力されています！（未確認）</div>' : ''}
         </div>
-    `).join('');
+    `}).join('');
 }
 
 window.toggleIkesuCheck = function(ikesuId) {

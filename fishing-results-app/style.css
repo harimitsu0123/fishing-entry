@@ -654,6 +654,12 @@ input:focus {
     border-color: #bbf7d0;
 }
 
+.ikesu-summary-card.has-catch {
+    border-left-color: #ef4444;
+    background: #fff1f2;
+    border-color: #fecdd3;
+}
+
 .ikesu-summary-card:hover {
     transform: translateY(-3px) scale(1.01);
     box-shadow: var(--shadow-md);
