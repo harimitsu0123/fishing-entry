@@ -2443,6 +2443,7 @@ window.updateDashboard = function() {
 
         // 3. Coordinator & Entry Tools (view param)
         const leaderEl = document.getElementById('url-leader-input');
+        const dirUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/') + 1);
         if (leaderEl) leaderEl.value = `${dirUrl}fishing-results-app/index.html?view=ranking`;
 
         const mintsuriAdminEl = document.getElementById('url-mintsuri-admin');
