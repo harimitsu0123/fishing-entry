@@ -336,7 +336,24 @@ function renderAdminView() {
         `;
     }
 
-    listContainer.innerHTML = ikesuStats.filter(ik => ik.memberCount > 0).map(ik => {
+    // Update Status Cards
+    const activeIkesus = ikesuStats.filter(ik => ik.memberCount > 0);
+    const totalActive = activeIkesus.length;
+    // An Ikesu is considered reported if it has catches or is explicitly checked
+    const reportedCount = activeIkesus.filter(ik => ik.ikFish > 0 || ik.checked).length;
+    const verifiedCount = activeIkesus.filter(ik => ik.checked).length;
+
+    const elReported = document.getElementById('status-reported');
+    if (elReported) elReported.textContent = reportedCount;
+    const elTotal = document.getElementById('status-total-ikesu');
+    if (elTotal) elTotal.textContent = totalActive;
+    
+    const elVerified = document.getElementById('status-verified');
+    if (elVerified) elVerified.textContent = verifiedCount;
+    const elTotalV = document.getElementById('status-total-ikesu-v');
+    if (elTotalV) elTotalV.textContent = totalActive;
+
+    listContainer.innerHTML = activeIkesus.map(ik => {
         const hasCatch = ik.ikFish > 0;
         const bgClass = ik.checked ? 'checked' : (hasCatch ? 'has-catch' : 'unentered');
         return `
