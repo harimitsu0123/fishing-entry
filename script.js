@@ -3952,6 +3952,7 @@ window.toggleParticipantType = function(entryId, pIdx) {
     // Refresh UI
     renderReceptionDesk();
     updateReceptionList();
+    if(typeof updateDashboard === 'function') updateDashboard();
     
     const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
     showToast(`${p.name}さんを「${typeLabel}」に変更しました`, "success");
