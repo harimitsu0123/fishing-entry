@@ -293,8 +293,8 @@ window.handleRegistration = async function() {
             return { ...cleanP, ikesuId: oldP ? oldP.ikesuId : null, isLeader: oldP ? oldP.isLeader : false, status };
         });
 
-        const fisherCount = finalParticipants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
-        const observerCount = finalParticipants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
+        const fisherCount = finalParticipants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+        const observerCount = finalParticipants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
 
         const entryData = {
             id: editId || null,
@@ -3913,8 +3913,8 @@ window.toggleParticipantType = function(entryId, pIdx) {
     p.type = p.type === 'fisher' ? 'observer' : 'fisher';
     
     // Recalculate counts
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
     
     state.lastUpdated = Date.now();
     saveData();
@@ -3938,8 +3938,8 @@ window.updateParticipantStatus = function (entryId, pIdx, status) {
     const newStatus = isTogglingOff ? 'pending' : status;
     entry.participants[pIdx].status = newStatus;
     
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
 
     // Sync group-level flags (for backward compatibility and stats)
     syncGroupStatusFromParticipants(entry);
@@ -3976,8 +3976,8 @@ window.updateGroupStatus = function (entryId, status) {
         p.status = status;
     });
 
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
 
     syncGroupStatusFromParticipants(entry);
 
@@ -4014,8 +4014,8 @@ window.resetAllReceptions = async function() {
                 }
             });
             if (changed) {
-                entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
-                entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
+                entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+                entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
                 syncGroupStatusFromParticipants(entry);
                 entry.lastModified = new Date().toISOString();
             }
@@ -4067,8 +4067,8 @@ window.submitAddParticipant = async function(e) {
     entry.participants.push(newP);
     entry.hasDropIn = true;
 
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
     
     syncGroupStatusFromParticipants(entry);
     entry.lastModified = new Date().toISOString();
@@ -5008,8 +5008,8 @@ window.cancelParticipant = async function(entryId, pIdx) {
     if (!entry || !entry.participants[pIdx]) return;
 
     entry.participants[pIdx].status = 'cancelled';
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
     entry.lastModified = new Date().toISOString();
     
     await saveData();
@@ -5024,8 +5024,8 @@ window.restoreParticipant = async function(entryId, pIdx) {
     if (!entry || !entry.participants[pIdx]) return;
 
     entry.participants[pIdx].status = 'pending';
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
     entry.lastModified = new Date().toISOString();
     
     await saveData();
