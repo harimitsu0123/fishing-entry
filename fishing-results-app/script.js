@@ -183,6 +183,23 @@ function renderParticipantList() {
     }
 
     document.getElementById('ikesu-total-points').textContent = totalPoints;
+
+    const verifyContainer = document.getElementById('admin-verify-container');
+    if (adminBackBtn && !adminBackBtn.classList.contains('hidden') && verifyContainer) {
+        verifyContainer.classList.remove('hidden');
+        verifyContainer.innerHTML = `
+            <div style="background: white; border: 2px solid ${currentIkesu.checked ? '#10b981' : '#ef4444'}; border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow-sm); margin-bottom: 2rem;">
+                <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.8rem; color: #475569; text-align: center;">管理者確認</div>
+                <button onclick="toggleIkesuCheck('${currentIkesu.id}')" 
+                    style="width: 100%; padding: 16px; font-size: 1.4rem; font-weight: 900; border-radius: 8px; border: none; cursor: pointer; color: white;
+                    background: ${currentIkesu.checked ? '#10b981' : '#ef4444'}; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    ${currentIkesu.checked ? '✅ 確認済 (元に戻す)' : '確認済にする'}
+                </button>
+            </div>
+        `;
+    } else if (verifyContainer) {
+        verifyContainer.classList.add('hidden');
+    }
 }
 
 window.updateInlineScore = function(entryId, partIdx, field, value, element) {
@@ -327,23 +344,29 @@ function renderAdminView() {
                 <div style="font-size: 1.6rem; font-weight: 900; color: #0f172a;">${ik.pts}<span style="font-size: 1rem; color: #64748b;">pt</span></div>
                 
                 ${ik.checked ? 
-                    `<button style="background: transparent; border: 2px solid #10b981; border-radius: 6px; padding: 4px 8px; font-size: 0.9rem; color: #10b981; font-weight: bold; cursor: pointer; white-space: nowrap;" onclick="event.stopPropagation(); toggleIkesuCheck('${ik.id}')">✅ 確認済</button>` :
-                    `<div style="display: flex; align-items: center; gap: 6px;">
-                        <span style="color: #ef4444; font-weight: 900; font-size: 1.2rem;">未</span>
-                        <button style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); white-space: nowrap;" onclick="event.stopPropagation(); toggleIkesuCheck('${ik.id}')">確認済にする</button>
-                    </div>`
+                    `<span style="color: #10b981; font-weight: bold; font-size: 1.2rem; white-space: nowrap;">✅ 確認済</span>` :
+                    `<span style="color: #ef4444; font-weight: 900; font-size: 1.2rem; white-space: nowrap; border: 2px solid #ef4444; padding: 4px 8px; border-radius: 6px;">未確認</span>`
                 }
             </div>
         </div>
     `}).join('');
 }
 
-window.toggleIkesuCheck = function(ikesuId) {
-    const ik = state.settings.ikesuList.find(i => i.id === ikesuId);
+window.toggleIkesuCheck = async function(ikesuId) {
+    const ik = (state.settings.ikesuList || []).find(i => i.id === ikesuId);
     if (ik) {
         ik.checked = !ik.checked;
         state.lastUpdated = Date.now();
-        renderAdminView();
+        
+        // Optimistic UI
+        if (document.getElementById('admin-view').classList.contains('hidden') === false) {
+            renderAdminView();
+        }
+        if (currentIkesu && currentIkesu.id === ikesuId) {
+            renderParticipantList();
+        }
+        
+        await handleSave();
     }
 };
 
