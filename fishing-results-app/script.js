@@ -38,6 +38,22 @@ async function initApp() {
     document.querySelectorAll('.logout-btn').forEach(btn => btn.addEventListener('click', handleLogout));
     document.getElementById('save-btn').addEventListener('click', handleSave);
     
+    // v1.2.0: Public Ranking View
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('view') === 'ranking') {
+        document.querySelector('#admin-view h2').textContent = '釣果ランキング';
+        document.querySelectorAll('.logout-btn').forEach(btn => btn.style.display = 'none');
+        document.querySelectorAll('#admin-view .card').forEach(c => {
+            if (!c.querySelector('h3') || !c.querySelector('h3').textContent.includes('全体釣果')) {
+                c.style.display = 'none';
+            }
+        });
+        showView('admin-view');
+        renderAdminView();
+        showLoading(false);
+        return;
+    }
+
     // v1.1.0: Auto-login
     const savedIkesuId = sessionStorage.getItem('loggedIkesuId');
     if (savedIkesuId) {

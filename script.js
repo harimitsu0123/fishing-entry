@@ -1015,7 +1015,7 @@ function generateSpecialUrls() {
     setVal('url-mintsuri-admin', `${baseUrl}?view=mintsuri`);
     setVal('url-harimitsu-admin', `${baseUrl}?view=harimitsu`);
     setVal('url-suiho-admin', `${baseUrl}?view=suiho`);
-    setVal('url-leader-input', `${baseUrl}?view=leader-entry`);
+    setVal('url-leader-input', `${dirUrl}fishing-results-app/index.html?view=ranking`);
     
     // Standalone forms
     setVal('url-preorder', `${dirUrl}preorder.html`);
@@ -2434,7 +2434,7 @@ window.updateDashboard = function() {
 
         // 3. Coordinator & Entry Tools (view param)
         const leaderEl = document.getElementById('url-leader-input');
-        if (leaderEl) leaderEl.value = `${baseUrl}?view=leader-entry`;
+        if (leaderEl) leaderEl.value = `${dirUrl}fishing-results-app/index.html?view=ranking`;
 
         const mintsuriAdminEl = document.getElementById('url-mintsuri-admin');
         if (mintsuriAdminEl) mintsuriAdminEl.value = `${baseUrl}?view=mintsuri-coordinator-view`;
