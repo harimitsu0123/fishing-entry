@@ -2759,12 +2759,17 @@ window.renderIkesuResultView = function() {
     
     state.settings.ikesuList.forEach((ik, idx) => {
         const participants = [];
+        let ikesuLeaderName = null;
+        
         state.entries.forEach(e => {
             if (e.status === 'cancelled') return;
             (e.participants || []).forEach(p => {
                 if (p.status === 'cancelled') return;
-                if (p.ikesuId === ik.id && p.type === 'fisher') {
-                    participants.push({ ...p, groupName: e.groupName, entryId: e.id });
+                if (p.ikesuId === ik.id) {
+                    if (p.isLeader) ikesuLeaderName = p.name;
+                    if (p.type === 'fisher') {
+                        participants.push({ ...p, groupName: e.groupName, entryId: e.id });
+                    }
                 }
             });
         });
@@ -2780,7 +2785,7 @@ window.renderIkesuResultView = function() {
                     </div>
                     <div style="flex: 1; display: flex; justify-content: center; align-items: baseline; gap: 10px; padding: 0 10px;">
                         <span style="font-size: 0.8rem; font-weight: 800; color: #666; background: #eee; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">イケスリーダー</span>
-                        <span style="font-size: 1.8rem; font-weight: 900; color: #000; white-space: nowrap;">${participants.find(p => p.isLeader)?.name || '未設定'} 様</span>
+                        <span style="font-size: 1.8rem; font-weight: 900; color: #000; white-space: nowrap;">${ikesuLeaderName || '未設定'} 様</span>
                     </div>
                     <div style="text-align: right; min-width: 280px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end;">
                         <div style="font-weight: 800; font-size: 1rem; color: #666; margin-bottom: 6px;">イケス 釣果記入表</div>
