@@ -280,15 +280,15 @@ function renderAdminView() {
     }
 
     listContainer.innerHTML = ikesuStats.map(ik => `
-        <div class="ikesu-summary-card ${ik.checked ? 'checked' : ''}">
-            <div class="ik-info" onclick="jumpToIkesu('${ik.id}')">
+        <div class="ikesu-summary-card ${ik.checked ? 'checked' : ''}" onclick="jumpToIkesu('${ik.id}')">
+            <div class="ik-info">
                 <span class="ik-name">${ik.name} <small style="color:#64748b; font-size:0.85rem; margin-left:4px;">(${ik.memberCount}名)</small> ${ik.checked ? '✅' : ''}</span>
                 <span class="ik-details">マダイ: ${ik.ikA} / 青物、クエ: ${ik.ikB} (計 ${ik.ikFish}匹)</span>
             </div>
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
                 <div class="ik-pts">${ik.pts}pt</div>
                 <button class="btn-check ${ik.checked ? 'checked' : ''}" style="padding: 4px 8px; font-size: 0.7rem;"
-                    onclick="toggleIkesuCheck('${ik.id}')">
+                    onclick="event.stopPropagation(); toggleIkesuCheck('${ik.id}')">
                     ${ik.checked ? '済' : '未'}
                 </button>
             </div>
