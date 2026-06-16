@@ -6037,7 +6037,7 @@ window.logChange = function(entry, type, oldEntry = null) {
         });
         
         
-        if (details.length === 0) details.push("登録内容の更新（詳細なし）");
+        if (details.length === 0) return; // Do not log if nothing changed
     } else if (type === '新規登録') {
         details.push(`代表者: ${entry.representative || entry.representativeName || '不明'}`);
         details.push(`人数: ${(entry.participants || []).length}名`);
@@ -6052,7 +6052,7 @@ window.logChange = function(entry, type, oldEntry = null) {
         if (oSet.maintenanceMode !== nSet.maintenanceMode) details.push(`準備中モード: ${nSet.maintenanceMode ? 'ON' : 'OFF'}`);
         if (oSet.soldoutMode !== nSet.soldoutMode) details.push(`満員モード: ${nSet.soldoutMode ? 'ON' : 'OFF'}`);
         if (oSet.closedMode !== nSet.closedMode) details.push(`受付終了モード: ${nSet.closedMode ? 'ON' : 'OFF'}`);
-        if (details.length === 0) details.push('設定の更新（詳細なし）');
+        if (details.length === 0) return; // Do not log if nothing changed
     }
 
     const logEntry = {
