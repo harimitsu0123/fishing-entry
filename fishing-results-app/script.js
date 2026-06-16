@@ -159,12 +159,12 @@ function renderParticipantList() {
                             <div style="display:flex; flex-direction:column; align-items:center;">
                                 <span style="font-size:0.65rem; color:#ef4444; font-weight:bold; margin-bottom:2px;">マダイ等</span>
                                 <input type="number" class="inline-input red" value="${cA}" min="0" 
-                                    onchange="updateInlineScore('${entry.id}', ${idx}, 'catchA', this.value)">
+                                    onchange="updateInlineScore('${entry.id}', ${idx}, 'catchA', this.value, this)">
                             </div>
                             <div style="display:flex; flex-direction:column; align-items:center;">
                                 <span style="font-size:0.65rem; color:#3b82f6; font-weight:bold; margin-bottom:2px;">青物、クエ</span>
                                 <input type="number" class="inline-input blue" value="${cB}" min="0" 
-                                    onchange="updateInlineScore('${entry.id}', ${idx}, 'catchB', this.value)">
+                                    onchange="updateInlineScore('${entry.id}', ${idx}, 'catchB', this.value, this)">
                             </div>
                             <div style="display:flex; flex-direction:column; align-items:center;">
                                 <span style="font-size:0.65rem; color:#64748b; font-weight:bold; margin-bottom:2px;">合計</span>
@@ -185,13 +185,39 @@ function renderParticipantList() {
     document.getElementById('ikesu-total-points').textContent = totalPoints;
 }
 
-window.updateInlineScore = function(entryId, partIdx, field, value) {
+window.updateInlineScore = function(entryId, partIdx, field, value, element) {
     const entry = state.entries.find(e => e.id === entryId);
     if (entry && entry.participants[partIdx]) {
         entry.participants[partIdx][field] = parseInt(value) || 0;
         entry.lastModified = new Date().toISOString();
         state.lastUpdated = Date.now();
-        renderParticipantList();
+        
+        if (element) {
+            const p = entry.participants[partIdx];
+            const cA = parseInt(p.catchA || 0);
+            const cB = parseInt(p.catchB || 0);
+            const pts = cA + (cB * 2);
+            
+            const row = element.closest('.p-scores-row');
+            if (row) {
+                const badge = row.querySelector('.score-badge.total');
+                if (badge) badge.textContent = pts + 'pt';
+            }
+            
+            let totalPoints = 0;
+            state.entries.forEach(e => {
+                if (e.status === 'cancelled') return;
+                (e.participants || []).forEach(pp => {
+                    if (pp.status === 'cancelled') return;
+                    if (pp.ikesuId === currentIkesu.id && pp.type === 'fisher') {
+                        totalPoints += parseInt(pp.catchA || 0) + (parseInt(pp.catchB || 0) * 2);
+                    }
+                });
+            });
+            document.getElementById('ikesu-total-points').textContent = totalPoints;
+        } else {
+            renderParticipantList();
+        }
     }
 };
 
