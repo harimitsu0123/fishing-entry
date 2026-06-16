@@ -2712,7 +2712,7 @@ window.renderIkesuPrintView = function() {
                     </div>
                     <div style="flex: 1; display: flex; justify-content: center; align-items: baseline; gap: 10px; margin-bottom: 5px;">
                         <span style="font-size: 0.8rem; font-weight: 700; color: #666; background: #eee; padding: 2px 6px; border-radius: 4px;">イケスリーダー</span>
-                        <span style="font-size: 1.8rem; font-weight: 900; color: #000;">${participants.find(p => p.isLeader)?.name || '未設定'} 様</span>
+                        <span style="font-size: 1.8rem; font-weight: 900; color: #000;">${participants.find(p => p.isLeader)?.name || '　　　　　'} 様</span>
                     </div>
                     <div style="text-align: right; font-size: 0.8rem; min-width: 180px;">
                         <div style="font-weight: 700; font-size: 1rem; color: #666;">イケス メンバー表</div>
@@ -2820,7 +2820,7 @@ window.renderIkesuResultView = function() {
                     </div>
                     <div style="flex: 1; display: flex; justify-content: center; align-items: baseline; gap: 10px; padding: 0 10px;">
                         <span style="font-size: 0.8rem; font-weight: 800; color: #666; background: #eee; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">イケスリーダー</span>
-                        <span style="font-size: 1.8rem; font-weight: 900; color: #000; white-space: nowrap;">${ikesuLeaderName || '未設定'} 様</span>
+                        <span style="font-size: 1.8rem; font-weight: 900; color: #000; white-space: nowrap;">${ikesuLeaderName || '　　　　　'} 様</span>
                     </div>
                     <div style="text-align: right; min-width: 280px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end;">
                         <div style="font-weight: 800; font-size: 1rem; color: #666; margin-bottom: 6px;">イケス 釣果記入表</div>
