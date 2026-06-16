@@ -876,7 +876,12 @@ textarea:focus {
 [id$="tshirt-breakdown-list"] {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.6rem 0.5rem;
+    gap: 1.2rem 0.5rem;
+}
+
+[id$="tshirt-breakdown-list"] .stats-item {
+    padding: 0.6rem 0.6rem;
+    font-size: 1.0rem;
 }
 
 .breakdown-grid {
