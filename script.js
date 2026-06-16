@@ -3252,7 +3252,7 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
                     "宇治": "京都府", "亀岡": "京都府", "舞鶴": "京都府", "橿原": "奈良県", "生駒": "奈良県", "大和郡山": "奈良県", "田辺": "和歌山県", "橋本": "和歌山県", "大津": "滋賀県", "草津": "滋賀県", "彦根": "滋賀県", "長浜": "滋賀県", "近江八幡": "滋賀県"
                 };
                 for (const [city, pref] of Object.entries(cityPrefMap)) {
-                    if (r.includes(city) && !r.includes(pref.replace(/(都|道|府|県)$/, ''))) {
+                    if (r === city || r.startsWith(city + '市') || r.startsWith(city + '区') || r.startsWith(city + '郡')) {
                         r = pref + r;
                         break;
                     }
