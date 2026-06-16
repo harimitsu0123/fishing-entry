@@ -1156,6 +1156,37 @@ function startAutoSync() {
 async function syncToCloud() {
     updateSyncStatus('syncing');
     try {
+        // v8.9.90: Fetch latest server state and merge catches to prevent wiping ikesu app data
+        try {
+            const fetchRes = await fetch(GAS_WEB_APP_URL + '?action=load');
+            const fetchResult = await fetchRes.json();
+            if (fetchResult.status === 'success' && fetchResult.data) {
+                const serverState = fetchResult.data;
+                state.entries.forEach(localEntry => {
+                    const serverEntry = serverState.entries.find(e => e.id === localEntry.id);
+                    if (serverEntry) {
+                        (localEntry.participants || []).forEach((localP, pIdx) => {
+                            if (serverEntry.participants[pIdx]) {
+                                // Adopt server catch if local is 0 to prevent wiping newly entered catches
+                                if (!localP.catchA && !localP.catchB && (serverEntry.participants[pIdx].catchA || serverEntry.participants[pIdx].catchB)) {
+                                    localP.catchA = serverEntry.participants[pIdx].catchA;
+                                    localP.catchB = serverEntry.participants[pIdx].catchB;
+                                }
+                            }
+                        });
+                    }
+                });
+                if (state.settings && state.settings.ikesuList && serverState.settings && serverState.settings.ikesuList) {
+                    state.settings.ikesuList.forEach(localIk => {
+                        const serverIk = serverState.settings.ikesuList.find(i => i.id === localIk.id);
+                        if (serverIk) localIk.checked = serverIk.checked;
+                    });
+                }
+            }
+        } catch (e) {
+            console.warn("Pre-sync merge failed, proceeding with local state", e);
+        }
+
         const payload = {
             action: 'save',
             data: state

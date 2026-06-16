@@ -391,13 +391,53 @@ window.jumpToIkesu = function(ikesuId) {
 async function handleSave() {
     showLoading(true, "保存中...");
     try {
+        // Fetch latest state from server to prevent overwriting reception app changes
+        const fetchResponse = await fetch(GAS_WEB_APP_URL + '?action=load');
+        const fetchResult = await fetchResponse.json();
+        
+        let stateToSave = state;
+        
+        if (fetchResult.status === 'success' && fetchResult.data) {
+            const serverState = fetchResult.data;
+            
+            // Merge our local catches into the server state
+            state.entries.forEach(localEntry => {
+                const serverEntry = serverState.entries.find(e => e.id === localEntry.id);
+                if (serverEntry) {
+                    (localEntry.participants || []).forEach((localP, pIdx) => {
+                        if (serverEntry.participants[pIdx]) {
+                            serverEntry.participants[pIdx].catchA = localP.catchA;
+                            serverEntry.participants[pIdx].catchB = localP.catchB;
+                        }
+                    });
+                }
+            });
+            
+            // Merge our local ikesu checked status
+            if (state.settings && state.settings.ikesuList && serverState.settings && serverState.settings.ikesuList) {
+                state.settings.ikesuList.forEach(localIk => {
+                    const serverIk = serverState.settings.ikesuList.find(i => i.id === localIk.id);
+                    if (serverIk) {
+                        serverIk.checked = localIk.checked;
+                    }
+                });
+            }
+            
+            // Update local state and prepare to save
+            state = serverState;
+            stateToSave = serverState;
+            
+            // Refresh UI with latest data (e.g. check-in statuses)
+            renderParticipantList();
+        }
+
         const response = await fetch(GAS_WEB_APP_URL, {
             method: 'POST',
             mode: 'cors',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({
                 action: 'save',
-                data: state
+                data: stateToSave
             })
         });
         const result = await response.json();
