@@ -931,8 +931,14 @@
                             <div style="display:flex; gap:0.4rem; margin-top:0.5rem; flex-wrap: nowrap; align-items: center;">
                                 <button class="btn-toolbar active" id="sort-reception-id" onclick="setReceptionSort('id')" style="white-space: nowrap; padding: 0.4rem 0.6rem; flex: 1;">ID順</button>
                                 <button class="btn-toolbar" id="sort-reception-source" onclick="setReceptionSort('source')" style="white-space: nowrap; padding: 0.4rem 0.6rem; flex: 1;">区分順</button>
-                                <label style="display:flex; align-items:center; gap:0.3rem; font-size:0.85rem; cursor:pointer; white-space: nowrap; flex-shrink: 0;">
-                                    <input type="checkbox" id="show-completed-toggle" onchange="updateReceptionList()"> 完了を表示
+                                <label style="display:flex; align-items:center; gap:0.2rem; font-size:0.85rem; cursor:pointer; white-space: nowrap; flex-shrink: 0;">
+                                    <input type="radio" name="reception-filter" value="uncompleted" checked onchange="updateReceptionList()"> 未完了
+                                </label>
+                                <label style="display:flex; align-items:center; gap:0.2rem; font-size:0.85rem; cursor:pointer; white-space: nowrap; flex-shrink: 0;">
+                                    <input type="radio" name="reception-filter" value="completed" onchange="updateReceptionList()"> 完了
+                                </label>
+                                <label style="display:flex; align-items:center; gap:0.2rem; font-size:0.85rem; cursor:pointer; white-space: nowrap; flex-shrink: 0;">
+                                    <input type="radio" name="reception-filter" value="all" onchange="updateReceptionList()"> 全て
                                 </label>
                             </div>
                         </div>

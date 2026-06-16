@@ -3712,7 +3712,8 @@ function updateReceptionList() {
     if (!list) return;
 
     const searchTerm = document.getElementById('reception-search').value.toLowerCase();
-    const showCompleted = document.getElementById('show-completed-toggle').checked;
+    const filterRadio = document.querySelector('input[name="reception-filter"]:checked');
+    const filterValue = filterRadio ? filterRadio.value : 'uncompleted';
 
     // v8.1.56: Save scroll position of the sidebar
     const scrollPos = list.scrollTop;
@@ -3754,7 +3755,8 @@ function updateReceptionList() {
         }
 
         // Completion Filter
-        if (!showCompleted && e.isCompleted) return;
+        if (filterValue === 'uncompleted' && e.isCompleted) return;
+        if (filterValue === 'completed' && !e.isCompleted) return;
 
         const badgeClass = e.source === 'みん釣り' ? 'badge-mintsuri' : e.source === '一般' ? 'badge-ippan' : e.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho';
         
