@@ -189,7 +189,7 @@ function renderParticipantList() {
         verifyContainer.classList.remove('hidden');
         verifyContainer.innerHTML = `
             <button onclick="toggleIkesuCheck('${currentIkesu.id}')" 
-                style="padding: 1rem 1.2rem; font-size: 1.1rem; font-weight: 800; border-radius: 12px; border: none; cursor: pointer; color: white;
+                style="padding: 1rem 1.5rem; font-size: 1.1rem; font-weight: 800; border-radius: 12px; border: none; cursor: pointer; color: white;
                 background: ${currentIkesu.checked ? '#10b981' : '#ef4444'}; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.2s; white-space: nowrap;">
                 ${currentIkesu.checked ? '✅ 確認済(戻す)' : '確認済にする'}
             </button>
