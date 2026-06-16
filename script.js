@@ -2510,8 +2510,9 @@ window.updateDashboard = function() {
             const pRegions = pArray.map(p => p.region || "").join(' ');
             const pTshirts = pArray.map(p => p.tshirtSize || "").join(' ');
             const pGenders = pArray.map(p => p.gender ? genderLabels[p.gender] || "" : "").join(' ');
+            const pTypes = pArray.map(p => p.type === 'observer' ? '見学' : '釣り').join(' ');
             
-            const combinedParticipantInfo = (pNames + " " + pNicks + " " + pRegions + " " + pTshirts + " " + pGenders).toLowerCase();
+            const combinedParticipantInfo = (pNames + " " + pNicks + " " + pRegions + " " + pTshirts + " " + pGenders + " " + pTypes).toLowerCase();
             const safeId = e.id || "未採番";
             
             const fullString = [safeId, e.groupName || "", e.representative || "", combinedParticipantInfo].join(' ').toLowerCase();
@@ -3781,7 +3782,8 @@ function updateReceptionList() {
         const pNicks = pArray.map(p => p.nickname || "").join(' ');
         const pTshirts = pArray.map(p => p.tshirtSize || "").join(' ');
         const pGenders = pArray.map(p => genderLabels[p.gender] || "").join(' ');
-        const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks} ${pTshirts} ${pGenders}`.toLowerCase();
+        const pTypes = pArray.map(p => p.type === 'observer' ? '見学' : '釣り').join(' ');
+        const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks} ${pTshirts} ${pGenders} ${pTypes}`.toLowerCase();
         
         const searchTerms = searchTerm.replace(/　/g, ' ').split(/\s+/).filter(Boolean);
         if (searchTerms.length > 0) {
