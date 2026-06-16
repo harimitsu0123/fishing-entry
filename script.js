@@ -5918,6 +5918,13 @@ function injectSpecialSource(sourceName) {
         selector.appendChild(label);
         target = label.querySelector('input');
     } else {
+        // v8.10.2: Prevent form.reset() from reverting to General by clearing default checks
+        selector.querySelectorAll('input[name="reg-source"]').forEach(r => {
+            r.removeAttribute('checked');
+            r.defaultChecked = false;
+        });
+        target.setAttribute('checked', 'checked');
+        target.defaultChecked = true;
         target.checked = true; // Force check (v8.1.36)
         target.disabled = false;
         const label = target.closest('.source-option');
