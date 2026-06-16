@@ -400,7 +400,12 @@
                             <button class="filter-btn" data-filter="水宝" onclick="window.setDashboardFilter('水宝')">水宝</button>
                             <button class="filter-btn" data-filter="ハリミツ" onclick="window.setDashboardFilter('ハリミツ')">ハリミツ</button>
                         </div>
-                        <div class="search-box mb-3"><input type="text" id="dashboard-search" placeholder="名前・IDで検索..." autocomplete="new-password"></div>
+                        <div class="search-box mb-3" style="display: flex; gap: 1rem; align-items: center;">
+                            <input type="text" id="dashboard-search" placeholder="名前・IDで検索..." autocomplete="new-password" style="flex: 1;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: bold; cursor: pointer; white-space: nowrap;">
+                                <input type="checkbox" id="dashboard-filter-observer" onchange="updateDashboard()" style="width: 18px; height: 18px; cursor: pointer;"> 見学あり
+                            </label>
+                        </div>
                         <div class="table-container">
                             <table id="entry-table">
                                 <thead>
@@ -927,7 +932,12 @@
                 <div class="reception-layout">
                     <div class="reception-sidebar">
                         <div class="reception-toolbar">
-                            <div class="search-box"><input type="text" id="reception-search" placeholder="名前・ID・グループ..." oninput="updateReceptionList()" autocomplete="off"></div>
+                            <div class="search-box" style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="text" id="reception-search" placeholder="名前・ID・グループ..." oninput="updateReceptionList()" autocomplete="off" style="flex: 1;">
+                                <label style="display: flex; align-items: center; gap: 0.3rem; font-weight: bold; cursor: pointer; white-space: nowrap; font-size: 0.85rem; padding: 0.2rem 0.5rem; background: #e2e8f0; border-radius: 4px;">
+                                    <input type="checkbox" id="reception-filter-observer" onchange="updateReceptionList()" style="width: 14px; height: 14px; cursor: pointer;"> 見学
+                                </label>
+                            </div>
                             <div style="display:flex; gap:0.4rem; margin-top:0.5rem; flex-wrap: nowrap; align-items: center;">
                                 <button class="btn-toolbar active" id="sort-reception-id" onclick="setReceptionSort('id')" style="white-space: nowrap; padding: 0.4rem 0.6rem; flex: 1;">ID順</button>
                                 <button class="btn-toolbar" id="sort-reception-source" onclick="setReceptionSort('source')" style="white-space: nowrap; padding: 0.4rem 0.6rem; flex: 1;">区分順</button>

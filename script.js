@@ -2522,6 +2522,13 @@ window.updateDashboard = function() {
                 const isMatch = searchTerms.every(term => fullString.includes(term));
                 if (!isMatch) return;
             }
+            
+            const filterObserver = document.getElementById('dashboard-filter-observer')?.checked;
+            if (filterObserver) {
+                const hasObserver = pArray.some(p => p.type === 'observer');
+                if (!hasObserver) return;
+            }
+            
             if (dashboardFilter !== 'all' && e.source !== dashboardFilter) return;
 
             const badgeMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
@@ -3789,6 +3796,12 @@ function updateReceptionList() {
         if (searchTerms.length > 0) {
             const isMatch = searchTerms.every(term => combined.includes(term));
             if (!isMatch) return;
+        }
+
+        const filterObserver = document.getElementById('reception-filter-observer')?.checked;
+        if (filterObserver) {
+            const hasObserver = pArray.some(p => p.type === 'observer');
+            if (!hasObserver) return;
         }
 
         // Completion Filter
