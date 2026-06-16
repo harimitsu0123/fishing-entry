@@ -2456,7 +2456,7 @@ window.updateDashboard = function() {
             const combinedParticipantInfo = (pNames + " " + pNicks + " " + pRegions + " " + pTshirts + " " + pGenders).toLowerCase();
             const safeId = e.id || "未採番";
             
-            const fullString = [safeId, e.groupName || "", e.representative || "", e.phone || "", e.repPhone || "", combinedParticipantInfo].join(' ').toLowerCase();
+            const fullString = [safeId, e.groupName || "", e.representative || "", combinedParticipantInfo].join(' ').toLowerCase();
             const searchTerms = searchTerm.replace(/　/g, ' ').split(/\s+/).filter(Boolean);
             
             if (searchTerms.length > 0) {
@@ -3542,7 +3542,7 @@ function renderGenericCoordinatorView(sourceName, prefix) {
             const pArray = e.participants || [];
             const pNames = pArray.map(p => p.name).join(' ');
             const pNicks = pArray.map(p => p.nickname || "").join(' ');
-            const combined = `${e.id} ${e.groupName} ${e.representative} ${e.phone || ""} ${e.repPhone || ""} ${pNames} ${pNicks}`.toLowerCase();
+            const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks}`.toLowerCase();
             return combined.includes(searchTerm);
         })
         .map(e => {
@@ -3715,7 +3715,7 @@ function updateReceptionList() {
         const pNicks = pArray.map(p => p ? (p.nickname || "") : "").join(' ');
         const pTshirts = pArray.map(p => p ? (p.tshirtSize || "") : "").join(' ');
         const pGenders = pArray.map(p => p ? (genderLabels[p.gender] || "") : "").join(' ');
-        const combined = `${e.id} ${e.groupName} ${e.representative} ${e.phone || ""} ${e.repPhone || ""} ${pNames} ${pNicks} ${pTshirts} ${pGenders}`.toLowerCase();
+        const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks} ${pTshirts} ${pGenders}`.toLowerCase();
         
         const searchTerms = searchTerm.replace(/　/g, ' ').split(/\s+/).filter(Boolean);
         if (searchTerms.length > 0) {
