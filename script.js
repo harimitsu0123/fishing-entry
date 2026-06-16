@@ -3366,6 +3366,31 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
                 </div>
             `).join('') || '<div class="text-muted small">データなし</div>';
     }
+
+    // Leader T-shirt Sizes
+    const leaderTshirtList = document.getElementById(prefix + 'leader-tshirt-breakdown-list');
+    if (leaderTshirtList) {
+        const leaderTshirtCount = {};
+        tshirtSizes.forEach(s => leaderTshirtCount[s] = 0);
+        
+        validEntries.forEach(e => {
+            (e.participants || []).forEach(p => {
+                if (p && p.tshirtSize && p.status !== 'cancelled' && p.status !== 'absent' && p.isLeader) {
+                    const normalized = normalizeTshirtSize(p.tshirtSize);
+                    leaderTshirtCount[normalized] = (leaderTshirtCount[normalized] || 0) + 1;
+                }
+            });
+        });
+
+        leaderTshirtList.innerHTML = Object.entries(leaderTshirtCount)
+            .filter(([_, count]) => count > 0 || prefix === '') // Show all in global, only non-zero in prefix views if needed
+            .map(([size, count]) => `
+                <div class="stats-item">
+                    <span class="stats-label">${size}</span>
+                    <span class="stats-count">${count}枚</span>
+                </div>
+            `).join('') || '<div class="text-muted small">データなし</div>';
+    }
 }
 
 function checkTshirtSizeAnomalies(entries) {
