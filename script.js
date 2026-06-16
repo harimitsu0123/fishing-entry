@@ -3815,6 +3815,19 @@ function renderReceptionDesk() {
             </div>
         </div>
 
+        ${(() => {
+            const validP = (entry.participants || []).filter(p => p.status !== 'cancelled');
+            const total = validP.length;
+            const finished = validP.filter(p => p.status === 'checked-in' || p.status === 'absent').length;
+            if (total > 0 && total === finished) {
+                return `
+                <div style="background: #10b981; color: white; padding: 1rem; text-align: center; font-size: 1.4rem; font-weight: 900; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.1);">
+                    ✅ 全員受付完了しました！
+                </div>`;
+            }
+            return '';
+        })()}
+
         <div class="participant-check-list" style="padding: 0.8rem 1rem; background: white;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
                 <div class="section-title" style="margin-top: 0; margin-bottom: 0; font-size: 1.1rem; border-left-width: 4px;">参加メンバー個別の受付状況</div>
@@ -3833,7 +3846,7 @@ function renderReceptionDesk() {
                         <div style="font-size: 1.2rem; width: 30px; text-align: center; flex-shrink: 0;">${p.status === 'checked-in' ? '✅' : (p.status === 'absent' ? '❌' : '⬜')}</div>
                         <div style="min-width: 0; flex: 1;">
                             <div class="p-name" style="font-size: 1.15rem; font-weight: 800; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}" style="margin-right: 4px; padding: 0.2rem 0.4rem; font-size: 0.8rem;">${typeLabel}</span>
+                                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}" onclick="window.toggleParticipantType('${entry.id}', ${idx})" title="クリックで釣りと見学を切り替え" style="margin-right: 4px; padding: 0.2rem 0.4rem; font-size: 0.8rem; cursor: pointer; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">${typeLabel} ⇄</span>
                                 ${p.name} <small style="font-weight: normal; color: #64748b;">(${p.nickname || 'ニックネーム無'})</small>
                             </div>
                             <div class="p-meta" style="font-size: 0.85rem; color: #64748b; margin-top: 2px;">
@@ -3859,6 +3872,29 @@ function renderReceptionDesk() {
     // const btn = desk.querySelector('.btn-primary');
     // if (btn) btn.addEventListener('click', () => window.updateGroupStatus(entry.id, 'checked-in'));
 }
+
+window.toggleParticipantType = function(entryId, pIdx) {
+    const entry = state.entries.find(e => e.id === entryId);
+    if (!entry) return;
+    const p = entry.participants[pIdx];
+    if (!p) return;
+    
+    p.type = p.type === 'fisher' ? 'observer' : 'fisher';
+    
+    // Recalculate counts
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
+    
+    state.lastUpdated = Date.now();
+    saveData();
+    
+    // Refresh UI
+    renderReceptionDesk();
+    updateReceptionList();
+    
+    const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
+    showToast(`${p.name}さんを「${typeLabel}」に変更しました`, "success");
+};
 
 window.updateParticipantStatus = function (entryId, pIdx, status) {
     const entry = state.entries.find(e => e.id === entryId);
