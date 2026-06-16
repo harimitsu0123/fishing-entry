@@ -2729,7 +2729,7 @@ window.renderIkesuResultView = function() {
             (e.participants || []).forEach(p => {
                 if (p.status === 'cancelled') return;
                 if (p.ikesuId === ik.id && p.type === 'fisher') {
-                    participants.push({ ...p, groupName: e.groupName });
+                    participants.push({ ...p, groupName: e.groupName, entryId: e.id });
                 }
             });
         });
@@ -2754,14 +2754,13 @@ window.renderIkesuResultView = function() {
                              <div style="text-align: left; line-height: 1.1; min-width: 80px;">
                                  <div style="font-size: 0.75rem; font-weight: bold; color: #666;">WEB報告用</div>
                                  <div style="font-size: 0.7rem; font-weight: bold; color: #666; margin-top: 4px;">暗証番号</div>
-                                 <div style="font-size: 2rem; font-weight: 900; color: #d32f2f;">${ik.passcode || '----'}</div>
+                                 <div style="font-size: 2rem; font-weight: 900; color: #1976d2;">${ik.passcode || '----'}</div>
                              </div>
                         </div>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0.5rem;">
-                    <div style="font-size: 0.8rem; color: #666;">生成日: ${new Date().toLocaleString()} | BORIJIN FESTIVAL 管理システム</div>
-                    <div style="font-size: 1.1rem; font-weight: 900; color: #d32f2f; background: #fff; padding: 2px 10px; border: 2px solid #d32f2f; border-radius: 4px;">※匹数（数字）で記入してください</div>
+                <div style="display: flex; justify-content: flex-end; align-items: flex-end; margin-bottom: 0.5rem;">
+                    <div style="font-size: 1.1rem; font-weight: 900; color: #d32f2f; background: #fff; padding: 2px 10px; border: 2px solid #d32f2f; border-radius: 4px;">※<span style="font-size: 1.6rem;">匹数</span>（数字）で記入してください</div>
                 </div>
                 <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; table-layout: fixed;">
                     <thead>
@@ -2769,39 +2768,34 @@ window.renderIkesuResultView = function() {
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 45px; text-align: center;">No</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 130px; text-align: center;">グループ名</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; text-align: center;">氏名</th>
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 95px; background: #fff3e0 !important; color: #e65100 !important; text-align: center;">鯛等</th>
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 95px; background: #e3f2fd !important; color: #1976d2 !important; text-align: center;">青物、クエ</th>
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 140px; background: #e8f5e9 !important; color: #388e3c !important; text-align: center;">備考</th>
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 60px; color: #000 !important; background: #f8f9fa !important; text-align: center;">小計</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 120px; background: #fff3e0 !important; color: #e65100 !important; text-align: center;">鯛等</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 120px; background: #e3f2fd !important; color: #1976d2 !important; text-align: center;">青物、クエ</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${participants.map((p, pIdx) => `
-                            <tr style="height: 3.2rem;">
+                            <tr style="height: 3.8rem;">
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold; font-size: 1.2rem;">${pIdx + 1}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-size: 1rem; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${p.groupName}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 2.6rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    ${p.name} ${p.nickname ? `<br><span style="font-size:1.0rem; font-weight:normal;">(${p.nickname})</span>` : ''}
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-size: 1.1rem; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${p.groupName}<br><span style="font-size:0.85rem; color:#666;">(${p.entryId})</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 2.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    ${p.name} ${p.nickname ? `(${p.nickname})` : ''}
                                 </td>
-                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; background: #fafafa;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 1.2rem; color: #999;">匹</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 1.2rem; color: #999;">匹</span></td>
                             </tr>
                         `).join('')}
                         ${[1, 2, 3].map(n => `
-                            <tr style="height: 3.2rem; background: #fff;">
+                            <tr style="height: 3.8rem; background: #fff;">
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold; font-size: 1.2rem;">${participants.length + n}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; background: #fafafa;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 1.2rem; color: #999;">匹</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 1.2rem; color: #999;">匹</span></td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
+                <div style="text-align: right; font-size: 0.8rem; color: #666; margin-top: 8px;">生成日: ${new Date().toLocaleString()} | BORIJIN FESTIVAL 管理システム</div>
             </div>
         `;
     });
