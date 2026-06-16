@@ -928,10 +928,10 @@
                     <div class="reception-sidebar">
                         <div class="reception-toolbar">
                             <div class="search-box"><input type="text" id="reception-search" placeholder="名前・ID・グループ..." oninput="updateReceptionList()" autocomplete="off"></div>
-                            <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-                                <button class="btn-toolbar active" id="sort-reception-id" onclick="setReceptionSort('id')">ID順</button>
-                                <button class="btn-toolbar" id="sort-reception-source" onclick="setReceptionSort('source')">区分順</button>
-                                <label style="display:flex; align-items:center; gap:0.3rem; font-size:0.8rem; cursor:pointer;">
+                            <div style="display:flex; gap:0.4rem; margin-top:0.5rem; flex-wrap: nowrap; align-items: center;">
+                                <button class="btn-toolbar active" id="sort-reception-id" onclick="setReceptionSort('id')" style="white-space: nowrap; padding: 0.4rem 0.6rem; flex: 1;">ID順</button>
+                                <button class="btn-toolbar" id="sort-reception-source" onclick="setReceptionSort('source')" style="white-space: nowrap; padding: 0.4rem 0.6rem; flex: 1;">区分順</button>
+                                <label style="display:flex; align-items:center; gap:0.3rem; font-size:0.85rem; cursor:pointer; white-space: nowrap; flex-shrink: 0;">
                                     <input type="checkbox" id="show-completed-toggle" onchange="updateReceptionList()"> 完了を表示
                                 </label>
                             </div>
