@@ -3226,7 +3226,10 @@ function sumCategoryFishers(category) {
     if (!state.entries) return 0;
     const dbCount = state.entries
         .filter(e => e.source === category && e.status !== 'cancelled')
-        .reduce((sum, e) => sum + (parseInt(e.fishers) || 0), 0);
+        .reduce((sum, e) => {
+            const dynamicCount = (e.participants || []).filter(p => p.type === 'fisher' && p.status !== 'cancelled').length;
+            return sum + dynamicCount;
+        }, 0);
     
     // v8.4.2 & v8.9.59: Add manual adjustment (Try DOM first for real-time sync, then state)
     let adj = 0;
@@ -3245,7 +3248,10 @@ function sumCategoryObservers(category) {
     if (!state.entries) return 0;
     const dbCount = state.entries
         .filter(e => e.source === category && e.status !== 'cancelled')
-        .reduce((sum, e) => sum + (parseInt(e.observers) || 0), 0);
+        .reduce((sum, e) => {
+            const dynamicCount = (e.participants || []).filter(p => p.type === 'observer' && p.status !== 'cancelled').length;
+            return sum + dynamicCount;
+        }, 0);
 
     // v8.4.2: Add manual adjustment
     let adj = 0;
