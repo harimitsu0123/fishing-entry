@@ -2360,6 +2360,34 @@ window.updateDashboard = function() {
     try {
         if (!state || !state.entries) return;
 
+        const checkedInCount = state.entries.filter(e => e.status === 'checked-in').length;
+        const absentCount = state.entries.filter(e => e.status === 'absent').length;
+        const validEntriesCount = state.entries.filter(e => e.status !== 'cancelled').length;
+
+        let fisherCheckedIn = 0;
+        let fisherAbsent = 0;
+        let observerCheckedIn = 0;
+        let observerAbsent = 0;
+        let dynamicTotalFishers = 0;
+        let dynamicTotalObservers = 0;
+
+        state.entries.forEach(e => {
+            if (e.status !== 'cancelled') {
+                (e.participants || []).forEach(p => {
+                    if (p.type === 'fisher' && p.status !== 'cancelled') {
+                        dynamicTotalFishers++;
+                        if (p.status === 'checked-in') fisherCheckedIn++;
+                        if (p.status === 'absent') fisherAbsent++;
+                    }
+                    if (p.type === 'observer' && p.status !== 'cancelled') {
+                        dynamicTotalObservers++;
+                        if (p.status === 'checked-in') observerCheckedIn++;
+                        if (p.status === 'absent') observerAbsent++;
+                    }
+                });
+            }
+        });
+
         const fishersIppan = sumCategoryFishers('一般');
         const fishersMintsuri = sumCategoryFishers('みん釣り');
         const fishersSuiho = sumCategoryFishers('水宝');
@@ -2370,29 +2398,8 @@ window.updateDashboard = function() {
         const observersSuiho = sumCategoryObservers('水宝');
         const observersHarimitsu = sumCategoryObservers('ハリミツ');
 
-        const totalFishers = fishersIppan + fishersMintsuri + fishersSuiho + fishersHarimitsu;
-        const totalObservers = observersIppan + observersMintsuri + observersSuiho + observersHarimitsu;
-        const checkedInCount = state.entries.filter(e => e.status === 'checked-in').length;
-        const absentCount = state.entries.filter(e => e.status === 'absent').length;
-        const validEntriesCount = state.entries.filter(e => e.status !== 'cancelled').length;
-
-        let fisherCheckedIn = 0;
-        let fisherAbsent = 0;
-        let observerCheckedIn = 0;
-        let observerAbsent = 0;
-        state.entries.forEach(e => {
-            if (e.status !== 'cancelled') {
-                (e.participants || []).forEach(p => {
-                    if (p.type === 'fisher' && p.status === 'checked-in') fisherCheckedIn++;
-                    if (p.type === 'fisher' && p.status === 'absent') fisherAbsent++;
-                    if (p.type === 'observer' && p.status === 'checked-in') observerCheckedIn++;
-                    if (p.type === 'observer' && p.status === 'absent') observerAbsent++;
-                });
-            }
-        });
-
         // Global Stats Summary Cards (v5.4 Compact)
-        renderGlobalStatsSummary(validEntriesCount, totalFishers, totalObservers, checkedInCount, absentCount, fisherCheckedIn, fisherAbsent, observerCheckedIn, observerAbsent);
+        renderGlobalStatsSummary(validEntriesCount, dynamicTotalFishers, dynamicTotalObservers, checkedInCount, absentCount, fisherCheckedIn, fisherAbsent, observerCheckedIn, observerAbsent);
 
         // Email count
         updateBulkMailCount();
