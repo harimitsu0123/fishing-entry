@@ -2378,17 +2378,19 @@ window.updateDashboard = function() {
 
         let fisherCheckedIn = 0;
         let fisherAbsent = 0;
+        let observerCheckedIn = 0;
         state.entries.forEach(e => {
             if (e.status !== 'cancelled') {
                 (e.participants || []).forEach(p => {
                     if (p.type === 'fisher' && p.status === 'checked-in') fisherCheckedIn++;
                     if (p.type === 'fisher' && p.status === 'absent') fisherAbsent++;
+                    if (p.type === 'observer' && p.status === 'checked-in') observerCheckedIn++;
                 });
             }
         });
 
         // Global Stats Summary Cards (v5.4 Compact)
-        renderGlobalStatsSummary(validEntriesCount, totalFishers, totalObservers, checkedInCount, absentCount, fisherCheckedIn, fisherAbsent);
+        renderGlobalStatsSummary(validEntriesCount, totalFishers, totalObservers, checkedInCount, absentCount, fisherCheckedIn, fisherAbsent, observerCheckedIn);
 
         // Email count
         updateBulkMailCount();
@@ -3665,7 +3667,7 @@ function exportGenericCSV(sourceName, fileName) {
 }
 
 // Global Stats Rendering (v7.3.0 Global Scope)
-function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent, fisherCheckedIn = 0, fisherAbsent = 0) {
+function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent, fisherCheckedIn = 0, fisherAbsent = 0, observerCheckedIn = 0) {
     const containers = [
         document.getElementById('global-stats-summary-top')
     ].filter(el => el);
@@ -3677,22 +3679,25 @@ function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent,
             <div class="summary-card" style="border-top: 5px solid var(--primary-color);">
                 <div class="summary-label">釣り参加者合計</div>
                 <div class="summary-value"><span class="current-fishers">${fishers}</span> <small>/ ${state.settings.capacityTotal}</small></div>
+                <div style="font-size: 0.85rem; color: #10b981; font-weight: bold; margin-top: 6px;">受付済: ${fisherCheckedIn} 名</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">総登録グループ</div>
                 <div class="summary-value">${groups} <small>組</small></div>
+                <div style="font-size: 0.85rem; color: #10b981; font-weight: bold; margin-top: 6px;">受付済: ${checkedIn} 組</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">見学者合計</div>
                 <div class="summary-value">${observers} <small>名</small></div>
+                <div style="font-size: 0.85rem; color: #10b981; font-weight: bold; margin-top: 6px;">受付済: ${observerCheckedIn} 名</div>
             </div>
             <div class="summary-card" style="border-top: 5px solid #10b981;">
-                <div class="summary-label">当日受付状況</div>
-                <div class="summary-value" style="font-size: 0.95rem; line-height: 1.4; display:flex; flex-direction:column; gap:2px; font-weight:bold;">
-                    <span style="color: var(--primary-color)">来場: ${checkedIn}組 <span style="font-size:0.8rem;">(${fisherCheckedIn}名)</span></span>
-                    <span style="color: var(--error-color)">欠席: ${absent}組 <span style="font-size:0.8rem;">(${fisherAbsent}名)</span></span>
+                <div class="summary-label">当日受付状況 (来場 / 予定)</div>
+                <div class="summary-value" style="font-size: 1.1rem; line-height: 1.4; display:flex; flex-direction:column; gap:4px; font-weight:bold;">
+                    <span style="color: var(--primary-color)">釣り人: <span style="font-size:1.4rem;">${fisherCheckedIn}</span> / ${fishers} <small style="font-size:0.8rem;">名</small></span>
+                    <span style="color: var(--primary-color)">グループ: <span style="font-size:1.4rem;">${checkedIn}</span> / ${groups} <small style="font-size:0.8rem;">組</small></span>
                 </div>
-                <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">全 <span class="total-groups-count">${groups}</span> 組</div>
+                ${absent > 0 || fisherAbsent > 0 ? `<div style="font-size: 0.8rem; color: var(--error-color); margin-top: 6px; font-weight: bold;">欠席: ${absent}組 (${fisherAbsent}名)</div>` : ''}
             </div>
         </div>
     `;
