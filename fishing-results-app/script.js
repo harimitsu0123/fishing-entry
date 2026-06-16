@@ -325,7 +325,7 @@ function renderAdminView() {
 
     listContainer.innerHTML = ikesuStats.map(ik => {
         const hasCatch = ik.ikFish > 0;
-        const bgClass = ik.checked ? 'checked' : (hasCatch ? 'has-catch' : '');
+        const bgClass = ik.checked ? 'checked' : (hasCatch ? 'has-catch' : 'unentered');
         return `
         <div class="ikesu-summary-card ${bgClass}" onclick="jumpToIkesu('${ik.id}')" style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1rem; gap: 0.5rem; flex-wrap: wrap;">
             

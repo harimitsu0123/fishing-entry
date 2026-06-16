@@ -655,7 +655,13 @@ input:focus {
 }
 
 .ikesu-summary-card.has-catch {
-    border-left-color: #ef4444;
+    border-left-color: #f59e0b; /* Amber */
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
+.ikesu-summary-card.unentered {
+    border-left-color: #ef4444; /* Red */
     background: #fff1f2;
     border-color: #fecdd3;
 }
