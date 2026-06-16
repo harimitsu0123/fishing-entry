@@ -336,7 +336,7 @@ function renderAdminView() {
         `;
     }
 
-    listContainer.innerHTML = ikesuStats.map(ik => {
+    listContainer.innerHTML = ikesuStats.filter(ik => ik.memberCount > 0).map(ik => {
         const hasCatch = ik.ikFish > 0;
         const bgClass = ik.checked ? 'checked' : (hasCatch ? 'has-catch' : 'unentered');
         return `
