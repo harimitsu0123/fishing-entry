@@ -3689,8 +3689,8 @@ function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent,
             <div class="summary-card" style="border-top: 5px solid #10b981;">
                 <div class="summary-label">当日受付状況</div>
                 <div class="summary-value" style="font-size: 0.95rem; line-height: 1.4; display:flex; flex-direction:column; gap:2px; font-weight:bold;">
-                    <span style="color: var(--primary-color)">来場: ${checkedIn}組 <span style="font-size:0.8rem;">(釣り人${fisherCheckedIn}名)</span></span>
-                    <span style="color: var(--error-color)">欠席: ${absent}組 <span style="font-size:0.8rem;">(釣り人${fisherAbsent}名)</span></span>
+                    <span style="color: var(--primary-color)">来場: ${checkedIn}組 <span style="font-size:0.8rem;">(${fisherCheckedIn}名)</span></span>
+                    <span style="color: var(--error-color)">欠席: ${absent}組 <span style="font-size:0.8rem;">(${fisherAbsent}名)</span></span>
                 </div>
                 <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">全 <span class="total-groups-count">${groups}</span> 組</div>
             </div>
