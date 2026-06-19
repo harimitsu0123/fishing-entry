@@ -4368,6 +4368,9 @@ window.renderIkesuWorkspace = function () {
     if (!state.settings.ikesuList) state.settings.ikesuList = [];
     if (!window.expandedIkesuIds) window.expandedIkesuIds = new Set();
 
+    // イケスを名前順（数値考慮）でソート
+    state.settings.ikesuList.sort((a, b) => a.name.localeCompare(b.name, 'ja', {numeric: true, sensitivity: 'base'}));
+
     state.settings.ikesuList.forEach(ik => assignedData[ik.id] = { ik, fishers: 0, observers: 0, items: [] });
 
     const searchTerm = (document.getElementById('ikesu-search')?.value || "").toLowerCase().trim();
