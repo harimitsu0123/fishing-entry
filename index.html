@@ -823,7 +823,10 @@
                     <div>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                             <h2 style="margin: 0; color: var(--color-mintsuri);">終了後アンケート 分析結果</h2>
-                            <button class="btn-primary" onclick="if(window.exportSurveysToCSV) window.exportSurveysToCSV()">📥 CSV書き出し</button>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <button class="btn-text" style="background: #fee2e2; color: #dc2626; border-radius: 4px; padding: 0.5rem 1rem;" onclick="if(window.clearSurveys) window.clearSurveys()">🗑 全アンケート削除</button>
+                                <button class="btn-primary" onclick="if(window.exportSurveysToCSV) window.exportSurveysToCSV()">📥 CSV書き出し</button>
+                            </div>
                         </div>
 
                         <div class="breakdown-grid mb-3" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
@@ -1257,6 +1260,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=8.28.8"></script>
+    <script src="script.js?v=8.28.9"></script>
 </body>
 </html>
