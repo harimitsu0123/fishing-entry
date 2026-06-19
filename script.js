@@ -5527,7 +5527,8 @@ window.renderRankings = function() {
         indContainer.innerHTML = `<p class="text-center p-4 text-muted">${showOnlyAwards ? '表彰対象者がまだ設定されていません' : 'データがありません'}</p>`;
     } else {
         let html = `
-            <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+            <div style="width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;">
+            <table class="table" style="width:100%; min-width:400px; border-collapse:collapse; font-size:0.9rem;">
                 <thead>
                     <tr style="background:#f1f5f9;">
                         <th style="padding:8px; width:50px;">順位</th>
@@ -5586,15 +5587,15 @@ window.renderRankings = function() {
                             ${p.ikName ? `<span style="font-size:0.75rem; background:#dbeafe; padding:1px 5px; border-radius:4px; color:#1e40af; border:1px solid #bfdbfe;">イケス${p.ikName}</span>` : ''}
                         </div>
                     </td>
-                    <td style="padding:8px; text-align:right; font-weight:bold; white-space:nowrap;">
-                        <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px;">
-                            <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">(マダイ <strong style="color:#ef4444; margin-right:6px; font-size:0.9rem;">${p.cA}</strong> 青物、クエ <strong style="color:#3b82f6; font-size:0.9rem;">${p.cB}</strong>)</span>
-                            <span style="font-size:1.6rem; font-weight:900; line-height:1; color:var(--primary-color);">${p.score}<small style="font-size:0.8rem; margin-left:1px;">点</small></span>
+                    <td style="padding:8px; text-align:right; font-weight:bold;">
+                        <div style="display:flex; justify-content:flex-end; align-items:center; flex-wrap:wrap; gap:4px;">
+                            <span style="font-size:0.75rem; color:#64748b; font-weight:normal; white-space:nowrap;">(マダイ <strong style="color:#ef4444; margin-right:2px; font-size:0.85rem;">${p.cA}</strong> 青物、クエ <strong style="color:#3b82f6; font-size:0.85rem;">${p.cB}</strong>)</span>
+                            <span style="font-size:1.6rem; font-weight:900; line-height:1; color:var(--primary-color); white-space:nowrap;">${p.score}<small style="font-size:0.8rem; margin-left:1px;">点</small></span>
                         </div>
                     </td>
                 </tr>`;
         });
-        html += '</tbody></table>';
+        html += '</tbody></table></div>';
         indContainer.innerHTML = html;
     }
 
@@ -5611,7 +5612,8 @@ window.renderRankings = function() {
             ikesuContainer.innerHTML = '<p class="text-center p-4 text-muted">データがありません</p>';
         } else {
             let html = `
-                <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                <div style="width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;">
+                <table class="table" style="width:100%; min-width:400px; border-collapse:collapse; font-size:0.9rem;">
                     <thead>
                         <tr style="background:#f1f5f9;">
                             <th style="padding:8px;">順位</th>
@@ -5646,7 +5648,7 @@ window.renderRankings = function() {
                         </td>
                     </tr>`;
             });
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
             ikesuContainer.innerHTML = html;
         }
     }
