@@ -5946,7 +5946,7 @@ function checkUrlParams() {
                             }
                             // Hide admin UI and top menu persistently for public viewing
                             const style = document.createElement('style');
-                            style.textContent = '#admin-toolbar, #sync-status-footer, .day-tab-nav { display: none !important; }';
+                            style.textContent = '.navbar, #admin-toolbar, #sync-status-footer, .day-tab-nav { display: none !important; }';
                             document.head.appendChild(style);
                         }, 100);
                     }
