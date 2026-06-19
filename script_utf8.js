@@ -2712,7 +2712,7 @@ window.renderIkesuPrintView = function() {
     }
 
     let html = '';
-    state.settings.ikesuList.forEach(ik => {
+    state.settings.ikesuList.forEach((ik, idx) => {
         const participants = [];
         state.entries.forEach(e => {
             if (e.status === 'cancelled') return;
