@@ -2602,7 +2602,7 @@ window.updateDashboard = function() {
                         <div style="display:flex; gap:0.2rem; flex-wrap: nowrap; width: auto; align-items:center;">
                             <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
                             <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
-                            <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
+                            <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>\n                            <button class="btn-outline btn-small" onclick="window.hardDeleteEntry(\'${e.id}\')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap; border-color: #f87171; color: #f87171;" title="完全に削除">🗑</button>
                         </div>
                     </td>
                 </tr>
