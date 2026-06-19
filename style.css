@@ -1944,9 +1944,9 @@ th {
 
 /* --- Reception List High-Visibility & Color Coding (v6.0) --- */
 .reception-group-item {
-    padding: 1rem !important;
-    margin-bottom: 0.5rem !important;
-    border-radius: 10px !important;
+    padding: 0.5rem 0.8rem !important;
+    margin-bottom: 0.3rem !important;
+    border-radius: 8px !important;
     background: #fff !important;
     border: 1px solid #e1e8ed !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.03) !important;
