@@ -5944,12 +5944,9 @@ function checkUrlParams() {
                             if (typeof window.switchDayTab === 'function') {
                                 window.switchDayTab('tab-day-rankings');
                             }
-                            const nav = document.querySelector('.day-tab-nav');
-                            if (nav) nav.style.display = 'none';
-                            
-                            // Hide admin UI for public viewing
+                            // Hide admin UI and top menu persistently for public viewing
                             const style = document.createElement('style');
-                            style.textContent = '#admin-toolbar, #sync-status-footer { display: none !important; }';
+                            style.textContent = '#admin-toolbar, #sync-status-footer, .day-tab-nav { display: none !important; }';
                             document.head.appendChild(style);
                         }, 100);
                     }
