@@ -1040,7 +1040,7 @@ function generateSpecialUrls() {
     setVal('url-mintsuri-admin', `${baseUrl}?view=mintsuri`);
     setVal('url-harimitsu-admin', `${baseUrl}?view=harimitsu`);
     setVal('url-suiho-admin', `${baseUrl}?view=suiho`);
-    setVal('url-leader-input', `${baseUrl}?view=view-ranking`);
+    setVal('url-leader-input', `${baseUrl}?view=reception-view`);
     
     // Standalone forms
     setVal('url-preorder', `${dirUrl}preorder.html`);
@@ -2469,7 +2469,7 @@ window.updateDashboard = function() {
         // 3. Coordinator & Entry Tools (view param)
         const leaderEl = document.getElementById('url-leader-input');
         const dirUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/') + 1);
-        if (leaderEl) leaderEl.value = `${baseUrl}?view=view-ranking`;
+        if (leaderEl) leaderEl.value = `${baseUrl}?view=reception-view`;
 
         const mintsuriAdminEl = document.getElementById('url-mintsuri-admin');
         if (mintsuriAdminEl) mintsuriAdminEl.value = `${baseUrl}?view=mintsuri-coordinator-view`;
@@ -5907,7 +5907,7 @@ function checkUrlParams() {
 
             if (document.getElementById(targetView)) {
                 // Security Check: Only protect core management views. Coordinator views are accessible via shared URL.
-                const adminViews = ['dashboard-view', 'reception-view', 'settings-view'];
+                const adminViews = ['dashboard-view', 'settings-view'];
                 if (adminViews.includes(targetView) && !isAdminAuth) {
                     console.log("BORIJIN: Redirecting to admin login for protected view:", targetView);
                     showAdminLogin(targetView);
