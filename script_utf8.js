@@ -5946,6 +5946,11 @@ function checkUrlParams() {
                             }
                             const nav = document.querySelector('.day-tab-nav');
                             if (nav) nav.style.display = 'none';
+                            
+                            // Hide admin UI for public viewing
+                            const style = document.createElement('style');
+                            style.textContent = '#admin-toolbar, #sync-status-footer { display: none !important; }';
+                            document.head.appendChild(style);
                         }, 100);
                     }
                 }
