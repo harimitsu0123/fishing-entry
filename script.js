@@ -6617,6 +6617,18 @@ window.renderSurveys = function() {
     list.innerHTML = html;
 };
 
+window.clearPreorders = async function() {
+    if (!confirm("本当に全ての先行予約データを削除しますか？\n（クラウド上からも完全に削除されます）")) return;
+    try {
+        state.preorders = [];
+        await saveData();
+        if (typeof window.renderPreorders === 'function') window.renderPreorders();
+        alert("先行予約データを全て削除しました。");
+    } catch (e) {
+        alert("削除に失敗しました: " + e.message);
+    }
+};
+
 window.exportPreordersToCSV = function() {
     const preorders = state.preorders || [];
     if (preorders.length === 0) return alert('データがありません');
