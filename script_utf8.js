@@ -1061,7 +1061,7 @@ function generateSpecialUrls() {
     setVal('url-mintsuri-admin', `${baseUrl}?view=mintsuri`);
     setVal('url-harimitsu-admin', `${baseUrl}?view=harimitsu`);
     setVal('url-suiho-admin', `${baseUrl}?view=suiho`);
-    setVal('url-leader-input', `${dirUrl}fishing-results-app/index.html`);
+    setVal('url-leader-input', `${baseUrl}?view=ranking`);
     
     // Standalone forms
     setVal('url-preorder', `${dirUrl}preorder.html`);
@@ -2490,7 +2490,7 @@ window.updateDashboard = function() {
         // 3. Coordinator & Entry Tools (view param)
         const leaderEl = document.getElementById('url-leader-input');
         const dirUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/') + 1);
-        if (leaderEl) leaderEl.value = `${baseUrl}?view=reception-view`;
+        if (leaderEl) leaderEl.value = `${baseUrl}?view=ranking`;
 
         const mintsuriAdminEl = document.getElementById('url-mintsuri-admin');
         if (mintsuriAdminEl) mintsuriAdminEl.value = `${baseUrl}?view=mintsuri-coordinator-view`;
@@ -5926,7 +5926,7 @@ function checkUrlParams() {
         // 2. Handle View (Navigation)
         if (view) {
             // Mapping for aliases
-            const viewAliases = { 'mintsuri': 'mintsuri-coordinator-view', 'harimitsu': 'harimitsu-coordinator-view', 'suiho': 'suiho-coordinator-view' };
+            const viewAliases = { 'mintsuri': 'mintsuri-coordinator-view', 'harimitsu': 'harimitsu-coordinator-view', 'suiho': 'suiho-coordinator-view', 'ranking': 'reception-view' };
             const targetView = viewAliases[view] || view;
 
             if (document.getElementById(targetView)) {
@@ -5937,6 +5937,15 @@ function checkUrlParams() {
                     showAdminLogin(targetView);
                 } else {
                     switchView(null, targetView);
+                    if (view === 'ranking') {
+                        setTimeout(() => {
+                            if (typeof window.switchDayTab === 'function') {
+                                window.switchDayTab('tab-day-rankings');
+                            }
+                            const nav = document.querySelector('.day-tab-nav');
+                            if (nav) nav.style.display = 'none';
+                        }, 100);
+                    }
                 }
             }
         }
