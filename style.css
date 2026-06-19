@@ -2601,10 +2601,27 @@ table {
         display: block !important;
     }
 
+    @page {
+        size: A4 portrait;
+        margin: 10mm;
+    }
+
+    body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
     .print-page {
         margin: 0 !important;
+        padding: 0 !important;
         border: none !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
         page-break-after: always;
+        break-after: page;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
     }
 }
 
