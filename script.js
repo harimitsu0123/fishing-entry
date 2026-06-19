@@ -113,6 +113,13 @@ window.showConfirmation = function() {
         }
     }
 
+    for (let i = 0; i < participants.length; i++) {
+        if (!participants[i].name.trim()) {
+            showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+            return;
+        }
+    }
+
     if (participants.length === 0) {
         showStatus("参加者を1名以上登録してください。", "error");
         return;
@@ -136,6 +143,15 @@ window.showConfirmation = function() {
     }
 
     for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
+        for (let i = 0; i < participants.length; i++) {
             if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
                 showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
                 submitBtn.disabled = false;
@@ -246,6 +262,15 @@ window.handleRegistration = async function() {
                 isCancelledEdit: getCheck('.p-cancel')
             };
         });
+
+        for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
 
         for (let i = 0; i < participants.length; i++) {
             if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
@@ -2761,6 +2786,7 @@ window.renderIkesuPrintView = function() {
                         `).join('')}
                     </tbody>
                 </table>
+                <div style="text-align: right; font-size: 16pt; font-weight: 900; color: #000; margin-top: 8px;">- ${idx + 1} -</div>
             </div>
         `;
     });
@@ -2871,7 +2897,13 @@ window.renderIkesuResultView = function() {
                         `).join('')}
                     </tbody>
                 </table>
-                <div style="text-align: right; font-size: 0.8rem; color: #666; margin-top: 8px;">生成日: ${new Date().toLocaleString()} | BORIJIN FESTIVAL 管理システム</div>
+                <div style="margin-top: 15px; text-align: center;">
+                    <div style="font-size: 16pt; font-weight: 900; color: #d32f2f;">用紙は、集計後記入し、QRコードから釣果を送信し、速やかに本部にお持ちください。</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 8px;">
+                    <div style="font-size: 0.8rem; color: #666;">生成日: ${new Date().toLocaleString()} | BORIJIN FESTIVAL 管理システム</div>
+                    <div style="font-size: 16pt; font-weight: 900; color: #000;">- ${idx + 1} -</div>
+                </div>
             </div>
         `;
     });
@@ -3685,13 +3717,17 @@ window.exportSuihoCSV = function() {
 }
 
 function exportGenericCSV(sourceName, fileName) {
-    const targetEntries = state.entries.filter(e => e.source === sourceName && e.status !== 'cancelled');
+    const targetEntries = state.entries.filter(e => e.source === sourceName);
     if (targetEntries.length === 0) return alert('データがありません');
 
-    const headers = ['受付番号', 'グループ名', '代表者名', '電話番号', 'メール', '釣り人数', '見学人数', '登録時間'];
-    const rows = targetEntries.map(e => [
-        e.id, e.groupName, e.representative, e.phone, e.email, e.fishers, e.observers, formatDateForCSV(e.timestamp)
-    ]);
+    const headers = ['受付番号', 'グループ名', '代表者名', '電話番号', 'メール', '釣り人数', '見学人数', '登録時間', '備考'];
+    const rows = targetEntries.map(e => {
+        let memo = (e.memo || "").replace(/\n/g, " ");
+        if (e.status === 'cancelled') memo = "[キャンセル] " + memo;
+        return [
+            e.id, e.groupName, e.representative, e.phone, e.email, e.fishers, e.observers, formatDateForCSV(e.timestamp), `"${memo.trim()}"`
+        ];
+    });
     downloadCSV(fileName, headers, rows);
 }
 
@@ -5124,18 +5160,22 @@ window.restoreEntry = async function (id) {
 async function exportGroupsCSV() {
     // v8.9.67: Restored timestamp, removed status as requested
     const headers = ["ID", "区分", "グループ名", "代表者", "電話番号", "メールアドレス", "人数(釣り)", "人数(見学)", "日時", "備考"];
-    const rows = state.entries.filter(e => e.status !== 'cancelled').map(e => [
-        e.id, 
-        e.source, 
-        `"${e.groupName}"`, 
-        `"${e.representative || e.representativeName}"`, 
-        `'${e.phone || e.repPhone}`, 
-        `"${e.email || e.repEmail}"`,
-        e.fishers, 
-        e.observers, 
-        e.timestamp,
-        `"${(e.memo || "").replace(/\n/g, " ")}"`
-    ]);
+    const rows = state.entries.map(e => {
+        let memo = (e.memo || "").replace(/\n/g, " ");
+        if (e.status === 'cancelled') memo = "[キャンセル] " + memo;
+        return [
+            e.id, 
+            e.source, 
+            `"${e.groupName}"`, 
+            `"${e.representative || e.representativeName}"`, 
+            `'${e.phone || e.repPhone}`, 
+            `"${e.email || e.repEmail}"`,
+            e.fishers, 
+            e.observers, 
+            e.timestamp,
+            `"${memo.trim()}"`
+        ];
+    });
     const d = new Date();
     const dateStr = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
     downloadCSV(`グループ名簿_${dateStr}.csv`, headers, rows);
@@ -5145,8 +5185,16 @@ async function exportParticipantsCSV() {
     // v8.9.67: Added timestamp, removed status, and used UI labels for gender/age
     const headers = ["ID", "区分", "グループ名", "代表電話", "代表メール", "氏名", "ニックネーム", "性別", "年代", "地域", "区分(釣/見)", "サイズ", "登録日時", "備考"];
     const rows = [];
-    state.entries.filter(e => e.status !== 'cancelled').forEach(e => {
+    state.entries.forEach(e => {
+        let entryMemo = (e.memo || "").replace(/\n/g, " ");
+        if (e.status === 'cancelled') entryMemo = "[キャンセル] " + entryMemo;
+        
         (e.participants || []).forEach(p => {
+            let memo = entryMemo;
+            if (e.status !== 'cancelled' && p.status === 'cancelled') {
+                memo = "[参加者キャンセル] " + memo;
+            }
+            
             rows.push([
                 e.id,
                 e.source,
@@ -5161,7 +5209,7 @@ async function exportParticipantsCSV() {
                 p.type === 'fisher' ? '釣り' : '見学',
                 p.tshirtSize,
                 e.timestamp,
-                `"${(e.memo || "").replace(/\n/g, " ")}"`
+                `"${memo.trim()}"`
             ]);
         });
     });

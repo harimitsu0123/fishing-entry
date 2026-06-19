@@ -10,7 +10,7 @@ let state = {
     deletedIds: [], // v7.9.3: Tracking local hard-deletions
     changeLog: [], // v8.6.0: Announcement-style change log
     settings: {
-        competitionName: "BORIJIN FESTIVAL in 豌ｴ螳・2026",
+        competitionName: "BORIJIN FESTIVAL in 水宝 2026",
         capacityGeneral: 100,
         capacityMintsuri: 100,
         capacitySuiho: 50,
@@ -22,14 +22,14 @@ let state = {
         adminPassword: "admin",
         // v7.9.3: Pre-populated Ikesu List (36 ponds)
         ikesuList: [
-            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `蟆・{i+1}`, capacity: 6 })),
-            { id: 'small-7', name: '蟆・', capacity: 6 },
-            { id: 'small-7n', name: '蟆・蛹・, capacity: 6 },
-            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `蟆・{i+8}`, capacity: 6 })),
-            ...Array.from({length: 10}, (_, i) => ({ id: `med-${i+1}`, name: `荳ｭ${i+1}`, capacity: 8 })),
-            ...Array.from({length: 3}, (_, i) => ({ id: `large-${i+1}`, name: `螟ｧ${i+1}`, capacity: 12 })),
-            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `縺ｧ縺｣縺ｱ繧・{i+1}`, capacity: 12 })),
-            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `蜊・{i+1}`, capacity: 12 }))
+            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `小${i+1}`, capacity: 6 })),
+            { id: 'small-7', name: '小7', capacity: 6 },
+            { id: 'small-7n', name: '小7北', capacity: 6 },
+            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `小${i+8}`, capacity: 6 })),
+            ...Array.from({length: 10}, (_, i) => ({ id: `med-${i+1}`, name: `中${i+1}`, capacity: 8 })),
+            ...Array.from({length: 3}, (_, i) => ({ id: `large-${i+1}`, name: `大${i+1}`, capacity: 12 })),
+            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `でっぱり${i+1}`, capacity: 12 })),
+            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `南${i+1}`, capacity: 12 }))
         ]
     },
     lastUpdated: 0 // Unix timestamp for sync merging
@@ -49,9 +49,9 @@ let activeReceptionEntryId = null; // Currently selected in reception desk
 window.onerror = function(msg, url, line, col, error) {
     console.error("Global Error Caught:", {msg, url, line, col, error});
     if (typeof showToast === 'function') {
-        showToast("繧ｨ繝ｩ繝ｼ: " + msg, "error");
+        showToast("エラー: " + msg, "error");
     } else {
-        alert("繧ｷ繧ｹ繝・Β繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆: " + msg + " (" + line + ":" + col + ")");
+        alert("システムエラーが発生しました: " + msg + " (" + line + ":" + col + ")");
     }
     return false;
 };
@@ -92,8 +92,36 @@ window.showConfirmation = function() {
         };
     });
 
+    for (let i = 0; i < participants.length; i++) {
+        if (!participants[i].name.trim()) {
+            showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+            return;
+        }
+    }
+
+    for (let i = 0; i < participants.length; i++) {
+        if (!participants[i].name.trim()) {
+            showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+            return;
+        }
+    }
+
+    for (let i = 0; i < participants.length; i++) {
+        if (!participants[i].name.trim()) {
+            showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+            return;
+        }
+    }
+
+    for (let i = 0; i < participants.length; i++) {
+        if (!participants[i].name.trim()) {
+            showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+            return;
+        }
+    }
+
     if (participants.length === 0) {
-        showStatus("蜿ょ刈閠・ｒ1蜷堺ｻ･荳顔匳骭ｲ縺励※縺上□縺輔＞縲・, "error");
+        showStatus("参加者を1名以上登録してください。", "error");
         return;
     }
 
@@ -104,13 +132,54 @@ window.showConfirmation = function() {
     const repEmailConfirm = document.getElementById('rep-email-confirm').value;
     const memo = document.getElementById('entry-memo')?.value || '';
 
-    if (repEmail !== repEmailConfirm) {
-        showStatus("繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺御ｸ閾ｴ縺励∪縺帙ｓ縲ゅｂ縺・ｸ蠎ｦ縺皮｢ｺ隱阪￥縺縺輔＞縲・, "error");
+    if (!groupName.trim() || !repName.trim() || !repPhone.trim() || !repEmail.trim()) {
+        showStatus("必須項目（グループ名、代表者名、電話番号、メールアドレス）を入力してください。", "error");
         return;
     }
 
-    const sourceEl = document.querySelector('input[name="reg-source"]:checked');
-    const source = sourceEl ? sourceEl.value : '荳闊ｬ';
+    if (repEmail !== repEmailConfirm) {
+        showStatus("メールアドレスが一致しません。もう一度ご確認ください。", "error");
+        return;
+    }
+
+    for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
+        for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
+        for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
+        for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
+        const sourceEl = document.querySelector('input[name="reg-source"]:checked');
+        const source = sourceEl ? sourceEl.value : '一般';
     const fisherCount = participants.filter(p => p.type === 'fisher').length;
 
     // v8.2.27: Capacity check in confirmation disabled per user request
@@ -120,13 +189,13 @@ window.showConfirmation = function() {
             .reduce((sum, en) => sum + en.fishers, 0);
 
         let capacityLimit = 0;
-        if (source === '荳闊ｬ') capacityLimit = state.settings.capacityGeneral;
-        else if (source === '縺ｿ繧馴・繧・) capacityLimit = state.settings.capacityMintsuri;
-        else if (source === '豌ｴ螳・) capacityLimit = state.settings.capacitySuiho;
-        else if (source === '繝上Μ繝溘ヤ') capacityLimit = state.settings.capacityHarimitsu;
+        if (source === '一般') capacityLimit = state.settings.capacityGeneral;
+        else if (source === 'みん釣り') capacityLimit = state.settings.capacityMintsuri;
+        else if (source === '水宝') capacityLimit = state.settings.capacitySuiho;
+        else if (source === 'ハリミツ') capacityLimit = state.settings.capacityHarimitsu;
 
         if (currentCategoryFishers + fisherCount > capacityLimit) {
-            showStatus(`螟ｧ螟臥筏縺苓ｨｳ縺ゅｊ縺ｾ縺帙ｓ縲ゅ％縺ｮ譫・・{source}・峨・螳壼藤縺ｫ驕斐＠縺溘◆繧√∫樟蝨ｨ蜿嶺ｻ倥ｒ蛛懈ｭ｢縺励※縺翫ｊ縺ｾ縺吶Ａ, "error");
+            showStatus(`大変申し訳ありません。この枠（${source}）は定員に達したため、現在受付を停止しております。`, "error");
             return;
         }
     }
@@ -147,12 +216,12 @@ window.showConfirmation = function() {
         li.style.padding = "0.5rem";
         li.style.borderBottom = "1px solid #eee";
         
-        const typeLabel = p.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ';
+        const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
         const genderLabel = genderLabels[p.gender] || p.gender;
         const ageLabel = ageLabels[p.age] || p.age;
         const regionLabel = p.region ? `${p.region} / ` : '';
         const nicknameLabel = p.nickname ? `(${p.nickname})` : '';
-        const detailText = `縲・{genderLabel} / ${regionLabel}${ageLabel} / ${p.tshirtSize}繧ｵ繧､繧ｺ縲疏;
+        const detailText = `【${genderLabel} / ${regionLabel}${ageLabel} / ${p.tshirtSize}サイズ】`;
         
         li.innerHTML = `
             <strong>${idx + 1}. ${p.name}</strong> ${nicknameLabel} <br>
@@ -163,7 +232,7 @@ window.showConfirmation = function() {
 
     document.getElementById('registration-form').classList.add('hidden');
     document.getElementById('confirmation-section').classList.remove('hidden');
-    document.getElementById('app-title').textContent = "逋ｻ骭ｲ蜀・ｮｹ縺ｮ遒ｺ隱・;
+    document.getElementById('app-title').textContent = "登録内容の確認";
     window.scrollTo(0, 0);
 }
 
@@ -174,13 +243,14 @@ window.handleRegistration = async function() {
     
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = "騾∽ｿ｡荳ｭ... 縺昴・縺ｾ縺ｾ縺雁ｾ・■縺上□縺輔＞";
+    submitBtn.textContent = "送信中... そのままお待ちください";
 
     try {
         const editId = document.getElementById('edit-entry-id')?.value || '';
         const pRows = document.querySelectorAll('.participant-row');
         const participants = Array.from(pRows).map(row => {
             const getVal = (cls) => row.querySelector(cls)?.value || '';
+            const getCheck = (cls) => row.querySelector(cls)?.checked || false;
             return {
                 type: getVal('.p-type'),
                 name: getVal('.p-name'),
@@ -188,23 +258,68 @@ window.handleRegistration = async function() {
                 region: getVal('.p-region'),
                 age: getVal('.p-age'),
                 gender: getVal('.p-gender'),
-                tshirtSize: getVal('.p-tshirt')
+                tshirtSize: getVal('.p-tshirt'),
+                isCancelledEdit: getCheck('.p-cancel')
             };
         });
 
+        for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
+        for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
+        for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
+        for (let i = 0; i < participants.length; i++) {
+            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
+                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
+            }
+        }
+
         const sourceEl = document.querySelector('input[name="reg-source"]:checked');
-        const source = sourceEl ? sourceEl.value : '荳闊ｬ';
-        const fisherCount = participants.filter(p => p.type === 'fisher').length;
-        const observerCount = participants.filter(p => p.type === 'observer').length;
+        const source = sourceEl ? sourceEl.value : '一般';
 
         const existingEntry = editId ? state.entries.find(en => en.id === editId) : null;
         const finalParticipants = participants.map((p, idx) => {
             const oldP = existingEntry && existingEntry.participants[idx];
+            let status = 'pending';
             if (oldP && oldP.name === p.name) {
-                return { ...p, ikesuId: oldP.ikesuId || null, isLeader: oldP.isLeader || false, status: oldP.status || 'pending' };
+                status = oldP.status || 'pending';
             }
-            return { ...p, ikesuId: null, isLeader: false, status: 'pending' };
+            if (p.isCancelledEdit) {
+                status = 'cancelled';
+            } else if (status === 'cancelled') {
+                status = 'pending';
+            }
+            const { isCancelledEdit, ...cleanP } = p;
+            return { ...cleanP, ikesuId: oldP ? oldP.ikesuId : null, isLeader: oldP ? oldP.isLeader : false, status };
         });
+
+        const fisherCount = finalParticipants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+        const observerCount = finalParticipants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
 
         const entryData = {
             id: editId || null,
@@ -225,7 +340,8 @@ window.handleRegistration = async function() {
             timestamp: existingEntry ? existingEntry.timestamp : new Date().toLocaleString('ja-JP'),
             lastUpdated: new Date().toLocaleString('ja-JP'),
             lastModified: new Date().toLocaleString('ja-JP'),
-            _ts: Date.now()
+            _ts: Date.now(),
+            userModified: (editId && !isAdminAuth && !isAdminAuthAction) ? true : (existingEntry ? existingEntry.userModified : false)
         };
 
         // v8.9.41: Pre-submission capacity check
@@ -234,20 +350,20 @@ window.handleRegistration = async function() {
             const totalNow = state.entries.filter(e => e.status !== 'cancelled').reduce((sum, en) => sum + en.fishers, 0);
             
             let catLimit = 0;
-            if (source === '荳闊ｬ') catLimit = state.settings.capacityGeneral;
-            else if (source === '縺ｿ繧馴・繧・) catLimit = state.settings.capacityMintsuri;
-            else if (source === '豌ｴ螳・) catLimit = state.settings.capacitySuiho;
-            else if (source === '繝上Μ繝溘ヤ') catLimit = state.settings.capacityHarimitsu;
+            if (source === '一般') catLimit = state.settings.capacityGeneral;
+            else if (source === 'みん釣り') catLimit = state.settings.capacityMintsuri;
+            else if (source === '水宝') catLimit = state.settings.capacitySuiho;
+            else if (source === 'ハリミツ') catLimit = state.settings.capacityHarimitsu;
 
             if (state.settings.capacityTotal && totalNow + fisherCount > state.settings.capacityTotal) {
-                alert(`螟ｧ莨壹・蜈ｨ菴灘ｮ壼藤・・{state.settings.capacityTotal}蜷搾ｼ峨↓驕斐＠縺溘◆繧√∫匳骭ｲ縺ｧ縺阪∪縺帙ｓ縲Ａ);
+                alert(`大会の全体定員（${state.settings.capacityTotal}名）に達したため、登録できません。`);
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
                 return;
             }
 
             if (catLimit > 0 && currentFishers + fisherCount > catLimit) {
-                alert(`${source}縺ｮ螳壼藤・・{catLimit}蜷搾ｼ峨↓驕斐＠縺溘◆繧√∫匳骭ｲ縺ｧ縺阪∪縺帙ｓ縲Ａ);
+                alert(`${source}の定員（${catLimit}名）に達したため、登録できません。`);
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
                 return;
@@ -281,7 +397,7 @@ window.handleRegistration = async function() {
         }
 
         if (result && result.status === 'error') {
-            throw new Error(result.message || "繧ｵ繝ｼ繝舌・繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆");
+            throw new Error(result.message || "サーバーエラーが発生しました");
         }
 
         console.log("BORIJIN: Server response received:", result);
@@ -302,7 +418,7 @@ window.handleRegistration = async function() {
         if (entryData.id) {
             entryData.id = entryData.id.replace(/(\d+)$/, (m) => m.padStart(3, '0'));
         } else if (!editId) {
-            const prefixMap = { '荳闊ｬ': 'A', '縺ｿ繧馴・繧・: 'M', '豌ｴ螳・: 'S', '繝上Μ繝溘ヤ': 'H' };
+            const prefixMap = { '一般': 'A', 'みん釣り': 'M', '水宝': 'S', 'ハリミツ': 'H' };
             const prefix = prefixMap[source] || 'A';
             
             // v8.9.37: Sequential fallback starting from 901
@@ -339,10 +455,10 @@ window.handleRegistration = async function() {
         if (typeof updateDashboard === 'function') updateDashboard();
         if (typeof updateReceptionList === 'function') updateReceptionList();
 
-        const entryType = editId ? '菫ｮ豁｣' : '譁ｰ隕冗匳骭ｲ';
+        const entryType = editId ? '修正' : '新規登録';
         if (typeof logChange === 'function') logChange(entryData, entryType, existingEntry);
         
-        showToast(editId ? "菫ｮ豁｣繧帝∽ｿ｡縺励∪縺励◆" : "逋ｻ骭ｲ螳御ｺ・＠縺ｾ縺励◆", "success");
+        showToast(editId ? "修正を送信しました" : "登録完了しました", "success");
         
         console.log("BORIJIN: Showing result screen for ID:", entryData.id);
         showResult(entryData);
@@ -352,7 +468,7 @@ window.handleRegistration = async function() {
 
     } catch (error) {
         console.error('Registration error:', error);
-        alert('繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆縲ょ・蠎ｦ縺願ｩｦ縺励￥縺縺輔＞縲・n' + error.toString());
+        alert('エラーが発生しました。再度お試しください。\n' + error.toString());
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
     }
@@ -372,54 +488,54 @@ window.finalizeAdminEdit = async function() {
 
 // Age labels map - v4.8 Updated
 const ageLabels = {
-    "unknown": "・・,
-    "elementary": "蟆丞ｭｦ逕滉ｻ･荳・,
-    "middle_high": "荳ｭ繝ｻ鬮俶｡逕・,
-    "19_20s": "19豁ｳ縲・0莉｣",
-    "30s": "30莉｣", "40s": "40莉｣", "50s": "50莉｣",
-    "60s": "60莉｣", "70s": "70莉｣", "80s": "80豁ｳ莉･荳・
+    "unknown": "？",
+    "elementary": "小学生以下",
+    "middle_high": "中・高校生",
+    "19_20s": "19歳〜20代",
+    "30s": "30代", "40s": "40代", "50s": "50代",
+    "60s": "60代", "70s": "70代", "80s": "80歳以上"
 };
 
 const genderLabels = {
-    "unknown": "・・,
-    "male": "逕ｷ諤ｧ",
-    "female": "螂ｳ諤ｧ",
-    "other": "縺昴・莉・
+    "unknown": "？",
+    "male": "男性",
+    "female": "女性",
+    "other": "その他"
 };
 
-const tshirtSizes = ['・・, '140', '150', 'S', 'M', 'L', 'XL・・L・・, '2XL・・L・・, '3XL・・L・・, '4XL・・L・・];
+const tshirtSizes = ['？', '140', '150', 'S', 'M', 'L', 'XL（2L）', '2XL（3L）', '3XL（4L）', '4XL（5L）'];
 
 /**
  * v8.9.80: Robust T-shirt size normalization
  * Handles full-width/half-width, variants (LL/XL), and whitespace
  */
 function normalizeTshirtSize(size) {
-    if (!size) return '・・;
+    if (!size) return '？';
     
     // 1. Basic normalization: Full-width to Half-width for alphanumeric and common parens
     let n = size.toString()
-        .replace(/[・｡-・ｺ・・・夲ｼ・・兢/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
-        .replace(/[・・/g, '(')
-        .replace(/[・云/g, ')')
+        .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+        .replace(/[（]/g, '(')
+        .replace(/[）]/g, ')')
         .toUpperCase()
         .trim();
     
     // 2. Explicit variant mapping to canonical labels used in tshirtSizes
     const mapping = {
-        'LL': 'XL・・L・・, '2L': 'XL・・L・・, 'XL': 'XL・・L・・, 'O': 'XL・・L・・, 'XL(2L)': 'XL・・L・・,
-        '3L': '2XL・・L・・, '2XL': '2XL・・L・・, 'XO': '2XL・・L・・, '2XL(3L)': '2XL・・L・・,
-        '4L': '3XL・・L・・, '3XL': '3XL・・L・・, '2XO': '3XL・・L・・, '3XL(4L)': '3XL・・L・・,
-        '5L': '4XL・・L・・, '4XL': '4XL・・L・・, '3XO': '4XL・・L・・, '4XL(5L)': '4XL・・L・・
+        'LL': 'XL（2L）', '2L': 'XL（2L）', 'XL': 'XL（2L）', 'O': 'XL（2L）', 'XL(2L)': 'XL（2L）',
+        '3L': '2XL（3L）', '2XL': '2XL（3L）', 'XO': '2XL（3L）', '2XL(3L)': '2XL（3L）',
+        '4L': '3XL（4L）', '3XL': '3XL（4L）', '2XO': '3XL（4L）', '3XL(4L)': '3XL（4L）',
+        '5L': '4XL（5L）', '4XL': '4XL（5L）', '3XO': '4XL（5L）', '4XL(5L)': '4XL（5L）'
     };
     
     if (mapping[n]) return mapping[n];
 
     // 3. Direct matches (including "?")
-    if (n === '・・ || n === '?') return '・・;
+    if (n === '？' || n === '?') return '？';
     if (['140', '150', 'S', 'M', 'L'].includes(n)) return n;
     
     // 4. Fallback: check if it already matches a canonical label exactly
-    const canonical = ['140', '150', 'S', 'M', 'L', 'XL・・L・・, '2XL・・L・・, '3XL・・L・・, '4XL・・L・・];
+    const canonical = ['140', '150', 'S', 'M', 'L', 'XL（2L）', '2XL（3L）', '3XL（4L）', '4XL（5L）'];
     if (canonical.includes(n)) return n;
 
     return n;
@@ -432,7 +548,7 @@ window.startAdminRegistration = function (source) {
     switchView(null, 'registration-view');
 
     // v8.2.02: Correct badge class and auto-fill password
-    const badgeClassMap = { '荳闊ｬ': 'badge-ippan', '縺ｿ繧馴・繧・: 'badge-mintsuri', '豌ｴ螳・: 'badge-suiho', '繝上Μ繝溘ヤ': 'badge-harimitsu' };
+    const badgeClassMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
     const badgeClass = badgeClassMap[source] || 'badge-ippan';
     
     const selector = document.getElementById('main-source-selector');
@@ -444,7 +560,7 @@ window.startAdminRegistration = function (source) {
         <input type="radio" name="reg-source" value="${source}" checked>
         <span class="source-label">
             <span class="badge ${badgeClass}">${source}</span>
-            ${source}荳諡ｬ逋ｻ骭ｲ
+            ${source}一括登録
         </span>
     `;
     selector.appendChild(label);
@@ -463,11 +579,11 @@ window.startAdminRegistration = function (source) {
 
 // v8.4.2: Quick Registration with Observer support
 window.quickAdminRegistration = function(source) {
-    const fCountStr = prompt(`${source}譫・夐・繧贋ｺｺ謨ｰ繧貞・蜉帙＠縺ｦ縺上□縺輔＞`, "1");
+    const fCountStr = prompt(`${source}枠：釣り人数を入力してください`, "1");
     if (fCountStr === null || fCountStr === "") return;
     const fCount = parseInt(fCountStr) || 0;
 
-    const oCountStr = prompt(`${source}譫・夊ｦ句ｭｦ閠・焚繧貞・蜉帙＠縺ｦ縺上□縺輔＞`, "0");
+    const oCountStr = prompt(`${source}枠：見学者数を入力してください`, "0");
     if (oCountStr === null || oCountStr === "") return;
     const oCount = parseInt(oCountStr) || 0;
     
@@ -476,8 +592,8 @@ window.quickAdminRegistration = function(source) {
     switchView(null, 'registration-view');
 
     // Auto-fill minimum required fields
-    document.getElementById('group-name').value = `${source}莠育ｴ・ｼ磯崕隧ｱ蛻・ｼ荏;
-    document.getElementById('representative-name').value = `${source}莠句漁螻`;
+    document.getElementById('group-name').value = `${source}予約（電話分）`;
+    document.getElementById('representative-name').value = `${source}事務局`;
     document.getElementById('rep-phone').value = "000-0000-0000";
     document.getElementById('rep-email').value = "dummy@example.com";
     document.getElementById('rep-email-confirm').value = "dummy@example.com";
@@ -491,20 +607,20 @@ window.quickAdminRegistration = function(source) {
         addParticipantRow('fisher'); 
         const rows = document.querySelectorAll('.participant-row');
         const lastRow = rows[rows.length - 1];
-        lastRow.querySelector('.p-name').value = `驥｣繧贋ｺｺ${i+1}`;
+        lastRow.querySelector('.p-name').value = `釣り人${i+1}`;
     }
     // Add observers
     for(let i=0; i<oCount; i++) {
         addParticipantRow('observer');
         const rows = document.querySelectorAll('.participant-row');
         const lastRow = rows[rows.length - 1];
-        lastRow.querySelector('.p-name').value = `隕句ｭｦ閠・{i+1}`;
+        lastRow.querySelector('.p-name').value = `見学者${i+1}`;
     }
 
     setTimeout(() => {
         const btn = document.getElementById('btn-to-confirm');
         if (btn) btn.scrollIntoView({ behavior: 'smooth' });
-        showToast(`${source}・夐・繧・{fCount}蜷阪∬ｦ句ｭｦ${oCount}蜷阪ｒ繧ｯ繧､繝・け蜈･蜉帙＠縺ｾ縺励◆縲Ａ, 'info');
+        showToast(`${source}：釣り${fCount}名、見学${oCount}名をクイック入力しました。`, 'info');
     }, 300);
 };
 // v8.9.64: Admin Auth (Promoted to Top for availability)
@@ -514,7 +630,7 @@ window.handleSecureClick = function (e) {
     if (!window._lastClickTime) window._lastClickTime = 0;
 
     const now = Date.now();
-    if (now - window._lastClickTime > 3000) {
+    if (now - window._lastClickTime > 5000) {
         window._clickCount = 0;
     }
 
@@ -552,12 +668,17 @@ window.handleAdminLogin = function() {
         sessionStorage.setItem('isAdminAuth', 'true');
         
         // v8.9.67: Ensure we land on the dashboard after admin login
-        sessionStorage.setItem('currentViewId', 'dashboard-view');
-        sessionStorage.setItem('currentAdminTab', 'tab-list');
-        
         document.getElementById('admin-auth-modal').classList.add('hidden');
-        showToast("邂｡逅・・→縺励※繝ｭ繧ｰ繧､繝ｳ縺励∪縺励◆", "success");
-        setTimeout(() => location.reload(), 300);
+        showToast("管理者としてログインしました", "success");
+        
+        // Prevent mobile reload bugs by switching view directly without refresh
+        window.history.replaceState(null, '', window.location.pathname);
+        updateAdminToolbar();
+        const targetView = (typeof pendingView !== 'undefined' && pendingView) ? pendingView : 'dashboard-view';
+        sessionStorage.setItem('currentViewId', targetView);
+        sessionStorage.setItem('currentAdminTab', 'tab-list');
+        switchView(null, targetView);
+        if (typeof startAutoSync === 'function') startAutoSync();
     } else {
         const errDiv = document.getElementById('admin-auth-error');
         if (errDiv) errDiv.classList.remove('hidden');
@@ -587,7 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("BORIJIN APP: Started successfully.");
     } catch (e) {
         console.error("BORIJIN APP: FATAL INITIALIZATION ERROR", e);
-        alert("繧ｷ繧ｹ繝・Β襍ｷ蜍輔お繝ｩ繝ｼ: " + e.message);
+        alert("システム起動エラー: " + e.message);
     }
 });
 
@@ -620,7 +741,7 @@ function restoreUIState() {
 async function loadData() {
     updateSyncStatus('syncing');
     try {
-        // 繧ｿ繧､繝繧｢繧ｦ繝・5遘偵ｒ險ｭ螳夲ｼ磯壻ｿ｡迺ｰ蠅・∈縺ｮ驟肴・・・
+        // タイムアウト15秒を設定（通信環境への配慮）
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
 
@@ -645,14 +766,14 @@ async function loadData() {
                     // v7.9.3: Ensure ikesuList is present even in merged state
                     if (!state.settings.ikesuList || state.settings.ikesuList.length === 0) {
                         state.settings.ikesuList = [
-                            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `蟆・{i+1}`, capacity: 6 })),
-                            { id: 'small-7', name: '蟆・', capacity: 6 },
-                            { id: 'small-7n', name: '蟆・蛹・, capacity: 6 },
-                            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `蟆・{i+8}`, capacity: 6 })),
-                            ...Array.from({length: 10}, (_, i) => ({ id: `med-${i+1}`, name: `荳ｭ${i+1}`, capacity: 8 })),
-                            ...Array.from({length: 3}, (_, i) => ({ id: `large-${i+1}`, name: `螟ｧ${i+1}`, capacity: 12 })),
-                            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `縺ｧ縺｣縺ｱ繧・{i+1}`, capacity: 12 })),
-                            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `蜊・{i+1}`, capacity: 12 }))
+                            ...Array.from({length: 6}, (_, i) => ({ id: `small-${i+1}`, name: `小${i+1}`, capacity: 6 })),
+                            { id: 'small-7', name: '小7', capacity: 6 },
+                            { id: 'small-7n', name: '小7北', capacity: 6 },
+                            ...Array.from({length: 4}, (_, i) => ({ id: `small-${i+8}`, name: `小${i+8}`, capacity: 6 })),
+                            ...Array.from({length: 10}, (_, i) => ({ id: `med-${i+1}`, name: `中${i+1}`, capacity: 8 })),
+                            ...Array.from({length: 3}, (_, i) => ({ id: `large-${i+1}`, name: `大${i+1}`, capacity: 12 })),
+                            ...Array.from({length: 3}, (_, i) => ({ id: `dep-${i+1}`, name: `でっぱり${i+1}`, capacity: 12 })),
+                            ...Array.from({length: 8}, (_, i) => ({ id: `south-${i+1}`, name: `南${i+1}`, capacity: 12 }))
                         ];
                     }
                     
@@ -693,7 +814,7 @@ async function loadData() {
             }
         });
         localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
-        // 笘・繝ｭ繝ｼ繧ｫ繝ｫ繝・・繧ｿ繧定ｪｭ縺ｿ霎ｼ繧縺後√け繝ｩ繧ｦ繝峨∈縺ｯ蜍晄焔縺ｫ騾√ｉ縺ｪ縺・ｼ井ｸ頑嶌縺埼亟豁｢・・
+        // ★ ローカルデータを読み込むが、クラウドへは勝手に送らない（上書き防止）
         console.log('Loaded from local storage (no automatic sync)');
     } else {
         // Migration from V2
@@ -716,10 +837,10 @@ async function loadData() {
 }
 
 /**
- * v6.5 鬮伜ｺｦ繝槭・繧ｸ繝ｭ繧ｸ繝・け: ID蜊倅ｽ・+ 蛟句挨繧ｿ繧､繝繧ｹ繧ｿ繝ｳ繝・lastModified)縺ｧ豈碑ｼ・
+ * v6.5 高度マージロジック: ID単位 + 個別タイムスタンプ(lastModified)で比較
  */
 function mergeData(local, cloud) {
-    // 蟶ｸ縺ｫ繧ｯ繝ｩ繧ｦ繝峨ｒ譛譁ｰ縺ｮ迥ｶ諷九・繝吶・繧ｹ縺ｨ縺吶ｋ
+    // 常にクラウドを最新の状態のベースとする
     const merged = { ...cloud }; 
     // Filter out corrupted null IDs
     const safeLocalEntries = (local.entries || []).filter(e => e && e.id);
@@ -728,26 +849,26 @@ function mergeData(local, cloud) {
     const localMap = new Map(safeLocalEntries.map(e => [e.id, e]));
     const cloudMap = new Map(safeCloudEntries.map(e => [e.id, e]));
 
-    // --- 1. 繝ｭ繝ｼ繧ｫ繝ｫ蝗ｺ譛会ｼ域悴蜷梧悄・峨・繝・・繧ｿ繧偵・繝ｼ繧ｸ ---
+    // --- 1. ローカル固有（未同期）のデータをマージ ---
     safeLocalEntries.forEach(lEntry => {
         // v8.9.35: Relaxed regex to match any digit count (e.g. A-1)
         const isServerId = /^[AMSH]-\d+$/.test(lEntry.id);
         
         if (!cloudMap.has(lEntry.id)) {
-            // 繧ｵ繝ｼ繝舌・逋ｺ陦梧ｸ医∩ID縺ｪ縺ｮ縺ｫ繧ｯ繝ｩ繧ｦ繝峨↓蟄伜惠縺励↑縺・ｴ蜷・
+            // サーバー発行済みIDなのにクラウドに存在しない場合
             if (isServerId) {
-                // 繧ｯ繝ｩ繧ｦ繝峨・譛邨よ峩譁ｰ縺ｮ譁ｹ縺梧眠縺励￠繧後・縲√け繝ｩ繧ｦ繝牙・縺ｧ縲梧悽蠖薙・蜑企勁縲阪′縺ゅ▲縺溘→縺ｿ縺ｪ縺・
+                // クラウドの最終更新の方が新しければ、クラウド側で「本当の削除」があったとみなす
                 // v8.9.35: Added a small grace period (30s) or if cloud is definitely newer
                 if (cloud.lastUpdated > (lEntry._ts || 0) + 30000) {
                     console.log(`[Sync] ${lEntry.id} was intentionally deleted on Cloud. Discarding local.`);
                     return; 
                 }
             }
-            // 譁ｰ隕上ョ繝ｼ繧ｿ縲√∪縺溘・蜑企勁遒ｺ螳壹〒縺ｪ縺・ｂ縺ｮ縺ｯ邯ｭ謖・
+            // 新規データ、または削除確定でないものは維持
             console.log(`[Sync] Keeping local entry ${lEntry.id} which is missing on cloud.`);
             merged.entries.push(lEntry);
         } else {
-            // 荳｡譁ｹ縺ｫ縺ゅｋ蝣ｴ蜷・ 譖ｴ譁ｰ譌･譎・lastModified)縺梧眠縺励＞譁ｹ繧呈治逕ｨ
+            // 両方にある場合: 更新日時(lastModified)が新しい方を採用
             const cEntry = cloudMap.get(lEntry.id);
             const lTime = new Date(lEntry.lastModified || lEntry.timestamp || 0).getTime();
             const cTime = new Date(cEntry.lastModified || cEntry.timestamp || 0).getTime();
@@ -759,14 +880,23 @@ function mergeData(local, cloud) {
         }
     });
 
-    // --- 2. 險ｭ螳壹・繝槭・繧ｸ: 繧ｯ繝ｩ繧ｦ繝牙・縺ｮ險ｭ螳壹ｒ蟶ｸ縺ｫ蜆ｪ蜈医☆繧・---
-    if (cloud.settings && Object.keys(cloud.settings).length > 0) {
-        merged.settings = { ...local.settings, ...cloud.settings };
+    // --- 2. 設定のマージ: タイムスタンプで優先度を決定 ---
+    const localSetTime = new Date(local.settingsLastModified || 0).getTime();
+    const cloudSetTime = new Date(cloud.settingsLastModified || 0).getTime();
+
+    if (localSetTime > cloudSetTime) {
+        merged.settings = { ...cloud.settings, ...local.settings };
+        merged.settingsLastModified = local.settingsLastModified;
     } else {
-        merged.settings = { ...local.settings };
+        if (cloud.settings && Object.keys(cloud.settings).length > 0) {
+            merged.settings = { ...local.settings, ...cloud.settings };
+        } else {
+            merged.settings = { ...local.settings };
+        }
+        merged.settingsLastModified = cloud.settingsLastModified || local.settingsLastModified;
     }
     
-    // --- 3. 驥崎､・賜髯､縲∝炎髯､貂医∩繝輔ぅ繝ｫ繧ｿ縲√た繝ｼ繝・---
+    // --- 3. 重複排除、削除済みフィルタ、ソート ---
     const allDeletedIds = [
         ...(local.deletedIds || []),
         ...(cloud.deletedIds || []),
@@ -806,7 +936,7 @@ function finalizeLoad(isRefresh = false) {
         // Ensure settings are merged with defaults
         state.settings = {
             ...{
-                competitionName: "隨ｬ1蝗・驥｣繧雁､ｧ莨・,
+                competitionName: "第1回 釣り大会",
                 capacityGeneral: 100,
                 capacityMintsuri: 100,
                 capacitySuiho: 50,
@@ -819,7 +949,7 @@ function finalizeLoad(isRefresh = false) {
                 maintenanceMode: true,
                 ikesuList: Array.from({ length: 10 }, (_, i) => ({
                     id: `ikesu-default-${i + 1}`,
-                    name: `繧､繧ｱ繧ｹ ${String.fromCharCode(65 + i)}`, // A, B, C...
+                    name: `イケス ${String.fromCharCode(65 + i)}`, // A, B, C...
                     capacity: 15
                 }))
             }, ...state.settings
@@ -829,6 +959,7 @@ function finalizeLoad(isRefresh = false) {
         migrateTshirtSizes(); // v7.7.0: Data migration for new labels
         syncSettingsUI();
         updateDashboard();
+        if (typeof window.checkForUserModifications === 'function') window.checkForUserModifications();
         updateReceptionList();
         updateSourceAvailability();
         applyMaintenanceMode();
@@ -843,16 +974,16 @@ function finalizeLoad(isRefresh = false) {
         // v8.1.42: Ensure coordinator views also refresh automatically on sync
         renderActiveCoordinatorView();
 
+        // Always generate URLs so they don't get stuck on "自動生成中..."
+        generateSpecialUrls();
+
         // v8.1.52: ONLY run startup helpers if this is NOT a standard auto-sync refresh
         if (!isRefresh) {
             // v7.6.1: Run URL parameter check AFTER loading is fully settled
             // v8.1.56: Skip scroll when refreshing data
             checkUrlParams(true); 
 
-            // v7.6.1: Initialize specialized URL display in Admin Tab
-            generateSpecialUrls();
-
-            // v7.0: 閾ｪ蜍募ｾｩ譌ｧ繝√ぉ繝・け・亥・隱ｭ縺ｿ霎ｼ縺ｿ譎ゑｼ・
+            // v7.0: 自動復旧チェック（再読み込み時）
             setTimeout(checkPendingRegistration, 500);
         }
     } catch (err) {
@@ -867,10 +998,10 @@ function migrateTshirtSizes() {
     let changed = false;
     // v7.8.6: Further expanded mapping to cover all potential variants
     const mapping = {
-        'LL': 'XL・・L・・, '2L': 'XL・・L・・, 'XL': 'XL・・L・・, 'O': 'XL・・L・・,
-        '3L': '2XL・・L・・, '2XL': '2XL・・L・・, 'XO': '2XL・・L・・,
-        '4L': '3XL・・L・・, '3XL': '3XL・・L・・, '2XO': '3XL・・L・・,
-        '5L': '4XL・・L・・, '4XL': '4XL・・L・・, '3XO': '4XL・・L・・
+        'LL': 'XL（2L）', '2L': 'XL（2L）', 'XL': 'XL（2L）', 'O': 'XL（2L）',
+        '3L': '2XL（3L）', '2XL': '2XL（3L）', 'XO': '2XL（3L）',
+        '4L': '3XL（4L）', '3XL': '3XL（4L）', '2XO': '3XL（4L）',
+        '5L': '4XL（5L）', '4XL': '4XL（5L）', '3XO': '4XL（5L）'
     };
 
     state.entries.forEach(entry => {
@@ -895,6 +1026,7 @@ function migrateTshirtSizes() {
 
 function generateSpecialUrls() {
     const baseUrl = window.location.href.split('?')[0];
+    const dirUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/') + 1);
     
     const setVal = (id, url) => {
         const el = document.getElementById(id);
@@ -908,11 +1040,17 @@ function generateSpecialUrls() {
     setVal('url-mintsuri-admin', `${baseUrl}?view=mintsuri`);
     setVal('url-harimitsu-admin', `${baseUrl}?view=harimitsu`);
     setVal('url-suiho-admin', `${baseUrl}?view=suiho`);
+    setVal('url-leader-input', `${dirUrl}fishing-results-app/index.html?view=ranking`);
+    
+    // Standalone forms
+    setVal('url-preorder', `${dirUrl}preorder.html`);
+    setVal('url-preorder-mintsuri', `${dirUrl}preorder_mintsuri.html`);
+    setVal('url-survey', `${dirUrl}survey.html`);
 }
 
 
 /**
- * v7.0: 騾∽ｿ｡荳ｭ繝・・繧ｿ縺ｮ莠碁㍾逋ｻ骭ｲ繝√ぉ繝・け & 蠕ｩ譌ｧ繝ｭ繧ｸ繝・け
+ * v7.0: 送信中データの二重登録チェック & 復旧ロジック
  */
 async function checkPendingRegistration() {
     const pendingJson = localStorage.getItem('fishing_app_pending_reg');
@@ -921,7 +1059,7 @@ async function checkPendingRegistration() {
     try {
         const pending = JSON.parse(pendingJson);
         const now = Date.now();
-        // 1譎る俣莉･荳雁燕縺ｮ蜿､縺・ョ繝ｼ繧ｿ縺ｯ辟｡隕・
+        // 1時間以上前の古いデータは無視
         if (now - (pending._ts || 0) > 3600000) {
             localStorage.removeItem('fishing_app_pending_reg');
             return;
@@ -929,7 +1067,7 @@ async function checkPendingRegistration() {
 
         console.log("Pending registration found, checking list...", pending);
         
-        // 譛譁ｰ繝・・繧ｿ繧貞ｼｷ蛻ｶ繝ｪ繝ｭ繝ｼ繝会ｼ亥酔譛滂ｼ・
+        // 最新データを強制リロード（同期）
         await loadDataFromCloudOnly();
 
         const match = state.entries.find(e => 
@@ -943,7 +1081,7 @@ async function checkPendingRegistration() {
             console.log("Match found! Restoring success screen.", match);
             
             // v7.4.0: Add "Clear Cache" option to the toast/recovery check
-            showToast('蜑榊屓縺ｮ逋ｻ骭ｲ・磯∽ｿ｡荳ｭ・峨′隕九▽縺九ｊ縺ｾ縺励◆縲・, 'info');
+            showToast('前回の登録（送信中）が見つかりました。', 'info');
             
             localStorage.removeItem('fishing_app_pending_reg');
             showResult(match);
@@ -954,18 +1092,18 @@ async function checkPendingRegistration() {
 }
 
 /**
- * v7.4.0: 騾∽ｿ｡蠕・■繝・・繧ｿ縺ｮ豸亥悉・域焔蜍包ｼ・
+ * v7.4.0: 送信待ちデータの消去（手動）
  */
 window.clearPendingRegistration = function() {
-    if (confirm('騾∽ｿ｡荳ｭ縺ｮ荳譎ゅョ繝ｼ繧ｿ繧呈ｶ亥悉縺励∪縺吶°・滂ｼ医☆縺ｧ縺ｫ騾∽ｿ｡縺悟ｮ御ｺ・＠縺ｦ縺・ｋ蝣ｴ蜷医・蠖ｱ髻ｿ縺ゅｊ縺ｾ縺帙ｓ・・)) {
+    if (confirm('送信中の一時データを消去しますか？（すでに送信が完了している場合は影響ありません）')) {
         localStorage.removeItem('fishing_app_pending_reg');
-        showToast('荳譎ゅョ繝ｼ繧ｿ繧呈ｶ亥悉縺励∪縺励◆', 'success');
+        showToast('一時データを消去しました', 'success');
         resetForm();
     }
 };
 
 /**
- * v7.0: 繧ｵ繝ｼ繝舌・縺九ｉ譛譁ｰ繝・・繧ｿ縺ｮ縺ｿ繧堤｢ｺ螳溘↓蜿門ｾ励☆繧具ｼ医・繝ｼ繧ｸ縺ｪ縺励・譛譁ｰ遒ｺ隱咲畑・・
+ * v7.0: サーバーから最新データのみを確実に取得する（マージなしの最新確認用）
  */
 async function loadDataFromCloudOnly() {
     try {
@@ -984,23 +1122,23 @@ async function loadDataFromCloudOnly() {
 }
 
 /**
- * v7.0: 謇句虚縺ｧ縺ｮ迥ｶ諷狗｢ｺ隱搾ｼ医お繝ｩ繝ｼ逕ｻ髱｢縺ｮ繝懊ち繝ｳ縺九ｉ蜻ｼ縺ｳ蜃ｺ縺暦ｼ・
+ * v7.0: 手動での状態確認（エラー画面のボタンから呼び出し）
  */
 window.handleCheckStatus = async function() {
     const btn = document.querySelector('.btn-check-status');
     if (btn) {
         btn.disabled = true;
-        btn.textContent = "遒ｺ隱堺ｸｭ...";
+        btn.textContent = "確認中...";
     }
     
     await checkPendingRegistration();
     
-    // 隕九▽縺九ｉ縺ｪ縺九▲縺溷ｴ蜷・
+    // 見つからなかった場合
     const pendingJson = localStorage.getItem('fishing_app_pending_reg');
     if (pendingJson && btn) {
         btn.disabled = false;
-        btn.textContent = "逋ｻ骭ｲ迥ｶ豕√ｒ蜀咲｢ｺ隱阪☆繧・;
-        showToast('縺ｾ縺逋ｻ骭ｲ縺檎｢ｺ隱阪〒縺阪∪縺帙ｓ縲ゅｂ縺・ｸ蠎ｦ縺願ｩｦ縺励＞縺溘□縺上°縲∝・蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・, 'info');
+        btn.textContent = "登録状況を再確認する";
+        showToast('まだ登録が確認できません。もう一度お試しいただくか、再入力してください。', 'info');
     }
 };
 
@@ -1028,7 +1166,7 @@ async function saveData() {
 }
 
 /** 
- * v6.5 閾ｪ蜍募酔譛溘し繧､繧ｯ繝ｫ (1蛻・
+ * v6.5 自動同期サイクル (1分)
  */
 function startAutoSync() {
     if (window._autoSyncTimer) return;
@@ -1043,6 +1181,41 @@ function startAutoSync() {
 async function syncToCloud() {
     updateSyncStatus('syncing');
     try {
+        // v8.9.90: Fetch latest server state and merge catches to prevent wiping ikesu app data
+        try {
+            const fetchRes = await fetch(GAS_WEB_APP_URL + '?action=load');
+            const fetchResult = await fetchRes.json();
+            if (fetchResult.status === 'success' && fetchResult.data) {
+                const serverState = fetchResult.data;
+                
+                // v8.9.91: Merge server state to preserve status updates from other devices
+                state = mergeData(state, serverState);
+                
+                state.entries.forEach(localEntry => {
+                    const serverEntry = serverState.entries.find(e => e.id === localEntry.id);
+                    if (serverEntry) {
+                        (localEntry.participants || []).forEach((localP, pIdx) => {
+                            if (serverEntry.participants[pIdx]) {
+                                // Adopt server catch if local is 0 to prevent wiping newly entered catches
+                                if (!localP.catchA && !localP.catchB && (serverEntry.participants[pIdx].catchA || serverEntry.participants[pIdx].catchB)) {
+                                    localP.catchA = serverEntry.participants[pIdx].catchA;
+                                    localP.catchB = serverEntry.participants[pIdx].catchB;
+                                }
+                            }
+                        });
+                    }
+                });
+                if (state.settings && state.settings.ikesuList && serverState.settings && serverState.settings.ikesuList) {
+                    state.settings.ikesuList.forEach(localIk => {
+                        const serverIk = serverState.settings.ikesuList.find(i => i.id === localIk.id);
+                        if (serverIk) localIk.checked = serverIk.checked;
+                    });
+                }
+            }
+        } catch (e) {
+            console.warn("Pre-sync merge failed, proceeding with local state", e);
+        }
+
         const payload = {
             action: 'save',
             data: state
@@ -1093,20 +1266,20 @@ function updateSyncStatus(type) {
     if (containerFooter) containerFooter.classList.remove('hidden');
 
     if (type === 'syncing') {
-        if (text) text.textContent = '蜷梧悄荳ｭ...';
+        if (text) text.textContent = '同期中...';
         if (dot) { dot.className = 'sync-dot syncing'; }
     } else if (type === 'success') {
-        if (text) text.textContent = '脂 蜷梧悄螳御ｺ・;
+        if (text) text.textContent = '🎉 同期完了';
         if (dot) { dot.className = 'sync-dot success'; }
         setTimeout(() => { 
-            if (text) text.textContent = '繧ｯ繝ｩ繧ｦ繝画磁邯・ 豁｣蟶ｸ'; 
+            if (text) text.textContent = 'クラウド接続: 正常'; 
             if (dot) { dot.className = 'sync-dot success'; }
         }, 2000);
     } else if (type === 'error') {
-        if (text) text.textContent = '蜷梧悄螟ｱ謨・;
+        if (text) text.textContent = '同期失敗';
         if (dot) { dot.className = 'sync-dot error'; }
     } else if (type === 'error-silent') {
-        if (text) text.textContent = '繧ｯ繝ｩ繧ｦ繝画磁邯・ 豁｣蟶ｸ'; // Keep optimistic if silent
+        if (text) text.textContent = 'クラウド接続: 正常'; // Keep optimistic if silent
         if (dot) { dot.className = 'sync-dot success'; }
     }
 }
@@ -1303,7 +1476,7 @@ function initApp() {
     const cancelEditBtn = document.getElementById('cancel-edit-btn');
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener('click', () => {
-            if (confirm('菫ｮ豁｣繧剃ｸｭ豁｢縺励※謌ｻ繧翫∪縺吶°・滂ｼ亥､画峩蜀・ｮｹ縺ｯ菫晏ｭ倥＆繧後∪縺帙ｓ・・)) {
+            if (confirm('修正を中止して戻りますか？（変更内容は保存されません）')) {
                 resetForm();
                 switchView(null, isAdminAuth ? 'dashboard-view' : 'registration-view');
                 isAdminAuthAction = false;
@@ -1506,27 +1679,37 @@ window.renderAwardsPreview = function() {
     const tobis = config.tobiList.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
 
     let html = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:1rem;">';
+    
+    let currentRank = 1;
     individuals.forEach((p, i) => {
-        const rank = i + 1;
-        const isTop = rank <= config.topCount;
-        const isTobi = tobis.includes(rank);
+        if (i > 0 && individuals[i].points === individuals[i-1].points && individuals[i].cA === individuals[i-1].cA) {
+            // same rank
+        } else {
+            currentRank = i + 1;
+        }
+        const rank = currentRank;
         
-        if (isTop || isTobi || p.isAwardWinner) {
-            const badge = isTop ? '醇 蜈･雉・ : (isTobi ? '識 鬟帙・雉・ : '事・・迚ｹ蛻･雉・);
-            const bg = isTop ? '#fef3c7' : (isTobi ? '#eff6ff' : '#f3f4f6');
-            const border = isTop ? '#f59e0b' : (isTobi ? '#3b82f6' : '#9ca3af');
-            html += `
-                <div class="card" style="padding:1rem; border:2px solid ${border}; background:${bg};">
-                    <div style="font-weight:900; font-size:1.2rem; color:#1e293b;">${rank}菴・ ${p.name} 讒・/div>
-                    <div style="font-size:0.8rem; color:#64748b; margin-bottom:0.5rem;">${p.group} / ${p.points}pt</div>
-                    <div><span class="badge" style="background:${border}; color:white; font-weight:bold; padding:4px 8px;">${badge}</span></div>
-                </div>
-            `;
+        if (p.points > 0 || p.isAwardWinner) {
+            const isTop = (p.points > 0 && rank <= config.topCount);
+            const isTobi = (p.points > 0 && tobis.includes(rank));
+            
+            if (isTop || isTobi || p.isAwardWinner) {
+                const badge = isTop ? '🏆 入賞' : (isTobi ? '🎯 飛び賞' : '🎖️ 特別賞');
+                const bg = isTop ? '#fef3c7' : (isTobi ? '#eff6ff' : '#f3f4f6');
+                const border = isTop ? '#f59e0b' : (isTobi ? '#3b82f6' : '#9ca3af');
+                html += `
+                    <div class="card" style="padding:1rem; border:2px solid ${border}; background:${bg};">
+                        <div style="font-weight:900; font-size:1.2rem; color:#1e293b;">${rank}位: ${p.name} 様</div>
+                        <div style="font-size:0.8rem; color:#64748b; margin-bottom:0.5rem;">${p.group} / ${p.points}pt</div>
+                        <div><span class="badge" style="background:${border}; color:white; font-weight:bold; padding:4px 8px;">${badge}</span></div>
+                    </div>
+                `;
+            }
         }
     });
     html += '</div>';
 
-    if (individuals.length === 0) html = '<p class="text-muted p-8 text-center">繝・・繧ｿ縺後≠繧翫∪縺帙ｓ</p>';
+    if (individuals.length === 0) html = '<p class="text-muted p-8 text-center">データがありません</p>';
     container.innerHTML = html;
 };
 
@@ -1543,10 +1726,10 @@ function updateAdminToolbar() {
         toolbar.className = 'admin-toolbar';
         toolbar.innerHTML = `
             <div class="toolbar-content">
-                <button class="btn-toolbar" data-target="registration-view">蜿嶺ｻ倥ヵ繧ｩ繝ｼ繝</button>
-                <button class="btn-toolbar" data-target="dashboard-view">螟ｧ莨壽ｺ門ｙ繝ｻ邂｡逅・/button>
-                <button class="btn-toolbar" data-target="reception-view">螟ｧ莨壼ｽ捺律</button>
-                <button class="btn-toolbar logout" id="admin-logout">繝ｭ繧ｰ繧｢繧ｦ繝・/button>
+                <button class="btn-toolbar" data-target="registration-view">受付フォーム</button>
+                <button class="btn-toolbar" data-target="dashboard-view">大会準備・管理</button>
+                <button class="btn-toolbar" data-target="reception-view">大会当日</button>
+                <button class="btn-toolbar logout" id="admin-logout">ログアウト</button>
             </div>
         `;
         document.body.appendChild(toolbar);
@@ -1608,11 +1791,17 @@ function syncSettingsUI() {
     updateIfInactive('capacity-observers', state.settings.capacityObservers);
     updateIfInactive('registration-start', state.settings.startTime);
     updateIfInactive('registration-deadline', state.settings.deadline);
+    updateIfInactive('cancel-deadline', state.settings.cancelDeadline);
+    updateIfInactive('edit-deadline', state.settings.editDeadline);
     updateIfInactive('admin-password-set', state.settings.adminPassword);
     
     // v8.9.39: Sync maintenance mode checkbox
     const maintToggle = document.getElementById('maintenance-mode-toggle');
     if (maintToggle) maintToggle.checked = !!state.settings.maintenanceMode;
+    const soldoutToggle = document.getElementById('soldout-mode-toggle');
+    if (soldoutToggle) soldoutToggle.checked = !!state.settings.soldoutMode;
+    const closedToggle = document.getElementById('closed-mode-toggle');
+    if (closedToggle) closedToggle.checked = !!state.settings.closedMode;
     
     // v8.4.2: Load manual adjustments
     updateIfInactive('adj-suiho-fishers', state.settings.adjSuihoFishers || 0);
@@ -1622,7 +1811,7 @@ function syncSettingsUI() {
     
     // v8.1.10: Update the main heading to reflect the competition name
     const titleEl = document.getElementById('app-title');
-    if (titleEl) titleEl.textContent = state.settings.competitionName || "BORIJIN FESTIVAL in 豌ｴ螳・2026";
+    if (titleEl) titleEl.textContent = state.settings.competitionName || "BORIJIN FESTIVAL in 水宝 2026";
 
     updateIfInactive('cap-total', state.settings.capacityTotal || 250);
     
@@ -1676,48 +1865,49 @@ function addParticipantRow(data = null, shouldFocus = true) {
     row.dataset.index = index;
     row.innerHTML = `
         <div class="participant-label">
-            蜿ょ刈閠・${index + 1}${index === 0 ? ' <span class="label-rep">・井ｻ｣陦ｨ閠・ｼ・/span>' : ''}
+            参加者 ${index + 1}${index === 0 ? ' <span class="label-rep">（代表者）</span>' : ''}
         </div>
         <div class="form-row">
             <div class="form-group" style="flex: 1; min-width: 140px;">
-                <label>蛹ｺ蛻・<span class="required">*</span></label>
+                <label>区分 <span class="required">*</span></label>
                 <select class="p-type" required>
-                    <option value="fisher" ${data && data.type === 'fisher' ? 'selected' : ''}>驥｣繧翫ｒ縺吶ｋ</option>
-                    <option value="observer" ${data && data.type === 'observer' ? 'selected' : ''}>隕句ｭｦ縺ｮ縺ｿ</option>
+                    <option value="fisher" ${data && data.type === 'fisher' ? 'selected' : ''}>釣りをする</option>
+                    <option value="observer" ${data && data.type === 'observer' ? 'selected' : ''}>見学のみ</option>
                 </select>
             </div>
             <div class="form-group" style="flex: 2; min-width: 200px;">
-                <label>縺雁錐蜑・<span class="required">*</span></label>
-                <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="${index === 0 ? '萓・ 螻ｱ逕ｰ 螟ｪ驛・(莉｣陦ｨ閠・' : '萓・ 螻ｱ逕ｰ 螟ｪ驛・}">
+                <label>お名前 <span class="required">*</span></label>
+                <input type="text" class="p-name" required value="${data ? data.name : ''}" placeholder="${index === 0 ? '例: 山田 太郎 (代表者)' : '例: 山田 太郎'}">
             </div>
             <div class="form-group" style="flex: 1; min-width: 100px;">
-                <label>諤ｧ蛻･ <span class="required">*</span></label>
+                <label>性別 <span class="required">*</span></label>
                 <select class="p-gender" required>
-                    <option value="" disabled ${!data ? 'selected' : ''}>驕ｸ謚・..</option>
-                    ${Object.entries(genderLabels).map(([val, label]) => `<option value="${val}" ${data && data.gender === val ? 'selected' : ''}>${label}</option>`).join('')}
+                    <option value="" disabled ${!data ? 'selected' : ''}>選択...</option>
+                    ${Object.entries(genderLabels).filter(([val]) => val !== 'unknown' || (typeof isBypassAllowed === 'function' && isBypassAllowed()) || (data && data.gender === 'unknown')).map(([val, label]) => `<option value="${val}" ${data && data.gender === val ? 'selected' : ''}>${label}</option>`).join('')}
                 </select>
             </div>
         </div>
         <div class="form-row">
             <div class="form-group" style="flex: 1; min-width: 140px;">
-                <label>蟷ｴ莉｣ <span class="required">*</span></label>
+                <label>年代 <span class="required">*</span></label>
                 <select class="p-age" required>
-                    <option value="" disabled ${!data ? 'selected' : ''}>驕ｸ謚・..</option>
-                    ${Object.entries(ageLabels).map(([val, label]) => `<option value="${val}" ${data && data.age === val ? 'selected' : ''}>${label}</option>`).join('')}
+                    <option value="" disabled ${!data ? 'selected' : ''}>選択...</option>
+                    ${Object.entries(ageLabels).filter(([val]) => val !== 'unknown' || (typeof isBypassAllowed === 'function' && isBypassAllowed()) || (data && data.age === 'unknown')).map(([val, label]) => `<option value="${val}" ${data && data.age === val ? 'selected' : ''}>${label}</option>`).join('')}
                 </select>
             </div>
             <div class="form-group" style="flex: 1; min-width: 140px;">
-                <label>菴乗園繝ｻ蝨ｰ蝓・<span class="required">*</span></label>
-                <input type="text" class="p-region" required value="${data && data.region ? data.region : ''}" placeholder="萓・ 蟋ｫ霍ｯ蟶ゅ↑縺ｩ">
+                <label>住所・地域 <span class="required">*</span></label>
+                <input type="text" class="p-region" required value="${data && data.region ? data.region : ''}" placeholder="例: 姫路市など">
             </div>
             <div class="form-group" style="flex: 1; min-width: 100px;">
-                <label>T繧ｷ繝｣繝・<span class="required">*</span></label>
+                <label>Tシャツ <span class="required">*</span></label>
                 <select class="p-tshirt" required>
-                    <option value="" disabled ${!data || !data.tshirtSize ? 'selected' : ''}>驕ｸ謚槭＠縺ｦ縺上□縺輔＞</option>
+                    <option value="" disabled ${!data || !data.tshirtSize ? 'selected' : ''}>選択してください</option>
                     ${(() => {
                         // v7.8.6: Improved safety logic
                         const currentSize = data ? data.tshirtSize : '';
-                        let options = [...tshirtSizes];
+                        const isAdmin = typeof isBypassAllowed === 'function' && isBypassAllowed();
+                        let options = tshirtSizes.filter(s => s !== '？' || isAdmin || currentSize === '？');
                         if (currentSize && !options.includes(currentSize)) {
                             options.push(currentSize);
                         }
@@ -1727,11 +1917,32 @@ function addParticipantRow(data = null, shouldFocus = true) {
             </div>
         </div>
         <div class="form-group">
-            <label>繝九ャ繧ｯ繝阪・繝 <span class="text-muted">(莉ｻ諢・</span></label>
-            <input type="text" class="p-nick" value="${data && data.nickname ? data.nickname : ''}" placeholder="蜷咲ｰｿ逕ｨ縺ｮ諢帷ｧｰ・育ｩｺ谺・庄・・>
+            <label>ニックネーム <span class="text-muted">(任意)</span></label>
+            <input type="text" class="p-nick" value="${data && data.nickname ? data.nickname : ''}" placeholder="名簿用の愛称（空欄可）">
         </div>
+        ${(() => {
+            if (!document.getElementById('edit-entry-id')?.value) return '';
+            
+            const isCancelDeadlinePassed = state.settings.cancelDeadline && new Date() > new Date(state.settings.cancelDeadline);
+            const isAdmin = typeof isBypassAllowed === 'function' && isBypassAllowed();
+            
+            if (isCancelDeadlinePassed && !isAdmin) {
+                if (data && data.status === 'cancelled') {
+                    return `<div class="form-group" style="margin-top: 10px; margin-bottom: 0;"><span style="color:#ef4444; font-weight:bold;">※キャンセル済</span></div>`;
+                }
+                return '';
+            }
+
+            return `
+            <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
+                <label style="display:flex; align-items:center; gap:8px; color:#ef4444; font-weight:bold; cursor:pointer;">
+                    <input type="checkbox" class="p-cancel" style="width:18px; height:18px;" ${data && data.status === 'cancelled' ? 'checked' : ''}>
+                    この参加者をキャンセルする
+                </label>
+            </div>`;
+        })()}
         <div class="row-actions">
-            <button type="button" class="btn-icon remove-p" title="蜑企勁">&times;</button>
+            <button type="button" class="btn-icon remove-p" title="削除">&times;</button>
         </div>
     `;
     list.appendChild(row);
@@ -1762,7 +1973,7 @@ function hideConfirmation() {
     document.getElementById('confirmation-section').classList.add('hidden');
     document.getElementById('registration-form').classList.remove('hidden');
     const editId = document.getElementById('edit-entry-id')?.value;
-    document.getElementById('app-title').textContent = editId ? "逋ｻ骭ｲ螟画峩" : (state.settings.competitionName || "驥｣繧雁､ｧ莨・蜿嶺ｻ・);
+    document.getElementById('app-title').textContent = editId ? "登録変更" : (state.settings.competitionName || "釣り大会 受付");
     window.scrollTo(0, 0);
 }
 
@@ -1802,6 +2013,17 @@ function handleEditAuth() {
     const rawId = document.getElementById('auth-entry-id').value.toUpperCase().trim();
     const cred = document.getElementById('auth-credential').value.trim();
     
+    // v8.11: Check edit deadline first
+    const isEditDeadlinePassed = state.settings.editDeadline && new Date() > new Date(state.settings.editDeadline);
+    const isAdmin = typeof isBypassAllowed === 'function' && isBypassAllowed();
+
+    if (isEditDeadlinePassed && !isAdmin) {
+        const err = document.getElementById('auth-error');
+        err.textContent = "追加・変更の受付期間は終了しました。";
+        err.classList.remove('hidden');
+        return;
+    }
+
     // v8.9.40: Flexible matching (ignore hyphens, spaces, and auto-pad numbers)
     const clean = (s) => (s || "").replace(/[^A-Z0-9]/g, '');
     const cleanCred = (s) => (s || "").replace(/[^a-zA-Z0-9@.]/g, '');
@@ -1838,7 +2060,7 @@ function handleEditAuth() {
     } else {
         console.warn("BORIJIN: Auth failed for", { searchId, cred });
         const err = document.getElementById('auth-error');
-        err.textContent = "蜿嶺ｻ倡分蜿ｷ縺ｾ縺溘・隱崎ｨｼ諠・ｱ縺梧ｭ｣縺励￥縺ゅｊ縺ｾ縺帙ｓ縲・;
+        err.textContent = "受付番号または認証情報が正しくありません。";
         err.classList.remove('hidden');
     }
 }
@@ -1879,10 +2101,10 @@ function fillFormForEdit(entry) {
 
         // Admin-only: Ensure all category options are available for migration
         if ((isAdminAuth || isAdminAuthAction) && document.getElementById('main-source-selector')) {
-            ['荳闊ｬ', '縺ｿ繧馴・繧・, '豌ｴ螳・, '繝上Μ繝溘ヤ'].forEach(source => {
+            ['一般', 'みん釣り', '水宝', 'ハリミツ'].forEach(source => {
                 if (!document.querySelector(`input[name="reg-source"][value="${source}"]`)) {
                     const selector = document.getElementById('main-source-selector');
-                    const badgeClassMap = { '荳闊ｬ': 'badge-ippan', '縺ｿ繧馴・繧・: 'badge-mintsuri', '豌ｴ螳・: 'badge-suiho', '繝上Μ繝溘ヤ': 'badge-harimitsu' };
+                    const badgeClassMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
                     const badgeClass = badgeClassMap[source] || 'badge-ippan';
                     const label = document.createElement('label');
                     label.className = 'source-option admin-only temp-option';
@@ -1908,9 +2130,9 @@ function fillFormForEdit(entry) {
         hide('registration-result');
         hide('confirmation-section');
         show('registration-form');
-        document.getElementById('app-title').textContent = "逋ｻ骭ｲ螟画峩: " + (entry.id || '');
+        document.getElementById('app-title').textContent = "登録変更: " + (entry.id || '');
         const submitBtn = document.getElementById('submit-registration');
-        if (submitBtn) submitBtn.textContent = "螟画峩繧剃ｿ晏ｭ倥☆繧・;
+        if (submitBtn) submitBtn.textContent = "変更を保存する";
         
         show('cancel-edit');
         show('registration-card');
@@ -1945,7 +2167,7 @@ function fillFormForEdit(entry) {
 
     } catch (e) {
         console.error("BORIJIN: fillFormForEdit failed:", e);
-        showToast("繝輔か繝ｼ繝縺ｮ隱ｭ縺ｿ霎ｼ縺ｿ縺ｫ螟ｱ謨励＠縺ｾ縺励◆", "error");
+        showToast("フォームの読み込みに失敗しました", "error");
     }
 }
 
@@ -1971,7 +2193,7 @@ function showResult(entry) {
 
     // v8.6.8: Ensure mapping works even if entry structure varies
     const groupName = entry.groupName || '';
-    const regId = entry.id || "逋ｺ陦御ｸｭ...";
+    const regId = entry.id || "発行中...";
 
     setResText('result-number', regId);
     setResText('res-group-name', groupName);
@@ -1987,10 +2209,10 @@ function showResult(entry) {
         pList.innerHTML = participants.map(p => {
             const genderLabel = genderLabels[p.gender] || '';
             const ageLabel = ageLabels[p.age] || '';
-            const typeLabel = p.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ';
+            const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
             const regionText = p.region ? `<span style="font-size:0.8rem; color:#666;">[${p.region}]</span>` : '';
             return `<li style="margin-bottom: 0.3rem;">
-                <span style="font-weight: bold;">${p.name}</span> ${regionText} (${genderLabel} / ${ageLabel} / ${p.tshirtSize || '縺ｪ縺・}) - ${typeLabel}
+                <span style="font-weight: bold;">${p.name}</span> ${regionText} (${genderLabel} / ${ageLabel} / ${p.tshirtSize || 'なし'}) - ${typeLabel}
             </li>`;
         }).join('');
     }
@@ -1999,7 +2221,7 @@ function showResult(entry) {
     const regCard = document.getElementById('registration-card');
     if (regCard) regCard.classList.add('hidden');
 
-    // showToast('笨ｨ 逋ｻ骭ｲ螳御ｺ・＠縺ｾ縺励◆・・, 'success');
+    // showToast('✨ 登録完了しました！', 'success');
     window.scrollTo(0, 0);
     updateAppTitle();
 }
@@ -2019,7 +2241,7 @@ function resetForm() {
     isAdminAuthAction = false; // v8.2.05: Reset action flag on form reset
     
     // Reset radio selection
-    const defaultRadio = document.querySelector('input[name="reg-source"][value="荳闊ｬ"]');
+    const defaultRadio = document.querySelector('input[name="reg-source"][value="一般"]');
     if (defaultRadio) defaultRadio.checked = true;
 
     const list = document.getElementById('participant-list');
@@ -2048,10 +2270,10 @@ function resetForm() {
     if (adminDeleteBtn) adminDeleteBtn.classList.add('hidden');
 
     const submitBtn = document.getElementById('submit-registration');
-    if (submitBtn) submitBtn.textContent = "螟ｧ莨壹↓蜿ょ刈繧堤筏縺苓ｾｼ繧";
+    if (submitBtn) submitBtn.textContent = "大会に参加を申し込む";
 
     updateAppTitle();
-    document.getElementById('submit-registration').textContent = "縺薙・蜀・ｮｹ縺ｧ逋ｻ骭ｲ縺吶ｋ";
+    document.getElementById('submit-registration').textContent = "この内容で登録する";
     
     const cancelEditBtn = document.getElementById('cancel-edit');
     if (cancelEditBtn) cancelEditBtn.classList.add('hidden');
@@ -2081,40 +2303,128 @@ function showStatus(msg, type, noScroll = false) {
 
 // Admin / Dashboard
 function clearLocalCache() {
-    if (!confirm("繝悶Λ繧ｦ繧ｶ縺ｫ菫晏ｭ倥＆繧後※縺・ｋ繧ｭ繝｣繝・す繝･繧貞炎髯､縺励√け繝ｩ繧ｦ繝峨°繧画怙譁ｰ繝・・繧ｿ繧貞・蜿門ｾ励＠縺ｾ縺吶°・歃n・育樟蝨ｨ騾∽ｿ｡荳ｭ縺ｮ繝・・繧ｿ縺後≠繧句ｴ蜷医・螟ｱ繧上ｌ繧句庄閭ｽ諤ｧ縺後≠繧翫∪縺呻ｼ・)) {
+    if (!confirm("ブラウザに保存されているキャッシュを削除し、クラウドから最新データを再取得しますか？\n（現在送信中のデータがある場合は失われる可能性があります）")) {
         return;
     }
     localStorage.removeItem('fishing_app_v3_data');
     localStorage.removeItem('fishing_app_pending_reg');
-    showToast("繧ｭ繝｣繝・す繝･繧偵け繝ｪ繧｢縺励∪縺励◆縲ょ・隱ｭ縺ｿ霎ｼ縺ｿ縺励∪縺・..", "info");
+    showToast("キャッシュをクリアしました。再読み込みします...", "info");
     setTimeout(() => location.reload(), 1000);
 }
 
 /**
  * v8.1.67: Unified Dashboard Update (Globally exposed)
  */
+/* --- NOTIFICATION POPUP --- */
+window.checkForUserModifications = function() {
+    if (!isAdminAuth) return;
+    
+    let seenMods = [];
+    try {
+        seenMods = JSON.parse(localStorage.getItem('seenModifiedIds') || '[]');
+    } catch(e) {}
+    
+    const unseenMods = state.entries.filter(e => e.userModified && !seenMods.includes(e.id));
+    
+    if (unseenMods.length > 0) {
+        let popup = document.getElementById('user-mod-popup');
+        if (!popup) {
+            popup = document.createElement('div');
+            popup.id = 'user-mod-popup';
+            popup.style.cssText = 'position:fixed; top:20px; right:20px; z-index:9999; background:white; border-left:5px solid #eab308; box-shadow:0 10px 25px rgba(0,0,0,0.2); padding:15px; border-radius:8px; width:300px; animation: slideInRight 0.3s ease-out;';
+            document.body.appendChild(popup);
+        }
+        
+        const groupNames = unseenMods.map(e => e.groupName).join('、');
+        
+        popup.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:8px;">
+                <h4 style="margin:0; color:#b45309; font-size:1rem; display:flex; align-items:center; gap:5px;">
+                    <span style="font-size:1.2rem;">⚠️</span> 変更通知
+                </h4>
+                <button onclick="dismissUserModPopup()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#9ca3af; line-height:1; padding:0;">&times;</button>
+            </div>
+            <p style="margin:0 0 12px 0; font-size:0.85rem; color:#374151; line-height:1.4;">
+                一般参加者からの登録内容の追加・変更がありました。<br>
+                <strong style="color:#000;">対象: ${groupNames.length > 30 ? groupNames.substring(0,30) + '...' : groupNames}</strong>
+            </p>
+            <button onclick="dismissUserModPopup(); if(typeof switchView==='function') switchView(null, 'dashboard-view'); setTimeout(()=>window.scrollTo({top:0, behavior:'smooth'}), 100);" style="background:#eab308; color:black; border:none; padding:8px 12px; border-radius:4px; font-size:0.9rem; cursor:pointer; width:100%; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                申込一覧で確認する
+            </button>
+        `;
+        
+        window.dismissUserModPopup = function() {
+            unseenMods.forEach(e => {
+                if (!seenMods.includes(e.id)) seenMods.push(e.id);
+            });
+            localStorage.setItem('seenModifiedIds', JSON.stringify(seenMods));
+            const p = document.getElementById('user-mod-popup');
+            if (p) {
+                p.style.opacity = '0';
+                p.style.transform = 'translateX(20px)';
+                p.style.transition = 'all 0.3s';
+                setTimeout(() => p.remove(), 300);
+            }
+        };
+        
+        if (!document.getElementById('popup-styles')) {
+            const style = document.createElement('style');
+            style.id = 'popup-styles';
+            style.textContent = `
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+};
+
 window.updateDashboard = function() {
     try {
         if (!state || !state.entries) return;
 
-        const fishersIppan = sumCategoryFishers('荳闊ｬ');
-        const fishersMintsuri = sumCategoryFishers('縺ｿ繧馴・繧・);
-        const fishersSuiho = sumCategoryFishers('豌ｴ螳・);
-        const fishersHarimitsu = sumCategoryFishers('繝上Μ繝溘ヤ');
-
-        const observersIppan = sumCategoryObservers('荳闊ｬ');
-        const observersMintsuri = sumCategoryObservers('縺ｿ繧馴・繧・);
-        const observersSuiho = sumCategoryObservers('豌ｴ螳・);
-        const observersHarimitsu = sumCategoryObservers('繝上Μ繝溘ヤ');
-
-        const totalFishers = fishersIppan + fishersMintsuri + fishersSuiho + fishersHarimitsu;
-        const totalObservers = observersIppan + observersMintsuri + observersSuiho + observersHarimitsu;
         const checkedInCount = state.entries.filter(e => e.status === 'checked-in').length;
         const absentCount = state.entries.filter(e => e.status === 'absent').length;
         const validEntriesCount = state.entries.filter(e => e.status !== 'cancelled').length;
 
+        let fisherCheckedIn = 0;
+        let fisherAbsent = 0;
+        let observerCheckedIn = 0;
+        let observerAbsent = 0;
+        let dynamicTotalFishers = 0;
+        let dynamicTotalObservers = 0;
+
+        state.entries.forEach(e => {
+            if (e.status !== 'cancelled') {
+                (e.participants || []).forEach(p => {
+                    if (p.type === 'fisher' && p.status !== 'cancelled') {
+                        dynamicTotalFishers++;
+                        if (p.status === 'checked-in') fisherCheckedIn++;
+                        if (p.status === 'absent') fisherAbsent++;
+                    }
+                    if (p.type === 'observer' && p.status !== 'cancelled') {
+                        dynamicTotalObservers++;
+                        if (p.status === 'checked-in') observerCheckedIn++;
+                        if (p.status === 'absent') observerAbsent++;
+                    }
+                });
+            }
+        });
+
+        const fishersIppan = sumCategoryFishers('一般');
+        const fishersMintsuri = sumCategoryFishers('みん釣り');
+        const fishersSuiho = sumCategoryFishers('水宝');
+        const fishersHarimitsu = sumCategoryFishers('ハリミツ');
+
+        const observersIppan = sumCategoryObservers('一般');
+        const observersMintsuri = sumCategoryObservers('みん釣り');
+        const observersSuiho = sumCategoryObservers('水宝');
+        const observersHarimitsu = sumCategoryObservers('ハリミツ');
+
         // Global Stats Summary Cards (v5.4 Compact)
-        renderGlobalStatsSummary(validEntriesCount, totalFishers, totalObservers, checkedInCount, absentCount);
+        renderGlobalStatsSummary(validEntriesCount, dynamicTotalFishers, dynamicTotalObservers, checkedInCount, absentCount, fisherCheckedIn, fisherAbsent, observerCheckedIn, observerAbsent);
 
         // Email count
         updateBulkMailCount();
@@ -2134,8 +2444,8 @@ window.updateDashboard = function() {
         if (warningContainer) {
             warningContainer.innerHTML = isLocalFile ? `
                 <div class="alert alert-warning no-print mb-4">
-                    <strong>縲舌＃豕ｨ諢上・/strong> 迴ｾ蝨ｨ繝ｭ繝ｼ繧ｫ繝ｫ繝輔ぃ繧､繝ｫ縺ｨ縺励※螳溯｡後＆繧後※縺・∪縺吶ょ魂蛻ｷ縺輔ｌ繧飢R繧ｳ繝ｼ繝峨・縲√％縺ｮPC蜀・ｒ謖・☆縺溘ａ繧ｹ繝槭・縺ｧ縺ｯ隱ｭ縺ｿ蜿悶ｌ縺ｾ縺帙ｓ縲・
-                    譛ｬ逡ｪ迺ｰ蠅・ｼ・itHub Pages遲会ｼ峨↓繧｢繝・・繝ｭ繝ｼ繝峨☆繧九→縲√せ繝槭・縺九ｉ驥｣譫懷ｱ蜻翫′縺ｧ縺阪ｋ繧医≧縺ｫ縺ｪ繧翫∪縺吶・
+                    <strong>【ご注意】</strong> 現在ローカルファイルとして実行されています。印刷されるQRコードは、このPC内を指すためスマホでは読み取れません。
+                    本番環境（GitHub Pages等）にアップロードすると、スマホから釣果報告ができるようになります。
                 </div>
             ` : '';
         }
@@ -2158,7 +2468,8 @@ window.updateDashboard = function() {
 
         // 3. Coordinator & Entry Tools (view param)
         const leaderEl = document.getElementById('url-leader-input');
-        if (leaderEl) leaderEl.value = `${baseUrl}?view=leader-entry`;
+        const dirUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/') + 1);
+        if (leaderEl) leaderEl.value = `${dirUrl}fishing-results-app/index.html?view=ranking`;
 
         const mintsuriAdminEl = document.getElementById('url-mintsuri-admin');
         if (mintsuriAdminEl) mintsuriAdminEl.value = `${baseUrl}?view=mintsuri-coordinator-view`;
@@ -2216,39 +2527,48 @@ window.updateDashboard = function() {
 
         sortedEntries.forEach(e => {
             // v8.1.58: Comprehensive Safety Guard for missing participants
-            const pArray = e.participants || [];
+            const pArray = (e.participants || []).filter(p => p && p.status !== 'cancelled');
             
             // Search logic using pArray
             const pNames = pArray.map(p => p.name).join(' ');
+            const pNicks = pArray.map(p => p.nickname || "").join(' ');
             const pRegions = pArray.map(p => p.region || "").join(' ');
             const pTshirts = pArray.map(p => p.tshirtSize || "").join(' ');
             const pGenders = pArray.map(p => p.gender ? genderLabels[p.gender] || "" : "").join(' ');
+            const pTypes = pArray.map(p => p.type === 'observer' ? '見学' : '釣り').join(' ');
             
-            const combinedParticipantInfo = (pNames + " " + pRegions + " " + pTshirts + " " + pGenders).toLowerCase();
-            const searchTermLower = searchTerm.toLowerCase();
+            const combinedParticipantInfo = (pNames + " " + pNicks + " " + pRegions + " " + pTshirts + " " + pGenders + " " + pTypes).toLowerCase();
+            const safeId = e.id || "未採番";
             
-            const safeId = e.id || "譛ｪ謗｡逡ｪ";
-            const matchesEntrySearch = safeId.toLowerCase().includes(searchTermLower) || 
-                                     (e.groupName && e.groupName.toLowerCase().includes(searchTermLower)) || 
-                                     (e.representative && e.representative.toLowerCase().includes(searchTermLower));
+            const fullString = [safeId, e.groupName || "", e.representative || "", combinedParticipantInfo].join(' ').toLowerCase();
+            const searchTerms = searchTerm.replace(/　/g, ' ').split(/\s+/).filter(Boolean);
             
-            const matchesParticipantSearch = combinedParticipantInfo.includes(searchTermLower);
-
-            if (!matchesEntrySearch && !matchesParticipantSearch) return;
+            if (searchTerms.length > 0) {
+                const isMatch = searchTerms.every(term => fullString.includes(term));
+                if (!isMatch) return;
+            }
+            
+            const filterObserver = document.getElementById('dashboard-filter-observer')?.checked;
+            if (filterObserver) {
+                const hasObserver = pArray.some(p => p.type === 'observer');
+                if (!hasObserver) return;
+            }
+            
             if (dashboardFilter !== 'all' && e.source !== dashboardFilter) return;
 
-            const badgeMap = { '荳闊ｬ': 'badge-ippan', '縺ｿ繧馴・繧・: 'badge-mintsuri', '豌ｴ螳・: 'badge-suiho', '繝上Μ繝溘ヤ': 'badge-harimitsu' };
-            const statusLabel = e.status === 'checked-in' ? '笨・蜿玲ｸ・ : e.status === 'absent' ? '笶・谺蟶ｭ' : e.status === 'cancelled' ? '圻 辟｡蜉ｹ' : '竢ｳ 譛ｪ蜿嶺ｻ・;
+            const badgeMap = { '一般': 'badge-ippan', 'みん釣り': 'badge-mintsuri', '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu' };
+            const statusLabel = e.status === 'checked-in' ? '✅ 受済' : e.status === 'absent' ? '❌ 欠席' : e.status === 'cancelled' ? '🚫 無効' : '⏳ 未受付';
             const rowClass = e.status === 'cancelled' ? 'row-cancelled' : (e.status === 'checked-in' ? 'row-checked-in' : '');
 
             const rep = pArray[0] || { name: e.representative, nickname: '', gender: '' };
-            const getGenderMark = (p) => p.gender === 'male' ? '笙・ : (p.gender === 'female' ? '笙' : '');
+            const getGenderMark = (p) => p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '');
             
+            const repDecoration = rep.status === 'cancelled' ? 'text-decoration:line-through; opacity:0.6;' : '';
             const pSummary = `
                 <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:400px; font-size:0.95rem;">
-                    <strong style="font-weight:800; color:var(--text-color);">${rep.name}</strong>${rep.nickname ? `<small>(${rep.nickname})</small>` : ''}${getGenderMark(rep)}
+                    <strong style="font-weight:800; color:var(--text-color); ${repDecoration}">${rep.name}</strong>${rep.nickname ? `<small>(${rep.nickname})</small>` : ''}${getGenderMark(rep)}
                     <span style="color:#64748b; font-size:0.8rem; margin-left:4px;">
-                        ${pArray.length > 1 ? `+ ${pArray.slice(1).map(p => p.name).join(', ')}` : ''}
+                        ${pArray.length > 1 ? `+ ${pArray.slice(1).map(p => `<span style="${p.status === 'cancelled' ? 'text-decoration:line-through; opacity:0.6;' : ''}">${p.name}</span>`).join(', ')}` : ''}
                     </span>
                 </div>
             `;
@@ -2270,19 +2590,19 @@ window.updateDashboard = function() {
 
             html += `
                 <tr class="${rowClass}">
-                    <td><span class="id-badge" style="white-space:nowrap;">${e.id}</span></td>
+                    <td><span class="id-badge" style="white-space:nowrap;">${e.id}</span>${e.userModified ? '<span class="badge" style="background:#eab308; color:#000; font-size:0.6rem; margin-left:4px; font-weight:bold;">変更あり</span>' : ''}${e.hasDropIn ? '<span class="badge" style="background:#ef4444; color:#fff; font-size:0.6rem; margin-left:4px; font-weight:bold;">当日追加</span>' : ''}</td>
                     <td><span class="badge ${badgeMap[e.source] || 'badge-ippan'}" style="white-space:nowrap;">${e.source}</span></td>
-                    <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}${e.memo ? `\n\n縲仙ｙ閠・曾n${e.memo}` : ''}">${e.groupName}${e.memo ? ' 統' : ''}</div></td>
+                    <td><div style="font-weight:800; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${e.status === 'cancelled' ? 'text-decoration:line-through' : ''}" title="${e.groupName}${e.memo ? `\n\n【備考】\n${e.memo}` : ''}">${e.groupName}${e.memo ? '<span style="font-size:0.7rem; color:#e67e22; border:1px solid #e67e22; border-radius:2px; padding:0 2px; margin-left:4px; vertical-align:middle;">備</span>' : ''}</div></td>
                     <td>${pSummary}</td>
-                    <td><small style="white-space:nowrap;">${e.fishers} / ${e.observers}</small></td>
+                    <td><small style="white-space:nowrap;">${e.status === 'cancelled' ? '0 / 0' : `${e.fishers} / ${e.observers}`}</small></td>
                     <td><small style="white-space:nowrap;">${ikesuDisplay}</small></td>
                     <td><span style="font-size:0.75rem; font-weight:700; white-space:nowrap;">${statusLabel}</span></td>
                     <td><small style="white-space:nowrap;">${regTime}</small></td>
                     <td class="no-print">
                         <div style="display:flex; gap:0.2rem; flex-wrap: nowrap; width: auto; align-items:center;">
-                            <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">遒ｺ隱・/button>
-                            <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">菫ｮ豁｣</button>
-                            <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">蜿嶺ｻ・/button>
+                            <button class="btn-outline btn-small btn-detail" onclick="showEntryDetails('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">確認</button>
+                            <button class="btn-outline btn-small" onclick="requestAdminEdit('${e.id}')" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">修正</button>
+                            <button class="btn-primary btn-small ${e.status === 'checked-in' ? 'active' : ''}" onclick="quickCheckIn('${e.id}')" ${e.status === 'cancelled' ? 'disabled' : ''} style="padding: 0.2rem 0.4rem; font-size: 0.75rem; white-space:nowrap;">受付</button>
                         </div>
                     </td>
                 </tr>
@@ -2291,7 +2611,7 @@ window.updateDashboard = function() {
         
         if (!html) {
             const hasFilter = searchTerm || dashboardFilter !== 'all';
-            const msg = hasFilter ? '隧ｲ蠖薙☆繧九ョ繝ｼ繧ｿ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲・ : '逋ｻ骭ｲ繝・・繧ｿ縺後≠繧翫∪縺帙ｓ縲・;
+            const msg = hasFilter ? '該当するデータが見つかりません。' : '登録データがありません。';
             html = `<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--text-muted);">${msg}</td></tr>`;
         }
         
@@ -2370,7 +2690,7 @@ window.updatePrintView = function() {
     } catch (err) {
         console.error("Print View Error:", err);
         const container = document.getElementById('print-view-container');
-        if (container) container.innerHTML = `<div class="alert alert-danger">陦ｨ遉ｺ繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆: ${err.message}</div>`;
+        if (container) container.innerHTML = `<div class="alert alert-danger">表示エラーが発生しました: ${err.message}</div>`;
     }
 };
 
@@ -2382,12 +2702,12 @@ window.renderIkesuPrintView = function() {
     if (!container) return;
     
     if (!state.entries || state.entries.length === 0) {
-        container.innerHTML = `<div class="alert alert-info">蜷咲ｰｿ繝・・繧ｿ繧定ｪｭ縺ｿ霎ｼ繧薙〒縺・∪縺吶ゅ＠縺ｰ繧峨￥縺雁ｾ・■縺上□縺輔＞...</div>`;
+        container.innerHTML = `<div class="alert alert-info">名簿データを読み込んでいます。しばらくお待ちください...</div>`;
         return;
     }
 
     if (!state.settings.ikesuList || state.settings.ikesuList.length === 0) {
-        container.innerHTML = `<div class="alert alert-warning">繧､繧ｱ繧ｹ縺瑚ｨｭ螳壹＆繧後※縺・∪縺帙ｓ縲・/div>`;
+        container.innerHTML = `<div class="alert alert-warning">イケスが設定されていません。</div>`;
         return;
     }
 
@@ -2397,39 +2717,42 @@ window.renderIkesuPrintView = function() {
         state.entries.forEach(e => {
             if (e.status === 'cancelled') return;
             (e.participants || []).forEach(p => {
+                if (p.status === 'cancelled') return;
                 if (p.ikesuId === ik.id) {
                     participants.push({ ...p, groupId: e.id, groupName: e.groupName });
                 }
             });
         });
 
-        if (participants.length === 0) return;
+        // v8.10.4: Allow printing empty Ikesus as spares with 12 blank rows
+        const extraRowsCount = participants.length === 0 ? 12 : 3;
+        const extraRows = Array.from({length: extraRowsCount}, (_, i) => i + 1);
 
         html += `
             <div class="print-page ikesu-sheet" style="background:white; padding:1rem; border:1px solid #eee; margin-bottom: 2rem; page-break-after: always; color: black;">
-                <div style="display: flex; align-items: flex-end; border-bottom: 5px solid #000; padding-bottom: 0.3rem; margin-bottom: 1rem;">
+                <div style="display: flex; align-items: flex-end; border-bottom: 5px solid #000; border-left: 8px solid #000; padding-left: 15px; padding-bottom: 0.3rem; margin-bottom: 1rem;">
                     <div style="display: flex; align-items: baseline; gap: 4px; min-width: 180px;">
-                        <span style="font-size: 3.5rem; font-weight: 900; line-height: 1;">${ik.name.replace('繧､繧ｱ繧ｹ','')}</span>
-                        <span style="font-size: 1rem; font-weight: 700; color: #333;">繧､繧ｱ繧ｹ</span>
+                        <span style="font-size: 3.5rem; font-weight: 900; line-height: 1;">${ik.name.replace('イケス','')}</span>
+                        <span style="font-size: 1rem; font-weight: 700; color: #333;">イケス</span>
                     </div>
                     <div style="flex: 1; display: flex; justify-content: center; align-items: baseline; gap: 10px; margin-bottom: 5px;">
-                        <span style="font-size: 0.8rem; font-weight: 700; color: #666; background: #eee; padding: 2px 6px; border-radius: 4px;">繧､繧ｱ繧ｹ繝ｪ繝ｼ繝繝ｼ</span>
-                        <span style="font-size: 1.8rem; font-weight: 900; color: #000;">${participants.find(p => p.isLeader)?.name || '譛ｪ險ｭ螳・} 讒・/span>
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #666; background: #eee; padding: 2px 6px; border-radius: 4px;">イケスリーダー</span>
+                        <span style="font-size: 1.8rem; font-weight: 900; color: #000;">${participants.find(p => p.isLeader)?.name || '　　　　　'} 様</span>
                     </div>
                     <div style="text-align: right; font-size: 0.8rem; min-width: 180px;">
-                        <div style="font-weight: 700; font-size: 1rem; color: #666;">繧､繧ｱ繧ｹ 繝｡繝ｳ繝舌・陦ｨ</div>
-                        <div>蜊ｰ蛻ｷ譌･: ${new Date().toLocaleDateString()} | 莠ｺ謨ｰ: ${participants.length} 蜷・/div>
+                        <div style="font-weight: 700; font-size: 1rem; color: #666;">イケス メンバー表</div>
+                        <div>印刷日: ${new Date().toLocaleDateString()} | 人数: ${participants.length} 名</div>
                     </div>
                 </div>
-                <table style="width: 100%; border-collapse: collapse; border: 3px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
                     <thead>
                         <tr style="background: #eee; color: #000; font-size: 1.1rem; height: 3.5rem;">
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 45px; text-align: center;">No</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 180px; text-align: center;">繧ｰ繝ｫ繝ｼ繝怜錐</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; text-align: center;">豌丞錐</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 60px; text-align: center;">諤ｧ蛻･</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 80px; text-align: center;">T繧ｷ繝｣繝・/th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; min-width: 120px; text-align: center;">蛯呵・/th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 35px; text-align: center;">No</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 130px; text-align: center;">グループ名</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; text-align: center;">氏名</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 60px; text-align: center;">性別</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 100px; text-align: center;">Tシャツ</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; min-width: 120px; text-align: center;">備考</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2437,18 +2760,21 @@ window.renderIkesuPrintView = function() {
                             <tr style="height: 3.2rem;">
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.2rem;">${idx + 1}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; font-size: 1.1rem;">${p.groupName}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 1.5rem;">
-                                    ${p.name} ${p.nickname ? `<span style="font-size:0.9rem; font-weight:normal;">(${p.nickname})</span>` : ''}
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; white-space: nowrap;">
+                                    <span style="font-size: 24pt !important;">${p.name}</span>
+                                    ${p.nickname ? `<span style="font-size:16pt !important; font-weight:normal; margin-left:10px;">(${p.nickname})</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.1rem;">${genderLabels[p.gender] || '-'}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-weight: bold; font-size: 1.3rem;">${p.tshirtSize || '-'}</td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-weight: bold;">
+                                    <span style="font-size: 22pt !important; white-space: nowrap;">${(p.tshirtSize || '-').replace(/\s*[\(（].*/, '').trim()}</span>
+                                </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: left; font-weight: bold; font-size: 1rem; color: ${p.isLeader ? '#d32f2f' : 'inherit'};">
-                                    ${p.isLeader ? '笘・Μ繝ｼ繝繝ｼ' : ''}
-                                    ${p.type === 'observer' ? '・郁ｦ句ｭｦ閠・ｼ・ : ''}
+                                    ${p.isLeader ? '★リーダー' : ''}
+                                    ${p.type === 'observer' ? '（見学者）' : ''}
                                 </td>
                             </tr>
                         `).join('')}
-                        ${[1, 2, 3].map(n => `
+                        ${extraRows.map(n => `
                             <tr style="height: 3.2rem;">
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; color: #ccc;">${participants.length + n}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
@@ -2460,10 +2786,11 @@ window.renderIkesuPrintView = function() {
                         `).join('')}
                     </tbody>
                 </table>
+                <div style="text-align: right; font-size: 16pt; font-weight: 900; color: #000; margin-top: 8px;">- ${idx + 1} -</div>
             </div>
         `;
     });
-    container.innerHTML = html || '<p class="text-muted p-4">蟇ｾ雎｡閠・′縺・∪縺帙ｓ縲・/p>';
+    container.innerHTML = html || '<p class="text-muted p-4">対象者がいません。</p>';
 };
 
 /**
@@ -2474,99 +2801,109 @@ window.renderIkesuResultView = function() {
     if (!container) return;
     
     if (!state.settings.ikesuList || state.settings.ikesuList.length === 0) {
-        container.innerHTML = `<div class="alert alert-warning">繧､繧ｱ繧ｹ縺瑚ｨｭ螳壹＆繧後※縺・∪縺帙ｓ縲・/div>`;
+        container.innerHTML = `<div class="alert alert-warning">イケスが設定されていません。</div>`;
         return;
     }
 
     const baseUrl = window.location.href.split('?')[0].replace('index.html', '');
-    const leaderUrl = baseUrl.includes('http') ? baseUrl.replace('/蜿嶺ｻ・fishing-entry-app/', '/驥｣譫・fishing-results-app/') : baseUrl + '../../驥｣譫・fishing-results-app/index.html';
+    // v8.9.84: Robust URL replacement for both local and GitHub environments
+    const leaderUrl = baseUrl + 'fishing-results-app/index.html';
     const isLocalFile = window.location.protocol === 'file:';
 
     let html = isLocalFile ? `
         <div class="alert alert-warning no-print mb-4">
-            <strong>縲舌＃豕ｨ諢上・/strong> 迴ｾ蝨ｨ繝ｭ繝ｼ繧ｫ繝ｫ繝輔ぃ繧､繝ｫ縺ｨ縺励※螳溯｡後＆繧後※縺・∪縺吶ょ魂蛻ｷ縺輔ｌ繧飢R繧ｳ繝ｼ繝峨・縲√％縺ｮPC蜀・ｒ謖・☆縺溘ａ繧ｹ繝槭・縺ｧ縺ｯ隱ｭ縺ｿ蜿悶ｌ縺ｾ縺帙ｓ縲・
+            <strong>【ご注意】</strong> 現在ローカルファイルとして実行されています。印刷されるQRコードは、このPC内を指すためスマホでは読み取れません。
         </div>
     ` : '';
     
     state.settings.ikesuList.forEach((ik, idx) => {
         const participants = [];
+        let ikesuLeaderName = null;
+        
         state.entries.forEach(e => {
             if (e.status === 'cancelled') return;
             (e.participants || []).forEach(p => {
-                if (p.ikesuId === ik.id && p.type === 'fisher') {
-                    participants.push({ ...p, groupName: e.groupName });
+                if (p.status === 'cancelled') return;
+                if (p.ikesuId === ik.id) {
+                    if (p.isLeader) ikesuLeaderName = p.name;
+                    if (p.type === 'fisher') {
+                        participants.push({ ...p, groupName: e.groupName, entryId: e.id });
+                    }
                 }
             });
         });
 
-        if (participants.length === 0) return;
+        // v8.10.4: Allow printing empty Ikesus as spares with 12 blank rows
+        const extraRowsCount = participants.length === 0 ? 12 : 3;
+        const extraRows = Array.from({length: extraRowsCount}, (_, i) => i + 1);
 
         html += `
             <div class="print-page result-sheet" style="background:white; padding:1.2rem; border:1px solid #eee; margin-bottom: 2rem; page-break-after: always; color: black; position: relative;">
-                <div style="display: flex; align-items: center; border-bottom: 5px solid #000; padding-bottom: 0.5rem; margin-bottom: 1.2rem;">
+                <div style="display: flex; align-items: center; border-bottom: 5px solid #000; border-left: 8px solid #000; padding-left: 15px; padding-bottom: 0.5rem; margin-bottom: 1.2rem;">
                     <div style="display: flex; align-items: baseline; gap: 4px; min-width: 150px; flex-shrink: 0;">
-                        <span style="font-size: 3.5rem; font-weight: 900; line-height: 1;">${(ik.name || "").replace('繧､繧ｱ繧ｹ','')}</span>
-                        <span style="font-size: 1rem; font-weight: 800; color: #333;">繧､繧ｱ繧ｹ</span>
+                        <span style="font-size: 3.5rem; font-weight: 900; line-height: 1;">${(ik.name || "").replace('イケス','')}</span>
+                        <span style="font-size: 1rem; font-weight: 800; color: #333;">イケス</span>
                     </div>
                     <div style="flex: 1; display: flex; justify-content: center; align-items: baseline; gap: 10px; padding: 0 10px;">
-                        <span style="font-size: 0.8rem; font-weight: 800; color: #666; background: #eee; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">繧､繧ｱ繧ｹ繝ｪ繝ｼ繝繝ｼ</span>
-                        <span style="font-size: 1.8rem; font-weight: 900; color: #000; white-space: nowrap;">${participants.find(p => p.isLeader)?.name || '譛ｪ險ｭ螳・} 讒・/span>
+                        <span style="font-size: 0.8rem; font-weight: 800; color: #666; background: #eee; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">イケスリーダー</span>
+                        <span style="font-size: 1.8rem; font-weight: 900; color: #000; white-space: nowrap;">${ikesuLeaderName || '　　　　　'} 様</span>
                     </div>
                     <div style="text-align: right; min-width: 280px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end;">
-                        <div style="font-weight: 800; font-size: 1rem; color: #666; margin-bottom: 6px;">繧､繧ｱ繧ｹ 驥｣譫懆ｨ伜・陦ｨ</div>
-                        <div style="display: flex; gap: 10px; align-items: center; border: 3px solid #000; padding: 5px; background: #fff;">
+                        <div style="font-weight: 800; font-size: 1rem; color: #666; margin-bottom: 6px;">イケス 釣果記入表</div>
+                        <div style="display: flex; gap: 10px; align-items: center; border: 1px solid #000; padding: 5px; background: #fff;">
                              <div id="qr-ikesu-${idx}" style="width: 100px; height: 100px; flex-shrink: 0; background: #fff;"></div>
                              <div style="text-align: left; line-height: 1.1; min-width: 80px;">
-                                 <div style="font-size: 0.75rem; font-weight: bold; color: #666;">WEB蝣ｱ蜻顔畑</div>
-                                 <div style="font-size: 0.7rem; font-weight: bold; color: #666; margin-top: 4px;">證苓ｨｼ逡ｪ蜿ｷ</div>
-                                 <div style="font-size: 2rem; font-weight: 900; color: #d32f2f;">${ik.passcode || '----'}</div>
+                                 <div style="font-size: 0.75rem; font-weight: bold; color: #666;">WEB報告用</div>
+                                 <div style="font-size: 0.7rem; font-weight: bold; color: #666; margin-top: 4px;">暗証番号</div>
+                                 <div style="font-size: 24pt; font-weight: 900; color: #1976d2;">${ik.passcode || '----'}</div>
                              </div>
                         </div>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0.5rem;">
-                    <div style="font-size: 0.9rem; font-weight: bold; color: #d32f2f;">窶ｻ蛹ｹ謨ｰ・域焚蟄暦ｼ峨〒險伜・縺励※縺上□縺輔＞</div>
-                    <div style="font-size: 0.8rem; color: #666;">逕滓・譌･: ${new Date().toLocaleString()} | 驥｣蝣縺ｾ縺､繧・邂｡逅・す繧ｹ繝・Β</div>
+                <div style="display: flex; justify-content: flex-end; align-items: flex-end; margin-bottom: 0.5rem;">
+                    <div style="font-size: 14pt; font-weight: 900; color: #d32f2f; background: #fff; padding: 2px 10px; border: 2px solid #d32f2f; border-radius: 4px;">※<span style="font-size: 18pt;">匹数</span>（数字）で記入してください</div>
                 </div>
-                <table style="width: 100%; border-collapse: collapse; border: 3px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; table-layout: fixed;">
+                <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
                     <thead>
-                        <tr style="background: #eee; color: #000; font-size: 1.1rem; height: 3.5rem;">
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 45px; text-align: center;">No</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 160px; text-align: center;">繧ｰ繝ｫ繝ｼ繝怜錐</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; text-align: center;">豌丞錐</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 95px; background: #ffebee !important; color: #d32f2f !important; text-align: center;">魃帙・縺昴・莉・/th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 95px; background: #e3f2fd !important; color: #1976d2 !important; text-align: center;">髱堤黄</th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 140px; background: #e8f5e9 !important; color: #388e3c !important; text-align: center;">蛯呵・/th>
-                            <th style="border: 1px solid #000; padding: 0.4rem; width: 60px; color: #000 !important; background: #f8f9fa !important; text-align: center;">蟆剰ｨ・/th>
+                        <tr style="background: #eee; color: #000; font-size: 14pt; height: 3.5rem;">
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 45px; text-align: center;">No</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 130px; text-align: center;">グループ名</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; text-align: center;">氏名</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 120px; background: #fff3e0 !important; color: #e65100 !important; text-align: center;">鯛等</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 120px; background: #e3f2fd !important; color: #1976d2 !important; text-align: center;">青物、クエ</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${participants.map((p, pIdx) => `
-                            <tr style="height: 3.2rem;">
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold; font-size: 1.2rem;">${pIdx + 1}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-size: 1rem; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${p.groupName}</td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; font-size: 1.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    ${p.name} ${p.nickname ? `<span style="font-size:0.9rem; font-weight:normal;">(${p.nickname})</span>` : ''}
+                            <tr style="height: 3.8rem;">
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0;"><span style="font-weight: bold; font-size: 14pt !important;">${pIdx + 1}</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem;"><span style="font-size: 12pt !important; font-weight: bold;">${p.groupName}</span><br><span style="font-size: 10pt !important; color:#666;">(${p.entryId})</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; white-space: nowrap;">
+                                    <span style="font-size: 24pt !important;">${p.name}</span>
+                                    ${p.nickname ? `<span style="font-size:16pt !important; font-weight:normal; margin-left:8px;">(${p.nickname})</span>` : ''}
                                 </td>
-                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; background: #fafafa;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt !important; color: #999;">匹</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt !important; color: #999;">匹</span></td>
                             </tr>
                         `).join('')}
-                        ${[1, 2, 3].map(n => `
-                            <tr style="height: 3.2rem; background: #fff;">
-                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0; font-weight: bold; font-size: 1.2rem;">${participants.length + n}</td>
+                        ${extraRows.map(n => `
+                            <tr style="height: 3.8rem; background: #fff;">
+                                <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; background: #f0f0f0;"><span style="font-weight: bold; font-size: 14pt !important;">${participants.length + n}</span></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem;"></td>
-                                <td style="border: 1px solid #000; padding: 0.3rem; background: #fafafa;"></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt !important; color: #999;">匹</span></td>
+                                <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt !important; color: #999;">匹</span></td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
+                <div style="margin-top: 15px; text-align: center;">
+                    <div style="font-size: 16pt; font-weight: 900; color: #d32f2f;">用紙は、集計後記入し、QRコードから釣果を送信し、速やかに本部にお持ちください。</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 8px;">
+                    <div style="font-size: 0.8rem; color: #666;">生成日: ${new Date().toLocaleString()} | BORIJIN FESTIVAL 管理システム</div>
+                    <div style="font-size: 16pt; font-weight: 900; color: #000;">- ${idx + 1} -</div>
+                </div>
             </div>
         `;
     });
@@ -2598,7 +2935,7 @@ window.saveRankingSettings = function() {
     
     state.settings.rankingConfig = { topCount, tobiList };
     state.lastUpdated = Date.now();
-    showToast("繝ｩ繝ｳ繧ｭ繝ｳ繧ｰ險ｭ螳壹ｒ菫晏ｭ倥＠縺ｾ縺励◆", "success");
+    showToast("ランキング設定を保存しました", "success");
     saveData(); // Sync to cloud
 };
 /**
@@ -2610,7 +2947,7 @@ window.renderGroupPrintView = function() {
 
     const validEntries = state.entries.filter(e => e.status !== 'cancelled');
     if (validEntries.length === 0) {
-        container.innerHTML = '<p class="text-muted p-4">逋ｻ骭ｲ繝・・繧ｿ縺後≠繧翫∪縺帙ｓ縲・/p>';
+        container.innerHTML = '<p class="text-muted p-4">登録データがありません。</p>';
         return;
     }
 
@@ -2618,51 +2955,69 @@ window.renderGroupPrintView = function() {
     const sorted = [...validEntries].sort((a,b) => a.source.localeCompare(b.source) || a.id.localeCompare(b.id));
     
     sorted.forEach((e, entryIdx) => {
-        const pArray = e.participants || [];
+        const pArray = (e.participants || []).filter(p => p.status !== 'cancelled' && p.status !== 'absent');
+        if (pArray.length === 0) return;
+        
         const isLast = entryIdx === sorted.length - 1;
         
+        const ikesuNames = new Set();
+        pArray.forEach(p => {
+            if (p.ikesuId) {
+                const ik = (state.settings.ikesuList || []).find(i => i.id === p.ikesuId);
+                if (ik) ikesuNames.add(ik.name);
+            }
+        });
+        const ikesuDisplay = Array.from(ikesuNames).join(', ') || '未割当';
+
+        const activeFishers = pArray.filter(p => p.type === 'fisher').length;
+        const activeObservers = pArray.filter(p => p.type === 'observer').length;
+
         html += `
             <div class="print-page group-sheet" style="background:white; padding:1.2rem; border:1px solid #eee; margin-bottom: 1rem; ${isLast ? '' : 'page-break-after: always;'} color: black;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #000; padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 4px solid #000; border-left: 8px solid #000; padding-left: 15px; padding-bottom: 0.5rem; margin-bottom: 1rem;">
                     <div>
                         <div style="font-size: 1rem; font-weight: bold; margin-bottom: 0.2rem;">[${e.source}]</div>
                         <h1 style="margin:0; font-size: 2rem;">${e.groupName}</h1>
                     </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 1.2rem; font-weight: bold; border: 3px solid #000; padding: 0.3rem 0.8rem;">${e.id}</div>
+                    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+                        <div style="font-size: 1.2rem; font-weight: bold; border: 1px solid #000; padding: 0.3rem 0.8rem;">${e.id}</div>
+                        <div style="font-size: 1.6rem; font-weight: 900; color: #000; border: 2px solid #000; padding: 0.2rem 0.6rem; background: #fff;">イケス: ${ikesuDisplay}</div>
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                     <div style="border: 2px solid #000; padding: 0.6rem;">
-                        <div style="font-size: 0.8rem; border-bottom: 1px solid #000; margin-bottom: 0.3rem;">莉｣陦ｨ閠・/div>
-                        <div style="font-size: 1.2rem; font-weight: bold;">${e.representative} 讒・/div>
+                        <div style="font-size: 0.8rem; border-bottom: 1px solid #000; margin-bottom: 0.3rem;">代表者</div>
+                        <div style="font-size: 1.2rem; font-weight: bold;">${e.representative} 様</div>
                     </div>
                     <div style="border: 2px solid #000; padding: 0.6rem;">
-                        <div style="font-size: 0.8rem; border-bottom: 1px solid #000; margin-bottom: 0.3rem;">蜷郁ｨ井ｺｺ謨ｰ</div>
-                        <div style="font-size: 1.2rem; font-weight: bold;">驥｣繧・ ${e.fishers}蜷・/ 隕句ｭｦ: ${e.observers}蜷・/div>
+                        <div style="font-size: 0.8rem; border-bottom: 1px solid #000; margin-bottom: 0.3rem;">合計人数</div>
+                        <div style="font-size: 1.2rem; font-weight: bold;">釣り: ${activeFishers}名 / 見学: ${activeObservers}名</div>
                     </div>
                 </div>
 
-                <h3 style="background: #000; color: white; padding: 0.4rem 0.8rem; margin-bottom: 0.8rem; font-size: 1rem;">蜿ょ刈閠・・T繧ｷ繝｣繝・し繧､繧ｺ 荳隕ｧ</h3>
-                <table style="width: 100%; border-collapse: collapse; border: 3px solid #000;">
+                <h3 style="background: #000; color: white; padding: 0.4rem 0.8rem; margin-bottom: 0.8rem; font-size: 1rem;">参加者・Tシャツサイズ 一覧</h3>
+                <table style="width: 100%; border-collapse: collapse; border: 2px solid #000;">
                     <thead>
                         <tr style="background: #eee; color: #000; font-size: 1.1rem; height: 3.5rem;">
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 45px; text-align: center;">No</th>
-                            <th style="border: 1px solid #000; padding: 0.5rem; text-align: center;">豌丞錐</th>
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 150px; text-align: center;">T繧ｷ繝｣繝・/th>
-                            <th style="border: 1px solid #000; padding: 0.5rem; width: 100px; text-align: center;">蛹ｺ蛻・/th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.5rem; width: 35px; text-align: center;">No</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.5rem; text-align: center;">氏名</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.5rem; width: 100px; text-align: center;">Tシャツ</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.5rem; width: 65px; text-align: center;">区分</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${pArray.map((p, idx) => `
                         <tr style="height: 3.2rem;">
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.2rem;">${idx + 1}</td>
-                                <td style="border: 1px solid #000; padding: 0.4rem; font-size: 1.5rem; font-weight: 900;">
-                                    ${p.name} ${p.nickname ? `<span style="font-size:0.9rem; font-weight:normal;">(${p.nickname})</span>` : ''}
+                                <td style="border: 1px solid #000; padding: 0.4rem; font-weight: 900; white-space: nowrap;">
+                                    <span style="font-size: 20pt;">${p.name}</span>
+                                    ${p.nickname ? `<span style="font-size:14pt; font-weight:normal; margin-left:12px;">(${p.nickname})</span>` : ''}
                                 </td>
-                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.3rem; font-weight: 900;">${p.tshirtSize || '-'}</td>
-                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.1rem;">${p.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ'}</td>
+                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-weight: 900;">
+                                    <span style="font-size: 22pt; white-space: nowrap;">${(p.tshirtSize || '-').replace(/\s*[\(（].*/, '').trim()}</span>
+                                </td>
+                                <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-size: 1.1rem;">${p.type === 'fisher' ? '釣り' : '見学'}</td>
                             </tr>
                         `).join('')}
                         ${[1, 2, 3].map(n => `
@@ -2688,7 +3043,7 @@ window.setParticipantAsLeader = function(entryId, partIdx) {
     entry.participants[partIdx].isLeader = true;
     saveData();
     renderIkesuWorkspace();
-    showToast(`${entry.participants[partIdx].name} 讒倥ｒ繝ｪ繝ｼ繝繝ｼ縺ｫ險ｭ螳壹＠縺ｾ縺励◆`, 'info');
+    showToast(`${entry.participants[partIdx].name} 様をリーダーに設定しました`, 'info');
 };
 
 let currentDayTab = 'tab-day-reception';
@@ -2714,6 +3069,7 @@ window.renderDayResults = function() {
 
     state.entries.filter(e => e.status !== 'cancelled').forEach(entry => {
         (entry.participants || []).forEach((p, pIdx) => {
+            if (p.status === 'cancelled') return;
             if (p.type !== 'fisher') return;
             fisherCount++;
             const cA = parseInt(p.catchA || 0);
@@ -2732,8 +3088,8 @@ window.renderDayResults = function() {
                 <td style="font-weight:bold;">${p.name}</td>
                 <td style="text-align:center;">${cA}</td>
                 <td style="text-align:center;">${cB}</td>
-                <td style="text-align:center; font-weight:900;">${total}pt <small>(${sum}蛹ｹ)</small></td>
-                <td class="no-print"><button class="btn-outline btn-small" onclick="openDayCatchEditModal('${entry.id}', ${pIdx})">邱ｨ髮・/button></td>
+                <td style="text-align:center; font-weight:900;">${total}pt <small>(${sum}匹)</small></td>
+                <td class="no-print"><button class="btn-outline btn-small" onclick="openDayCatchEditModal('${entry.id}', ${pIdx})">編集</button></td>
             </tr>`;
         });
     });
@@ -2748,17 +3104,17 @@ window.renderDayResults = function() {
             statsBox.style.cssText = "font-size:0.85rem; color:#64748b; margin-top:0.2rem; font-weight:normal;";
             header.parentElement.appendChild(statsBox);
         }
-        statsBox.innerHTML = `蜈ｨ菴灘粋險・ <strong>${totalFish}蛹ｹ</strong> (${totalFish * 1.0 / (fisherCount || 1).toFixed(1)}/莠ｺ) | 驥｣譫懊≠繧・ ${caughtCount}蜷・/ 蝮贋ｸｻ: <span style="color:#ef4444">${zeroCount}蜷・/span>`;
+        statsBox.innerHTML = `全体合計: <strong>${totalFish}匹</strong> (${totalFish * 1.0 / (fisherCount || 1).toFixed(1)}/人) | 釣果あり: ${caughtCount}名 / 坊主: <span style="color:#ef4444">${zeroCount}名</span>`;
     }
 
-    list.innerHTML = html || '<tr><td colspan="7" class="text-center p-4">驥｣譫懊ョ繝ｼ繧ｿ縺ｪ縺・/td></tr>';
+    list.innerHTML = html || '<tr><td colspan="7" class="text-center p-4">釣果データなし</td></tr>';
 };
 
 window.openDayCatchEditModal = function(entryId, pIdx) {
     const entry = state.entries.find(e => e.id === entryId);
     if (!entry || !entry.participants[pIdx]) return;
     currentDayEdit = { entryId, pIdx };
-    document.getElementById('day-edit-p-name').textContent = `${entry.participants[pIdx].name} 縺ｮ驥｣譫懃ｷｨ髮・;
+    document.getElementById('day-edit-p-name').textContent = `${entry.participants[pIdx].name} の釣果編集`;
     document.getElementById('day-input-cA').value = entry.participants[pIdx].catchA || 0;
     document.getElementById('day-input-cB').value = entry.participants[pIdx].catchB || 0;
     document.getElementById('day-catch-edit-modal').classList.remove('hidden');
@@ -2794,7 +3150,7 @@ window.renderRankings = function() {
     state.entries.forEach(e => {
         if (e.status === 'cancelled') return;
         (e.participants || []).forEach((p, pIdx) => {
-            if (!p || p.type === 'observer') return;
+            if (!p || p.type === 'observer' || p.status === 'cancelled') return;
             const cA = parseInt(p.catchA || 0);
             const cB = parseInt(p.catchB || 0);
             const points = cA + (cB * 2);
@@ -2814,7 +3170,7 @@ window.renderRankings = function() {
         const rankClass = i < 3 ? `rank-${i + 1}` : '';
         const rankNumClass = i < 3 ? `top-${i + 1}` : '';
         const awardClass = p.isAwardWinner ? 'award-winner-row' : '';
-        const awardStar = p.isAwardWinner ? '醇' : '笘・;
+        const awardStar = p.isAwardWinner ? '🏆' : '☆';
         
         return `
             <div class="ranking-card compact-rank ${rankClass} ${awardClass}">
@@ -2825,14 +3181,42 @@ window.renderRankings = function() {
                 </div>
                 <div class="ranking-points">
                     <span class="rank-val" style="font-size:1.2rem;">${p.points}</span><span class="rank-unit">pt</span>
-                    <div style="font-size:0.65rem; color:#64748b; margin-top:-2px;">${p.totalFish}蛹ｹ (魃・${p.cA}/髱・${p.cB})</div>
+                    <div style="font-size:0.65rem; color:#64748b; margin-top:-2px;">${p.totalFish}匹 (鯛 <strong style="color:#ef4444; margin-right:2px;">${p.cA}</strong> / 青 <strong style="color:#3b82f6;">${p.cB}</strong>)</div>
                 </div>
             </div>
         `;
-    }).join('') : '<div class="p-8 text-center text-muted" style="border: 2px dashed #eee; border-radius: 12px;">蛟倶ｺｺ縺ｮ驥｣譫懊ョ繝ｼ繧ｿ縺後∪縺縺ゅｊ縺ｾ縺帙ｓ</div>';
+    }).join('') : '<div class="p-8 text-center text-muted" style="border: 2px dashed #eee; border-radius: 12px;">個人の釣果データがまだありません</div>';
 
     if (indList) indList.innerHTML = rankingHtml;
     if (dayIndList) dayIndList.innerHTML = rankingHtml;
+};
+
+// v8.10.0: External link helper for results app
+window.handleResultsExternalLink = function() {
+    let baseUrl = window.location.href.split('#')[0].split('?')[0].replace('index.html', '');
+    if (!baseUrl.endsWith('/')) baseUrl += '/';
+    const url = baseUrl + 'fishing-results-app/index.html';
+    window.open(url, '_blank');
+};
+
+// v8.10.0: View switcher for rankings
+window.switchRankView = function(view) {
+    const indView = document.getElementById('rank-view-ind');
+    const ikView = document.getElementById('rank-view-ik');
+    const btnInd = document.getElementById('btn-rank-ind');
+    const btnIk = document.getElementById('btn-rank-ik');
+    
+    if (view === 'ind') {
+        if (indView) indView.style.display = 'block';
+        if (ikView) ikView.style.display = 'none';
+        btnInd?.classList.add('active');
+        btnIk?.classList.remove('active');
+    } else {
+        if (indView) indView.style.display = 'none';
+        if (ikView) ikView.style.display = 'block';
+        btnInd?.classList.remove('active');
+        btnIk?.classList.add('active');
+    }
 };
 
 window.toggleAwardWinner = async function(entryId, pIdx) {
@@ -2850,14 +3234,20 @@ window.toggleAwardWinner = async function(entryId, pIdx) {
 
 window.toggleAwardFilter = function() {
     const btn = document.getElementById('award-filter-btn');
+    const title = document.getElementById('ranking-title-text');
     if (!btn) return;
+    
     btn.classList.toggle('active');
     if (btn.classList.contains('active')) {
         btn.style.background = '#f1c40f';
         btn.style.color = '#fff';
+        btn.innerHTML = '👥 全員表示';
+        if (title) title.textContent = '表彰対象者';
     } else {
         btn.style.background = '';
         btn.style.color = '';
+        btn.innerHTML = '🏆 表彰者のみ';
+        if (title) title.textContent = '個人順位 (全参加者)';
     }
     renderRankings();
 };
@@ -2873,15 +3263,18 @@ function sumCategoryFishers(category) {
     if (!state.entries) return 0;
     const dbCount = state.entries
         .filter(e => e.source === category && e.status !== 'cancelled')
-        .reduce((sum, e) => sum + (parseInt(e.fishers) || 0), 0);
+        .reduce((sum, e) => {
+            const dynamicCount = (e.participants || []).filter(p => p.type === 'fisher' && p.status !== 'cancelled').length;
+            return sum + dynamicCount;
+        }, 0);
     
     // v8.4.2 & v8.9.59: Add manual adjustment (Try DOM first for real-time sync, then state)
     let adj = 0;
-    if (category === '豌ｴ螳・) {
+    if (category === '水宝') {
         const el = document.getElementById('adj-suiho-fishers');
         adj = el ? (parseInt(el.value) || 0) : parseInt(state.settings.adjSuihoFishers || 0);
     }
-    if (category === '繝上Μ繝溘ヤ') {
+    if (category === 'ハリミツ') {
         const el = document.getElementById('adj-harimitsu-fishers');
         adj = el ? (parseInt(el.value) || 0) : parseInt(state.settings.adjHarimitsuFishers || 0);
     }
@@ -2892,12 +3285,15 @@ function sumCategoryObservers(category) {
     if (!state.entries) return 0;
     const dbCount = state.entries
         .filter(e => e.source === category && e.status !== 'cancelled')
-        .reduce((sum, e) => sum + (parseInt(e.observers) || 0), 0);
+        .reduce((sum, e) => {
+            const dynamicCount = (e.participants || []).filter(p => p.type === 'observer' && p.status !== 'cancelled').length;
+            return sum + dynamicCount;
+        }, 0);
 
     // v8.4.2: Add manual adjustment
     let adj = 0;
-    if (category === '豌ｴ螳・) adj = parseInt(state.settings.adjSuihoObservers || 0);
-    if (category === '繝上Μ繝溘ヤ') adj = parseInt(state.settings.adjHarimitsuObservers || 0);
+    if (category === '水宝') adj = parseInt(state.settings.adjSuihoObservers || 0);
+    if (category === 'ハリミツ') adj = parseInt(state.settings.adjHarimitsuObservers || 0);
     return dbCount + adj;
 }
 
@@ -2931,9 +3327,51 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
 
     validEntries.forEach(e => {
         (e.participants || []).forEach(p => {
-            if (p.age) ageCount[p.age] = (ageCount[p.age] || 0) + 1;
-            if (p.gender) genderCount[p.gender] = (genderCount[p.gender] || 0) + 1;
-            if (p.region) regionCount[p.region] = (regionCount[p.region] || 0) + 1;
+            if (p.status === 'cancelled' || p.status === 'absent') return;
+            const a = p.age || 'unknown';
+            ageCount[a] = (ageCount[a] || 0) + 1;
+            const g = p.gender || 'unknown';
+            genderCount[g] = (genderCount[g] || 0) + 1;
+            let r = p.region ? p.region.trim() : '未入力';
+            if (r !== '未入力') {
+                // まず末尾に「市」が抜けている場合は補完する（主要な市のみ）
+                const cities = ['姫路', '神戸', '明石', '加古川', '高砂', '西宮', '尼崎', '芦屋', '伊丹', '宝塚', '川西', '三田', 'たつの', '赤穂', '相生', '宍粟', '豊岡', '養父', '朝来', '丹波', '丹波篠山', '洲本', '南あわじ', '淡路', '堺', '東大阪', '豊中', '吹田', '高槻', '枚方', '八尾', '寝屋川', '茨木', '岸和田', '和泉', '宇治', '亀岡', '舞鶴', '橿原', '生駒', '大和郡山', '田辺', '橋本', '大津', '草津', '彦根', '長浜', '近江八幡', '名古屋', '四日市', '豊田', '一宮', '豊橋', '岡崎', '春日井', '津', '鈴鹿', '松阪', '桑名', '伊勢', '横浜', '川崎', '相模原', '浜松', '倉敷', '福山', '呉', '高松', '丸亀'];
+                for (let c of cities) {
+                    if (r === c || (r.endsWith(c) && !r.endsWith(c + '市') && !r.endsWith(c + '郡') && !r.endsWith(c + '区'))) r = r + '市';
+                }
+
+                // 「大阪」等とだけ入力されている場合「大阪府」にする
+                const prefs = { '大阪': '大阪府', '京都': '京都府', '東京': '東京都', '北海道': '北海道', '兵庫': '兵庫県', '奈良': '奈良県', '和歌山': '和歌山県', '滋賀': '滋賀県', '三重': '三重県', '岡山': '岡山県', '鳥取': '鳥取県', '徳島': '徳島県', '香川': '香川県', '愛媛': '愛媛県', '高知': '高知県', '愛知': '愛知県', '岐阜': '岐阜県', '福井': '福井県', '神奈川': '神奈川県', '静岡': '静岡県', '広島': '広島県' };
+                for (let p in prefs) {
+                    if (r.startsWith(p) && !r.startsWith(prefs[p])) {
+                        if (r === p) {
+                            r = prefs[p];
+                        } else if (r.startsWith(p + '市') || r.startsWith(p + '区')) {
+                            r = prefs[p] + r;
+                        } else {
+                            r = prefs[p] + r.slice(p.length);
+                        }
+                    }
+                }
+
+                // 都道府県が省略されている都市名に都道府県を補完する
+                const cityPrefMap = {
+                    "名古屋": "愛知県", "豊田": "愛知県", "一宮": "愛知県", "豊橋": "愛知県", "岡崎": "愛知県", "春日井": "愛知県",
+                    "四日市": "三重県", "津": "三重県", "鈴鹿": "三重県", "松阪": "三重県", "桑名": "三重県", "伊勢": "三重県",
+                    "神戸": "兵庫県", "姫路": "兵庫県", "尼崎": "兵庫県", "明石": "兵庫県", "西宮": "兵庫県", "芦屋": "兵庫県", "宝塚": "兵庫県", "伊丹": "兵庫県", "加古川": "兵庫県", "高砂": "兵庫県", "たつの": "兵庫県", "赤穂": "兵庫県", "相生": "兵庫県", "宍粟": "兵庫県", "豊岡": "兵庫県", "養父": "兵庫県", "朝来": "兵庫県", "丹波": "兵庫県", "丹波篠山": "兵庫県", "洲本": "兵庫県", "南あわじ": "兵庫県", "淡路": "兵庫県",
+                    "堺": "大阪府", "東大阪": "大阪府", "枚方": "大阪府", "豊中": "大阪府", "吹田": "大阪府", "高槻": "大阪府", "茨木": "大阪府", "八尾": "大阪府", "寝屋川": "大阪府", "岸和田": "大阪府", "和泉": "大阪府",
+                    "横浜": "神奈川県", "川崎": "神奈川県", "相模原": "神奈川県",
+                    "浜松": "静岡県", "倉敷": "岡山県", "福山": "広島県", "呉": "広島県", "高松": "香川県", "丸亀": "香川県",
+                    "宇治": "京都府", "亀岡": "京都府", "舞鶴": "京都府", "橿原": "奈良県", "生駒": "奈良県", "大和郡山": "奈良県", "田辺": "和歌山県", "橋本": "和歌山県", "大津": "滋賀県", "草津": "滋賀県", "彦根": "滋賀県", "長浜": "滋賀県", "近江八幡": "滋賀県"
+                };
+                for (const [city, pref] of Object.entries(cityPrefMap)) {
+                    if (r === city || r.startsWith(city + '市') || r.startsWith(city + '区') || r.startsWith(city + '郡')) {
+                        r = pref + r;
+                        break;
+                    }
+                }
+            }
+            regionCount[r] = (regionCount[r] || 0) + 1;
         });
     });
 
@@ -2948,9 +3386,9 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             .map(([age, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${ageLabels[age] || age}</span>
-                    <span class="stats-count">${count}蜷・/span>
+                    <span class="stats-count">${count}名</span>
                 </div>
-            `).join('') || '<div class="text-muted small">繝・・繧ｿ縺ｪ縺・/div>';
+            `).join('') || '<div class="text-muted small">データなし</div>';
     }
 
     // v7.8.5: Check for suspicious T-shirt sizes (Adults with 140) in current view
@@ -2966,23 +3404,55 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             .map(([key, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${genderLabels[key] || key}</span>
-                    <span class="stats-count">${count}蜷・/span>
+                    <span class="stats-count">${count}名</span>
                 </div>
-            `).join('') || '<div class="text-muted small">繝・・繧ｿ縺ｪ縺・/div>';
+            `).join('') || '<div class="text-muted small">データなし</div>';
     }
 
     // Render Regions
     const regionList = document.getElementById(prefix + 'region-breakdown-list');
     if (regionList) {
+        const distanceOrder = [
+            "北海道", "沖縄", "青森", "岩手", "秋田", "宮城", "山形", "鹿児島",
+            "福島", "宮崎", "長崎", "熊本", "大分", "佐賀", "新潟", "茨城",
+            "栃木", "群馬", "福岡", "千葉", "埼玉", "東京", "神奈川", "富山",
+            "長野", "山梨", "石川", "静岡", "愛媛", "高知", "福井", "山口",
+            "愛知", "岐阜", "香川", "徳島", "島根", "三重", "広島", "鳥取",
+            "滋賀", "和歌山", "奈良", "京都", "大阪", "岡山", "兵庫"
+        ];
+        const cityToPref = {
+            "名古屋": "愛知", "豊田": "愛知", "一宮": "愛知", "豊橋": "愛知", "岡崎": "愛知", "春日井": "愛知",
+            "四日市": "三重", "津": "三重", "鈴鹿": "三重", "松阪": "三重", "桑名": "三重", "伊勢": "三重",
+            "神戸": "兵庫", "姫路": "兵庫", "尼崎": "兵庫", "明石": "兵庫", "西宮": "兵庫", "芦屋": "兵庫", "宝塚": "兵庫", "伊丹": "兵庫", "加古川": "兵庫",
+            "堺": "大阪", "東大阪": "大阪", "枚方": "大阪", "豊中": "大阪", "吹田": "大阪", "高槻": "大阪", "茨木": "大阪", "八尾": "大阪",
+            "横浜": "神奈川", "川崎": "神奈川", "相模原": "神奈川",
+            "浜松": "静岡", "倉敷": "岡山", "福山": "広島", "呉": "広島", "高松": "香川", "丸亀": "香川"
+        };
+        const getDistRank = (name) => {
+            let clean = name;
+            for (const [city, pref] of Object.entries(cityToPref)) {
+                if (name.includes(city)) {
+                    clean = pref;
+                    break;
+                }
+            }
+            const idx = distanceOrder.findIndex(p => clean.includes(p) || name.includes(p));
+            return idx === -1 ? 999 : idx;
+        };
+
         regionList.innerHTML = Object.entries(regionCount)
-            .sort((a,b) => b[1] - a[1])
-            .slice(0, 15)
+            .sort((a,b) => {
+                const rankA = getDistRank(a[0]);
+                const rankB = getDistRank(b[0]);
+                if (rankA !== rankB) return rankA - rankB;
+                return b[1] - a[1]; // 同じ都道府県なら人数の多い順
+            })
             .map(([reg, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${reg}</span>
-                    <span class="stats-count">${count}蜷・/span>
+                    <span class="stats-count">${count}名</span>
                 </div>
-            `).join('') || '<div class="text-muted small">繝・・繧ｿ縺ｪ縺・/div>';
+            `).join('') || '<div class="text-muted small">データなし</div>';
     }
 
     // v7.7.0: Render T-shirt Sizes (Total for orders)
@@ -2993,7 +3463,7 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
         
         validEntries.forEach(e => {
             (e.participants || []).forEach(p => {
-                if (p && p.tshirtSize) {
+                if (p && p.tshirtSize && p.status !== 'cancelled' && p.status !== 'absent') {
                     const normalized = normalizeTshirtSize(p.tshirtSize);
                     tshirtCount[normalized] = (tshirtCount[normalized] || 0) + 1;
                 }
@@ -3005,9 +3475,9 @@ function renderBreakdownStats(filterSource = 'all', prefix = '') {
             .map(([size, count]) => `
                 <div class="stats-item">
                     <span class="stats-label">${size}</span>
-                    <span class="stats-count">${count}譫・/span>
+                    <span class="stats-count">${count}枚</span>
                 </div>
-            `).join('') || '<div class="text-muted small">繝・・繧ｿ縺ｪ縺・/div>';
+            `).join('') || '<div class="text-muted small">データなし</div>';
     }
 
     // Leader T-shirt Sizes
@@ -3066,13 +3536,13 @@ function checkTshirtSizeAnomalies(entries) {
         alert.className = 'alert alert-info mt-4';
         alert.style.borderLeft = '5px solid var(--error-color)';
         alert.innerHTML = `
-            <div style="font-weight:bold; color:var(--error-color); margin-bottom:0.5rem;">笞・・T繧ｷ繝｣繝・し繧､繧ｺ縺ｮ遒ｺ隱肴耳螂ｨ (${anomalies.length}莉ｶ)</div>
+            <div style="font-weight:bold; color:var(--error-color); margin-bottom:0.5rem;">⚠️ Tシャツサイズの確認推奨 (${anomalies.length}件)</div>
             <div style="font-size:0.85rem; color:var(--text-color); margin-bottom:0.5rem;">
-                荳ｭ蟄ｦ逕滉ｻ･荳翫・蟷ｴ莉｣縺ｧ繧ｵ繧､繧ｺ縺後・40縲阪↓縺ｪ縺｣縺ｦ縺・ｋ譁ｹ縺後＞縺ｾ縺吶ょ､画峩貍上ｌ縺ｮ蜿ｯ閭ｽ諤ｧ縺後≠繧九◆繧√∝錐邁ｿ縺九ｉ蜀・ｮｹ繧偵＃遒ｺ隱阪￥縺縺輔＞縲・
+                中学生以上の年代でサイズが「140」になっている方がいます。変更漏れの可能性があるため、名簿から内容をご確認ください。
             </div>
             <div style="max-height:120px; overflow-y:auto; font-size:0.8rem; background:rgba(0,0,0,0.03); padding:0.5rem; border-radius:4px;">
                 ${anomalies.map(a => `
-                    <div style="margin-bottom:0.25rem;">繝ｻ[${a.id}] ${a.groupName} - ${a.pName} (${a.age})</div>
+                    <div style="margin-bottom:0.25rem;">・[${a.id}] ${a.groupName} - ${a.pName} (${a.age})</div>
                 `).join('')}
             </div>
         `;
@@ -3085,16 +3555,16 @@ window.renderPublicStats = function() {
     const validEntries = state.entries.filter(e => e.status !== 'cancelled');
     
     const categories = [
-        { id: 'ippan', name: '荳闊ｬ', source: '荳闊ｬ', capacity: state.settings.capacityGeneral, color: 'ippan' },
-        { id: 'mintsuri', name: '縺ｿ繧馴・繧・, source: '縺ｿ繧馴・繧・, capacity: state.settings.capacityMintsuri, color: 'mintsuri' },
-        { id: 'suiho', name: '豌ｴ螳・, source: '豌ｴ螳・, capacity: state.settings.capacitySuiho, color: 'suiho' },
-        { id: 'harimitsu', name: '繝上Μ繝溘ヤ', source: '繝上Μ繝溘ヤ', capacity: state.settings.capacityHarimitsu, color: 'harimitsu' }
+        { id: 'ippan', name: '一般', source: '一般', capacity: state.settings.capacityGeneral, color: 'ippan' },
+        { id: 'mintsuri', name: 'みん釣り', source: 'みん釣り', capacity: state.settings.capacityMintsuri, color: 'mintsuri' },
+        { id: 'suiho', name: '水宝', source: '水宝', capacity: state.settings.capacitySuiho, color: 'suiho' },
+        { id: 'harimitsu', name: 'ハリミツ', source: 'ハリミツ', capacity: state.settings.capacityHarimitsu, color: 'harimitsu' }
     ];
 
     const gridHtml = categories.map(cat => {
         const count = validEntries.filter(e => e.source === cat.source).reduce((sum, e) => sum + e.fishers, 0);
         const progress = Math.min(100, (count / cat.capacity) * 100);
-        const statusText = count >= cat.capacity ? '貅蜩｡' : `縺ゅ→ ${cat.capacity - count} 蜷港;
+        const statusText = count >= cat.capacity ? '満員' : `あと ${cat.capacity - count} 名`;
         return `
             <div class="public-stat-card border-top-${cat.color}">
                 <div class="public-stat-label">
@@ -3103,7 +3573,7 @@ window.renderPublicStats = function() {
                 </div>
                 <div class="public-stat-main">
                     <span class="public-stat-value">${count}</span>
-                    <span class="public-stat-unit">/ ${cat.capacity} 蜷・/span>
+                    <span class="public-stat-unit">/ ${cat.capacity} 名</span>
                 </div>
                 <div class="public-progress-container"><div class="public-progress bg-${cat.color}" style="width: ${progress}%"></div></div>
             </div>`;
@@ -3121,24 +3591,24 @@ window.renderPublicStats = function() {
     if (summaryContainer) {
         summaryContainer.innerHTML = `
             <div class="stats-summary-grid mb-4">
-                <div class="summary-card"><div class="summary-label">邱冗匳骭ｲ繧ｰ繝ｫ繝ｼ繝・/div><div class="summary-value">${groups} <small>邨・/small></div></div>
-                <div class="summary-card"><div class="summary-label">驥｣繧雁盾蜉閠・粋險・/div><div class="summary-value">${fishers} <small>/ ${state.settings.capacityTotal}</small></div></div>
-                <div class="summary-card"><div class="summary-label">隕句ｭｦ閠・粋險・/div><div class="summary-value">${observers} <small>蜷・/small></div></div>
-                <div class="summary-card"><div class="summary-label">譛邨よ峩譁ｰ</div><div class="summary-value" style="font-size:1.2rem;">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div>
+                <div class="summary-card"><div class="summary-label">総登録グループ</div><div class="summary-value">${groups} <small>組</small></div></div>
+                <div class="summary-card"><div class="summary-label">釣り参加者合計</div><div class="summary-value">${fishers} <small>/ ${state.settings.capacityTotal}</small></div></div>
+                <div class="summary-card"><div class="summary-label">見学者合計</div><div class="summary-value">${observers} <small>名</small></div></div>
+                <div class="summary-card"><div class="summary-label">最終更新</div><div class="summary-value" style="font-size:1.2rem;">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div>
             </div>`;
     }
 }
 
 window.renderMintsuriCoordinatorView = function() {
-    renderGenericCoordinatorView('縺ｿ繧馴・繧・, 'mintsuri');
+    renderGenericCoordinatorView('みん釣り', 'mintsuri');
 };
 
 window.renderHarimitsuCoordinatorView = function() {
-    renderGenericCoordinatorView('繝上Μ繝溘ヤ', 'harimitsu');
+    renderGenericCoordinatorView('ハリミツ', 'harimitsu');
 };
 
 window.renderSuihoCoordinatorView = function() {
-    renderGenericCoordinatorView('豌ｴ螳・, 'suiho');
+    renderGenericCoordinatorView('水宝', 'suiho');
 };
 
 /**
@@ -3158,10 +3628,10 @@ function renderGenericCoordinatorView(sourceName, prefix) {
     
     // v8.1.39: Fixed capacity key mapping
     const capacityKeyMap = {
-        '縺ｿ繧馴・繧・: 'capacityMintsuri',
-        '繝上Μ繝溘ヤ': 'capacityHarimitsu',
-        '豌ｴ螳・: 'capacitySuiho',
-        '荳闊ｬ': 'capacityGeneral'
+        'みん釣り': 'capacityMintsuri',
+        'ハリミツ': 'capacityHarimitsu',
+        '水宝': 'capacitySuiho',
+        '一般': 'capacityGeneral'
     };
     const capacityKey = capacityKeyMap[sourceName];
     const capacity = state.settings[capacityKey] || 0;
@@ -3169,10 +3639,10 @@ function renderGenericCoordinatorView(sourceName, prefix) {
     if (summary) {
         summary.innerHTML = `
             <div class="stats-summary-grid">
-                <div class="summary-card"><div class="summary-label">${sourceName} 蜷郁ｨ育ｵ・焚</div><div class="summary-value">${sourceEntries.length} <small>邨・/small></div></div>
-                <div class="summary-card"><div class="summary-label">${sourceName} 驥｣繧贋ｺｺ謨ｰ</div><div class="summary-value">${totalFishers} <small>/ ${capacity}</small></div></div>
-                <div class="summary-card"><div class="summary-label">隕句ｭｦ莠ｺ謨ｰ</div><div class="summary-value">${totalObservers} <small>蜷・/small></div></div>
-                <div class="summary-card"><div class="summary-label">蜈・ｶｳ邇・/div><div class="summary-value">${capacity > 0 ? Math.round((totalFishers/capacity)*100) : 0}%</div></div>
+                <div class="summary-card"><div class="summary-label">${sourceName} 合計組数</div><div class="summary-value">${sourceEntries.length} <small>組</small></div></div>
+                <div class="summary-card"><div class="summary-label">${sourceName} 釣り人数</div><div class="summary-value">${totalFishers} <small>/ ${capacity}</small></div></div>
+                <div class="summary-card"><div class="summary-label">見学人数</div><div class="summary-value">${totalObservers} <small>名</small></div></div>
+                <div class="summary-card"><div class="summary-label">充足率</div><div class="summary-value">${capacity > 0 ? Math.round((totalFishers/capacity)*100) : 0}%</div></div>
             </div>`;
     }
 
@@ -3184,7 +3654,8 @@ function renderGenericCoordinatorView(sourceName, prefix) {
             // v8.1.41: Safety Guard
             const pArray = e.participants || [];
             const pNames = pArray.map(p => p.name).join(' ');
-            const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames}`.toLowerCase();
+            const pNicks = pArray.map(p => p.nickname || "").join(' ');
+            const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks}`.toLowerCase();
             return combined.includes(searchTerm);
         })
         .map(e => {
@@ -3199,13 +3670,13 @@ function renderGenericCoordinatorView(sourceName, prefix) {
                 <td><small>${regTime}</small></td>
                 <td>
                     <div style="display:flex; gap:0.3rem;">
-                        <button class="btn-outline btn-small" onclick="showEntryDetails('${e.id}')">遒ｺ隱・/button>
-                        ${prefix === 'harimitsu' ? `<button class="btn-primary btn-small" onclick="requestAdminEdit('${e.id}')">菫ｮ豁｣</button>` : ''}
+                        <button class="btn-outline btn-small" onclick="showEntryDetails('${e.id}')">確認</button>
+                        ${prefix === 'harimitsu' ? `<button class="btn-primary btn-small" onclick="requestAdminEdit('${e.id}')">修正</button>` : ''}
                     </div>
                 </td>
             </tr>
         `;
-        }).join('') || '<tr><td colspan="6" style="text-align:center; padding:2rem;">隧ｲ蠖薙☆繧狗匳骭ｲ縺ｯ縺ゅｊ縺ｾ縺帙ｓ</td></tr>';
+        }).join('') || '<tr><td colspan="6" style="text-align:center; padding:2rem;">該当する登録はありません</td></tr>';
 
     renderBreakdownStats(sourceName, `${prefix}-`);
     window.scrollTo(0, scrollPos);
@@ -3234,30 +3705,34 @@ function renderActiveCoordinatorView() {
 }
 
 window.exportMintsuriCSV = function() {
-    exportGenericCSV('縺ｿ繧馴・繧・, 'mintsuri_export');
+    exportGenericCSV('みん釣り', 'mintsuri_export');
 }
 
 window.exportHarimitsuCSV = function() {
-    exportGenericCSV('繝上Μ繝溘ヤ', 'harimitsu_export');
+    exportGenericCSV('ハリミツ', 'harimitsu_export');
 }
 
 window.exportSuihoCSV = function() {
-    exportGenericCSV('豌ｴ螳・, 'suiho_export');
+    exportGenericCSV('水宝', 'suiho_export');
 }
 
 function exportGenericCSV(sourceName, fileName) {
-    const targetEntries = state.entries.filter(e => e.source === sourceName && e.status !== 'cancelled');
-    if (targetEntries.length === 0) return alert('繝・・繧ｿ縺後≠繧翫∪縺帙ｓ');
+    const targetEntries = state.entries.filter(e => e.source === sourceName);
+    if (targetEntries.length === 0) return alert('データがありません');
 
-    const headers = ['蜿嶺ｻ倡分蜿ｷ', '繧ｰ繝ｫ繝ｼ繝怜錐', '莉｣陦ｨ閠・錐', '髮ｻ隧ｱ逡ｪ蜿ｷ', '繝｡繝ｼ繝ｫ', '驥｣繧贋ｺｺ謨ｰ', '隕句ｭｦ莠ｺ謨ｰ', '逋ｻ骭ｲ譎る俣'];
-    const rows = targetEntries.map(e => [
-        e.id, e.groupName, e.representative, e.phone, e.email, e.fishers, e.observers, formatDateForCSV(e.timestamp)
-    ]);
+    const headers = ['受付番号', 'グループ名', '代表者名', '電話番号', 'メール', '釣り人数', '見学人数', '登録時間', '備考'];
+    const rows = targetEntries.map(e => {
+        let memo = (e.memo || "").replace(/\n/g, " ");
+        if (e.status === 'cancelled') memo = "[キャンセル] " + memo;
+        return [
+            e.id, e.groupName, e.representative, e.phone, e.email, e.fishers, e.observers, formatDateForCSV(e.timestamp), `"${memo.trim()}"`
+        ];
+    });
     downloadCSV(fileName, headers, rows);
 }
 
 // Global Stats Rendering (v7.3.0 Global Scope)
-function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent) {
+function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent, fisherCheckedIn = 0, fisherAbsent = 0, observerCheckedIn = 0, observerAbsent = 0) {
     const containers = [
         document.getElementById('global-stats-summary-top')
     ].filter(el => el);
@@ -3267,24 +3742,27 @@ function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent)
     const html = `
         <div class="stats-summary-grid">
             <div class="summary-card" style="border-top: 5px solid var(--primary-color);">
-                <div class="summary-label">驥｣繧雁盾蜉閠・粋險・/div>
+                <div class="summary-label">釣り参加者合計</div>
                 <div class="summary-value"><span class="current-fishers">${fishers}</span> <small>/ ${state.settings.capacityTotal}</small></div>
+                <div style="font-size: 0.85rem; color: #10b981; font-weight: bold; margin-top: 6px;">受付済: ${fisherCheckedIn} / ${fishers - fisherAbsent} 名</div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">邱冗匳骭ｲ繧ｰ繝ｫ繝ｼ繝・/div>
-                <div class="summary-value">${groups} <small>邨・/small></div>
+                <div class="summary-label">総登録グループ</div>
+                <div class="summary-value">${groups} <small>組</small></div>
+                <div style="font-size: 0.85rem; color: #10b981; font-weight: bold; margin-top: 6px;">受付済: ${checkedIn} / ${groups - absent} 組</div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">隕句ｭｦ閠・粋險・/div>
-                <div class="summary-value">${observers} <small>蜷・/small></div>
+                <div class="summary-label">見学者合計</div>
+                <div class="summary-value">${observers} <small>名</small></div>
+                <div style="font-size: 0.85rem; color: #10b981; font-weight: bold; margin-top: 6px;">受付済: ${observerCheckedIn} / ${observers - observerAbsent} 名</div>
             </div>
             <div class="summary-card" style="border-top: 5px solid #10b981;">
-                <div class="summary-label">蠖捺律蜿嶺ｻ倡憾豕・/div>
-                <div class="summary-value" style="font-size: 1.1rem; line-height: 1.4;">
-                    <span style="color: var(--primary-color)">譚･蝣ｴ: <span class="checked-in-count">${checkedIn}</span></span> / 
-                    <span style="color: var(--error-color)">谺蟶ｭ: <span class="absent-count">${absent}</span></span>
+                <div class="summary-label">当日受付状況 (来場 / 予定)</div>
+                <div class="summary-value" style="font-size: 1.1rem; line-height: 1.4; display:flex; flex-direction:column; gap:4px; font-weight:bold;">
+                    <span style="color: var(--primary-color)">釣り人: <span style="font-size:1.4rem;">${fisherCheckedIn}</span> / ${fishers - fisherAbsent} <small style="font-size:0.8rem;">名</small></span>
+                    <span style="color: var(--primary-color)">グループ: <span style="font-size:1.4rem;">${checkedIn}</span> / ${groups - absent} <small style="font-size:0.8rem;">組</small></span>
                 </div>
-                <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">蜈ｨ <span class="total-groups-count">${groups}</span> 邨・/div>
+                ${absent > 0 || fisherAbsent > 0 ? `<div style="font-size: 0.8rem; color: var(--error-color); margin-top: 6px; font-weight: bold;">欠席: ${absent}組 (${fisherAbsent}名)</div>` : ''}
             </div>
         </div>
     `;
@@ -3294,17 +3772,17 @@ function renderGlobalStatsSummary(groups, fishers, observers, checkedIn, absent)
 
 // Admin Debug Methods
 async function testEmailFeature() {
-    const testEmail = prompt("繝・せ繝医Γ繝ｼ繝ｫ縺ｮ騾∽ｿ｡蜈医ｒ蜈･蜉帙＠縺ｦ縺上□縺輔＞:", "test@example.com");
+    const testEmail = prompt("テストメールの送信先を入力してください:", "test@example.com");
     if (!testEmail) return;
-    showToast('繝・せ繝医Γ繝ｼ繝ｫ騾∽ｿ｡荳ｭ...', 'info');
+    showToast('テストメール送信中...', 'info');
     try {
         await sendEmailViaGAS({
-            action: 'sendEmail', id: 'TEST-000', groupName: '繝・せ繝・,
-            email: testEmail, representative: '繝・せ繝域ｰ丞錐',
-            fishers: 1, observers: 0, source: '荳闊ｬ', participants: [{name: '繝・せ繝亥盾蜉閠・, type: 'fisher'}]
+            action: 'sendEmail', id: 'TEST-000', groupName: 'テスト',
+            email: testEmail, representative: 'テスト氏名',
+            fishers: 1, observers: 0, source: '一般', participants: [{name: 'テスト参加者', type: 'fisher'}]
         });
-        alert("騾∽ｿ｡繝ｪ繧ｯ繧ｨ繧ｹ繝亥ｮ御ｺ・りｨｭ螳啅RL: " + GAS_WEB_APP_URL);
-    } catch (e) { alert("繧ｨ繝ｩ繝ｼ: " + e.message); }
+        alert("送信リクエスト完了。設定URL: " + GAS_WEB_APP_URL);
+    } catch (e) { alert("エラー: " + e.message); }
 }
 
 
@@ -3324,17 +3802,18 @@ function updateReceptionList() {
     if (!list) return;
 
     const searchTerm = document.getElementById('reception-search').value.toLowerCase();
-    const showCompleted = document.getElementById('show-completed-toggle').checked;
+    const filterRadio = document.querySelector('input[name="reception-filter"]:checked');
+    const filterValue = filterRadio ? filterRadio.value : 'uncompleted';
 
     // v8.1.56: Save scroll position of the sidebar
     const scrollPos = list.scrollTop;
 
     const processedEntries = state.entries.filter(e => e.status !== 'cancelled').map(e => {
-        const pArray = e.participants || [];
-        const finishedCount = pArray.filter(p => p && (p.status === 'checked-in' || p.status === 'absent')).length;
+        const pArray = (e.participants || []).filter(p => p && p.status !== 'cancelled');
+        const finishedCount = pArray.filter(p => p.status === 'checked-in' || p.status === 'absent').length;
         const totalCount = pArray.length;
         const isCompleted = finishedCount === totalCount && totalCount > 0;
-        return { ...e, isCompleted, finishedCount, totalCount };
+        return { ...e, isCompleted, finishedCount, totalCount, validPArray: pArray };
     });
 
     // Sort: isCompleted false first, then logic
@@ -3352,32 +3831,43 @@ function updateReceptionList() {
     let html = '';
     processedEntries.forEach(e => {
         // Search Filter (v8.1.58: Safety guarded)
-        const pArray = e.participants || [];
-        const pNames = pArray.map(p => p ? p.name : "").join(' ');
-        const pNicks = pArray.map(p => p ? (p.nickname || "") : "").join(' ');
-        const pTshirts = pArray.map(p => p ? (p.tshirtSize || "") : "").join(' ');
-        const pGenders = pArray.map(p => p ? (genderLabels[p.gender] || "") : "").join(' ');
-        const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks} ${pTshirts} ${pGenders}`.toLowerCase();
+        const pArray = e.validPArray || [];
+        const pNames = pArray.map(p => p.name).join(' ');
+        const pNicks = pArray.map(p => p.nickname || "").join(' ');
+        const pTshirts = pArray.map(p => p.tshirtSize || "").join(' ');
+        const pGenders = pArray.map(p => genderLabels[p.gender] || "").join(' ');
+        const pTypes = pArray.map(p => p.type === 'observer' ? '見学' : '釣り').join(' ');
+        const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks} ${pTshirts} ${pGenders} ${pTypes}`.toLowerCase();
         
-        if (searchTerm && !combined.includes(searchTerm)) return;
+        const searchTerms = searchTerm.replace(/　/g, ' ').split(/\s+/).filter(Boolean);
+        if (searchTerms.length > 0) {
+            const isMatch = searchTerms.every(term => combined.includes(term));
+            if (!isMatch) return;
+        }
+
+        const filterObserver = document.getElementById('reception-filter-observer')?.checked;
+        if (filterObserver) {
+            const hasObserver = pArray.some(p => p.type === 'observer');
+            if (!hasObserver) return;
+        }
 
         // Completion Filter
-        if (!showCompleted && e.isCompleted) return;
+        if (filterValue === 'uncompleted' && e.isCompleted) return;
+        if (filterValue === 'completed' && !e.isCompleted) return;
 
-        const badgeClass = e.source === '縺ｿ繧馴・繧・ ? 'badge-mintsuri' : e.source === '荳闊ｬ' ? 'badge-ippan' : e.source === '繝上Μ繝溘ヤ' ? 'badge-harimitsu' : 'badge-suiho';
+        const badgeClass = e.source === 'みん釣り' ? 'badge-mintsuri' : e.source === '一般' ? 'badge-ippan' : e.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho';
         
         html += `
             <div class="reception-group-item ${activeReceptionEntryId === e.id ? 'active' : ''} ${e.isCompleted ? 'completed' : ''}" 
                  onclick="selectReceptionEntry('${e.id}')">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
-                    <strong style="font-size:1.1rem; color:#2d3436;">${e.id} | ${e.groupName}</strong>
+                    <strong style="font-size:1.1rem; color:#2d3436;">${e.id} | ${e.groupName}${e.hasDropIn ? '<span class="badge" style="background:#ef4444; color:#fff; font-size:0.6rem; margin-left:4px; font-weight:bold; vertical-align:middle;">当日追加</span>' : ''}</strong>
                     <span class="badge ${badgeClass}" style="font-size:0.7rem; padding:0.1rem 0.4rem;">${e.source}</span>
                 </div>
                 <div class="item-meta" style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="font-size:1rem; color:#636e72;">${e.representative}</div>
                     <div style="display:flex; align-items:center; gap:0.5rem;">
-                        <span style="font-size:0.9rem; font-weight:700; color: #0984e3;">${e.isCompleted ? '笨・蜿嶺ｻ俶ｸ・ : `${e.finishedCount}/${e.totalCount}`}</span>
-                        ${!e.isCompleted ? `<button onclick="event.stopPropagation(); updateGroupStatus('${e.id}', 'checked-in')" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: var(--primary-color); border: none; border-radius: 4px; color: white; cursor: pointer;">蜈ｨ蜩｡蜿嶺ｻ・/button>` : ''}
+                        <span style="font-size:0.9rem; font-weight:700; color: #0984e3;">${e.isCompleted ? '✅ 受付済' : `${e.finishedCount}/${e.totalCount}`}</span>
                     </div>
                 </div>
             </div>
@@ -3390,6 +3880,7 @@ function updateReceptionList() {
 
 function selectReceptionEntry(id) {
     activeReceptionEntryId = id;
+    window.justCompleted = false;
     updateReceptionList();
     renderReceptionDesk();
 }
@@ -3401,54 +3892,79 @@ function renderReceptionDesk() {
     const entry = state.entries.find(e => e.id === activeReceptionEntryId);
 
     if (!entry) {
-        desk.innerHTML = `
-            <div class="reception-placeholder">
-                <i class="icon-search">剥</i>
-                <p>蟾ｦ蛛ｴ縺ｮ繝ｪ繧ｹ繝医°繧峨げ繝ｫ繝ｼ繝励ｒ驕ｸ謚槭＠縺ｦ縺上□縺輔＞縲・/p>
-            </div>
-        `;
+        if (window.justCompleted) {
+            desk.innerHTML = `
+                <div class="reception-placeholder" style="color: #10b981;">
+                    <i class="icon-search" style="font-style: normal; font-size: 5rem; margin-bottom: 1rem; display: block;">🎉</i>
+                    <p style="font-size: 1.5rem; font-weight: bold;">全員受付完了しました！</p>
+                </div>
+            `;
+        } else {
+            desk.innerHTML = `
+                <div class="reception-placeholder">
+                    <i class="icon-search">🔍</i>
+                    <p>左側のリストからグループを選択してください。</p>
+                </div>
+            `;
+        }
         return;
     }
 
     desk.innerHTML = `
-        <div class="desk-header" style="background: #eef2ff; border-bottom: 2px solid var(--primary-color); padding: 1.5rem; border-radius: 8px 8px 0 0;">
-            <div class="desk-title-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <div class="desk-group-name" style="font-size: 1.8rem; font-weight: 900; color: var(--primary-color);">${entry.groupName}</div>
-                <div class="badge ${entry.source === '縺ｿ繧馴・繧・ ? 'badge-mintsuri' : entry.source === '荳闊ｬ' ? 'badge-ippan' : entry.source === '繝上Μ繝溘ヤ' ? 'badge-harimitsu' : 'badge-suiho'}" style="font-size: 1.2rem; padding: 0.5rem 1rem;">${entry.source}</div>
+        <div class="desk-header" style="background: #eef2ff; border-bottom: 2px solid var(--primary-color); padding: 0.8rem 1rem; border-radius: 8px 8px 0 0;">
+            <div class="desk-title-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                <div class="desk-group-name" style="font-size: 1.6rem; font-weight: 900; color: var(--primary-color);">${entry.groupName}</div>
+                <div class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}" style="font-size: 1.1rem; padding: 0.4rem 0.8rem;">${entry.source}</div>
             </div>
             <div class="desk-meta" style="font-size: 1rem; color: #475569; font-weight: 600;">
                 <span style="background: white; padding: 2px 8px; border-radius: 4px; border: 1px solid #cbd5e1;">ID: ${entry.id}</span>
-                <span style="margin-left: 1rem;">莉｣陦ｨ閠・ ${entry.representative}</span>
+                <span style="margin-left: 1rem;">代表者: ${entry.representative}</span>
                 <span style="margin-left: 1rem;">TEL: ${entry.phone}</span>
             </div>
         </div>
 
-        <div class="participant-check-list" style="padding: 1.5rem; background: white;">
-            <div class="section-title" style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; border-left-width: 4px;">蜿ょ刈繝｡繝ｳ繝舌・蛟句挨縺ｮ蜿嶺ｻ倡憾豕・/div>
+        ${(() => {
+            const validP = (entry.participants || []).filter(p => p.status !== 'cancelled');
+            const total = validP.length;
+            const finished = validP.filter(p => p.status === 'checked-in' || p.status === 'absent').length;
+            if (total > 0 && total === finished) {
+                return `
+                <div style="background: #10b981; color: white; padding: 1rem; text-align: center; font-size: 1.4rem; font-weight: 900; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.1);">
+                    ✅ 全員受付完了しました！
+                </div>`;
+            }
+            return '';
+        })()}
+
+        <div class="participant-check-list" style="padding: 0.8rem 1rem; background: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+                <div class="section-title" style="margin-top: 0; margin-bottom: 0; font-size: 1.1rem; border-left-width: 4px;">参加メンバー個別の受付状況</div>
+                <button class="btn-outline btn-small" onclick="window.openAddParticipantModal('${entry.id}')" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">+ 飛び入り参加</button>
+            </div>
             
             ${(entry.participants || []).map((p, idx) => {
-                if (!p) return '';
+                if (!p || p.status === 'cancelled') return '';
                 const typeClass = p.type === 'fisher' ? 'p-badge-fisher' : 'p-badge-observer';
-                const typeLabel = p.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ';
+                const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
                 const rowStatusClass = p.status === 'checked-in' ? 'checked-in' : (p.status === 'absent' ? 'absent' : '');
                 
                 return `
-                <div class="participant-check-row ${rowStatusClass}" style="margin-bottom: 12px; padding: 1rem; border-radius: 12px; border: 2px solid ${p.status === 'checked-in' ? '#10b981' : (p.status === 'absent' ? '#ef4444' : '#e2e8f0')}; display: flex; align-items: center; justify-content: space-between; background: ${p.status === 'checked-in' ? '#f0fdf4' : (p.status === 'absent' ? '#fef2f2' : 'white')}; transition: all 0.2s;">
-                    <div class="p-info" style="display: flex; align-items: center; gap: 1rem; flex: 1;">
-                        <div style="font-size: 1.5rem; width: 40px; text-align: center;">${p.status === 'checked-in' ? '笨・ : (p.status === 'absent' ? '笶・ : '筮・)}</div>
-                        <div>
-                            <div class="p-name" style="font-size: 1.25rem; font-weight: 800; color: #1e293b;">
-                                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}" style="margin-right: 8px;">${typeLabel}</span>
-                                ${p.name} <small style="font-weight: normal; color: #64748b;">(${p.nickname || '繝九ャ繧ｯ繝阪・繝辟｡'})</small>
+                <div class="participant-check-row ${rowStatusClass}" style="margin-bottom: 8px; padding: 0.6rem 0.8rem; border-radius: 12px; border: 2px solid ${p.status === 'checked-in' ? '#10b981' : (p.status === 'absent' ? '#ef4444' : '#e2e8f0')}; display: flex; align-items: center; justify-content: space-between; background: ${p.status === 'checked-in' ? '#f0fdf4' : (p.status === 'absent' ? '#fef2f2' : 'white')}; transition: all 0.2s;">
+                    <div class="p-info" style="display: flex; align-items: center; gap: 0.6rem; flex: 1; min-width: 0;">
+                        <div style="font-size: 1.2rem; width: 30px; text-align: center; flex-shrink: 0;">${p.status === 'checked-in' ? '✅' : (p.status === 'absent' ? '❌' : '⬜')}</div>
+                        <div style="min-width: 0; flex: 1;">
+                            <div class="p-name" style="font-size: 1.15rem; font-weight: 800; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}" onclick="window.toggleParticipantType('${entry.id}', ${idx})" title="クリックで釣りと見学を切り替え" style="margin-right: 4px; padding: 0.2rem 0.4rem; font-size: 0.8rem; cursor: pointer; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">${typeLabel} ⇄</span>
+                                ${p.name} <small style="font-weight: normal; color: #64748b;">(${p.nickname || 'ニックネーム無'})</small>
                             </div>
-                            <div class="p-meta" style="font-size: 0.9rem; color: #64748b; margin-top: 4px;">
-                                ${p.region || '蝨ｰ蝓滉ｸ肴・'} | ${genderLabels[p.gender] || '-'} | ${ageLabels[p.age] || '-'} | T繧ｷ繝｣繝・ [<strong>${p.tshirtSize || '荳肴・'}</strong>]
+                            <div class="p-meta" style="font-size: 0.85rem; color: #64748b; margin-top: 2px;">
+                                ${p.region || '地域不明'} | ${genderLabels[p.gender] || '-'} | ${ageLabels[p.age] || '-'} | Tシャツ: [<strong>${p.tshirtSize || '不明'}</strong>]
                             </div>
                         </div>
                     </div>
-                    <div class="p-status-actions" style="display: flex; gap: 8px;">
-                        <button class="btn-status in ${p.status === 'checked-in' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'checked-in')" style="padding: 1rem 1.5rem; font-size: 1rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #10b981; background: ${p.status === 'checked-in' ? '#10b981' : 'white'}; color: ${p.status === 'checked-in' ? 'white' : '#10b981'}; min-width: 100px;">譚･蝣ｴ</button>
-                        <button class="btn-status out ${p.status === 'absent' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'absent')" style="padding: 1rem 1.5rem; font-size: 1rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #ef4444; background: ${p.status === 'absent' ? '#ef4444' : 'white'}; color: ${p.status === 'absent' ? 'white' : '#ef4444'}; min-width: 100px;">谺蟶ｭ</button>
+                    <div class="p-status-actions" style="display: flex; gap: 4px; flex-shrink: 0;">
+                        <button class="btn-status in ${p.status === 'checked-in' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'checked-in')" style="padding: 0.6rem 0.8rem; font-size: 0.9rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #10b981; background: ${p.status === 'checked-in' ? '#10b981' : 'white'}; color: ${p.status === 'checked-in' ? 'white' : '#10b981'}; min-width: 60px;">来場</button>
+                        <button class="btn-status out ${p.status === 'absent' ? 'active' : ''}" onclick="updateParticipantStatus('${entry.id}', ${idx}, 'absent')" style="padding: 0.6rem 0.8rem; font-size: 0.9rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 2px solid #ef4444; background: ${p.status === 'absent' ? '#ef4444' : 'white'}; color: ${p.status === 'absent' ? 'white' : '#ef4444'}; min-width: 60px;">欠席</button>
                     </div>
                 </div>
                 `;
@@ -3456,7 +3972,7 @@ function renderReceptionDesk() {
         </div>
 
         <div class="desk-footer" style="padding: 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; align-items: center; border-radius: 0 -0 8px 8px; gap: 1rem;">
-            <button class="btn-primary btn-large" onclick="window.updateGroupStatus('${entry.id}', 'checked-in')" style="padding: 1rem 2rem; font-size: 1.2rem; white-space: nowrap;">蜈ｨ蜩｡縺ｾ縺ｨ繧√※蜿嶺ｻ・/button>
+            <button class="btn-primary btn-large" onclick="window.updateGroupStatus('${entry.id}', 'checked-in')" style="padding: 1rem 2rem; font-size: 1.2rem; white-space: nowrap;">全員まとめて受付</button>
         </div>
     `;
     
@@ -3464,6 +3980,30 @@ function renderReceptionDesk() {
     // const btn = desk.querySelector('.btn-primary');
     // if (btn) btn.addEventListener('click', () => window.updateGroupStatus(entry.id, 'checked-in'));
 }
+
+window.toggleParticipantType = function(entryId, pIdx) {
+    const entry = state.entries.find(e => e.id === entryId);
+    if (!entry) return;
+    const p = entry.participants[pIdx];
+    if (!p) return;
+    
+    p.type = p.type === 'fisher' ? 'observer' : 'fisher';
+    
+    // Recalculate counts
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
+    
+    state.lastUpdated = Date.now();
+    saveData();
+    
+    // Refresh UI
+    renderReceptionDesk();
+    updateReceptionList();
+    if(typeof updateDashboard === 'function') updateDashboard();
+    
+    const typeLabel = p.type === 'fisher' ? '釣り' : '見学';
+    showToast(`${p.name}さんを「${typeLabel}」に変更しました`, "success");
+};
 
 window.updateParticipantStatus = function (entryId, pIdx, status) {
     const entry = state.entries.find(e => e.id === entryId);
@@ -3475,17 +4015,27 @@ window.updateParticipantStatus = function (entryId, pIdx, status) {
     // v7.9.3: Toggle logic - if already active, revert to pending
     const newStatus = isTogglingOff ? 'pending' : status;
     entry.participants[pIdx].status = newStatus;
+    
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
 
     // Sync group-level flags (for backward compatibility and stats)
     syncGroupStatusFromParticipants(entry);
 
     if (!isTogglingOff) {
-        const statusLabel = status === 'checked-in' ? '蜿嶺ｻ俶ｸ・ : status === 'absent' ? '谺蟶ｭ' : '譛ｪ蜿嶺ｻ・;
-        showToast(`${entry.participants[pIdx].name} 讒倥ｒ縲・{statusLabel}縲阪↓譖ｴ譁ｰ縺励∪縺励◆`, 'info');
+        const statusLabel = status === 'checked-in' ? '受付済' : status === 'absent' ? '欠席' : '未受付';
+        showToast(`${entry.participants[pIdx].name} 様を「${statusLabel}」に更新しました`, 'info');
     }
 
-    entry.lastModified = new Date().toLocaleString('ja-JP');
+    entry.lastModified = new Date().toISOString();
     saveData();
+
+    // Auto-close right pane if group is now fully completed
+    const validP = entry.participants.filter(p => p.status !== 'cancelled');
+    if (validP.length > 0 && validP.every(p => p.status === 'checked-in' || p.status === 'absent')) {
+        activeReceptionEntryId = null;
+        window.justCompleted = true;
+    }
 
     renderReceptionDesk();
     updateReceptionList();
@@ -3497,25 +4047,122 @@ window.updateGroupStatus = function (entryId, status) {
     if (!entry) return;
 
     entry.participants.forEach(p => {
-        // status縺・'checked-in' 縺ｮ蝣ｴ蜷医∵里縺ｫ 'absent' 縺ｮ莠ｺ縺ｯ荳頑嶌縺阪＠縺ｪ縺・
+        // statusが 'checked-in' の場合、既に 'absent' の人は上書きしない
         if (status === 'checked-in' && p.status === 'absent') {
             return;
         }
         p.status = status;
     });
+
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
+
     syncGroupStatusFromParticipants(entry);
 
     if (status === 'checked-in') {
-        showToast('繧ｰ繝ｫ繝ｼ繝怜・蜩｡繧貞女莉倥＠縺ｾ縺励◆', 'success');
+        showToast('グループ全員を受付しました', 'success');
     }
 
-    entry.lastModified = new Date().toLocaleString('ja-JP');
+    entry.lastModified = new Date().toISOString();
     saveData();
+
+    // Auto-close right pane if group is now fully completed
+    const validP = entry.participants.filter(p => p.status !== 'cancelled');
+    if (validP.length > 0 && validP.every(p => p.status === 'checked-in' || p.status === 'absent')) {
+        activeReceptionEntryId = null;
+        window.justCompleted = true;
+    }
 
     renderReceptionDesk();
     updateReceptionList();
     updateDashboard();
 };
+
+window.resetAllReceptions = async function() {
+    if (!confirm('【テスト用】すべての参加者の受付状況を「未受付」に戻しますか？\n※この操作はシミュレーション後のリセット用です。')) {
+        return;
+    }
+    state.entries.forEach(entry => {
+        if (entry.participants) {
+            let changed = false;
+            entry.participants.forEach(p => {
+                if (p && (p.status === 'checked-in' || p.status === 'absent')) {
+                    p.status = 'pending';
+                    changed = true;
+                }
+            });
+            if (changed) {
+                entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+                entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
+                syncGroupStatusFromParticipants(entry);
+                entry.lastModified = new Date().toISOString();
+            }
+        }
+    });
+    
+    showToast('すべての受付状況をリセットしました', 'success');
+    await saveData();
+    if(typeof renderReceptionDesk === 'function') renderReceptionDesk();
+    if(typeof updateReceptionList === 'function') updateReceptionList();
+    if(typeof updateDashboard === 'function') updateDashboard();
+};
+
+window.openAddParticipantModal = function(entryId) {
+    document.getElementById('add-p-entry-id').value = entryId;
+    document.getElementById('add-p-name').value = '';
+    document.getElementById('add-p-nickname').value = '';
+    document.getElementById('add-p-type').value = 'fisher';
+    document.getElementById('add-p-gender').value = 'male';
+    document.getElementById('add-p-age').value = 'adult';
+    document.getElementById('add-p-tshirt').value = '';
+    document.getElementById('add-p-checkin').checked = true;
+    
+    document.getElementById('add-participant-modal').classList.remove('hidden');
+};
+
+window.closeAddParticipantModal = function() {
+    document.getElementById('add-participant-modal').classList.add('hidden');
+};
+
+window.submitAddParticipant = async function(e) {
+    e.preventDefault();
+    const entryId = document.getElementById('add-p-entry-id').value;
+    const entry = state.entries.find(en => en.id === entryId);
+    if (!entry) return;
+
+    const newP = {
+        name: document.getElementById('add-p-name').value.trim(),
+        nickname: document.getElementById('add-p-nickname').value.trim(),
+        type: document.getElementById('add-p-type').value,
+        gender: document.getElementById('add-p-gender').value,
+        age: document.getElementById('add-p-age').value,
+        tshirtSize: document.getElementById('add-p-tshirt').value,
+        status: document.getElementById('add-p-checkin').checked ? 'checked-in' : 'pending',
+        isDropIn: true
+    };
+
+    if (!entry.participants) entry.participants = [];
+    entry.participants.push(newP);
+    entry.hasDropIn = true;
+
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
+    
+    syncGroupStatusFromParticipants(entry);
+    entry.lastModified = new Date().toISOString();
+
+    showToast('参加者を追加しました', 'success');
+    window.closeAddParticipantModal();
+
+    await saveData();
+    
+    if (activeReceptionEntryId === entry.id) {
+        renderReceptionDesk();
+    }
+    updateReceptionList();
+    updateDashboard();
+};
+
 
 function syncGroupStatusFromParticipants(entry) {
     const hasCheckedIn = entry.participants.some(p => p.status === 'checked-in');
@@ -3544,36 +4191,43 @@ window.openIkesuModal = function (id = null) {
     if (id) {
         const ikesu = state.settings.ikesuList.find(i => i.id === id);
         if (ikesu) {
-            document.getElementById('ikesu-modal-title').textContent = "繧､繧ｱ繧ｹ縺ｮ邱ｨ髮・;
-            document.getElementById('ikesu-edit-id').value = ikesu.id;
-            document.getElementById('ikesu-name').value = ikesu.name;
-            document.getElementById('ikesu-capacity').value = ikesu.capacity;
-            const passEl = document.getElementById('ikesu-passcode');
+            document.getElementById('ikesu-modal-title').textContent = "イケスの編集";
+            document.getElementById('ikesu-id-hidden').value = ikesu.id;
+            document.getElementById('ikesu-name-input').value = ikesu.name;
+            document.getElementById('ikesu-capacity-input').value = ikesu.capacity;
+            const passEl = document.getElementById('ikesu-passcode-input');
             if (passEl) passEl.value = ikesu.passcode || "";
+            const delBtn = document.getElementById('delete-ikesu-btn');
+            if (delBtn) delBtn.classList.remove('hidden');
             return;
         }
     }
-    document.getElementById('ikesu-modal-title').textContent = "繧､繧ｱ繧ｹ縺ｮ霑ｽ蜉";
-    document.getElementById('ikesu-edit-id').value = '';
-    document.getElementById('ikesu-name').value = '';
-    document.getElementById('ikesu-capacity').value = '15';
-    const passEl = document.getElementById('ikesu-passcode');
-    if (passEl) passEl.value = '';
+    document.getElementById('ikesu-modal-title').textContent = "イケスの追加";
+    document.getElementById('ikesu-id-hidden').value = '';
+    document.getElementById('ikesu-name-input').value = '';
+    document.getElementById('ikesu-capacity-input').value = '15';
+    const passEl = document.getElementById('ikesu-passcode-input');
+    if (passEl) {
+        passEl.value = Math.floor(1000 + Math.random() * 9000).toString();
+    }
+    const delBtn = document.getElementById('delete-ikesu-btn');
+    if (delBtn) delBtn.classList.add('hidden');
 };
 
 window.closeIkesuModal = function () {
     document.getElementById('ikesu-modal').classList.add('hidden');
 };
 
-window.saveIkesu = function () {
-    const id = document.getElementById('ikesu-edit-id').value;
-    const name = document.getElementById('ikesu-name').value.trim();
-    const capacity = parseInt(document.getElementById('ikesu-capacity').value, 10);
-    const passEl = document.getElementById('ikesu-passcode');
+window.handleIkesuSave = function (event) {
+    if (event) event.preventDefault();
+    const id = document.getElementById('ikesu-id-hidden').value;
+    const name = document.getElementById('ikesu-name-input').value.trim();
+    const capacity = parseInt(document.getElementById('ikesu-capacity-input').value, 10);
+    const passEl = document.getElementById('ikesu-passcode-input');
     const passcode = passEl ? passEl.value.trim() : "";
 
     if (!name || isNaN(capacity) || capacity < 1) {
-        alert("蜷榊燕縺ｨ螳壼藤・・莉･荳奇ｼ峨ｒ豁｣縺励￥蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・);
+        alert("名前と定員（1以上）を正しく入力してください。");
         return;
     }
 
@@ -3595,22 +4249,27 @@ window.saveIkesu = function () {
         });
     }
 
+    state.settingsLastModified = new Date().toISOString();
     state.lastUpdated = Date.now();
     saveData();
     closeIkesuModal();
     renderIkesuWorkspace();
 };
 
-window.deleteIkesu = function (id) {
-    if (!confirm('譛ｬ蠖薙↓縺薙・繧､繧ｱ繧ｹ繧貞炎髯､縺励∪縺吶°・歃n蜑ｲ繧雁ｽ薙※繧峨ｌ縺ｦ縺・◆莠ｺ縺ｯ譛ｪ蜑ｲ繧雁ｽ薙※縺ｫ謌ｻ繧翫∪縺吶・)) return;
+window.handleIkesuDelete = function () {
+    const id = document.getElementById('ikesu-id-hidden').value;
+    if (!id) return;
+    if (!confirm('本当にこのイケスを削除しますか？\n割り当てられていた人は未割り当てに戻ります。')) return;
     state.settings.ikesuList = state.settings.ikesuList.filter(i => i.id !== id);
     state.entries.forEach(e => {
         e.participants.forEach(p => {
             if (p.ikesuId === id) p.ikesuId = null;
         });
     });
+    state.settingsLastModified = new Date().toISOString();
     state.lastUpdated = Date.now();
     saveData();
+    closeIkesuModal();
     renderIkesuWorkspace();
 };
 
@@ -3693,10 +4352,13 @@ window.renderIkesuWorkspace = function () {
         const matchesSearch = !searchTerm || 
             e.id.toLowerCase().includes(searchTerm) || 
             e.groupName.toLowerCase().includes(searchTerm) ||
-            e.representative.toLowerCase().includes(searchTerm);
+            e.representative.toLowerCase().includes(searchTerm) ||
+            (e.phone && e.phone.includes(searchTerm)) ||
+            (e.repPhone && e.repPhone.includes(searchTerm));
 
         const unassignedParts = [];
         e.participants.forEach((p, idx) => {
+            if (p.status === 'cancelled') return;
             if (p.ikesuId && assignedData[p.ikesuId]) {
                 assignedData[p.ikesuId].items.push({ entry: e, p, idx });
                 if (p.type === 'fisher') assignedData[p.ikesuId].fishers++;
@@ -3707,11 +4369,12 @@ window.renderIkesuWorkspace = function () {
         });
 
         if (unassignedParts.length > 0 && matchesSearch) {
-            const isFull = unassignedParts.length === e.participants.length;
+            const activeParticipants = e.participants.filter(p => p.status !== 'cancelled');
+            const isFull = unassignedParts.length === activeParticipants.length && activeParticipants.length > 0;
             const fishers = unassignedParts.filter(i => i.p.type === 'fisher').length;
             const observers = unassignedParts.filter(i => i.p.type === 'observer').length;
             
-            const sourceClass = `source-${e.source === '荳闊ｬ' ? 'ippan' : e.source === '縺ｿ繧馴・繧・ ? 'mintsuri' : e.source === '豌ｴ螳・ ? 'suiho' : e.source === '繝上Μ繝溘ヤ' ? 'harimitsu' : 'default'}`;
+            const sourceClass = `source-${e.source === '一般' ? 'ippan' : e.source === 'みん釣り' ? 'mintsuri' : e.source === '水宝' ? 'suiho' : e.source === 'ハリミツ' ? 'harimitsu' : 'default'}`;
             let html = `
                 <div class="drag-item-group ${sourceClass} ${isFull ? 'draggable' : ''}" 
                      ${isFull ? `draggable="true" ondragstart="dragGroup(event, '${e.id}')"` : ''}>
@@ -3726,7 +4389,7 @@ window.renderIkesuWorkspace = function () {
                         ${unassignedParts.map(item => `
                             <div class="drag-item-person draggable" draggable="true" ondragstart="dragPerson(event, '${e.id}', ${item.idx})">
                                 <span>${item.p.name}</span>
-                                <span class="badge ${item.p.type==='fisher'?'':'badge-observer'}">${item.p.type==='fisher'?'驥｣繧・:'隕句ｭｦ'}</span>
+                                <span class="badge ${item.p.type==='fisher'?'':'badge-observer'}">${item.p.type==='fisher'?'釣り':'見学'}</span>
                             </div>
                         `).join('')}
                     </div>
@@ -3755,13 +4418,13 @@ window.renderIkesuWorkspace = function () {
         box.innerHTML = `
             <div class="ikesu-header">
                 <div class="ikesu-title">
-                    <span class="num">${ik.name.replace('繧､繧ｱ繧ｹ','')}</span>
-                    <span class="unit">繧､繧ｱ繧ｹ</span>
+                    <span class="num">${ik.name.replace('イケス','')}</span>
+                    <span class="unit">イケス</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px;">
                     <div class="capacity-badge ${badgeClass}">${current} / ${capacity}</div>
-                    <button class="btn-text" onclick="window.toggleIkesuExpand('${ik.id}')" title="繝｡繝ｳ繝舌・陦ｨ遉ｺ蛻・崛" style="font-size: 1rem; padding: 0 4px;">${isExpanded ? '早・・ : '文・・}</button>
-                    <button class="btn-text" onclick="window.openIkesuModal('${ik.id}')">笨擾ｸ・/button>
+                    <button class="btn-text" onclick="window.toggleIkesuExpand('${ik.id}')" title="メンバー表示切替" style="font-size: 1rem; padding: 0 4px;">${isExpanded ? '👁️' : '🕶️'}</button>
+                    <button class="btn-text" onclick="window.openIkesuModal('${ik.id}')">✏️</button>
                 </div>
             </div>
             <div class="ikesu-drop-area">
@@ -3770,7 +4433,7 @@ window.renderIkesuWorkspace = function () {
                     acc[item.entry.id].parts.push(item);
                     return acc;
                 }, {})).map(group => {
-                    const sc = `source-${group.entry.source === '荳闊ｬ' ? 'ippan' : group.entry.source === '縺ｿ繧馴・繧・ ? 'mintsuri' : group.entry.source === '豌ｴ螳・ ? 'suiho' : group.entry.source === '繝上Μ繝溘ヤ' ? 'harimitsu' : 'default'}`;
+                    const sc = `source-${group.entry.source === '一般' ? 'ippan' : group.entry.source === 'みん釣り' ? 'mintsuri' : group.entry.source === '水宝' ? 'suiho' : group.entry.source === 'ハリミツ' ? 'harimitsu' : 'default'}`;
                     const fishers = group.parts.filter(i => i.p.type === 'fisher').length;
                     const observers = group.parts.filter(i => i.p.type === 'observer').length;
                     
@@ -3788,10 +4451,10 @@ window.renderIkesuWorkspace = function () {
                                 <div class="drag-item-person" draggable="true" ondragstart="dragPerson(event, '${group.entry.id}', ${m.idx})">
                                     <div style="display:flex; align-items:center; gap:4px;">
                                         <button class="btn-leader-toggle ${m.p.isLeader ? 'active' : ''}" 
-                                                onclick="window.toggleLeader(event, '${group.entry.id}', ${m.idx})">箝・/button>
+                                                onclick="window.toggleLeader(event, '${group.entry.id}', ${m.idx})">⭐</button>
                                         <span>${m.p.name}</span>
                                     </div>
-                                    ${m.p.type === 'observer' ? '<span style="font-size:0.6rem; color:#64748b;">(隕・</span>' : ''}
+                                    ${m.p.type === 'observer' ? '<span style="font-size:0.6rem; color:#64748b;">(見)</span>' : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -3821,12 +4484,12 @@ window.verifyLeaderAuth = function() {
     const input = document.getElementById('leader-passcode-input').value;
     const ikesu = state.settings.ikesuList?.find(ik => ik.id === ikId);
     if (ikesu && (input === ikesu.passcode || input === state.settings.adminPassword)) {
-        showToast('隱崎ｨｼ謌仙粥', 'success');
+        showToast('認証成功', 'success');
         document.getElementById('leader-step-1').classList.add('hidden');
         document.getElementById('leader-step-2').classList.remove('hidden');
         renderLeaderEntryTable();
     } else {
-        showToast('證苓ｨｼ逡ｪ蜿ｷ縺碁＆縺・∪縺・, 'error');
+        showToast('暗証番号が違います', 'error');
     }
 };
 
@@ -3843,10 +4506,11 @@ window.renderLeaderEntryTable = function() {
     });
 
     container.innerHTML = `
-        <table class="leader-table">
-            <thead><tr><th>豌丞錐</th><th>髱堤黄(2pt)</th><th>魃帷ｭ・1pt)</th><th>蟆剰ｨ・/th></tr></thead>
-            <tbody>
-                ${members.map(m => `
+        <div style="font-size:0.8rem;">
+            <table class="table-striped" style="margin-bottom:0;">
+                <thead><tr><th>氏名</th><th>青物、クエ(2pt)</th><th>鯛等(1pt)</th><th>小計</th></tr></thead>
+                <tbody>
+                    ${members.map(m => `
                     <tr data-entry="${m.entry.id}" data-idx="${m.idx}">
                         <td><strong>${m.p.name}</strong><br><small>${m.entry.groupName}</small></td>
                         <td><input type="number" class="catch-a" value="${m.p.catchA || 0}" min="0" oninput="window.updateLeaderLiveTotals()"></td>
@@ -3894,7 +4558,7 @@ window.commitLeaderResultsSave = function() {
         }
     });
     saveData();
-    showToast('菫晏ｭ倥＠縺ｾ縺励◆', 'success');
+    showToast('保存しました', 'success');
     window.location.reload();
 };
 
@@ -3909,7 +4573,7 @@ window.toggleIkesuExpand = function(ikId) {
 };
 
 window.splitGroupInWorkspace = function(entryId) {
-    showToast('蛟倶ｺｺ蜊倅ｽ阪〒遘ｻ蜍募庄閭ｽ縺ｧ縺・, 'info');
+    showToast('個人単位で移動可能です', 'info');
 };
 
 window.toggleLeader = function(event, entryId, pIdx) {
@@ -3923,23 +4587,29 @@ window.toggleLeader = function(event, entryId, pIdx) {
     const targetIkesuId = entry.participants[pIdx].ikesuId;
     const isNowLeader = !entry.participants[pIdx].isLeader;
     
-    // Clear leaders in SAME IKESU or SAME TEAM (Exclusive)
     if (isNowLeader) {
         state.entries.forEach(e => {
+            let modified = false;
             // Clear within the same team
             if (e.id === entryId) {
-                e.participants.forEach(p => p.isLeader = false);
+                e.participants.forEach(p => {
+                    if (p.isLeader) { p.isLeader = false; modified = true; }
+                });
             }
             // Clear within the same ikesu
             if (targetIkesuId) {
                 e.participants.forEach(p => {
-                    if (p.ikesuId === targetIkesuId) p.isLeader = false;
+                    if (p.ikesuId === targetIkesuId && p.isLeader) { p.isLeader = false; modified = true; }
                 });
+            }
+            if (modified) {
+                e.lastModified = new Date().toISOString();
             }
         });
     }
     
     entry.participants[pIdx].isLeader = isNowLeader;
+    entry.lastModified = new Date().toISOString();
     saveStateToLocalStorage();
     renderIkesuWorkspace();
 };
@@ -3949,13 +4619,13 @@ window.toggleLeader = function(event, entryId, pIdx) {
 
 function updateAppTitle() {
     const titleEl = document.getElementById('app-title');
-    const competitionName = state.settings.competitionName || "BORIJIN FESTIVAL in 豌ｴ螳・2026";
+    const competitionName = state.settings.competitionName || "BORIJIN FESTIVAL in 水宝 2026";
     const version = "v8.9.79";
     if (titleEl) {
         let prefix = "";
         // v8.9.65: Ensure Admin prefix is shown when authenticated or in admin views
-        if (isAdminAuth || currentViewId === 'dashboard-view') prefix = "邂｡逅・・ ";
-        else if (currentViewId === 'reception-view') prefix = "蠖捺律蜿嶺ｻ・ ";
+        if (isAdminAuth || currentViewId === 'dashboard-view') prefix = "管理者: ";
+        else if (currentViewId === 'reception-view') prefix = "当日受付: ";
         
         titleEl.innerHTML = `
             ${prefix}${competitionName}
@@ -3967,19 +4637,19 @@ function updateAppTitle() {
 
 window.triggerSettingsSave = async function () {
     const btn = document.querySelector('button[onclick="triggerSettingsSave()"]');
-    const originalText = btn ? btn.textContent : "螟ｧ莨夊ｨｭ螳壹ｒ縺吶∋縺ｦ菫晏ｭ・;
+    const originalText = btn ? btn.textContent : "大会設定をすべて保存";
     
     if (btn) {
         btn.disabled = true;
-        btn.textContent = "菫晏ｭ倅ｸｭ...";
+        btn.textContent = "保存中...";
     }
 
     try {
         await handleSettingsUpdate({ preventDefault: () => { } });
-        showToast('險ｭ螳壹ｒ菫晏ｭ倥＠縲√け繝ｩ繧ｦ繝峨→蜷梧悄縺励∪縺励◆', 'success');
+        showToast('設定を保存し、クラウドと同期しました', 'success');
     } catch (err) {
         console.error("BORIJIN: Save failed:", err);
-        showToast('菫晏ｭ倥↓螟ｱ謨励＠縺ｾ縺励◆', 'error');
+        showToast('保存に失敗しました', 'error');
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -4022,7 +4692,9 @@ async function handleSettingsUpdate(e) {
         return (v === "" || v === undefined) ? 0 : parseInt(v) || 0;
     };
 
-    // 譛譁ｰ縺ｮ蜷郁ｨ医ｒ蠑ｷ蛻ｶ險育ｮ励＠縲√◎縺ｮ蛟､繧剃ｿ晏ｭ倥↓蛻ｩ逕ｨ縺吶ｋ
+    const oldSettings = JSON.parse(JSON.stringify(state.settings || {}));
+
+    // 最新の合計を強制計算し、その値を保存に利用する
     const calculatedTotal = window.updateCapacityTotal();
 
     state.settings.competitionName = getVal('competition-name');
@@ -4035,10 +4707,16 @@ async function handleSettingsUpdate(e) {
     
     state.settings.startTime = getVal('registration-start');
     state.settings.deadline = getVal('registration-deadline');
+    state.settings.cancelDeadline = getVal('cancel-deadline');
+    state.settings.editDeadline = getVal('edit-deadline');
     state.settings.adminPassword = getVal('admin-password-set');
     
     const maintToggle = document.getElementById('maintenance-mode-toggle');
     if (maintToggle) state.settings.maintenanceMode = maintToggle.checked;
+    const soldoutToggle = document.getElementById('soldout-mode-toggle');
+    if (soldoutToggle) state.settings.soldoutMode = soldoutToggle.checked;
+    const closedToggle = document.getElementById('closed-mode-toggle');
+    if (closedToggle) state.settings.closedMode = closedToggle.checked;
     applyMaintenanceMode();
 
     state.settings.adjSuihoFishers = getInt('adj-suiho-fishers');
@@ -4047,6 +4725,8 @@ async function handleSettingsUpdate(e) {
     state.settings.adjHarimitsuObservers = getInt('adj-harimitsu-observers');
     
     console.log("BORIJIN: Updating state and syncing...", state.settings);
+    
+    state.settingsLastModified = new Date().toISOString();
     
     // v8.9.63: Save locally first
     localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
@@ -4059,7 +4739,7 @@ async function handleSettingsUpdate(e) {
     checkTimeframe();
     updateAppTitle();
     
-    logChange({ groupName: '螟ｧ莨夊ｨｭ螳・, id: 'SYSTEM' }, '險ｭ螳壼､画峩');
+    logChange({ groupName: '大会設定', id: 'SYSTEM', settings: state.settings }, '設定変更', { settings: oldSettings });
 }
 
 /**
@@ -4074,15 +4754,31 @@ function applyMaintenanceMode() {
         document.body.classList.remove('maintenance-active');
         console.log(`BORIJIN: Maintenance Mode is ${state.settings.maintenanceMode ? 'ENABLED (but bypassed for admin)' : 'DISABLED'}`);
     }
+
+    if (state.settings.soldoutMode && !isAdminAuth) {
+        document.body.classList.add('soldout-active');
+        console.log("BORIJIN: Sold Out Mode is ENABLED (Overlay active for non-admins)");
+    } else {
+        document.body.classList.remove('soldout-active');
+        console.log(`BORIJIN: Sold Out Mode is ${state.settings.soldoutMode ? 'ENABLED (but bypassed for admin)' : 'DISABLED'}`);
+    }
+
+    if (state.settings.closedMode && !isAdminAuth) {
+        document.body.classList.add('closed-active');
+        console.log("BORIJIN: Closed Mode is ENABLED (Overlay active for non-admins)");
+    } else {
+        document.body.classList.remove('closed-active');
+        console.log(`BORIJIN: Closed Mode is ${state.settings.closedMode ? 'ENABLED (but bypassed for admin)' : 'DISABLED'}`);
+    }
 }
 
 
 
 window.confirmReset = async function () {
-    if (confirm('蜈ｨ縺ｦ縺ｮ蜷咲ｰｿ繝・・繧ｿ繧貞炎髯､縺励∪縺吶よ悽蠖薙↓繧医ｍ縺励＞縺ｧ縺吶°・・)) {
+    if (confirm('全ての名簿データを削除します。本当によろしいですか？')) {
         state.entries = [];
         state.lastUpdated = Date.now();
-        showToast('繝ｪ繧ｻ繝・ヨ荳ｭ...', 'info');
+        showToast('リセット中...', 'info');
         try {
             await syncToCloud();
             localStorage.setItem('fishing_app_v3_data', JSON.stringify(state));
@@ -4104,7 +4800,7 @@ function generateAdminQRCode() {
     if (!container) return;
     container.innerHTML = "";
     if (typeof QRCode === 'undefined') {
-        container.innerHTML = "<p style='font-size:0.8rem; color:var(--text-muted);'>QR繧ｳ繝ｼ繝峨Λ繧､繝悶Λ繝ｪ隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</p>";
+        container.innerHTML = "<p style='font-size:0.8rem; color:var(--text-muted);'>QRコードライブラリ読み込み中...</p>";
         return;
     }
     const baseUrl = window.location.href.split('?')[0].split('#')[0];
@@ -4132,16 +4828,16 @@ function setVal(id, val) {
 }
 
 function handleCheckStatus() {
-    const searchVal = prompt("縺雁錐蜑搾ｼ井ｻ｣陦ｨ閠・ｼ峨ｒ蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・);
+    const searchVal = prompt("お名前（代表者）を入力してください。");
     if (!searchVal) return;
     
     dashboardFilter = 'all';
     const matches = state.entries.filter(e => e.representative.includes(searchVal));
     if (matches.length > 0) {
-        alert(`${matches.length} 莉ｶ隕九▽縺九ｊ縺ｾ縺励◆縲よ怙譁ｰ縺ｮ逡ｪ蜿ｷ縺ｯ ${matches[0].id} 縺ｧ縺吶Ａ);
+        alert(`${matches.length} 件見つかりました。最新の番号は ${matches[0].id} です。`);
         location.reload();
     } else {
-        alert("隕九▽縺九ｊ縺ｾ縺帙ｓ縺ｧ縺励◆縲ゅｂ縺・ｸ蠎ｦ隧ｦ縺吶°縲∽ｺ句漁螻縺ｸ縺雁撫縺・粋繧上○縺上□縺輔＞縲・);
+        alert("見つかりませんでした。もう一度試すか、事務局へお問い合わせください。");
     }
 }
 
@@ -4150,12 +4846,12 @@ function handleCheckStatus() {
  */
 window.hardDeleteEntry = async function (id) {
     if (!isAdminAuth) return;
-    if (!confirm(`繧ｨ繝ｳ繝医Μ繝ｼ ${id} 繧貞ｮ悟・縺ｫ蜑企勁縺励∪縺吶°・歃n(騾∽ｿ｡蠕後√し繝ｼ繝舌・縺九ｉ繧ょｮ悟・縺ｫ蜑企勁縺輔ｌ縺ｾ縺吶ゅユ繧ｹ繝亥・蜉帙・謨ｴ逅・↓菴ｿ逕ｨ縺励※縺上□縺輔＞)`)) return;
+    if (!confirm(`エントリー ${id} を完全に削除しますか？\n(送信後、サーバーからも完全に削除されます。テスト入力の整理に使用してください)`)) return;
 
     try {
         const idx = state.entries.findIndex(e => e.id === id);
         if (idx === -1) {
-            showToast('繧ｨ繝ｳ繝医Μ繝ｼ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ', 'error');
+            showToast('エントリーが見つかりません', 'error');
             return;
         }
 
@@ -4164,18 +4860,18 @@ window.hardDeleteEntry = async function (id) {
         state.deletedIds.push(id);
 
         state.entries.splice(idx, 1);
-        showToast('繧ｨ繝ｳ繝医Μ繝ｼ繧貞炎髯､縺励∪縺励◆', 'success');
+        showToast('エントリーを削除しました', 'success');
 
         // Refresh UI
         updateDashboard();
         updateReceptionList();
 
         // Immediate sync to server
-        logChange({ groupName: id, id: id }, '蜑企勁');
+        logChange({ groupName: id, id: id }, '削除');
         await saveData();
     } catch (err) {
         console.error("Deletion failed:", err);
-        showToast('蜑企勁縺ｫ螟ｱ謨励＠縺ｾ縺励◆', 'error');
+        showToast('削除に失敗しました', 'error');
     }
 };
 
@@ -4186,6 +4882,14 @@ window.showEntryDetails = function (id) {
     window.currentDetailId = id; // Store for modal edit button
     const entry = state.entries.find(e => e.id === id);
     if (!entry) return;
+
+    // v8.10.x: Clear userModified flag when admin reviews the entry
+    if (entry.userModified) {
+        entry.userModified = false;
+        entry.lastModified = new Date().toISOString();
+        saveData(); // Persist the cleared flag
+        updateDashboard(); // Remove the badge from the list
+    }
 
     const modal = document.getElementById('detail-modal');
     const body = document.getElementById('detail-modal-body');
@@ -4233,42 +4937,38 @@ window.showEntryDetails = function (id) {
         };
     }
 
-    if (title) title.textContent = `[${entry.id}] ${entry.groupName} 隧ｳ邏ｰ`;
+    if (title) title.textContent = `[${entry.id}] ${entry.groupName} 詳細`;
 
     // Calculate Scores for display
-    let groupPoints = 0;
-    (entry.participants || []).forEach(p => {
-        const pA = parseInt(p.catchA || 0);
-        const pB = parseInt(p.catchB || 0);
-        groupPoints += (pA * 2) + pB;
-    });
-
     let participantsHtml = entry.participants.map((p, idx) => `
-        <div style="padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; background: ${p.type === 'observer' ? '#f8f9fa' : '#fff'}">
+        <div style="padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; background: ${p.type === 'observer' ? '#f8f9fa' : '#fff'}; ${p.status === 'cancelled' ? 'opacity: 0.5;' : ''}">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <strong>${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}${p.gender === 'male' ? '笙・ : (p.gender === 'female' ? '笙' : '')}</strong>
-                <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}">${p.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ'}</span>
+                <strong style="${p.status === 'cancelled' ? 'text-decoration: line-through;' : ''}">${p.isLeader ? '<span style="color:#d32f2f; margin-right:4px;">★</span>' : ''}${p.name} ${p.nickname ? `<small>(${p.nickname})</small>` : ''}${p.gender === 'male' ? '♂' : (p.gender === 'female' ? '♀' : '')}</strong>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span class="badge ${p.type === 'fisher' ? 'badge-ippan' : 'badge-secondary'}">${p.type === 'fisher' ? '釣り' : '見学'}</span>
+                    ${p.status === 'cancelled' ? 
+                        `<span class="badge" style="background:#f87171;">キャンセル済</span>
+                         <button class="btn-outline btn-small" style="padding: 2px 6px; font-size: 0.7rem; border-color: #10b981; color: #10b981;" onclick="restoreParticipant('${entry.id}', ${idx})">元に戻す</button>` :
+                        `<button class="btn-outline btn-small" style="padding: 2px 6px; font-size: 0.7rem; border-color: #f87171; color: #f87171;" onclick="cancelParticipant('${entry.id}', ${idx})">キャンセル</button>`
+                    }
+                </div>
             </div>
             <div style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">
-                ${genderLabels[p.gender] || '-'} / ${ageLabels[p.age] || '-'} / ${p.region || '蝨ｰ蝓滉ｸ肴・'} / T繧ｷ繝｣繝・ ${p.tshirtSize || '縺ｪ縺・}
+                ${genderLabels[p.gender] || '-'} / ${ageLabels[p.age] || '-'} / ${p.region || '地域不明'} / Tシャツ: ${p.tshirtSize || 'なし'}
             </div>
-            ${p.type === 'fisher' ? `
-            <div style="margin-top: 5px; font-weight: bold; color: var(--primary-color);">
-                ${p.catchA || 0}蛹ｹ (螟ｧ迚ｩ) / ${p.catchB || 0}蛹ｹ (縺昴・莉・
-            </div>` : ''}
         </div>
     `).join('');
 
     body.innerHTML = `
         <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f1f5f9; border-radius: 8px;">
-            <p><strong>莉｣陦ｨ閠・</strong> ${entry.representative}</p>
-            <p><strong>髮ｻ隧ｱ逡ｪ蜿ｷ:</strong> ${entry.phone}</p>
-            <p><strong>繝｡繝ｼ繝ｫ:</strong> ${entry.email}</p>
-            <p><strong>逋ｻ骭ｲ蛹ｺ蛻・</strong> <span class="badge ${entry.source === '縺ｿ繧馴・繧・ ? 'badge-mintsuri' : entry.source === '荳闊ｬ' ? 'badge-ippan' : entry.source === '繝上Μ繝溘ヤ' ? 'badge-harimitsu' : 'badge-suiho'}">${entry.source}</span></p>
-            <p><strong>迴ｾ蝨ｨ縺ｮ迥ｶ諷・</strong> ${entry.status === 'checked-in' ? '笨・蜿嶺ｻ俶ｸ・ : entry.status === 'cancelled' ? '圻 繧ｭ繝｣繝ｳ繧ｻ繝ｫ' : '竢ｳ 譛ｪ蜿嶺ｻ・}</p>
-            <p><strong>蠕礼せ蜷郁ｨ・</strong> <span style="font-size: 1.2rem; font-weight: 900; color: var(--primary-color);">${groupPoints} pt</span></p>
+            <p><strong>代表者:</strong> ${entry.representative}</p>
+            <p><strong>電話番号:</strong> ${entry.phone}</p>
+            <p><strong>メール:</strong> ${entry.email}</p>
+            <p><strong>登録区分:</strong> <span class="badge ${entry.source === 'みん釣り' ? 'badge-mintsuri' : entry.source === '一般' ? 'badge-ippan' : entry.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho'}">${entry.source}</span></p>
+            <p><strong>現在の状態:</strong> ${entry.status === 'checked-in' ? '✅ 受付済' : entry.status === 'cancelled' ? '🚫 キャンセル' : '⏳ 未受付'}</p>
+            ${entry.memo ? `<div style="margin-top: 0.8rem; padding: 0.8rem; background: #fff; border: 1px dashed #cbd5e1; border-radius: 6px;"><strong style="color:#64748b;">備考:</strong><br><span style="white-space: pre-wrap;">${entry.memo}</span></div>` : ''}
         </div>
-        <h4 style="margin-bottom: 0.8rem; font-size: 1rem; color: #475569;">蜿ょ刈閠・・險ｳ (${entry.participants.length}蜷・</h4>
+        <h4 style="margin-bottom: 0.8rem; font-size: 1rem; color: #475569;">参加者内訳 (${entry.participants.length}名)</h4>
         <div>${participantsHtml}</div>
     `;
 
@@ -4290,7 +4990,7 @@ window.requestAdminEdit = function (id) {
     try {
         const entry = state.entries.find(e => e.id === id);
         if (!entry) {
-            showToast('繧ｨ繝ｳ繝医Μ繝ｼ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ', 'error');
+            showToast('エントリーが見つかりません', 'error');
             return;
         }
         
@@ -4306,7 +5006,7 @@ window.requestAdminEdit = function (id) {
         // 3. UI refinements
         window.scrollTo({ top: 0, behavior: 'smooth' });
         const titleEl = document.getElementById('app-title');
-        if (titleEl) titleEl.textContent = "逋ｻ骭ｲ螟画峩: " + entry.id;
+        if (titleEl) titleEl.textContent = "登録変更: " + entry.id;
         
         // 4. Close modal if open
         const modal = document.getElementById('detail-modal');
@@ -4314,7 +5014,7 @@ window.requestAdminEdit = function (id) {
         
     } catch (e) {
         console.error("BORIJIN: requestAdminEdit failed:", e);
-        showToast("邱ｨ髮・判髱｢縺ｸ縺ｮ驕ｷ遘ｻ縺ｫ螟ｱ謨励＠縺ｾ縺励◆", "error");
+        showToast("編集画面への遷移に失敗しました", "error");
     }
 };
 
@@ -4326,7 +5026,7 @@ window.quickCheckIn = async function (id) {
     if (!entry) return;
 
     if (entry.status === 'cancelled') {
-        showToast('繧ｭ繝｣繝ｳ繧ｻ繝ｫ貂医∩縺ｮ繧ｨ繝ｳ繝医Μ繝ｼ縺ｯ蜿嶺ｻ倥〒縺阪∪縺帙ｓ', 'error');
+        showToast('キャンセル済みのエントリーは受付できません', 'error');
         return;
     }
 
@@ -4339,26 +5039,26 @@ window.quickCheckIn = async function (id) {
         p.status = newStatus;
     });
 
-    entry.lastModified = new Date().toLocaleString('ja-JP');
+    entry.lastModified = new Date().toISOString();
     if (newStatus === 'checked-in') entry.checkedIn = true;
     
-    showToast(`${entry.groupName} 縺ｮ迥ｶ諷九ｒ縲・{newStatus === 'checked-in' ? '蜿嶺ｻ俶ｸ・ : '譛ｪ蜿嶺ｻ・}縲阪↓譖ｴ譁ｰ荳ｭ...`, 'info');
+    showToast(`${entry.groupName} の状態を「${newStatus === 'checked-in' ? '受付済' : '未受付'}」に更新中...`, 'info');
     
     await saveData();
     updateDashboard();
     updateReceptionList();
-    showToast(`${entry.groupName} 縺ｮ迥ｶ諷九ｒ譖ｴ譁ｰ縺励∪縺励◆`, 'success');
+    showToast(`${entry.groupName} の状態を更新しました`, 'success');
 };
 
 /**
  * v8.1.48: Admin Email Resend
  */
 window.resendEmail = async function (id) {
-    if (!confirm('縺薙・逕ｳ霎ｼ縺ｮ遒ｺ螳壹Γ繝ｼ繝ｫ繧貞・騾√＠縺ｾ縺吶°・・)) return;
+    if (!confirm('この申込の確定メールを再送しますか？')) return;
     const entry = state.entries.find(e => e.id === id);
     if (!entry) return;
 
-    showToast('繝｡繝ｼ繝ｫ蜀埼√さ繝槭Φ繝峨ｒ騾∽ｿ｡荳ｭ...', 'info');
+    showToast('メール再送コマンドを送信中...', 'info');
     try {
         const payload = { action: 'resend_email', id: entry.id };
         const response = await fetch(GAS_WEB_APP_URL, {
@@ -4367,28 +5067,63 @@ window.resendEmail = async function (id) {
         });
         const res = await response.json();
         if (res.status === 'success') {
-            showToast('笨・繝｡繝ｼ繝ｫ繧貞・騾√＠縺ｾ縺励◆', 'success');
+            showToast('✅ メールを再送しました', 'success');
         } else {
             throw new Error(res.message);
         }
     } catch (e) {
         console.error("Email resend failed:", e);
-        showToast('笶・繝｡繝ｼ繝ｫ縺ｮ蜀埼√↓螟ｱ謨励＠縺ｾ縺励◆縲ゅし繝ｼ繝舌・蛛ｴ縺ｮ繝ｭ繧ｰ繧堤｢ｺ隱阪＠縺ｦ縺上□縺輔＞縲・, 'error');
+        showToast('❌ メールの再送に失敗しました。サーバー側のログを確認してください。', 'error');
     }
+};
+
+/**
+ * Individual Participant Cancellation
+ */
+window.cancelParticipant = async function(entryId, pIdx) {
+    if (!confirm('この参加者をキャンセルしますか？')) return;
+    const entry = state.entries.find(e => e.id === entryId);
+    if (!entry || !entry.participants[pIdx]) return;
+
+    entry.participants[pIdx].status = 'cancelled';
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
+    entry.lastModified = new Date().toISOString();
+    
+    await saveData();
+    showToast('参加者をキャンセルしました', 'success');
+    updateDashboard();
+    window.showEntryDetails(entryId);
+};
+
+window.restoreParticipant = async function(entryId, pIdx) {
+    if (!confirm('この参加者のキャンセルを取り消しますか？')) return;
+    const entry = state.entries.find(e => e.id === entryId);
+    if (!entry || !entry.participants[pIdx]) return;
+
+    entry.participants[pIdx].status = 'pending';
+    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
+    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
+    entry.lastModified = new Date().toISOString();
+    
+    await saveData();
+    showToast('参加者のキャンセルを取り消しました', 'success');
+    updateDashboard();
+    window.showEntryDetails(entryId);
 };
 
 /**
  * v8.1.48: Entry Cancellation
  */
 window.cancelEntry = async function (id) {
-    if (!confirm('縺薙・繧ｨ繝ｳ繝医Μ繝ｼ繧偵檎┌蜉ｹ・医く繝｣繝ｳ繧ｻ繝ｫ・峨阪↓縺励∪縺吶°・歃n窶ｻ繝・・繧ｿ縺ｯ繝槭せ繧ｿ縺ｫ谿九ｊ縺ｾ縺吶′縲・寔險医ｄ蜿怜・縺九ｉ縺ｯ髯､螟悶＆繧後∪縺吶・)) return;
+    if (!confirm('このエントリーを「無効（キャンセル）」にしますか？\n※データはマスタに残りますが、集計や受入からは除外されます。')) return;
     const entry = state.entries.find(e => e.id === id);
     if (entry) {
         entry.status = 'cancelled';
-        entry.lastModified = new Date().toLocaleString('ja-JP');
+        entry.lastModified = new Date().toISOString();
         await saveData();
         updateDashboard();
-        showToast('繧ｨ繝ｳ繝医Μ繝ｼ繧堤┌蜉ｹ蛹悶＠縺ｾ縺励◆', 'info');
+        showToast('エントリーを無効化しました', 'info');
         
         // v8.9.60: Refresh modal or form if visible
         if (document.getElementById('detail-modal')?.classList.contains('hidden') === false) {
@@ -4407,10 +5142,10 @@ window.restoreEntry = async function (id) {
     const entry = state.entries.find(e => e.id === id);
     if (entry) {
         entry.status = 'pending';
-        entry.lastModified = new Date().toLocaleString('ja-JP');
+        entry.lastModified = new Date().toISOString();
         await saveData();
         updateDashboard();
-        showToast('繧ｨ繝ｳ繝医Μ繝ｼ繧呈怏蜉ｹ縺ｪ迥ｶ諷具ｼ域悴蜿嶺ｻ假ｼ峨↓蠕ｩ蜈・＠縺ｾ縺励◆', 'success');
+        showToast('エントリーを有効な状態（未受付）に復元しました', 'success');
         
         // v8.9.60: Refresh modal or form if visible
         if (document.getElementById('detail-modal')?.classList.contains('hidden') === false) {
@@ -4424,28 +5159,42 @@ window.restoreEntry = async function (id) {
 
 async function exportGroupsCSV() {
     // v8.9.67: Restored timestamp, removed status as requested
-    const headers = ["ID", "蛹ｺ蛻・, "繧ｰ繝ｫ繝ｼ繝怜錐", "莉｣陦ｨ閠・, "髮ｻ隧ｱ逡ｪ蜿ｷ", "繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ", "莠ｺ謨ｰ(驥｣繧・", "莠ｺ謨ｰ(隕句ｭｦ)", "譌･譎・, "蛯呵・];
-    const rows = state.entries.filter(e => e.status !== 'cancelled').map(e => [
-        e.id, 
-        e.source, 
-        `"${e.groupName}"`, 
-        `"${e.representative || e.representativeName}"`, 
-        `'${e.phone || e.repPhone}`, 
-        `"${e.email || e.repEmail}"`,
-        e.fishers, 
-        e.observers, 
-        e.timestamp,
-        `"${(e.memo || "").replace(/\n/g, " ")}"`
-    ]);
-    downloadCSV("groups_export.csv", headers, rows);
+    const headers = ["ID", "区分", "グループ名", "代表者", "電話番号", "メールアドレス", "人数(釣り)", "人数(見学)", "日時", "備考"];
+    const rows = state.entries.map(e => {
+        let memo = (e.memo || "").replace(/\n/g, " ");
+        if (e.status === 'cancelled') memo = "[キャンセル] " + memo;
+        return [
+            e.id, 
+            e.source, 
+            `"${e.groupName}"`, 
+            `"${e.representative || e.representativeName}"`, 
+            `'${e.phone || e.repPhone}`, 
+            `"${e.email || e.repEmail}"`,
+            e.fishers, 
+            e.observers, 
+            e.timestamp,
+            `"${memo.trim()}"`
+        ];
+    });
+    const d = new Date();
+    const dateStr = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    downloadCSV(`グループ名簿_${dateStr}.csv`, headers, rows);
 }
 
 async function exportParticipantsCSV() {
     // v8.9.67: Added timestamp, removed status, and used UI labels for gender/age
-    const headers = ["ID", "蛹ｺ蛻・, "繧ｰ繝ｫ繝ｼ繝怜錐", "莉｣陦ｨ髮ｻ隧ｱ", "莉｣陦ｨ繝｡繝ｼ繝ｫ", "豌丞錐", "繝九ャ繧ｯ繝阪・繝", "諤ｧ蛻･", "蟷ｴ莉｣", "蝨ｰ蝓・, "蛹ｺ蛻・驥｣/隕・", "繧ｵ繧､繧ｺ", "逋ｻ骭ｲ譌･譎・, "蛯呵・];
+    const headers = ["ID", "区分", "グループ名", "代表電話", "代表メール", "氏名", "ニックネーム", "性別", "年代", "地域", "区分(釣/見)", "サイズ", "登録日時", "備考"];
     const rows = [];
-    state.entries.filter(e => e.status !== 'cancelled').forEach(e => {
+    state.entries.forEach(e => {
+        let entryMemo = (e.memo || "").replace(/\n/g, " ");
+        if (e.status === 'cancelled') entryMemo = "[キャンセル] " + entryMemo;
+        
         (e.participants || []).forEach(p => {
+            let memo = entryMemo;
+            if (e.status !== 'cancelled' && p.status === 'cancelled') {
+                memo = "[参加者キャンセル] " + memo;
+            }
+            
             rows.push([
                 e.id,
                 e.source,
@@ -4457,15 +5206,94 @@ async function exportParticipantsCSV() {
                 genderLabels[p.gender] || p.gender,
                 ageLabels[p.age] || p.age,
                 `"${p.region || ""}"`,
-                p.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ',
+                p.type === 'fisher' ? '釣り' : '見学',
                 p.tshirtSize,
                 e.timestamp,
-                `"${(e.memo || "").replace(/\n/g, " ")}"`
+                `"${memo.trim()}"`
             ]);
         });
     });
-    downloadCSV("participants_export.csv", headers, rows);
+    const d = new Date();
+    const dateStr = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    downloadCSV(`参加者名簿_${dateStr}.csv`, headers, rows);
 }
+
+// --- v8.10.2: Mock Data Tools for Testing ---
+window.generateMockCatchData = async function() {
+    if (!confirm("テスト用の仮データ（約9割が釣果あり）を生成しますか？\n※現在の釣果データは上書きされます。")) return;
+    
+    let updated = false;
+    state.entries.forEach(e => {
+        if (e.status === 'cancelled') return;
+        (e.participants || []).forEach(p => {
+            if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
+                // 鯛 (Bream) - 1〜4匹を多めにし、青物だけの人や鯛だけで入賞する人を出やすくする
+                let rA = Math.random();
+                if (rA < 0.10) {
+                    p.catchA = Math.floor(Math.random() * 6) + 12; // 12-17匹 (10%: 鯛のみでも入賞の可能性あり)
+                } else if (rA < 0.40) {
+                    p.catchA = Math.floor(Math.random() * 6) + 6;  // 6-11匹 (30%)
+                } else if (rA < 0.80) {
+                    p.catchA = Math.floor(Math.random() * 4) + 1;  // 1-4匹 (40%: 要望に合わせて大幅増)
+                } else {
+                    p.catchA = 0;                                  // 0匹 (20%: 青物だけ釣る人の母数になる)
+                }
+
+                // 青物 (Blue) - 少し分散させて被りを減らす
+                let rB = Math.random();
+                if (rB < 0.01) {
+                    p.catchB = 5;       // 1%
+                } else if (rB < 0.03) {
+                    p.catchB = 4;       // 2%
+                } else if (rB < 0.18) {
+                    p.catchB = 3;       // 15% (イケスに2人くらい)
+                } else if (rB < 0.33) {
+                    p.catchB = 2;       // 15%
+                } else if (rB < 0.78) {
+                    p.catchB = 1;       // 45% (約半分)
+                } else {
+                    p.catchB = 0;       // 22%
+                }
+                updated = true;
+            }
+        });
+    });
+    
+    if (updated) {
+        await saveData();
+        if (window.renderDayResults) window.renderDayResults();
+        if (window.renderRankings) window.renderRankings();
+        if (window.renderAwardsPreview) window.renderAwardsPreview();
+        showToast("テストデータを生成しました", "success");
+    }
+};
+
+window.clearCatchData = async function() {
+    if (!confirm("⚠️ 本当にすべての釣果データを「0」にリセットしますか？\n※この操作は元に戻せません！")) return;
+    
+    let updated = false;
+    state.entries.forEach(e => {
+        (e.participants || []).forEach(p => {
+            if (p.catchA > 0 || p.catchB > 0 || p.isAwardWinner) {
+                p.catchA = 0;
+                p.catchB = 0;
+                p.isAwardWinner = false;
+                updated = true;
+            }
+        });
+    });
+    
+    if (updated) {
+        await saveData();
+        if (window.renderDayResults) window.renderDayResults();
+        if (window.renderRankings) window.renderRankings();
+        if (window.renderAwardsPreview) window.renderAwardsPreview();
+        showToast("すべての釣果をリセットしました", "info");
+    } else {
+        showToast("リセットするデータがありません", "info");
+    }
+};
+// ---------------------------------------------
 
 // v8.4.3: Bulk Email Helpers
 window.insertMailVar = function(tag) {
@@ -4481,18 +5309,18 @@ window.insertMailVar = function(tag) {
 window.previewBulkEmail = function() {
     const body = document.getElementById('bulk-mail-body').value;
     const entries = state.entries.filter(e => e.status !== 'cancelled' && e.repEmail);
-    if (entries.length === 0) { alert("騾∽ｿ｡蟇ｾ雎｡縺後＞縺ｾ縺帙ｓ縲・); return; }
+    if (entries.length === 0) { alert("送信対象がいません。"); return; }
     
     const entry = entries[0];
     const pList = (entry.participants || []).map(p => `${p.name}(${genderLabels[p.gender] || p.gender})`).join(', ');
     
     const previewText = body
-        .replace(/{{逡ｪ蜿ｷ}}/g, entry.id || "")
-        .replace(/{{蜷榊燕}}/g, entry.representativeName || "")
-        .replace(/{{繧ｰ繝ｫ繝ｼ繝抑}/g, entry.groupName || "")
-        .replace(/{{驥｣繧贋ｺｺ謨ｰ}}/g, entry.fishers || "0")
-        .replace(/{{隕句ｭｦ莠ｺ謨ｰ}}/g, entry.observers || "0")
-        .replace(/{{蜿ょ刈閠・錐邁ｿ}}/g, pList);
+        .replace(/{{番号}}/g, entry.id || "")
+        .replace(/{{名前}}/g, entry.representativeName || "")
+        .replace(/{{グループ}}/g, entry.groupName || "")
+        .replace(/{{釣り人数}}/g, entry.fishers || "0")
+        .replace(/{{見学人数}}/g, entry.observers || "0")
+        .replace(/{{参加者名簿}}/g, pList);
 
     const area = document.getElementById('bulk-mail-preview-area');
     const content = document.getElementById('bulk-mail-preview-content');
@@ -4504,7 +5332,7 @@ window.previewBulkEmail = function() {
 async function handleBulkEmailSend() {
     const subject = document.getElementById('bulk-mail-subject').value.trim();
     const body = document.getElementById('bulk-mail-body').value.trim();
-    if (!subject || !body) { alert("莉ｶ蜷阪→譛ｬ譁・ｒ蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・); return; }
+    if (!subject || !body) { alert("件名と本文を入力してください。"); return; }
     
     const entriesToMail = state.entries.filter(e => e.status !== 'cancelled' && e.repEmail).map(e => {
         // Add participantsList string for GAS replacement
@@ -4512,13 +5340,13 @@ async function handleBulkEmailSend() {
         return { ...e, participantsList: pList };
     });
 
-    if (entriesToMail.length === 0) { alert("騾∽ｿ｡蟇ｾ雎｡縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲・); return; }
-    if (!confirm(`${entriesToMail.length} 蜷阪∈蛟句挨繝・・繧ｿ繧貞性繧√◆荳譁峨Γ繝ｼ繝ｫ繧帝∽ｿ｡縺励∪縺吶°・歔)) return;
+    if (entriesToMail.length === 0) { alert("送信対象が見つかりません。"); return; }
+    if (!confirm(`${entriesToMail.length} 名へ個別データを含めた一斉メールを送信しますか？`)) return;
     
     const btn = document.getElementById('btn-send-bulk-mail');
     const originalText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '騾∽ｿ｡荳ｭ...';
+    btn.textContent = '送信中...';
     try {
         const response = await fetch(GAS_WEB_APP_URL, { 
             method: 'POST', 
@@ -4531,13 +5359,13 @@ async function handleBulkEmailSend() {
         });
         const result = await response.json();
         if (result.status === 'success') {
-            showToast('笨・荳譁峨Γ繝ｼ繝ｫ繧帝∽ｿ｡縺励∪縺励◆', 'success');
+            showToast('✅ 一斉メールを送信しました', 'success');
         } else {
-            throw new Error(result.message || '騾∽ｿ｡縺ｫ螟ｱ謨励＠縺ｾ縺励◆');
+            throw new Error(result.message || '送信に失敗しました');
         }
     } catch (err) {
         console.error(err);
-        showToast('笶・繝｡繝ｼ繝ｫ騾∽ｿ｡繧ｨ繝ｩ繝ｼ', 'error');
+        showToast('❌ メール送信エラー', 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
@@ -4562,65 +5390,179 @@ window.renderRankings = function() {
     const ikesuContainer = document.getElementById('day-ranking-ikesu-list');
     
     if (!indContainer) return;
-    indContainer.innerHTML = '<p class="text-center p-4">髮・ｨ井ｸｭ...</p>';
-    if (ikesuContainer) ikesuContainer.innerHTML = '<p class="text-center p-4">髮・ｨ井ｸｭ...</p>';
+    indContainer.innerHTML = '<p class="text-center p-4">集計中...</p>';
+    if (ikesuContainer) ikesuContainer.innerHTML = '<p class="text-center p-4">集計中...</p>';
     
     // 1. Individual Ranking Data
     const individualData = [];
     const ikesuScores = {}; // { ikesuId: { total: 0, count: 0, name: "" } }
 
     state.entries.forEach(entry => {
-        if (entry.status === 'cancelled') return;
+        if (entry.status === 'cancelled' || entry.status === 'absent') return;
         (entry.participants || []).forEach(p => {
-            if (p.type === 'fisher') {
+            if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
                 const cA = parseInt(p.catchA || 0);
                 const cB = parseInt(p.catchB || 0);
                 const score = cA + (cB * 2);
                 
+                let ikName = '';
+                if (p.ikesuId) {
+                    ikName = state.settings.ikesuList?.find(ik => ik.id === p.ikesuId)?.name || p.ikesuId;
+                }
+
                 individualData.push({
                     name: p.name,
+                    nickname: p.nickname || '',
                     groupName: entry.groupName,
                     id: entry.id,
-                    cA, cB, score
+                    ikName,
+                    cA, cB, score,
+                    isAwardWinner: !!p.isAwardWinner
                 });
 
                 // Aggregation for Ikesu
                 if (p.ikesuId) {
                     if (!ikesuScores[p.ikesuId]) {
                         const ikName = state.settings.ikesuList?.find(ik => ik.id === p.ikesuId)?.name || p.ikesuId;
-                        ikesuScores[p.ikesuId] = { total: 0, count: 0, name: ikName };
+                        ikesuScores[p.ikesuId] = { total: 0, count: 0, name: ikName, members: [] };
                     }
                     ikesuScores[p.ikesuId].total += score;
                     ikesuScores[p.ikesuId].count += 1;
+                    ikesuScores[p.ikesuId].members.push({ name: p.name, group: entry.groupName, score });
                 }
             }
         });
     });
 
     // --- Render Individual Table ---
-    individualData.sort((a, b) => (b.score - a.score) || a.id.localeCompare(b.id));
+    // v8.10.0: Tie-breaking rule (Score > Aomono > ID)
+    individualData.sort((a, b) => (b.score - a.score) || (b.cB - a.cB) || (b.cA - a.cA));
+
+    const config = state.settings.rankingConfig || { topCount: 3, tobiList: "5,10,15,20,25,30" };
+    // Handle full-width numbers and commas
+    const tobiStr = (config.tobiList || "").replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/、|，/g, ',');
+    const tobis = tobiStr.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+    // 1. Assign finalRank and strictRank
+    let tmpRank = 1;
+    for (let i = 0; i < individualData.length; i++) {
+        if (i > 0 && individualData[i].score === individualData[i-1].score && individualData[i].cB === individualData[i-1].cB && individualData[i].cA === individualData[i-1].cA) {
+            // keep tmpRank
+        } else {
+            tmpRank = i + 1;
+        }
+        individualData[i].finalRank = tmpRank;
+        individualData[i].strictRank = i + 1;
+    }
+
+    // 2. Identify if a tie block covers a tobi target
+    const tobiTargetsByRank = {};
+    for (let i = 0; i < individualData.length; i++) {
+        if (individualData[i].score > 0) {
+            if (tobis.includes(individualData[i].strictRank)) {
+                // This absolute rank is a tobi, record it for the whole tie block
+                tobiTargetsByRank[individualData[i].finalRank] = individualData[i].strictRank;
+            }
+        }
+    }
+
+    // 3. Assign awards
+    for (let i = 0; i < individualData.length; i++) {
+        if (individualData[i].score > 0) {
+            if (individualData[i].finalRank <= config.topCount) {
+                individualData[i].isAutoAward = true;
+                individualData[i].awardType = 'top';
+            } else if (tobiTargetsByRank[individualData[i].finalRank]) {
+                individualData[i].isAutoAward = true;
+                individualData[i].awardType = 'tobi';
+                individualData[i].tobiTarget = tobiTargetsByRank[individualData[i].finalRank];
+            } else {
+                individualData[i].isAutoAward = false;
+            }
+        } else {
+            individualData[i].isAutoAward = false;
+        }
+    }
     
-    if (individualData.length === 0) {
-        indContainer.innerHTML = '<p class="text-center p-4 text-muted">繝・・繧ｿ縺後≠繧翫∪縺帙ｓ</p>';
+    // v8.10.0: Apply "Award Winners Only" filter if active
+    const awardFilterBtn = document.getElementById('award-filter-btn');
+    const showOnlyAwards = awardFilterBtn && awardFilterBtn.classList.contains('active');
+    const filteredData = showOnlyAwards ? individualData.filter(p => p.isAwardWinner || p.isAutoAward) : individualData;
+    
+    // v8.10.0: Update title based on filter state
+    const titleText = document.getElementById('ranking-title-text');
+    if (titleText) {
+        titleText.textContent = showOnlyAwards ? '表彰対象者' : '個人順位 (全参加者)';
+    }
+
+    if (filteredData.length === 0) {
+        indContainer.innerHTML = `<p class="text-center p-4 text-muted">${showOnlyAwards ? '表彰対象者がまだ設定されていません' : 'データがありません'}</p>`;
     } else {
         let html = `
             <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
                 <thead>
                     <tr style="background:#f1f5f9;">
-                        <th style="padding:8px;">鬆・ｽ・/th>
-                        <th style="padding:8px;">蜷榊燕</th>
-                        <th style="padding:8px; text-align:center;">蜷郁ｨ・/th>
+                        <th style="padding:8px; width:50px;">順位</th>
+                        <th style="padding:8px;">名前 / チーム</th>
+                        <th style="padding:8px; text-align:right;">釣果 / 合計</th>
                     </tr>
                 </thead>
                 <tbody>`;
-        individualData.slice(0, 100).forEach((p, idx) => {
-            const rank = idx + 1;
-            const rankMark = rank === 1 ? '･・ : rank === 2 ? '･・ : rank === 3 ? '･・ : rank;
+        let currentRank = 1;
+        let lastP = null;
+
+        // v8.10.1: Pre-calculate ties for warning badge
+        for (let i = 0; i < filteredData.length; i++) {
+            let isTie = false;
+            if (filteredData[i].score > 0) {
+                if (i > 0 && filteredData[i].cA === filteredData[i-1].cA && filteredData[i].cB === filteredData[i-1].cB) isTie = true;
+                if (i < filteredData.length - 1 && filteredData[i].cA === filteredData[i+1].cA && filteredData[i].cB === filteredData[i+1].cB) isTie = true;
+            }
+            filteredData[i].isTie = isTie;
+        }
+
+        filteredData.forEach((p) => {
+            const rank = p.finalRank;
+            const rankMark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+            let awardIcon = '';
+            if (p.isAwardWinner) {
+                awardIcon = '<span style="color:#f1c40f; margin-left:4px;" title="特別賞/手動付与">🏆</span>';
+            } else if (p.isAutoAward) {
+                if (p.awardType === 'top') {
+                    awardIcon = '<span style="color:#f1c40f; margin-left:4px;" title="上位入賞">🏆</span>';
+                } else if (p.awardType === 'tobi') {
+                    if (p.tobiTarget && p.tobiTarget !== p.finalRank) {
+                        awardIcon = `<span style="color:#10b981; margin-left:4px;" title="${p.tobiTarget}位の飛び賞対象（同着から選出）">🎁<span style="font-size:0.65rem; color:#10b981;">(${p.tobiTarget}位対象)</span></span>`;
+                    } else {
+                        awardIcon = '<span style="color:#10b981; margin-left:4px;" title="飛び賞">🎁<span style="font-size:0.65rem; color:#10b981;">(飛)</span></span>';
+                    }
+                }
+            }
+            const awardStar = awardIcon;
+            const tieBadge = p.isTie ? '<span style="font-size:0.75rem; color:#eab308; margin-left:4px; font-weight:bold;" title="完全同点（ジャンケン等で決定してください）">⚠️同着</span>' : '';
+            
             html += `
                 <tr style="border-bottom:1px solid #f1f5f9;">
-                    <td style="padding:8px;">${rankMark}</td>
-                    <td style="padding:8px;"><strong>${p.name}</strong><br><small class="text-muted">${p.groupName}</small></td>
-                    <td style="padding:8px; text-align:center; font-weight:bold; color:var(--primary-color);">${p.score}pt</td>
+                    <td style="padding:8px; width:75px;">
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <span style="font-weight:900; font-size:1.3rem; color:#1e293b;">${rankMark}</span>
+                            <div style="display:flex; flex-direction:column; line-height:1;">${awardStar}</div>
+                        </div>
+                    </td>
+                    <td style="padding:8px;">
+                        <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:6px;">
+                            <strong style="font-size:1.05rem;">${p.name}</strong>
+                            ${p.nickname ? `<span style="font-size:0.85rem; color:#64748b;">(${p.nickname})</span>` : ''}
+                            ${tieBadge}
+                            <span style="font-size:0.75rem; background:#f1f5f9; padding:1px 5px; border-radius:4px; color:#475569; border:1px solid #e2e8f0;">${p.groupName}</span>
+                            ${p.ikName ? `<span style="font-size:0.75rem; background:#dbeafe; padding:1px 5px; border-radius:4px; color:#1e40af; border:1px solid #bfdbfe;">イケス${p.ikName}</span>` : ''}
+                        </div>
+                    </td>
+                    <td style="padding:8px; text-align:right; font-weight:bold; white-space:nowrap;">
+                        <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px;">
+                            <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">(マダイ <strong style="color:#ef4444; margin-right:6px; font-size:0.9rem;">${p.cA}</strong> 青物、クエ <strong style="color:#3b82f6; font-size:0.9rem;">${p.cB}</strong>)</span>
+                            <span style="font-size:1.6rem; font-weight:900; line-height:1; color:var(--primary-color);">${p.score}<small style="font-size:0.8rem; margin-left:1px;">点</small></span>
+                        </div>
+                    </td>
                 </tr>`;
         });
         html += '</tbody></table>';
@@ -4631,29 +5573,48 @@ window.renderRankings = function() {
     if (ikesuContainer) {
         const ikesuData = Object.keys(ikesuScores).map(id => {
             const s = ikesuScores[id];
-            return { id, name: s.name, average: (s.total / s.count).toFixed(2), total: s.total, count: s.count };
+            // Sort members within each ikesu by score
+            const sortedMembers = s.members.sort((a,b) => b.score - a.score);
+            return { id, name: s.name, average: (s.total / s.count).toFixed(2), total: s.total, count: s.count, members: sortedMembers };
         }).sort((a, b) => b.average - a.average);
 
         if (ikesuData.length === 0) {
-            ikesuContainer.innerHTML = '<p class="text-center p-4 text-muted">繝・・繧ｿ縺後≠繧翫∪縺帙ｓ</p>';
+            ikesuContainer.innerHTML = '<p class="text-center p-4 text-muted">データがありません</p>';
         } else {
             let html = `
                 <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
                     <thead>
                         <tr style="background:#f1f5f9;">
-                            <th style="padding:8px;">鬆・ｽ・/th>
-                            <th style="padding:8px;">繧､繧ｱ繧ｹ</th>
-                            <th style="padding:8px; text-align:center;">蟷ｳ蝮・せ</th>
+                            <th style="padding:8px;">順位</th>
+                            <th style="padding:8px;">イケス</th>
+                            <th style="padding:8px; text-align:right;">平均点</th>
                         </tr>
                     </thead>
                     <tbody>`;
             ikesuData.forEach((ik, idx) => {
                 const rank = idx + 1;
+                const rankMark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+                const membersHtml = (rank <= 3) ? `
+                    <div style="margin-top:0.3rem; font-size:0.85rem; color:#475569; background:#f8fafc; padding:0.3rem 0.5rem; border-radius:6px; border-left:3px solid #059669; line-height:1.4;">
+                        ${ik.members.slice(0, 5).map(m => `<span style="display:inline-block; margin-right:8px; white-space:nowrap;">${m.group} - <strong>${m.name}</strong>(${m.score}点)</span>`).join('')}
+                    </div>
+                ` : '';
+                
                 html += `
                     <tr style="border-bottom:1px solid #f1f5f9;">
-                        <td style="padding:8px;">${rank}</td>
-                        <td style="padding:8px;"><strong>${ik.name}</strong><br><small class="text-muted">${ik.count}蜷・/ 險・{ik.total}pt</small></td>
-                        <td style="padding:8px; text-align:center; font-weight:bold; color:#059669;">${ik.average}</td>
+                        <td style="padding:6px 8px; vertical-align:top; width:50px;">
+                            <span style="font-weight:900; font-size:1.3rem; color:#1e293b;">${rankMark}</span>
+                        </td>
+                        <td style="padding:6px 8px; vertical-align:top;">
+                            <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+                                <strong style="font-size:1.3rem;">${ik.name}</strong>
+                                <small class="text-muted" style="font-size:0.85rem;">${ik.count}名 / 計${ik.total}点</small>
+                            </div>
+                            ${membersHtml}
+                        </td>
+                        <td style="padding:6px 8px; text-align:right; vertical-align:top; white-space:nowrap;">
+                            <span style="font-size:1.6rem; font-weight:900; color:#059669;">${ik.average}<small style="font-size:0.8rem; margin-left:2px; font-weight:normal;">点</small></span>
+                        </td>
                     </tr>`;
             });
             html += '</tbody></table>';
@@ -4668,7 +5629,7 @@ window.renderDayResults = function() {
     const filterIkesuId = document.getElementById('day-results-ikesu-filter')?.value;
     if (!listBody) return;
     
-    listBody.innerHTML = '<tr><td colspan="7" class="text-center p-4">隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</td></tr>';
+    listBody.innerHTML = '<tr><td colspan="7" class="text-center p-4">読み込み中...</td></tr>';
     
     // Update Ikesu Filter Options if empty
     const filterSelect = document.getElementById('day-results-ikesu-filter');
@@ -4683,9 +5644,9 @@ window.renderDayResults = function() {
     
     const rows = [];
     state.entries.forEach(entry => {
-        if (entry.status === 'cancelled') return;
+        if (entry.status === 'cancelled' || entry.status === 'absent') return;
         (entry.participants || []).forEach(p => {
-            if (p.type === 'fisher') {
+            if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {
                 if (filterIkesuId && p.ikesuId !== filterIkesuId) return;
                 
                 const cA = parseInt(p.catchA || 0);
@@ -4701,35 +5662,30 @@ window.renderDayResults = function() {
                         <td class="text-center">${cA}</td>
                         <td class="text-center">${cB}</td>
                         <td class="text-center" style="font-weight:900; color:var(--primary-color); font-size:1.1rem;">${score}pt</td>
-                        <td class="no-print">
-                            <button class="btn-outline btn-small" onclick="window.openDayEditModal('${entry.id}', '${p.name}')">菫ｮ豁｣</button>
-                        </td>
                     </tr>`);
             }
         });
     });
     
     if (rows.length === 0) {
-        listBody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-muted">隧ｲ蠖薙☆繧九ョ繝ｼ繧ｿ縺後≠繧翫∪縺帙ｓ</td></tr>';
+        listBody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-muted">該当するデータがありません</td></tr>';
     } else {
         listBody.innerHTML = rows.join('');
     }
 };
 
-window.openDayEditModal = function(entryId, pName) {
-    alert(`蛟句挨菫ｮ豁｣讖溯・縺ｯ縲碁・譫懷・蜉・螟夜Κ)縲阪い繝励Μ縺九ｉ縲・{entryId} (${pName}) 繧帝∈謚槭＠縺ｦ陦後▲縺ｦ縺上□縺輔＞縲Ａ);
-};
+// window.openDayEditModal removed as edit is now fully external
 
 /* --- LEADER ENTRY LOGIC --- */
 function renderLeaderEntryForm() {
     const container = document.getElementById('leader-entry-form-container');
     if (!container) return;
-    container.innerHTML = '<p class="text-center p-4">隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</p>';
+    container.innerHTML = '<p class="text-center p-4">読み込み中...</p>';
     const searchHtml = `
         <div class="form-group">
-            <label>蜈･蜉帙☆繧九メ繝ｼ繝繧帝∈謚・/label>
+            <label>入力するチームを選択</label>
             <select id="leader-group-select" class="form-control" style="font-size:1.1rem; padding:0.8rem;">
-                <option value="">-- 繝√・繝繧帝∈謚槭＠縺ｦ縺上□縺輔＞ --</option>
+                <option value="">-- チームを選択してください --</option>
                 ${state.entries
                     .filter(e => e.status !== 'cancelled')
                     .sort((a,b) => a.groupName.localeCompare(b.groupName, 'ja'))
@@ -4749,16 +5705,16 @@ function renderLeaderEntryForm() {
             area.innerHTML = `
                 <div class="card p-3 mb-3" style="background:#f8f9ff">
                     <h4>${entry.groupName}</h4>
-                    <p class="small text-muted">ID: ${entry.id} / 莉｣陦ｨ閠・ ${entry.representative}</p>
+                    <p class="small text-muted">ID: ${entry.id} / 代表者: ${entry.representative}</p>
                     <div class="form-group mt-3">
-                        <label style="font-weight:bold">驥｣譫懊・繧､繝ｳ繝・(蜷郁ｨ・</label>
+                        <label style="font-weight:bold">釣果ポイント (合計)</label>
                         <input type="number" id="leader-point-input" class="form-control" 
                                style="font-size:2rem; font-weight:900; text-align:center;" 
                                value="${entry.totalScore || 0}" min="0">
                     </div>
                 </div>
                 <button class="btn-primary w-100 p-3" style="font-size:1.2rem" onclick="window.commitLeaderResultsSave()">
-                    遒ｺ螳壹＠縺ｦ菫晏ｭ・
+                    確定して保存
                 </button>`;
             area.classList.remove('hidden');
         });
@@ -4772,20 +5728,20 @@ window.commitLeaderResultsSave = async function() {
     const scoreVal = document.getElementById('leader-point-input')?.value;
     const score = parseInt(scoreVal || 0);
 
-    if (!id) { alert("繝√・繝繧帝∈謚槭＠縺ｦ縺上□縺輔＞縲・); return; }
+    if (!id) { alert("チームを選択してください。"); return; }
     const entry = state.entries.find(e => e.id === id);
     if (!entry) return;
-    if (!confirm(`${entry.groupName} 縺ｮ蠕礼せ繧・${score} pt 縺ｧ逋ｻ骭ｲ縺励∪縺吶°・歔)) return;
+    if (!confirm(`${entry.groupName} の得点を ${score} pt で登録しますか？`)) return;
 
     entry.totalScore = score;
-    entry.lastModified = new Date().toLocaleString('ja-JP');
-    showToast("菫晏ｭ倅ｸｭ...", "info");
+    entry.lastModified = new Date().toISOString();
+    showToast("保存中...", "info");
     const success = await syncToCloud();
     if (success) {
-        showToast("笨・菫晏ｭ伜ｮ御ｺ・＠縺ｾ縺励◆", "success");
+        showToast("✅ 保存完了しました", "success");
         renderLeaderEntryForm();
     } else {
-        showToast("笶・蜷梧悄縺ｫ螟ｱ謨励＠縺ｾ縺励◆", "error");
+        showToast("❌ 同期に失敗しました", "error");
     }
 };
 
@@ -4797,10 +5753,10 @@ function updateBulkMailCount() {
 
 function updateSourceAvailability() {
     try {
-        const fishersIppan = sumCategoryFishers('荳闊ｬ');
-        const fishersMintsuri = sumCategoryFishers('縺ｿ繧馴・繧・);
-        const fishersSuiho = sumCategoryFishers('豌ｴ螳・);
-        const fishersHarimitsu = sumCategoryFishers('繝上Μ繝溘ヤ');
+        const fishersIppan = sumCategoryFishers('一般');
+        const fishersMintsuri = sumCategoryFishers('みん釣り');
+        const fishersSuiho = sumCategoryFishers('水宝');
+        const fishersHarimitsu = sumCategoryFishers('ハリミツ');
         
         // v8.1.18: Filter out cancelled for global capacity check
         const totalNow = state.entries.filter(e => e.status !== 'cancelled').reduce((sum, en) => sum + en.fishers, 0);
@@ -4842,10 +5798,10 @@ function updateSourceAvailability() {
             }
         };
 
-        updateRadio('荳闊ｬ', fishersIppan, state.settings.capacityGeneral);
-        updateRadio('縺ｿ繧馴・繧・, fishersMintsuri, state.settings.capacityMintsuri);
-        updateRadio('豌ｴ螳・, fishersSuiho, state.settings.capacitySuiho);
-        updateRadio('繝上Μ繝溘ヤ', fishersHarimitsu, state.settings.capacityHarimitsu);
+        updateRadio('一般', fishersIppan, state.settings.capacityGeneral);
+        updateRadio('みん釣り', fishersMintsuri, state.settings.capacityMintsuri);
+        updateRadio('水宝', fishersSuiho, state.settings.capacitySuiho);
+        updateRadio('ハリミツ', fishersHarimitsu, state.settings.capacityHarimitsu);
     } catch (e) {
         console.warn("Source availability check skipped:", e);
     }
@@ -4854,14 +5810,14 @@ function updateSourceAvailability() {
 async function handleBulkEmailSend() {
     const subject = document.getElementById('bulk-mail-subject').value.trim();
     const body = document.getElementById('bulk-mail-body').value.trim();
-    if (!subject || !body) { alert("莉ｶ蜷阪→譛ｬ譁・ｒ蜈･蜉帙＠縺ｦ縺上□縺輔＞縲・); return; }
+    if (!subject || !body) { alert("件名と本文を入力してください。"); return; }
     const entriesToMail = state.entries.filter(e => e.status !== 'cancelled' && e.repEmail);
-    if (entriesToMail.length === 0) { alert("騾∽ｿ｡蟇ｾ雎｡縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲・); return; }
-    if (!confirm(`${entriesToMail.length} 蜷阪∈蛟句挨繝・・繧ｿ繧貞性繧√◆荳譁峨Γ繝ｼ繝ｫ繧帝∽ｿ｡縺励∪縺吶°・歃n・域悽譁・・縺ｮ {{逡ｪ蜿ｷ}}, {{蜷榊燕}} 遲峨′閾ｪ蜍慕ｽｮ謠帙＆繧後∪縺呻ｼ荏)) return;
+    if (entriesToMail.length === 0) { alert("送信対象が見つかりません。"); return; }
+    if (!confirm(`${entriesToMail.length} 名へ個別データを含めた一斉メールを送信しますか？\n（本文内の {{番号}}, {{名前}} 等が自動置換されます）`)) return;
     const btn = document.getElementById('btn-send-bulk-mail');
     const originalText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '騾∽ｿ｡荳ｭ...';
+    btn.textContent = '送信中...';
     try {
         const response = await fetch(GAS_WEB_APP_URL, { 
             method: 'POST', 
@@ -4869,18 +5825,18 @@ async function handleBulkEmailSend() {
                 action: 'bulk_email', 
                 subject, 
                 body, 
-                entries: entriesToMail // 騾∽ｿ｡蟇ｾ雎｡縺ｮ繧ｨ繝ｳ繝医Μ繧偵∪繧九＃縺ｨ貂｡縺・
+                entries: entriesToMail // 送信対象のエントリをまるごと渡す
             }) 
         });
         const result = await response.json();
         if (result.status === 'success') {
-            showToast('笨・荳譁峨Γ繝ｼ繝ｫ繧帝∽ｿ｡縺励∪縺励◆', 'success');
+            showToast('✅ 一斉メールを送信しました', 'success');
             document.getElementById('bulk-mail-subject').value = '';
             document.getElementById('bulk-mail-body').value = '';
-        } else { throw new Error(result.message || '騾∽ｿ｡繧ｨ繝ｩ繝ｼ'); }
+        } else { throw new Error(result.message || '送信エラー'); }
     } catch (error) {
         console.error("Bulk email error:", error);
-        showToast('笶・繝｡繝ｼ繝ｫ縺ｮ騾∽ｿ｡縺ｫ螟ｱ謨励＠縺ｾ縺励◆', 'error');
+        showToast('❌ メールの送信に失敗しました', 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
@@ -4933,7 +5889,7 @@ function checkUrlParams() {
         
         // 1. Handle Source (Primary Context)
         if (src) {
-            const validSources = { 'mintsuri': '縺ｿ繧馴・繧・, 'harimitsu': '繝上Μ繝溘ヤ', 'suiho': '豌ｴ螳・, 'general': '荳闊ｬ' };
+            const validSources = { 'mintsuri': 'みん釣り', 'harimitsu': 'ハリミツ', 'suiho': '水宝', 'general': '一般' };
             const decodedSrc = validSources[src.toLowerCase()];
             if (decodedSrc) injectSpecialSource(decodedSrc);
         }
@@ -4981,7 +5937,7 @@ function injectSpecialSource(sourceName) {
     selector.classList.add('special-window');
 
     // v8.1.23: Hide selector entirely if it's 'General' (unless admin)
-    if (sourceName === '荳闊ｬ' && !isAdminAuth) {
+    if (sourceName === '一般' && !isAdminAuth) {
         if (selectorGroup) selectorGroup.classList.add('hidden');
         console.log("General window: hiding selector");
     } else {
@@ -5001,7 +5957,7 @@ function injectSpecialSource(sourceName) {
     
     if (!target) {
         // Create specialized radio if missing
-        const badgeClassMap = { '豌ｴ螳・: 'badge-suiho', '繝上Μ繝溘ヤ': 'badge-harimitsu', '縺ｿ繧馴・繧・: 'badge-mintsuri' };
+        const badgeClassMap = { '水宝': 'badge-suiho', 'ハリミツ': 'badge-harimitsu', 'みん釣り': 'badge-mintsuri' };
         const badgeClass = badgeClassMap[sourceName] || 'badge-ippan';
         const label = document.createElement('label');
         label.className = 'source-option forced-source'; // No hidden class here
@@ -5014,6 +5970,13 @@ function injectSpecialSource(sourceName) {
         selector.appendChild(label);
         target = label.querySelector('input');
     } else {
+        // v8.10.2: Prevent form.reset() from reverting to General by clearing default checks
+        selector.querySelectorAll('input[name="reg-source"]').forEach(r => {
+            r.removeAttribute('checked');
+            r.defaultChecked = false;
+        });
+        target.setAttribute('checked', 'checked');
+        target.defaultChecked = true;
         target.checked = true; // Force check (v8.1.36)
         target.disabled = false;
         const label = target.closest('.source-option');
@@ -5031,9 +5994,9 @@ function injectSpecialSource(sourceName) {
         target.dispatchEvent(new Event('change', { bubbles: true }));
     }
     
-    // v8.1.36: Explicitly ensure "荳闊ｬ" is hidden in ANY specialized window
-    if (sourceName !== '荳闊ｬ') {
-        const ippanRadio = selector.querySelector('input[value="荳闊ｬ"]');
+    // v8.1.36: Explicitly ensure "一般" is hidden in ANY specialized window
+    if (sourceName !== '一般') {
+        const ippanRadio = selector.querySelector('input[value="一般"]');
         if (ippanRadio) {
             ippanRadio.disabled = true;
             ippanRadio.closest('.source-option')?.classList.add('hidden');
@@ -5060,10 +6023,10 @@ window.copyShareUrl = function(inputId) {
     const el = document.getElementById(inputId);
     if (el && el.value) {
         navigator.clipboard.writeText(el.value).then(() => {
-            showToast('繧ｳ繝斐・縺励∪縺励◆', 'success');
+            showToast('コピーしました', 'success');
         }).catch(err => {
             console.error('Copy failed:', err);
-            showToast('繧ｳ繝斐・縺ｫ螟ｱ謨励＠縺ｾ縺励◆', 'error');
+            showToast('コピーに失敗しました', 'error');
         });
     }
 };
@@ -5099,16 +6062,16 @@ window.updateSyncStatus = function(status) {
         case 'syncing':
             dot.style.background = '#3b82f6';
             dot.classList.add('syncing');
-            text.textContent = '蜷梧悄荳ｭ...';
+            text.textContent = '同期中...';
             break;
         case 'success':
             dot.style.background = '#22c55e';
-            text.textContent = '蜷梧悄貂医∩';
+            text.textContent = '同期済み';
             break;
         case 'error':
         case 'error-silent':
             dot.style.background = '#ef4444';
-            text.textContent = '繧ｪ繝輔Λ繧､繝ｳ';
+            text.textContent = 'オフライン';
             break;
     }
 };
@@ -5120,43 +6083,64 @@ window.logChange = function(entry, type, oldEntry = null) {
     if (!state.changeLog) state.changeLog = [];
     
     let details = [];
-    if (type === '菫ｮ豁｣' && oldEntry) {
-        if (oldEntry.groupName !== entry.groupName) details.push(`繧ｰ繝ｫ繝ｼ繝怜錐: ${oldEntry.groupName} 竊・${entry.groupName}`);
+    if (type === '修正' && oldEntry) {
+        if (oldEntry.groupName !== entry.groupName) details.push(`グループ名: ${oldEntry.groupName} → ${entry.groupName}`);
         const oldRep = oldEntry.representative || oldEntry.representativeName;
         const newRep = entry.representative || entry.representativeName;
-        if (oldRep !== newRep) details.push(`莉｣陦ｨ閠・ ${oldRep} 竊・${newRep}`);
+        if (oldRep !== newRep) details.push(`代表者: ${oldRep} → ${newRep}`);
         
-        if ((oldEntry.phone || oldEntry.repPhone) !== (entry.phone || entry.repPhone)) details.push(`髮ｻ隧ｱ逡ｪ蜿ｷ繧貞､画峩`);
-        if ((oldEntry.email || oldEntry.repEmail) !== (entry.email || entry.repEmail)) details.push(`繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ繧貞､画峩`);
-        if (oldEntry.memo !== entry.memo) details.push(`蛯呵・ｬ・ｒ譖ｴ譁ｰ`);
+        if ((oldEntry.phone || oldEntry.repPhone) !== (entry.phone || entry.repPhone)) details.push(`電話番号を変更`);
+        if ((oldEntry.email || oldEntry.repEmail) !== (entry.email || entry.repEmail)) details.push(`メールアドレスを変更`);
+        if ((oldEntry.memo || '') !== (entry.memo || '')) details.push(`備考欄を更新`);
         
         const oldPCount = (oldEntry.participants || []).length;
         const newPCount = (entry.participants || []).length;
-        if (oldPCount !== newPCount) details.push(`莠ｺ謨ｰ螟画峩: ${oldPCount}莠ｺ 竊・${newPCount}莠ｺ`);
+        if (oldPCount !== newPCount) details.push(`人数変更: ${oldPCount}人 → ${newPCount}人`);
         
         // Detailed participant check
         entry.participants.forEach((p, i) => {
             const oldP = oldEntry.participants && oldEntry.participants[i];
             if (oldP) {
-                if (oldP.name !== p.name) details.push(`蜿ょ刈閠・{i+1}豌丞錐: ${oldP.name} 竊・${p.name}`);
-                if (oldP.age !== p.age) details.push(`蜿ょ刈閠・{i+1}蟷ｴ莉｣縺ｮ螟画峩`);
-                if (oldP.gender !== p.gender) details.push(`蜿ょ刈閠・{i+1}諤ｧ蛻･縺ｮ螟画峩`);
-                if (oldP.tshirtSize !== p.tshirtSize) details.push(`蜿ょ刈閠・{i+1}T繧ｷ繝｣繝・し繧､繧ｺ: ${oldP.tshirtSize} 竊・${p.tshirtSize}`);
-                if (oldP.type !== p.type) details.push(`蜿ょ刈閠・{i+1}遞ｮ蛻･: ${oldP.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ'} 竊・${p.type === 'fisher' ? '驥｣繧・ : '隕句ｭｦ'}`);
+                if (oldP.name !== p.name) details.push(`参加者${i+1}氏名: ${oldP.name} → ${p.name}`);
+                if (oldP.age !== p.age) details.push(`参加者${i+1}年代の変更`);
+                if (oldP.gender !== p.gender) details.push(`参加者${i+1}性別の変更`);
+                if (oldP.tshirtSize !== p.tshirtSize) details.push(`参加者${i+1}Tシャツサイズ: ${oldP.tshirtSize} → ${p.tshirtSize}`);
+                if (oldP.type !== p.type) details.push(`参加者${i+1}種別: ${oldP.type === 'fisher' ? '釣り' : '見学'} → ${p.type === 'fisher' ? '釣り' : '見学'}`);
+                if ((oldP.status || 'pending') !== (p.status || 'pending')) {
+                    if (p.status === 'cancelled') details.push(`参加者${i+1}をキャンセル`);
+                    else if (oldP.status === 'cancelled') details.push(`参加者${i+1}のキャンセルを取り消し`);
+                    else details.push(`参加者${i+1}ステータス変更: ${oldP.status || 'pending'} → ${p.status}`);
+                }
             } else {
-                details.push(`蜿ょ刈閠・ｿｽ蜉: ${p.name}`);
+                details.push(`参加者追加: ${p.name}`);
             }
         });
         
-        if (details.length === 0) details.push("逋ｻ骭ｲ蜀・ｮｹ縺ｮ譖ｴ譁ｰ・郁ｩｳ邏ｰ縺ｪ縺暦ｼ・);
+        
+        if (details.length === 0) return; // Do not log if nothing changed
+    } else if (type === '新規登録') {
+        details.push(`代表者: ${entry.representative || entry.representativeName || '不明'}`);
+        details.push(`人数: ${(entry.participants || []).length}名`);
+        if (entry.source) details.push(`受付先: ${entry.source}`);
+    } else if (type === '設定変更' && oldEntry && oldEntry.settings && entry.settings) {
+        const oSet = oldEntry.settings;
+        const nSet = entry.settings;
+        if (oSet.competitionName !== nSet.competitionName) details.push(`大会名: ${oSet.competitionName} → ${nSet.competitionName}`);
+        if (oSet.capacityTotal !== nSet.capacityTotal) details.push(`全体定員: ${oSet.capacityTotal} → ${nSet.capacityTotal}`);
+        if (oSet.startTime !== nSet.startTime) details.push(`開始日時更新`);
+        if (oSet.deadline !== nSet.deadline) details.push(`終了日時更新`);
+        if (oSet.maintenanceMode !== nSet.maintenanceMode) details.push(`準備中モード: ${nSet.maintenanceMode ? 'ON' : 'OFF'}`);
+        if (oSet.soldoutMode !== nSet.soldoutMode) details.push(`満員モード: ${nSet.soldoutMode ? 'ON' : 'OFF'}`);
+        if (oSet.closedMode !== nSet.closedMode) details.push(`受付終了モード: ${nSet.closedMode ? 'ON' : 'OFF'}`);
+        if (details.length === 0) return; // Do not log if nothing changed
     }
 
     const logEntry = {
         id: 'log-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
         timestamp: Date.now(),
         dateStr: new Date().toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
-        type: type, // '譁ｰ隕冗匳骭ｲ', '菫ｮ豁｣', '蜑企勁', '險ｭ螳壼､画峩'
-        groupName: entry.groupName || entry.representativeName || '荳肴・',
+        type: type, // '新規登録', '修正', '削除', '設定変更'
+        groupName: entry.groupName || entry.representativeName || '不明',
         entryId: entry.id || 'NEW',
         isAdmin: !!(isAdminAuth || isAdminAuthAction),
         details: details
@@ -5169,19 +6153,36 @@ window.logChange = function(entry, type, oldEntry = null) {
     saveStateToLocalStorage();
 };
 
-window.deleteLogItem = function(logId) {
-    if (!confirm("縺薙・螻･豁ｴ繧貞炎髯､縺励∪縺吶°・・)) return;
+window.deleteLogItem = async function(logId) {
+    if (!confirm("この履歴を削除しますか？")) return;
     state.changeLog = state.changeLog.filter(l => l.id !== logId);
     saveStateToLocalStorage();
     window.renderChangeLog();
+    showToast("ログを削除し、同期しています...", "info");
+    await saveData();
 };
 
 window.renderChangeLog = function() {
     const container = document.getElementById('change-log-container');
     if (!container) return;
 
+    state.changeLog = (state.changeLog || []).filter(log => {
+        if (log.details && log.details.length === 1 && log.details[0] === '備考欄を更新') {
+            const currentEntry = state.entries.find(e => e.id === log.entryId);
+            if (currentEntry && (!currentEntry.memo || currentEntry.memo.trim() === '')) {
+                const hasCancelled = currentEntry.participants && currentEntry.participants.some(p => p.status === 'cancelled');
+                if (hasCancelled) {
+                    log.details[0] = '一部参加者をキャンセル';
+                    return true;
+                }
+                return false;
+            }
+        }
+        return true;
+    });
+
     if (!state.changeLog || state.changeLog.length === 0) {
-        container.innerHTML = '<div class="text-center py-5 text-muted">螟画峩螻･豁ｴ縺ｯ縺ゅｊ縺ｾ縺帙ｓ</div>';
+        container.innerHTML = '<div class="text-center py-5 text-muted">変更履歴はありません</div>';
         return;
     }
 
@@ -5189,15 +6190,20 @@ window.renderChangeLog = function() {
         let badgeClass = 'log-badge-edit';
         let itemClass = 'log-edit';
         
-        if (log.type === '譁ｰ隕冗匳骭ｲ') { badgeClass = 'log-badge-new'; itemClass = 'log-new'; }
-        else if (log.type === '蜑企勁') { badgeClass = 'log-badge-delete'; itemClass = 'log-delete'; }
+        if (log.type === '新規登録') { badgeClass = 'log-badge-new'; itemClass = 'log-new'; }
+        else if (log.type === '削除') { badgeClass = 'log-badge-delete'; itemClass = 'log-delete'; }
         
-        const adminMark = log.isAdmin ? '<span class="admin-badge" style="background:#6366f1; color:white; padding:1px 4px; border-radius:3px; font-size:0.65rem; margin-right:4px;">邂｡逅・・/span>' : '';
+        let adminMark = '';
+        if (log.isAdmin === true) {
+            adminMark = '<span class="admin-badge" style="background:#6366f1; color:white; padding:1px 4px; border-radius:3px; font-size:0.65rem; margin-right:0;">管理者</span>';
+        } else if (log.isAdmin === false) {
+            adminMark = '<span class="user-badge" style="background:#eab308; color:black; padding:1px 4px; border-radius:3px; font-size:0.65rem; margin-right:0; font-weight:bold;">一般操作</span>';
+        }
         
         let detailsHtml = '';
         if (log.details && log.details.length > 0) {
             detailsHtml = `<div class="log-details-list" style="margin-top: 4px; padding-left: 10px; border-left: 2px solid #e2e8f0; font-size: 0.8rem; color: #64748b;">
-                ${log.details.map(d => `<div class="log-detail-item" style="margin-bottom: 2px;">繝ｻ${d}</div>`).join('')}
+                ${log.details.map(d => `<div class="log-detail-item" style="margin-bottom: 2px;">・${d}</div>`).join('')}
             </div>`;
         }
 
@@ -5206,10 +6212,10 @@ window.renderChangeLog = function() {
                 <div style="display: flex; align-items: center; flex-wrap: nowrap; gap: 5px; font-size: 0.82rem; overflow: hidden;">
                     <span class="log-badge ${badgeClass}" style="font-size: 0.65rem; padding: 1px 4px; flex-shrink: 0;">${log.type}</span>
                     <span class="log-time" style="font-size: 0.7rem; color: #64748b; flex-shrink: 0;">${log.dateStr}</span>
-                    ${adminMark ? adminMark.replace('margin-right:4px;', 'margin-right:0;') : ''}
+                    ${adminMark}
                     <span class="log-group" style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">${log.groupName}</span> 
                     <span class="text-muted" style="font-size:0.7rem; flex-shrink: 0;">(ID: ${log.entryId})</span>
-                    <span style="flex-shrink: 0; color: #475569;">${log.type === '譁ｰ隕冗匳骭ｲ' ? '逋ｻ骭ｲ' : log.type === '蜑企勁' ? '蜑企勁' : '菫ｮ豁｣'}</span>
+                    <span style="flex-shrink: 0; color: #475569;">${log.type === '新規登録' ? '登録' : log.type === '削除' ? '削除' : '修正'}</span>
                     <button class="btn-icon" onclick="window.deleteLogItem('${log.id}')" style="font-size: 1.1rem; padding: 0 4px; opacity: 0.3; margin-left: auto;">&times;</button>
                 </div>
                 ${detailsHtml}
@@ -5225,7 +6231,7 @@ function saveStateToLocalStorage() {
 }
 
 window.clearLocalCache = function() {
-    if (confirm('繝悶Λ繧ｦ繧ｶ縺ｮ繧ｭ繝｣繝・す繝･繝・・繧ｿ繧貞炎髯､縺励√け繝ｩ繧ｦ繝峨°繧画怙譁ｰ繝・・繧ｿ繧貞・蜿門ｾ励＠縺ｾ縺吶°・歃n・亥・蜉幃比ｸｭ縺ｮ繝・・繧ｿ縺後≠繧句ｴ蜷医・豸医∴縺ｦ縺励∪縺・∪縺呻ｼ・)) {
+    if (confirm('ブラウザのキャッシュデータを削除し、クラウドから最新データを再取得しますか？\n（入力途中のデータがある場合は消えてしまいます）')) {
         localStorage.removeItem('fishing_app_v3_data');
         location.reload();
     }
@@ -5250,7 +6256,7 @@ window.setDashboardFilter = function(filter) {
 
 /**
  * v8.9.50: Suiho Bulk Import from Excel
- * 豌ｴ螳晄棧縺ｮ髮ｻ隧ｱ蜿嶺ｻ倥ョ繝ｼ繧ｿ・・xcel・峨ｒTSV蠖｢蠑上〒荳諡ｬ蜿悶ｊ霎ｼ縺ｿ縺吶ｋ讖溯・
+ * 水宝枠の電話受付データ（Excel）をTSV形式で一括取り込みする機能
  */
 window.openBulkImportModal = function() {
     const modal = document.getElementById('bulk-import-modal');
@@ -5265,7 +6271,7 @@ window.openBulkImportModal = function() {
 window.handleBulkImportExecute = async function() {
     const input = document.getElementById('bulk-import-input').value.trim();
     if (!input) {
-        alert("繝・・繧ｿ繧定ｲｼ繧贋ｻ倥￠縺ｦ縺上□縺輔＞縲・);
+        alert("データを貼り付けてください。");
         return;
     }
 
@@ -5273,25 +6279,25 @@ window.handleBulkImportExecute = async function() {
     const entries = [];
     let currentEntry = null;
 
-    // 蟷ｴ莉｣繝槭ャ繝斐Φ繧ｰ
+    // 年代マッピング
     const ageMap = {
-        '・・: 'unknown', '荳肴・': 'unknown', '?': 'unknown',
-        '5': 'elementary', '10': 'elementary', '蟆丞ｭｦ': 'elementary',
+        '？': 'unknown', '不明': 'unknown', '?': 'unknown',
+        '5': 'elementary', '10': 'elementary', '小学': 'elementary',
         '20': '19_20s', '30': '30s', '40': '40s', '50': '50s', '60': '60s', '70': '70s', '80': '80s',
-        '荳ｭ': 'middle_high', '鬮・: 'middle_high'
+        '中': 'middle_high', '高': 'middle_high'
     };
     
-    // T繧ｷ繝｣繝・・繝・ヴ繝ｳ繧ｰ (v7.7.0貅匁侠)
+    // Tシャツマッピング (v7.7.0準拠)
     const tshirtMap = {
-        'LL': 'XL・・L・・, '2L': 'XL・・L・・, 'XL': 'XL・・L・・,
-        '3L': '2XL・・L・・, '2XL': '2XL・・L・・,
-        '4L': '3XL・・L・・, '3XL': '3XL・・L・・,
-        '5L': '4XL・・L・・, '4XL': '4XL・・L・・
+        'LL': 'XL（2L）', '2L': 'XL（2L）', 'XL': 'XL（2L）',
+        '3L': '2XL（3L）', '2XL': '2XL（3L）',
+        '4L': '3XL（4L）', '3XL': '3XL（4L）',
+        '5L': '4XL（5L）', '4XL': '4XL（5L）'
     };
 
     lines.forEach((line) => {
         const cols = line.split('\t').map(c => c.trim());
-        if (cols.length < 3) return; // 辟｡蜉ｹ縺ｪ陦・
+        if (cols.length < 3) return; // 無効な行
 
         const groupName = cols[0];
         const fisherCountRaw = parseInt(cols[1]);
@@ -5302,7 +6308,7 @@ window.handleBulkImportExecute = async function() {
         const pTshirtRaw = cols[6];
         const repPhone = cols[7];
 
-        // 繧ｰ繝ｫ繝ｼ繝怜錐縺後≠繧句ｴ蜷医・譁ｰ縺励＞繧ｰ繝ｫ繝ｼ繝励ｒ髢句ｧ・
+        // グループ名がある場合は新しいグループを開始
         if (groupName && groupName !== "") {
             if (currentEntry) entries.push(currentEntry);
             currentEntry = {
@@ -5313,31 +6319,31 @@ window.handleBulkImportExecute = async function() {
                 repPhone: repPhone || "000-0000-0000",
                 email: "suiho-manual@example.com",
                 repEmail: "suiho-manual@example.com",
-                source: "豌ｴ螳・,
+                source: "水宝",
                 participants: [],
                 status: 'pending',
                 password: '0000',
-                memo: "Excel荳諡ｬ逋ｻ骭ｲ蛻・,
+                memo: "Excel一括登録分",
                 expectedCount: fisherCountRaw || 1
             };
         }
 
         if (currentEntry) {
-            // 蜷榊燕縺檎ｩｺ縺ｧ繧ゅ碁・繧贋ｺｺ謨ｰ縲阪・陦梧焚蛻・・霑ｽ蜉繧定ｩｦ縺ｿ繧・
+            // 名前が空でも「釣り人数」の行数分は追加を試みる
             if (pName || pGenderRaw || pAgeRaw || pTshirtRaw || currentEntry.participants.length < currentEntry.expectedCount) {
-                const finalName = pName || `${currentEntry.groupName} 蜿ょ刈閠・{currentEntry.participants.length + 1}`;
+                const finalName = pName || `${currentEntry.groupName} 参加者${currentEntry.participants.length + 1}`;
                 
-                // 蟷ｴ莉｣縺ｮ豁｣隕丞喧
+                // 年代の正規化
                 let ageKey = 'unknown'; // Default to unknown for bulk
                 for (let k in ageMap) { if (pAgeRaw && pAgeRaw.includes(k)) { ageKey = ageMap[k]; break; } }
                 
-                // T繧ｷ繝｣繝・・豁｣隕丞喧 (v8.9.80: Unified helper)
+                // Tシャツの正規化 (v8.9.80: Unified helper)
                 let size = normalizeTshirtSize(pTshirtRaw);
 
                 currentEntry.participants.push({
                     name: finalName,
                     type: 'fisher',
-                    gender: (pGenderRaw === '螂ｳ') ? 'female' : (pGenderRaw === '逕ｷ' ? 'male' : 'unknown'),
+                    gender: (pGenderRaw === '女') ? 'female' : (pGenderRaw === '男' ? 'male' : 'unknown'),
                     age: ageKey,
                     region: pRegion || '',
                     tshirtSize: size,
@@ -5349,22 +6355,22 @@ window.handleBulkImportExecute = async function() {
     if (currentEntry) entries.push(currentEntry);
 
     if (entries.length === 0) {
-        alert("譛牙柑縺ｪ繝・・繧ｿ繧定ｧ｣譫舌〒縺阪∪縺帙ｓ縺ｧ縺励◆縲ょ・縺ｮ荳ｦ縺ｳ繧堤｢ｺ隱阪＠縺ｦ縺上□縺輔＞縲・);
+        alert("有効なデータを解析できませんでした。列の並びを確認してください。");
         return;
     }
 
-    // 繝励Ξ繝薙Η繝ｼ陦ｨ遉ｺ
+    // プレビュー表示
     const previewContent = document.getElementById('import-preview-content');
     const previewArea = document.getElementById('import-preview-area');
     previewContent.innerHTML = entries.map(e => `
         <div style="margin-bottom:8px; border-bottom:1px solid #ddd; padding-bottom:4px;">
-            <strong>${e.groupName}</strong> (${e.participants.length}蜷・ - 莉｣陦ｨ: ${e.representative} / ${e.phone}
+            <strong>${e.groupName}</strong> (${e.participants.length}名) - 代表: ${e.representative} / ${e.phone}
             <div style="color:#666; font-size:0.7rem;">${e.participants.map(p => p.name).join(', ')}</div>
         </div>
     `).join('');
     previewArea.classList.remove('hidden');
 
-    if (!confirm(`${entries.length} 莉ｶ縺ｮ繧ｰ繝ｫ繝ｼ繝暦ｼ郁ｨ・${entries.reduce((s, e) => s + e.participants.length, 0)} 蜷搾ｼ峨ｒ蜿悶ｊ霎ｼ縺ｿ縺ｾ縺吶°・歃n窶ｻ螳御ｺ・∪縺ｧ謨ｰ蛻・°縺九ｋ蝣ｴ蜷医′縺ゅｊ縺ｾ縺吶Ａ)) return;
+    if (!confirm(`${entries.length} 件のグループ（計 ${entries.reduce((s, e) => s + e.participants.length, 0)} 名）を取り込みますか？\n※完了まで数分かかる場合があります。`)) return;
 
     const btn = document.getElementById('btn-execute-import');
     const statusArea = document.getElementById('import-status-area');
@@ -5377,8 +6383,8 @@ window.handleBulkImportExecute = async function() {
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
         statusArea.innerHTML = `<div class="alert alert-info">
-            <strong>${i + 1} / ${entries.length} 繧ｰ繝ｫ繝ｼ繝礼岼繧貞叙繧願ｾｼ縺ｿ荳ｭ...</strong><br>
-            [${entry.groupName}] (${entry.participants.length}蜷・ 繧堤匳骭ｲ縺励※縺・∪縺吶・
+            <strong>${i + 1} / ${entries.length} グループ目を取り込み中...</strong><br>
+            [${entry.groupName}] (${entry.participants.length}名) を登録しています。
         </div>`;
         
         try {
@@ -5414,7 +6420,7 @@ window.handleBulkImportExecute = async function() {
                 successCount++;
             } else {
                 console.warn("Server error for group:", entry.groupName, result);
-                failedGroups.push(`${entry.groupName} (繧ｵ繝ｼ繝舌・繧ｨ繝ｩ繝ｼ: ${result?.message || '荳肴・'})`);
+                failedGroups.push(`${entry.groupName} (サーバーエラー: ${result?.message || '不明'})`);
             }
 
             // v8.9.62: Add a small delay between requests to avoid rate limits
@@ -5422,31 +6428,31 @@ window.handleBulkImportExecute = async function() {
 
         } catch (err) {
             console.error("Fetch error for group:", entry.groupName, err);
-            failedGroups.push(`${entry.groupName} (騾壻ｿ｡繧ｨ繝ｩ繝ｼ: ${err.message})`);
+            failedGroups.push(`${entry.groupName} (通信エラー: ${err.message})`);
         }
     }
 
-    // 譛邨らｵ先棡縺ｮ陦ｨ遉ｺ
+    // 最終結果の表示
     btn.disabled = false;
-    let finalHtml = `<h3>蜿悶ｊ霎ｼ縺ｿ螳御ｺ・/h3>
-        <p style="font-size:1.1rem; font-weight:bold;">謌仙粥: ${successCount} / 蜈ｨ ${entries.length} 繧ｰ繝ｫ繝ｼ繝・/p>`;
+    let finalHtml = `<h3>取り込み完了</h3>
+        <p style="font-size:1.1rem; font-weight:bold;">成功: ${successCount} / 全 ${entries.length} グループ</p>`;
     
     if (failedGroups.length > 0) {
         finalHtml += `<div class="alert alert-danger" style="background:#fee2e2; border:1px solid #ef4444; color:#991b1b; margin-top:10px; padding:10px; border-radius:6px;">
-            <strong>莉･荳九・繧ｰ繝ｫ繝ｼ繝励・逋ｻ骭ｲ縺ｫ螟ｱ謨励＠縺ｾ縺励◆・・/strong>
+            <strong>以下のグループの登録に失敗しました：</strong>
             <ul style="margin:5px 0 0 20px; font-size:0.8rem;">
                 ${failedGroups.map(f => `<li>${f}</li>`).join('')}
             </ul>
-            <p style="font-size:0.75rem; margin-top:5px;">窶ｻ螟ｱ謨励＠縺溷・縺縺代ｒ蜀榊ｺｦ繧ｳ繝斐・縺励※繧・ｊ逶ｴ縺励※縺上□縺輔＞縲・/p>
+            <p style="font-size:0.75rem; margin-top:5px;">※失敗した分だけを再度コピーしてやり直してください。</p>
         </div>`;
     }
 
     finalHtml += `<div class="alert alert-success" style="background:#d1fae5; border:1px solid #10b981; color:#065f46; margin-top:10px; padding:10px; border-radius:6px;">
-        蜷咲ｰｿ繧呈峩譁ｰ縺吶ｋ縺溘ａ縲・遘貞ｾ後↓逕ｻ髱｢繧貞・隱ｭ縺ｿ霎ｼ縺ｿ縺励∪縺・..
+        名簿を更新するため、3秒後に画面を再読み込みします...
     </div>`;
 
     statusArea.innerHTML = finalHtml;
-    showToast(`荳諡ｬ蜿悶ｊ霎ｼ縺ｿ螳御ｺ・ ${successCount}莉ｶ謌仙粥`, successCount === entries.length ? "success" : "warning");
+    showToast(`一括取り込み完了: ${successCount}件成功`, successCount === entries.length ? "success" : "warning");
     
     setTimeout(() => {
         if (successCount > 0) location.reload();
@@ -5466,3 +6472,178 @@ window.onpopstate = function(event) {
 };
 
 // End of script
+
+// Standalone form admin dashboard features
+window.renderPreorders = function() {
+    const list = document.getElementById('preorder-list');
+    const statsList = document.getElementById('preorder-stats-list');
+    const preorders = state.preorders || [];
+    
+    if (statsList) {
+        if (preorders.length === 0) {
+            statsList.innerHTML = '<div>データなし</div>';
+        } else {
+            const counts = {};
+            preorders.forEach(p => {
+                (p.items || []).forEach(item => {
+                    counts[item.name] = (counts[item.name] || 0) + parseInt(item.quantity || 0, 10);
+                });
+            });
+            let statsHtml = '';
+            for (const [name, qty] of Object.entries(counts)) {
+                if (qty > 0) {
+                    statsHtml += `<div class="stat-item" style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid #e2e8f0;"><span>${name}</span><span class="stat-value" style="font-weight:bold;">${qty} 個</span></div>`;
+                }
+            }
+            statsList.innerHTML = statsHtml || '<div>予約商品なし</div>';
+        }
+    }
+
+    if (!list) return;
+    if (preorders.length === 0) {
+        list.innerHTML = '<tr><td colspan="5" style="text-align:center;">予約データがありません</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    [...preorders].reverse().forEach(p => {
+        const dateStr = p.timestamp ? new Date(p.timestamp).toLocaleString() : '-';
+        const itemsStr = (p.items || []).map(i => `${i.name}(${i.quantity})`).join('<br>');
+        html += `
+            <tr>
+                <td>${dateStr}</td>
+                <td>${p.storeName || ''}</td>
+                <td>${p.customerName || ''}</td>
+                <td>${p.customerPhone || ''}</td>
+                <td>${p.customerEmail || ''}</td>
+                <td>${itemsStr}</td>
+            </tr>
+        `;
+    });
+    list.innerHTML = html;
+};
+
+window.renderSurveys = function() {
+    const list = document.getElementById('survey-list');
+    const satList = document.getElementById('survey-satisfaction-list');
+    const catchList = document.getElementById('survey-catch-result-list');
+    const opList = document.getElementById('survey-operations-score-list');
+    const partCountList = document.getElementById('survey-participation-count-list');
+    const testEventList = document.getElementById('survey-test-event-list');
+    const nextList = document.getElementById('survey-next-list');
+    const surveys = state.surveys || [];
+    
+    if (satList && nextList) {
+        if (surveys.length === 0) {
+            satList.innerHTML = '<div>データなし</div>';
+            if (catchList) catchList.innerHTML = '<div>データなし</div>';
+            if (opList) opList.innerHTML = '<div>データなし</div>';
+            if (partCountList) partCountList.innerHTML = '<div>データなし</div>';
+            if (testEventList) testEventList.innerHTML = '<div>データなし</div>';
+            nextList.innerHTML = '<div>データなし</div>';
+        } else {
+            const satCounts = {};
+            const catchCounts = {};
+            const opCounts = {};
+            const partCounts = {};
+            const testCounts = {};
+            const nextCounts = {};
+            
+            surveys.forEach(s => {
+                if (s.satisfaction) satCounts[s.satisfaction] = (satCounts[s.satisfaction] || 0) + 1;
+                if (s.catchResult) catchCounts[s.catchResult] = (catchCounts[s.catchResult] || 0) + 1;
+                if (s.operationsScore) opCounts[s.operationsScore] = (opCounts[s.operationsScore] || 0) + 1;
+                if (s.participationCount) partCounts[s.participationCount] = (partCounts[s.participationCount] || 0) + 1;
+                if (s.testEventParticipation) testCounts[s.testEventParticipation] = (testCounts[s.testEventParticipation] || 0) + 1;
+                if (s.nextTime) nextCounts[s.nextTime] = (nextCounts[s.nextTime] || 0) + 1;
+            });
+            
+            const renderStat = (counts, total) => {
+                let html = '';
+                // Sort by count descending
+                const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+                for (const [key, val] of sorted) {
+                    const pct = Math.round((val / total) * 100);
+                    html += `
+                        <div class="stat-item" style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                                <span>${key}</span>
+                                <span class="stat-value" style="font-weight:bold;">${val} 件 <small style="color:#64748b; font-weight:normal;">(${pct}%)</small></span>
+                            </div>
+                            <div class="progress-bar" style="height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden;">
+                                <div class="progress" style="width:${pct}%; background:var(--primary-color); height:100%;"></div>
+                            </div>
+                        </div>`;
+                }
+                return html || '<div>データなし</div>';
+            };
+            
+            satList.innerHTML = renderStat(satCounts, surveys.length);
+            if (catchList) catchList.innerHTML = renderStat(catchCounts, surveys.length);
+            if (opList) opList.innerHTML = renderStat(opCounts, surveys.length);
+            if (partCountList) partCountList.innerHTML = renderStat(partCounts, surveys.length);
+            if (testEventList) testEventList.innerHTML = renderStat(testCounts, surveys.length);
+            nextList.innerHTML = renderStat(nextCounts, surveys.length);
+        }
+    }
+
+    if (!list) return;
+    if (surveys.length === 0) {
+        list.innerHTML = '<tr><td colspan="6" style="text-align:center;">アンケート結果がありません</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    [...surveys].reverse().forEach(s => {
+        const dateStr = s.timestamp ? new Date(s.timestamp).toLocaleString() : '-';
+        // For backwards compatibility, if they have groupName we show it, else participantName
+        const nameToShow = s.participantName || s.groupName || '';
+        html += `
+            <tr>
+                <td>${dateStr}</td>
+                <td>${nameToShow}</td>
+                <td>${s.satisfaction || ''}</td>
+                <td>${s.catchResult || ''}</td>
+                <td>${s.nextTime || ''}</td>
+                <td><div style="max-width:200px; max-height:60px; overflow-y:auto; font-size:0.8rem;">${s.comments || ''}</div></td>
+            </tr>
+        `;
+    });
+    list.innerHTML = html;
+};
+
+window.exportPreordersToCSV = function() {
+    const preorders = state.preorders || [];
+    if (preorders.length === 0) return alert('データがありません');
+    let csv = '\uFEFF日時,受取店舗,氏名,電話番号,メールアドレス,予約商品\n';
+    preorders.forEach(p => {
+        const dateStr = p.timestamp ? new Date(p.timestamp).toLocaleString() : '';
+        const itemsStr = (p.items || []).map(i => `${i.name}(${i.quantity})`).join(' / ');
+        csv += `"${dateStr}","${p.storeName || ''}","${p.customerName || ''}","${p.customerPhone || ''}","${p.customerEmail || ''}","${itemsStr}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `予約一覧_${new Date().getTime()}.csv`;
+    link.click();
+};
+
+window.exportSurveysToCSV = function() {
+    const surveys = state.surveys || [];
+    if (surveys.length === 0) return alert('データがありません');
+    let csv = '\uFEFF日時,氏名(旧グループ名),電話番号,メールアドレス,釣果,満足度,運営評価,参加回数,お気に入り製品,試釣会参加,試釣会感想,次回参加,コメント\n';
+    surveys.forEach(s => {
+        const dateStr = s.timestamp ? new Date(s.timestamp).toLocaleString() : '';
+        const safeComment = (s.comments || '').replace(/"/g, '""');
+        const safeFavProduct = (s.favoriteProduct || '').replace(/"/g, '""');
+        const safeTestComments = (s.testEventComments || '').replace(/"/g, '""');
+        const nameToExport = s.participantName || s.groupName || '';
+        
+        csv += `"${dateStr}","${nameToExport}","${s.participantTel || ''}","${s.participantEmail || ''}","${s.catchResult || ''}","${s.satisfaction || ''}","${s.operationsScore || ''}","${s.participationCount || ''}","${safeFavProduct}","${s.testEventParticipation || ''}","${safeTestComments}","${s.nextTime || ''}","${safeComment}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `アンケート結果_${new Date().getTime()}.csv`;
+    link.click();
+};
