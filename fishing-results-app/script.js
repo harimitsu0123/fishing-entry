@@ -92,7 +92,7 @@ function handleLogin() {
     if (!selectedId || !passcode) return;
 
     if (selectedId === 'admin') {
-        const adminPass = state.settings.adminPassword || "1212";
+        const adminPass = String(state.settings.adminPassword || "1212");
         if (passcode === adminPass || passcode === "1212") {
             sessionStorage.setItem('loggedIkesuId', 'admin');
             showView('admin-view');
@@ -105,7 +105,7 @@ function handleLogin() {
     }
 
     const ikesuList = state.settings.ikesuList || [];
-    const found = ikesuList.find(i => i.id === selectedId && i.passcode === passcode);
+    const found = ikesuList.find(i => i.id === selectedId && String(i.passcode) === passcode);
 
     if (found) {
         currentIkesu = found;
