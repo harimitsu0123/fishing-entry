@@ -1750,7 +1750,7 @@ function updateAdminToolbar() {
             <div class="toolbar-content">
                 <button class="btn-toolbar" data-target="registration-view">受付フォーム</button>
                 <button class="btn-toolbar" data-target="dashboard-view">大会準備・管理</button>
-                <button class="btn-toolbar" data-target="reception-view">大会当日</button>
+                <button class="btn-toolbar" data-target="reception-view">当日受付</button>
                 <button class="btn-toolbar logout" id="admin-logout">ログアウト</button>
             </div>
         `;
