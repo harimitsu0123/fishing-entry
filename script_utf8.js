@@ -454,6 +454,7 @@ window.handleRegistration = async function() {
         // v8.9.37: Force UI update for admin views
         if (typeof updateDashboard === 'function') updateDashboard();
         if (typeof updateReceptionList === 'function') updateReceptionList();
+        if (typeof renderIkesuWorkspace === 'function') renderIkesuWorkspace();
 
         const entryType = editId ? '修正' : '新規登録';
         if (typeof logChange === 'function') logChange(entryData, entryType, existingEntry);
@@ -5152,6 +5153,7 @@ window.cancelEntry = async function (id) {
         entry.lastModified = new Date().toISOString();
         await saveData();
         updateDashboard();
+        if (typeof renderIkesuWorkspace === 'function') renderIkesuWorkspace();
         showToast('エントリーを無効化しました', 'info');
         
         // v8.9.60: Refresh modal or form if visible
@@ -5174,6 +5176,7 @@ window.restoreEntry = async function (id) {
         entry.lastModified = new Date().toISOString();
         await saveData();
         updateDashboard();
+        if (typeof renderIkesuWorkspace === 'function') renderIkesuWorkspace();
         showToast('エントリーを有効な状態（未受付）に復元しました', 'success');
         
         // v8.9.60: Refresh modal or form if visible
