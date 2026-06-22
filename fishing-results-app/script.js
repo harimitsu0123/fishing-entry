@@ -279,7 +279,7 @@ function renderAdminView() {
     state.entries.forEach(e => {
         if (e.status === 'cancelled') return;
         (e.participants || []).forEach(p => {
-            if (p.status === 'cancelled') return;
+            if (p.status === 'cancelled' || p.status === 'absent') return;
             if (p.type === 'fisher') {
                 const cA = parseInt(p.catchA || 0);
                 const cB = parseInt(p.catchB || 0);
@@ -301,7 +301,7 @@ function renderAdminView() {
         state.entries.forEach(e => {
             if (e.status === 'cancelled') return;
             (e.participants || []).forEach(p => {
-                if (p.status === 'cancelled') return;
+                if (p.status === 'cancelled' || p.status === 'absent') return;
                 if (p.ikesuId === ik.id && p.type === 'fisher') {
                     ikA += parseInt(p.catchA || 0);
                     ikB += parseInt(p.catchB || 0);

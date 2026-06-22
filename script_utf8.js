@@ -99,27 +99,6 @@ window.showConfirmation = function() {
         }
     }
 
-    for (let i = 0; i < participants.length; i++) {
-        if (!participants[i].name.trim()) {
-            showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
-            return;
-        }
-    }
-
-    for (let i = 0; i < participants.length; i++) {
-        if (!participants[i].name.trim()) {
-            showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
-            return;
-        }
-    }
-
-    for (let i = 0; i < participants.length; i++) {
-        if (!participants[i].name.trim()) {
-            showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
-            return;
-        }
-    }
-
     if (participants.length === 0) {
         showStatus("参加者を1名以上登録してください。", "error");
         return;
@@ -142,43 +121,7 @@ window.showConfirmation = function() {
         return;
     }
 
-    for (let i = 0; i < participants.length; i++) {
-            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
-                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-                return;
-            }
-        }
-
-        for (let i = 0; i < participants.length; i++) {
-            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
-                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-                return;
-            }
-        }
-
-        for (let i = 0; i < participants.length; i++) {
-            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
-                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-                return;
-            }
-        }
-
-        for (let i = 0; i < participants.length; i++) {
-            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
-                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-                return;
-            }
-        }
-
-        const sourceEl = document.querySelector('input[name="reg-source"]:checked');
+    const sourceEl = document.querySelector('input[name="reg-source"]:checked');
         const source = sourceEl ? sourceEl.value : '一般';
     const fisherCount = participants.filter(p => p.type === 'fisher').length;
 
@@ -262,33 +205,6 @@ window.handleRegistration = async function() {
                 isCancelledEdit: getCheck('.p-cancel')
             };
         });
-
-        for (let i = 0; i < participants.length; i++) {
-            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
-                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-                return;
-            }
-        }
-
-        for (let i = 0; i < participants.length; i++) {
-            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
-                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-                return;
-            }
-        }
-
-        for (let i = 0; i < participants.length; i++) {
-            if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
-                showStatus(`参加者${i + 1}の氏名を入力してください。`, "error");
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-                return;
-            }
-        }
 
         for (let i = 0; i < participants.length; i++) {
             if (!participants[i].name.trim() && !participants[i].isCancelledEdit) {
@@ -4388,7 +4304,7 @@ window.renderIkesuWorkspace = function () {
 
         const unassignedParts = [];
         e.participants.forEach((p, idx) => {
-            if (p.status === 'cancelled') return;
+            if (p.status === 'cancelled' || p.status === 'absent') return;
             if (p.ikesuId && assignedData[p.ikesuId]) {
                 assignedData[p.ikesuId].items.push({ entry: e, p, idx });
                 if (p.type === 'fisher') assignedData[p.ikesuId].fishers++;
@@ -4399,7 +4315,7 @@ window.renderIkesuWorkspace = function () {
         });
 
         if (unassignedParts.length > 0 && matchesSearch) {
-            const activeParticipants = e.participants.filter(p => p.status !== 'cancelled');
+            const activeParticipants = e.participants.filter(p => p.status !== 'cancelled' && p.status !== 'absent');
             const isFull = unassignedParts.length === activeParticipants.length && activeParticipants.length > 0;
             const fishers = unassignedParts.filter(i => i.p.type === 'fisher').length;
             const observers = unassignedParts.filter(i => i.p.type === 'observer').length;
