@@ -198,15 +198,6 @@ function renderParticipantList() {
 
     if (!foundAny) {
         listContainer.innerHTML = '<p class="text-muted" style="text-align:center; padding:2rem;">このイケスに割り当てられた釣り人はまだいません。</p>';
-    } else {
-        const saveBtnWrapper = document.createElement('div');
-        saveBtnWrapper.style.cssText = "margin-top: 1.5rem; margin-bottom: 2rem; display: flex; justify-content: center;";
-        saveBtnWrapper.innerHTML = `
-            <button class="btn-primary" onclick="handleSave()" style="padding: 1rem 2rem; font-size: 1.1rem; width: 100%; max-width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                変更を保存
-            </button>
-        `;
-        listContainer.appendChild(saveBtnWrapper);
     }
 
     document.getElementById('ikesu-total-points').textContent = totalPoints;
@@ -375,13 +366,37 @@ function renderAdminView() {
     const elTotalV = document.getElementById('status-total-ikesu-v');
     if (elTotalV) elTotalV.textContent = totalActive;
 
-    listContainer.innerHTML = activeIkesus.map(ik => {
+    let displayIkesus = activeIkesus;
+    const isRankingView = new URLSearchParams(window.location.search).get('view') === 'ranking';
+    if (isRankingView) {
+        displayIkesus.sort((a, b) => {
+            const avgA = a.memberCount > 0 ? (a.pts / a.memberCount) : 0;
+            const avgB = b.memberCount > 0 ? (b.pts / b.memberCount) : 0;
+            if (Math.abs(avgA - avgB) > 0.01) return avgB - avgA;
+            if (a.ikB !== b.ikB) return b.ikB - a.ikB;
+            if (a.ikA !== b.ikA) return b.ikA - a.ikA;
+            return 0;
+        });
+    }
+
+    listContainer.innerHTML = displayIkesus.map((ik, index) => {
         const hasCatch = ik.ikFish > 0;
         const bgClass = ik.checked ? 'checked' : (hasCatch ? 'has-catch' : 'unentered');
+        
+        let rankHtml = '';
+        if (isRankingView) {
+            let rankColor = '#64748b';
+            if (index === 0) rankColor = '#fbbf24';
+            else if (index === 1) rankColor = '#94a3b8';
+            else if (index === 2) rankColor = '#b45309';
+            rankHtml = `<div style="font-size: 1.6rem; font-weight: 900; color: ${rankColor}; margin-right: 0.5rem; min-width: 45px;">${index + 1}位</div>`;
+        }
+
         return `
         <div class="ikesu-summary-card ${bgClass}" onclick="jumpToIkesu('${ik.id}')" style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1rem; gap: 0.5rem; flex-wrap: wrap;">
             
             <div style="display: flex; align-items: baseline; gap: 0.8rem; min-width: 150px;">
+                ${rankHtml}
                 <span style="font-size: 1.4rem; font-weight: 900; color: #1e293b; line-height: 1;">${ik.name}</span>
                 <span style="font-size: 1rem; color: #475569; font-weight: 700;">${ik.leaderName} 様</span>
             </div>
