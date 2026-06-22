@@ -197,7 +197,16 @@ function renderParticipantList() {
     });
 
     if (!foundAny) {
-        listContainer.innerHTML = '<p class="text-muted" style="text-align:center; padding:2rem;">このイケスに割り当てられた釣り人はいません。</p>';
+        listContainer.innerHTML = '<p class="text-muted" style="text-align:center; padding:2rem;">このイケスに割り当てられた釣り人はまだいません。</p>';
+    } else {
+        const saveBtnWrapper = document.createElement('div');
+        saveBtnWrapper.style.cssText = "margin-top: 1.5rem; margin-bottom: 2rem; display: flex; justify-content: center;";
+        saveBtnWrapper.innerHTML = `
+            <button class="btn-primary" onclick="handleSave()" style="padding: 1rem 2rem; font-size: 1.1rem; width: 100%; max-width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                変更を保存
+            </button>
+        `;
+        listContainer.appendChild(saveBtnWrapper);
     }
 
     document.getElementById('ikesu-total-points').textContent = totalPoints;
