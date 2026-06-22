@@ -312,12 +312,14 @@ function renderAdminView() {
             if (e.status === 'cancelled') return;
             (e.participants || []).forEach(p => {
                 if (p.status === 'cancelled' || p.status === 'absent') return;
-                if (p.ikesuId === ik.id && p.type === 'fisher') {
-                    ikA += parseInt(p.catchA || 0);
-                    ikB += parseInt(p.catchB || 0);
-                    ikFish += (parseInt(p.catchA || 0) + parseInt(p.catchB || 0));
-                    memberCount++;
+                if (p.ikesuId === ik.id) {
                     if (p.isLeader) leaderName = p.name;
+                    if (p.type === 'fisher') {
+                        ikA += parseInt(p.catchA || 0);
+                        ikB += parseInt(p.catchB || 0);
+                        ikFish += (parseInt(p.catchA || 0) + parseInt(p.catchB || 0));
+                        memberCount++;
+                    }
                 }
             });
         });
