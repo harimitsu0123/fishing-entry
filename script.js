@@ -3088,6 +3088,7 @@ window.renderGroupPrintView = function() {
                                 <td style="border: 1px solid #000; padding: 0.4rem; font-weight: 900; white-space: nowrap;">
                                     <span style="font-size: 20pt;">${p.name}</span>
                                     ${p.nickname ? `<span style="font-size:14pt; font-weight:normal; margin-left:12px;">(${p.nickname})</span>` : ''}
+                                    ${p.isLeader ? `<span style="font-size:14pt; font-weight:bold; color:#d32f2f; margin-left:8px;">★リーダー</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-weight: 900;">
                                     <span style="font-size: 22pt; white-space: nowrap;">${(p.tshirtSize || '-').replace(/\s*[\(（].*/, '').trim()}</span>

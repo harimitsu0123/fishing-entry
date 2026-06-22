@@ -167,7 +167,7 @@ function renderParticipantList() {
                 card.className = `participant-card`;
                 card.innerHTML = `
                     <div class="p-info">
-                        <div class="p-name">${p.name} ${p.isLeader ? '⭐' : ''}</div>
+                        <div class="p-name">${p.name} ${p.nickname ? `<span style="font-size: 0.8rem; color: #64748b;">(${p.nickname})</span>` : ''} ${p.isLeader ? '⭐' : ''}</div>
                         <div class="p-group">${entry.groupName} (${entry.id})</div>
                     </div>
                     <div class="p-scores-row">
