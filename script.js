@@ -3964,7 +3964,7 @@ function updateReceptionList() {
                             ${e.groupName}${e.hasDropIn ? '<span class="badge" style="background:#ef4444; color:#fff; font-size:0.6rem; margin-left:4px; font-weight:bold; vertical-align:middle;">当日追加</span>' : ''}
                         </div>
                         <div style="font-size:0.85rem; color:#636e72; margin-top:0.2rem;">
-                            (代表者) ${e.representative} ${ikesuLabel}
+                            (代表者) ${e.representative}
                         </div>
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.3rem; flex-shrink:0;">
