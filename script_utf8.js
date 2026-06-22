@@ -3799,6 +3799,16 @@ function updateReceptionList() {
 
         const badgeClass = e.source === 'みん釣り' ? 'badge-mintsuri' : e.source === '一般' ? 'badge-ippan' : e.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho';
         
+        const ikesuNames = new Set();
+        (e.participants || []).forEach(p => {
+            if (p.ikesuId && p.status !== 'cancelled' && p.status !== 'absent') {
+                const ik = (state.settings.ikesuList || []).find(i => i.id === p.ikesuId);
+                if (ik) ikesuNames.add(ik.name);
+            }
+        });
+        const ikesuDisplay = Array.from(ikesuNames).join(', ');
+        const ikesuLabel = ikesuDisplay ? `<span style="font-size:0.8rem; font-weight:bold; color:#059669; border:1px solid #059669; border-radius:4px; padding:1px 4px; margin-left:6px; background:#ecfdf5;">イケス: ${ikesuDisplay}</span>` : '';
+
         html += `
             <div class="reception-group-item ${activeReceptionEntryId === e.id ? 'active' : ''} ${e.isCompleted ? 'completed' : ''}" 
                  onclick="selectReceptionEntry('${e.id}')">
@@ -3809,7 +3819,7 @@ function updateReceptionList() {
                             ${e.groupName}${e.hasDropIn ? '<span class="badge" style="background:#ef4444; color:#fff; font-size:0.6rem; margin-left:4px; font-weight:bold; vertical-align:middle;">当日追加</span>' : ''}
                         </div>
                         <div style="font-size:0.85rem; color:#636e72; margin-top:0.2rem;">
-                            (代表者) ${e.representative}
+                            (代表者) ${e.representative} ${ikesuLabel}
                         </div>
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.3rem; flex-shrink:0;">
@@ -3857,6 +3867,16 @@ function renderReceptionDesk() {
         return;
     }
 
+    const ikesuNames = new Set();
+    (entry.participants || []).forEach(p => {
+        if (p.ikesuId && p.status !== 'cancelled' && p.status !== 'absent') {
+            const ik = (state.settings.ikesuList || []).find(i => i.id === p.ikesuId);
+            if (ik) ikesuNames.add(ik.name);
+        }
+    });
+    const ikesuDisplay = Array.from(ikesuNames).join(', ');
+    const ikesuLabel = ikesuDisplay ? `<span style="margin-left: 1rem; background: #ecfdf5; color: #059669; border: 1px solid #059669; padding: 2px 8px; border-radius: 4px;">イケス: ${ikesuDisplay}</span>` : '';
+
     desk.innerHTML = `
         <div class="desk-header" style="background: #eef2ff; border-bottom: 2px solid var(--primary-color); padding: 0.8rem 1rem; border-radius: 8px 8px 0 0;">
             <div class="desk-title-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
@@ -3867,6 +3887,7 @@ function renderReceptionDesk() {
                 <span style="background: white; padding: 2px 8px; border-radius: 4px; border: 1px solid #cbd5e1;">ID: ${entry.id}</span>
                 <span style="margin-left: 1rem;">代表者: ${entry.representative}</span>
                 <span style="margin-left: 1rem;">TEL: ${entry.phone}</span>
+                ${ikesuLabel}
             </div>
         </div>
 
