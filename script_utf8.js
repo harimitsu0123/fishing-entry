@@ -2657,7 +2657,7 @@ window.renderIkesuPrintView = function() {
             (e.participants || []).forEach(p => {
                 if (p.status === 'cancelled') return;
                 if (p.ikesuId === ik.id) {
-                    participants.push({ ...p, groupId: e.id, groupName: e.groupName });
+                    participants.push({ ...p, groupId: e.id, groupName: e.groupName, source: e.source });
                 }
             });
         });
@@ -2701,6 +2701,7 @@ window.renderIkesuPrintView = function() {
                                 <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; white-space: nowrap;">
                                     <span style="font-size: 24pt !important;">${p.name}</span>
                                     ${p.nickname ? `<span style="font-size:16pt !important; font-weight:normal; margin-left:10px;">(${p.nickname})</span>` : ''}
+                                    ${(p.isDropIn || p.source === '当日追加') ? `<span style="font-size:12pt !important; font-weight:bold; color:#ef4444; margin-left:8px;">[当日追加]</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.1rem;">${genderLabels[p.gender] || '-'}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-weight: bold;">
@@ -2765,7 +2766,7 @@ window.renderIkesuResultView = function() {
                 if (p.ikesuId === ik.id) {
                     if (p.isLeader) ikesuLeaderName = p.name;
                     if (p.type === 'fisher') {
-                        participants.push({ ...p, groupName: e.groupName, entryId: e.id });
+                        participants.push({ ...p, groupName: e.groupName, entryId: e.id, source: e.source });
                     }
                 }
             });
@@ -2819,6 +2820,7 @@ window.renderIkesuResultView = function() {
                                 <td style="border: 1px solid #000; padding: 0.3rem; font-weight: 900; white-space: nowrap;">
                                     <span style="font-size: 24pt !important;">${p.name}</span>
                                     ${p.nickname ? `<span style="font-size:16pt !important; font-weight:normal; margin-left:8px;">(${p.nickname})</span>` : ''}
+                                    ${(p.isDropIn || p.source === '当日追加') ? `<span style="font-size:12pt !important; font-weight:bold; color:#ef4444; margin-left:8px;">[当日追加]</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt !important; color: #999;">匹</span></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt !important; color: #999;">匹</span></td>
@@ -2952,6 +2954,7 @@ window.renderGroupPrintView = function() {
                                     <span style="font-size: 20pt;">${p.name}</span>
                                     ${p.nickname ? `<span style="font-size:14pt; font-weight:normal; margin-left:12px;">(${p.nickname})</span>` : ''}
                                     ${p.isLeader ? `<span style="font-size:14pt; font-weight:bold; color:#d32f2f; margin-left:8px;">★リーダー</span>` : ''}
+                                    ${(p.isDropIn || e.source === '当日追加') ? `<span style="font-size:14pt; font-weight:bold; color:#ef4444; margin-left:8px;">[当日追加]</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-weight: 900;">
                                     <span style="font-size: 22pt; white-space: nowrap;">${(p.tshirtSize || '-').replace(/\s*[\(（].*/, '').trim()}</span>
