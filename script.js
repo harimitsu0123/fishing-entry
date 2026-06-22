@@ -951,7 +951,7 @@ function mergeData(local, cloud) {
     // --- 2.5. 独立フォームのデータマージ ---
     const localPreTime = new Date(local.preordersLastModified || 0).getTime();
     const cloudPreTime = new Date(cloud.preordersLastModified || 0).getTime();
-    if (localPreTime > cloudPreTime) {
+    if (localPreTime > cloudPreTime && (local.preorders || []).length >= (cloud.preorders || []).length) {
         merged.preorders = local.preorders || [];
         merged.preordersLastModified = local.preordersLastModified;
     } else {
