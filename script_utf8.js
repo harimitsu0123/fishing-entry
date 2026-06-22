@@ -3750,12 +3750,13 @@ function updateReceptionList() {
     // v8.1.56: Save scroll position of the sidebar
     const scrollPos = list.scrollTop;
 
-    const processedEntries = state.entries.filter(e => e.status !== 'cancelled').map(e => {
-        const pArray = (e.participants || []).filter(p => p && p.status !== 'cancelled');
-        const finishedCount = pArray.filter(p => p.status === 'checked-in' || p.status === 'absent').length;
-        const totalCount = pArray.length;
+    const processedEntries = state.entries.map(e => {
+        const pArray = e.participants || [];
+        const validPArray = pArray.filter(p => p && p.status !== 'cancelled');
+        const finishedCount = validPArray.filter(p => p.status === 'checked-in' || p.status === 'absent').length;
+        const totalCount = validPArray.length;
         const isCompleted = finishedCount === totalCount && totalCount > 0;
-        return { ...e, isCompleted, finishedCount, totalCount, validPArray: pArray };
+        return { ...e, isCompleted, finishedCount, totalCount, validPArray, allPArray: pArray, isCancelledEntry: e.status === 'cancelled' };
     });
 
     // Sort: isCompleted false first, then logic
@@ -3772,30 +3773,36 @@ function updateReceptionList() {
 
     let html = '';
     processedEntries.forEach(e => {
-        // Search Filter (v8.1.58: Safety guarded)
-        const pArray = e.validPArray || [];
-        const pNames = pArray.map(p => p.name).join(' ');
-        const pNicks = pArray.map(p => p.nickname || "").join(' ');
-        const pTshirts = pArray.map(p => p.tshirtSize || "").join(' ');
-        const pGenders = pArray.map(p => genderLabels[p.gender] || "").join(' ');
-        const pTypes = pArray.map(p => p.type === 'observer' ? '見学' : '釣り').join(' ');
+        const searchTerms = searchTerm.replace(/　/g, ' ').split(/\s+/).filter(Boolean);
+        const hasSearch = searchTerms.length > 0;
+
+        if (!hasSearch && e.isCancelledEntry) return;
+
+        const targetPArray = hasSearch ? e.allPArray : e.validPArray;
+
+        const pNames = targetPArray.map(p => p.name).join(' ');
+        const pNicks = targetPArray.map(p => p.nickname || "").join(' ');
+        const pTshirts = targetPArray.map(p => p.tshirtSize || "").join(' ');
+        const pGenders = targetPArray.map(p => genderLabels[p.gender] || "").join(' ');
+        const pTypes = targetPArray.map(p => p.type === 'observer' ? '見学' : '釣り').join(' ');
         const combined = `${e.id} ${e.groupName} ${e.representative} ${pNames} ${pNicks} ${pTshirts} ${pGenders} ${pTypes}`.toLowerCase();
         
-        const searchTerms = searchTerm.replace(/　/g, ' ').split(/\s+/).filter(Boolean);
-        if (searchTerms.length > 0) {
+        if (hasSearch) {
             const isMatch = searchTerms.every(term => combined.includes(term));
             if (!isMatch) return;
         }
 
         const filterObserver = document.getElementById('reception-filter-observer')?.checked;
         if (filterObserver) {
-            const hasObserver = pArray.some(p => p.type === 'observer');
+            const hasObserver = targetPArray.some(p => p.type === 'observer');
             if (!hasObserver) return;
         }
 
-        // Completion Filter
-        if (filterValue === 'uncompleted' && e.isCompleted) return;
-        if (filterValue === 'completed' && !e.isCompleted) return;
+        // Completion Filter (ignore if searching)
+        if (!hasSearch) {
+            if (filterValue === 'uncompleted' && e.isCompleted) return;
+            if (filterValue === 'completed' && !e.isCompleted) return;
+        }
 
         const badgeClass = e.source === 'みん釣り' ? 'badge-mintsuri' : e.source === '一般' ? 'badge-ippan' : e.source === 'ハリミツ' ? 'badge-harimitsu' : 'badge-suiho';
         
