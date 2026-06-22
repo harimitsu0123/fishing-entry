@@ -4625,7 +4625,7 @@ window.renderLeaderEntryTable = function() {
 
     container.innerHTML = `
         <div style="font-size:0.8rem;">
-            <table class="table-striped" style="margin-bottom:0;">
+            <table class="table-striped leader-table" style="margin-bottom:0;">
                 <thead><tr><th>氏名</th><th>青物、クエ(2pt)</th><th>鯛等(1pt)</th><th>小計</th></tr></thead>
                 <tbody>
                     ${members.map(m => `
