@@ -2763,7 +2763,7 @@ window.renderIkesuResultView = function() {
         state.entries.forEach(e => {
             if (e.status === 'cancelled') return;
             (e.participants || []).forEach(p => {
-                if (p.status === 'cancelled') return;
+                if (p.status === 'cancelled' || p.status === 'absent') return;
                 if (p.ikesuId === ik.id) {
                     if (p.isLeader) ikesuLeaderName = p.name;
                     if (p.type === 'fisher') {
@@ -5407,10 +5407,12 @@ window.renderRankings = function() {
                 if (p.ikesuId) {
                     if (!ikesuScores[p.ikesuId]) {
                         const ikName = state.settings.ikesuList?.find(ik => ik.id === p.ikesuId)?.name || p.ikesuId;
-                        ikesuScores[p.ikesuId] = { total: 0, count: 0, name: ikName, members: [] };
+                        ikesuScores[p.ikesuId] = { total: 0, count: 0, cA: 0, cB: 0, name: ikName, members: [] };
                     }
                     ikesuScores[p.ikesuId].total += score;
                     ikesuScores[p.ikesuId].count += 1;
+                    ikesuScores[p.ikesuId].cA += cA;
+                    ikesuScores[p.ikesuId].cB += cB;
                     ikesuScores[p.ikesuId].members.push({ name: p.name, group: entry.groupName, score });
                 }
             }
@@ -5559,8 +5561,14 @@ window.renderRankings = function() {
             const s = ikesuScores[id];
             // Sort members within each ikesu by score
             const sortedMembers = s.members.sort((a,b) => b.score - a.score);
-            return { id, name: s.name, average: (s.total / s.count).toFixed(2), total: s.total, count: s.count, members: sortedMembers };
-        }).sort((a, b) => b.average - a.average);
+            return { id, name: s.name, average: (s.total / s.count).toFixed(2), total: s.total, count: s.count, cA: s.cA, cB: s.cB, members: sortedMembers };
+        }).sort((a, b) => {
+            const avgDiff = b.average - a.average;
+            if (Math.abs(avgDiff) > 0.01) return avgDiff;
+            if (a.cB !== b.cB) return b.cB - a.cB;
+            if (a.cA !== b.cA) return b.cA - a.cA;
+            return 0;
+        });
 
         if (ikesuData.length === 0) {
             ikesuContainer.innerHTML = '<p class="text-center p-4 text-muted">データがありません</p>';
@@ -5594,6 +5602,9 @@ window.renderRankings = function() {
                             <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
                                 <strong style="font-size:1.3rem;">${ik.name}</strong>
                                 <small class="text-muted" style="font-size:0.85rem;">${ik.count}名 / 計${ik.total}点</small>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #64748b; margin-top: 2px;">
+                                マダイ: <strong style="color: #ef4444;">${ik.cA}</strong> / 青物・クエ: <strong style="color: #3b82f6;">${ik.cB}</strong>
                             </div>
                             ${membersHtml}
                         </td>
