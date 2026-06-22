@@ -2702,6 +2702,7 @@ window.renderIkesuPrintView = function() {
                                     <span style="font-size: 24pt !important;">${p.name}</span>
                                     ${p.nickname ? `<span style="font-size:16pt !important; font-weight:normal; margin-left:10px;">(${p.nickname})</span>` : ''}
                                     ${(p.isDropIn || p.source === '当日追加') ? `<span style="font-size:12pt !important; font-weight:bold; color:#ef4444; margin-left:8px;">[当日追加]</span>` : ''}
+                                    ${p.status === 'absent' ? `<span style="font-size:12pt !important; font-weight:bold; color:#ef4444; margin-left:8px;">[欠席]</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-size: 1.1rem;">${genderLabels[p.gender] || '-'}</td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; text-align: center; font-weight: bold;">
@@ -2821,6 +2822,7 @@ window.renderIkesuResultView = function() {
                                     <span style="font-size: 24pt !important;">${p.name}</span>
                                     ${p.nickname ? `<span style="font-size:16pt !important; font-weight:normal; margin-left:8px;">(${p.nickname})</span>` : ''}
                                     ${(p.isDropIn || p.source === '当日追加') ? `<span style="font-size:12pt !important; font-weight:bold; color:#ef4444; margin-left:8px;">[当日追加]</span>` : ''}
+                                    ${p.status === 'absent' ? `<span style="font-size:12pt !important; font-weight:bold; color:#ef4444; margin-left:8px;">[欠席]</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt !important; color: #999;">匹</span></td>
                                 <td style="border: 1px solid #000; padding: 0.3rem; position: relative;"><span style="position: absolute; bottom: 4px; right: 4px; font-size: 12pt !important; color: #999;">匹</span></td>
@@ -2895,7 +2897,7 @@ window.renderGroupPrintView = function() {
     const sorted = [...validEntries].sort((a,b) => a.source.localeCompare(b.source) || a.id.localeCompare(b.id));
     
     sorted.forEach((e, entryIdx) => {
-        const pArray = (e.participants || []).filter(p => p.status !== 'cancelled' && p.status !== 'absent');
+        const pArray = (e.participants || []).filter(p => p.status !== 'cancelled');
         if (pArray.length === 0) return;
         
         const isLast = entryIdx === sorted.length - 1;
@@ -2909,8 +2911,8 @@ window.renderGroupPrintView = function() {
         });
         const ikesuDisplay = Array.from(ikesuNames).join(', ') || '未割当';
 
-        const activeFishers = pArray.filter(p => p.type === 'fisher').length;
-        const activeObservers = pArray.filter(p => p.type === 'observer').length;
+        const activeFishers = pArray.filter(p => p.type === 'fisher' && p.status !== 'absent').length;
+        const activeObservers = pArray.filter(p => p.type === 'observer' && p.status !== 'absent').length;
 
         html += `
             <div class="print-page group-sheet" style="background:white; padding:1.2rem; border:1px solid #eee; margin-bottom: 1rem; ${isLast ? '' : 'page-break-after: always;'} color: black;">
@@ -2955,6 +2957,7 @@ window.renderGroupPrintView = function() {
                                     ${p.nickname ? `<span style="font-size:14pt; font-weight:normal; margin-left:12px;">(${p.nickname})</span>` : ''}
                                     ${p.isLeader ? `<span style="font-size:14pt; font-weight:bold; color:#d32f2f; margin-left:8px;">★リーダー</span>` : ''}
                                     ${(p.isDropIn || e.source === '当日追加') ? `<span style="font-size:14pt; font-weight:bold; color:#ef4444; margin-left:8px;">[当日追加]</span>` : ''}
+                                    ${p.status === 'absent' ? `<span style="font-size:14pt; font-weight:bold; color:#ef4444; margin-left:8px;">[欠席]</span>` : ''}
                                 </td>
                                 <td style="border: 1px solid #000; padding: 0.4rem; text-align: center; font-weight: 900;">
                                     <span style="font-size: 22pt; white-space: nowrap;">${(p.tshirtSize || '-').replace(/\s*[\(（].*/, '').trim()}</span>
