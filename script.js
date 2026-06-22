@@ -336,6 +336,7 @@ window.handleRegistration = async function() {
             fishers: fisherCount,
             observers: observerCount,
             participants: finalParticipants,
+            _formModified: true,
             status: existingEntry ? existingEntry.status : 'pending',
             timestamp: existingEntry ? existingEntry.timestamp : new Date().toLocaleString('ja-JP'),
             lastUpdated: new Date().toLocaleString('ja-JP'),
@@ -869,15 +870,65 @@ function mergeData(local, cloud) {
             console.log(`[Sync] Keeping local entry ${lEntry.id} which is missing on cloud.`);
             merged.entries.push(lEntry);
         } else {
-            // 両方にある場合: 更新日時(lastModified)が新しい方を採用
+            // 両方にある場合: プロパティ単位のディープマージ
             const cEntry = cloudMap.get(lEntry.id);
             const lTime = new Date(lEntry.lastModified || lEntry.timestamp || 0).getTime();
             const cTime = new Date(cEntry.lastModified || cEntry.timestamp || 0).getTime();
 
-            if (lTime > cTime) {
-                const idx = merged.entries.findIndex(e => e.id === lEntry.id);
-                if (idx !== -1) merged.entries[idx] = lEntry;
+            const mergedEntry = JSON.parse(JSON.stringify(cEntry)); // Base is Server
+
+            // 1. Form modifications (structural changes)
+            if (lEntry._formModified) {
+                mergedEntry.participants = JSON.parse(JSON.stringify(lEntry.participants));
+                mergedEntry.groupName = lEntry.groupName;
+                mergedEntry.representative = lEntry.representative;
+                mergedEntry.phone = lEntry.phone;
+                mergedEntry.source = lEntry.source;
+                mergedEntry.memo = lEntry.memo;
+                mergedEntry.lastModified = lEntry.lastModified;
+                delete lEntry._formModified;
+            } 
+
+            // 2. Property-level modifications
+            let bumped = false;
+            
+            if (lEntry._statusModified) {
+                mergedEntry.status = lEntry.status;
+                delete lEntry._statusModified;
+                bumped = true;
+            } else if (lTime > cTime && lEntry.status !== cEntry.status) {
+                mergedEntry.status = lEntry.status;
             }
+
+            (lEntry.participants || []).forEach((lP, pIdx) => {
+                const mP = mergedEntry.participants[pIdx];
+                if (mP) {
+                    if (lP._ikesuModified) { mP.ikesuId = lP.ikesuId; mP.isLeader = lP.isLeader; delete lP._ikesuModified; bumped = true; }
+                    else if (lTime > cTime) { mP.ikesuId = lP.ikesuId; mP.isLeader = lP.isLeader; }
+
+                    if (lP._typeModified) { mP.type = lP.type; delete lP._typeModified; bumped = true; }
+                    else if (lTime > cTime && lP.type !== undefined) { mP.type = lP.type; }
+
+                    if (lP._statusModified) { mP.status = lP.status; delete lP._statusModified; bumped = true; }
+                    else if (lTime > cTime && lP.status !== undefined) { mP.status = lP.status; }
+
+                    if (lP._catchModified) { 
+                        mP.catchA = lP.catchA; 
+                        mP.catchB = lP.catchB; 
+                        delete lP._catchModified; 
+                        bumped = true; 
+                    }
+                }
+            });
+
+            if (bumped || lEntry._formModified) {
+                mergedEntry.lastModified = new Date().toISOString();
+            } else if (lTime > cTime) {
+                mergedEntry.lastModified = lEntry.lastModified;
+            }
+
+            const idx = merged.entries.findIndex(e => e.id === lEntry.id);
+            if (idx !== -1) merged.entries[idx] = mergedEntry;
         }
     });
 
@@ -1218,8 +1269,10 @@ async function syncToCloud() {
                     if (serverEntry) {
                         (localEntry.participants || []).forEach((localP, pIdx) => {
                             if (serverEntry.participants[pIdx]) {
-                                // Adopt server catch if local is 0 to prevent wiping newly entered catches
-                                if (!localP.catchA && !localP.catchB && (serverEntry.participants[pIdx].catchA || serverEntry.participants[pIdx].catchB)) {
+                                // Adopt server catch if local is not explicitly modified
+                                if (localP._catchModified) {
+                                    delete localP._catchModified;
+                                } else {
                                     localP.catchA = serverEntry.participants[pIdx].catchA;
                                     localP.catchB = serverEntry.participants[pIdx].catchB;
                                 }
@@ -3153,6 +3206,7 @@ window.saveDayCatch = async function() {
     const p = entry.participants[currentDayEdit.pIdx];
     p.catchA = parseInt(document.getElementById('day-input-cA').value) || 0;
     p.catchB = parseInt(document.getElementById('day-input-cB').value) || 0;
+    p._catchModified = true;
     saveStateToLocalStorage();
     renderDayResults();
     renderRankings();
@@ -4015,6 +4069,7 @@ window.toggleParticipantType = function(entryId, pIdx) {
     if (!p) return;
     
     p.type = p.type === 'fisher' ? 'observer' : 'fisher';
+    p._typeModified = true;
     
     // Recalculate counts
     entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
@@ -4042,6 +4097,7 @@ window.updateParticipantStatus = function (entryId, pIdx, status) {
     // v7.9.3: Toggle logic - if already active, revert to pending
     const newStatus = isTogglingOff ? 'pending' : status;
     entry.participants[pIdx].status = newStatus;
+    entry.participants[pIdx]._statusModified = true;
     
     entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' ).length;
     entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' ).length;
@@ -4290,7 +4346,7 @@ window.handleIkesuDelete = function () {
     state.settings.ikesuList = state.settings.ikesuList.filter(i => i.id !== id);
     state.entries.forEach(e => {
         e.participants.forEach(p => {
-            if (p.ikesuId === id) p.ikesuId = null;
+            if (p.ikesuId === id) { p.ikesuId = null; p._ikesuModified = true; }
         });
     });
     state.settingsLastModified = new Date().toISOString();
@@ -4340,10 +4396,10 @@ function processDrop(ev, ikesuId) {
     if (!entry) return;
 
     if (type === "group") {
-        entry.participants.forEach(p => p.ikesuId = ikesuId);
+        entry.participants.forEach(p => { p.ikesuId = ikesuId; p._ikesuModified = true; });
     } else {
         const idx = parseInt(ev.dataTransfer.getData("idx"));
-        if (entry.participants[idx]) entry.participants[idx].ikesuId = ikesuId;
+        if (entry.participants[idx]) { entry.participants[idx].ikesuId = ikesuId; entry.participants[idx]._ikesuModified = true; }
     }
     
     // v8.3.12: Update timestamp for sync
@@ -4388,7 +4444,7 @@ window.renderIkesuWorkspace = function () {
 
         const unassignedParts = [];
         e.participants.forEach((p, idx) => {
-            if (p.status === 'cancelled') return;
+            if (p.status === 'cancelled' || p.status === 'absent') return;
             if (p.ikesuId && assignedData[p.ikesuId]) {
                 assignedData[p.ikesuId].items.push({ entry: e, p, idx });
                 if (p.type === 'fisher') assignedData[p.ikesuId].fishers++;
@@ -4399,7 +4455,7 @@ window.renderIkesuWorkspace = function () {
         });
 
         if (unassignedParts.length > 0 && matchesSearch) {
-            const activeParticipants = e.participants.filter(p => p.status !== 'cancelled');
+            const activeParticipants = e.participants.filter(p => p.status !== 'cancelled' && p.status !== 'absent');
             const isFull = unassignedParts.length === activeParticipants.length && activeParticipants.length > 0;
             const fishers = unassignedParts.filter(i => i.p.type === 'fisher').length;
             const observers = unassignedParts.filter(i => i.p.type === 'observer').length;
@@ -4585,6 +4641,7 @@ window.commitLeaderResultsSave = function() {
         if (entry && entry.participants[idx]) {
             entry.participants[idx].catchA = parseInt(row.querySelector('.catch-a').value) || 0;
             entry.participants[idx].catchB = parseInt(row.querySelector('.catch-b').value) || 0;
+            entry.participants[idx]._catchModified = true;
         }
     });
     saveData();
@@ -4623,13 +4680,13 @@ window.toggleLeader = function(event, entryId, pIdx) {
             // Clear within the same team
             if (e.id === entryId) {
                 e.participants.forEach(p => {
-                    if (p.isLeader) { p.isLeader = false; modified = true; }
+                    if (p.isLeader) { p.isLeader = false; p._ikesuModified = true; modified = true; }
                 });
             }
             // Clear within the same ikesu
             if (targetIkesuId) {
                 e.participants.forEach(p => {
-                    if (p.ikesuId === targetIkesuId && p.isLeader) { p.isLeader = false; modified = true; }
+                    if (p.ikesuId === targetIkesuId && p.isLeader) { p.isLeader = false; p._ikesuModified = true; modified = true; }
                 });
             }
             if (modified) {
@@ -4639,6 +4696,7 @@ window.toggleLeader = function(event, entryId, pIdx) {
     }
     
     entry.participants[pIdx].isLeader = isNowLeader;
+    entry.participants[pIdx]._ikesuModified = true;
     entry.lastModified = new Date().toISOString();
     saveStateToLocalStorage();
     renderIkesuWorkspace();
@@ -5150,6 +5208,7 @@ window.cancelEntry = async function (id) {
     const entry = state.entries.find(e => e.id === id);
     if (entry) {
         entry.status = 'cancelled';
+        entry._statusModified = true;
         entry.lastModified = new Date().toISOString();
         await saveData();
         updateDashboard();
@@ -5173,6 +5232,7 @@ window.restoreEntry = async function (id) {
     const entry = state.entries.find(e => e.id === id);
     if (entry) {
         entry.status = 'pending';
+        entry._statusModified = true;
         entry.lastModified = new Date().toISOString();
         await saveData();
         updateDashboard();
@@ -5286,6 +5346,7 @@ window.generateMockCatchData = async function() {
                 } else {
                     p.catchB = 0;       // 22%
                 }
+                p._catchModified = true;
                 updated = true;
             }
         });
@@ -5310,6 +5371,7 @@ window.clearCatchData = async function() {
                 p.catchA = 0;
                 p.catchB = 0;
                 p.isAwardWinner = false;
+                p._catchModified = true;
                 updated = true;
             }
         });
@@ -6718,3 +6780,4 @@ window.exportSurveysToCSV = function() {
     link.download = `アンケート結果_${new Date().getTime()}.csv`;
     link.click();
 };
+
