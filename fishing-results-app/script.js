@@ -368,11 +368,14 @@ function renderAdminView() {
             <div style="display: flex; align-items: baseline; gap: 1rem; flex: 1; justify-content: center; min-width: 250px;">
                 <span style="font-size: 1.2rem; font-weight: bold; color: #ef4444;">マダイ: ${ik.ikA}</span>
                 <span style="font-size: 1.2rem; font-weight: bold; color: #3b82f6;">青物: ${ik.ikB}</span>
-                <span style="font-size: 0.9rem; color: #64748b; font-weight: 600;">(計 ${ik.ikFish}匹 / ${ik.memberCount}名 <span style="margin: 0 4px;">|</span> 平均 ${(ik.ikFish / ik.memberCount).toFixed(1)}匹)</span>
+                <span style="font-size: 0.9rem; color: #64748b; font-weight: 600;">(計 ${ik.ikFish}匹 / ${ik.memberCount}名)</span>
             </div>
 
             <div style="display: flex; align-items: center; gap: 1rem; min-width: 200px; justify-content: flex-end;">
-                <div style="font-size: 1.6rem; font-weight: 900; color: #0f172a;">${ik.pts}<span style="font-size: 1rem; color: #64748b;">pt</span></div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                    <div style="font-size: 1.6rem; font-weight: 900; color: #0f172a; line-height: 1.1;">${ik.pts}<span style="font-size: 1rem; color: #64748b;">pt</span></div>
+                    <div style="font-size: 0.85rem; color: #8b5cf6; font-weight: bold; margin-top: 2px;">平均 ${(ik.ikFish / ik.memberCount).toFixed(1)}匹</div>
+                </div>
                 
                 ${ik.checked ? 
                     `<span style="color: #10b981; font-weight: bold; font-size: 1.2rem; white-space: nowrap;">✅ 確認済</span>` :
