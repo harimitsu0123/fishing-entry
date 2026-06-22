@@ -462,18 +462,23 @@ async function handleSave() {
             state.entries.forEach(localEntry => {
                 const serverEntry = serverState.entries.find(e => e.id === localEntry.id);
                 if (serverEntry) {
+                    let entryModified = false;
                     (localEntry.participants || []).forEach((localP, pIdx) => {
                         if (serverEntry.participants[pIdx]) {
                             if (localP._modified) {
                                 serverEntry.participants[pIdx].catchA = localP.catchA;
                                 serverEntry.participants[pIdx].catchB = localP.catchB;
                                 serverEntry.participants[pIdx]._modified = true;
+                                entryModified = true;
                             } else {
                                 localP.catchA = serverEntry.participants[pIdx].catchA;
                                 localP.catchB = serverEntry.participants[pIdx].catchB;
                             }
                         }
                     });
+                    if (entryModified && localEntry.lastModified) {
+                        serverEntry.lastModified = localEntry.lastModified;
+                    }
                 }
             });
             
