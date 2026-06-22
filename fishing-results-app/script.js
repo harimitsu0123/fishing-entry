@@ -456,7 +456,7 @@ async function handleSave() {
                             if (localP._modified) {
                                 serverEntry.participants[pIdx].catchA = localP.catchA;
                                 serverEntry.participants[pIdx].catchB = localP.catchB;
-                                delete localP._modified;
+                                serverEntry.participants[pIdx]._modified = true;
                             } else {
                                 localP.catchA = serverEntry.participants[pIdx].catchA;
                                 localP.catchB = serverEntry.participants[pIdx].catchB;
@@ -494,8 +494,15 @@ async function handleSave() {
             })
         });
         const result = await response.json();
+        
         if (result.status === 'success') {
-            showToast("保存完了しました", "success");
+            state.entries.forEach(e => {
+                (e.participants || []).forEach(p => {
+                    delete p._modified;
+                });
+            });
+            state.lastUpdated = Date.now();
+            showToast("保存しました", "success");
         } else {
             throw new Error(result.message);
         }
