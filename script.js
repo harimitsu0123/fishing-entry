@@ -4506,7 +4506,7 @@ window.renderIkesuWorkspace = function () {
                     <div class="drag-item-participants active">
                         ${unassignedParts.map(item => `
                             <div class="drag-item-person draggable" draggable="true" ondragstart="dragPerson(event, '${e.id}', ${item.idx})">
-                                <span>${item.p.name}</span>
+                                <span>${item.p.name}${item.p.nickname ? ` <small style="color:#666;">(${item.p.nickname})</small>` : ''}</span>
                                 <span class="badge ${item.p.type==='fisher'?'':'badge-observer'}">${item.p.type==='fisher'?'釣り':'見学'}</span>
                             </div>
                         `).join('')}
@@ -4570,7 +4570,7 @@ window.renderIkesuWorkspace = function () {
                                     <div style="display:flex; align-items:center; gap:4px;">
                                         <button class="btn-leader-toggle ${m.p.isLeader ? 'active' : ''}" 
                                                 onclick="window.toggleLeader(event, '${group.entry.id}', ${m.idx})">⭐</button>
-                                        <span>${m.p.name}</span>
+                                        <span>${m.p.name}${m.p.nickname ? ` <small style="color:#666;">(${m.p.nickname})</small>` : ''}</span>
                                     </div>
                                     ${m.p.type === 'observer' ? '<span style="font-size:0.6rem; color:#64748b;">(見)</span>' : ''}
                                 </div>
