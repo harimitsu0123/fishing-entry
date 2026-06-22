@@ -149,6 +149,7 @@ function renderParticipantList() {
     listContainer.innerHTML = '';
 
     let totalPoints = 0;
+    let fisherCount = 0;
     let foundAny = false;
 
     state.entries.forEach(entry => {
@@ -162,6 +163,7 @@ function renderParticipantList() {
                 const cB = parseInt(p.catchB || 0);
                 const points = cA + (cB * 2);
                 totalPoints += points;
+                fisherCount++;
 
                 const card = document.createElement('div');
                 card.className = `participant-card`;
@@ -199,6 +201,9 @@ function renderParticipantList() {
     }
 
     document.getElementById('ikesu-total-points').textContent = totalPoints;
+    const avg = fisherCount > 0 ? (totalPoints / fisherCount).toFixed(1) : 0;
+    const avgEl = document.getElementById('ikesu-average-points');
+    if (avgEl) avgEl.textContent = `(平均 ${avg} pt)`;
 
     const verifyContainer = document.getElementById('admin-verify-container');
     if (adminBackBtn && !adminBackBtn.classList.contains('hidden') && verifyContainer) {
@@ -236,16 +241,21 @@ window.updateInlineScore = function(entryId, partIdx, field, value, element) {
             }
             
             let totalPoints = 0;
+            let fisherCount = 0;
             state.entries.forEach(e => {
                 if (e.status === 'cancelled') return;
                 (e.participants || []).forEach(pp => {
                     if (pp.status === 'cancelled' || pp.status === 'absent') return;
                     if (pp.ikesuId === currentIkesu.id && pp.type === 'fisher') {
                         totalPoints += parseInt(pp.catchA || 0) + (parseInt(pp.catchB || 0) * 2);
+                        fisherCount++;
                     }
                 });
             });
             document.getElementById('ikesu-total-points').textContent = totalPoints;
+            const avg = fisherCount > 0 ? (totalPoints / fisherCount).toFixed(1) : 0;
+            const avgEl = document.getElementById('ikesu-average-points');
+            if (avgEl) avgEl.textContent = `(平均 ${avg} pt)`;
         } else {
             renderParticipantList();
         }
