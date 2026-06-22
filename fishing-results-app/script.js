@@ -373,8 +373,8 @@ function renderAdminView() {
 
             <div style="display: flex; align-items: center; gap: 1rem; min-width: 200px; justify-content: flex-end;">
                 <div style="display: flex; flex-direction: column; align-items: flex-end;">
-                    <div style="font-size: 1.6rem; font-weight: 900; color: #0f172a; line-height: 1.1;">${ik.pts}<span style="font-size: 1rem; color: #64748b;">pt</span></div>
-                    <div style="font-size: 0.85rem; color: #8b5cf6; font-weight: bold; margin-top: 2px;">平均 ${(ik.pts / ik.memberCount).toFixed(1)}pt</div>
+                    <div style="font-size: 1.6rem; font-weight: 900; color: #8b5cf6; line-height: 1.1;"><span style="font-size: 0.9rem; margin-right: 4px;">平均</span>${(ik.pts / ik.memberCount).toFixed(1)}<span style="font-size: 1rem;">pt</span></div>
+                    <div style="font-size: 0.9rem; color: #64748b; font-weight: bold; margin-top: 2px;">合計 ${ik.pts}pt</div>
                 </div>
                 
                 ${ik.checked ? 
