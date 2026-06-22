@@ -219,6 +219,7 @@ window.updateInlineScore = function(entryId, partIdx, field, value, element) {
     const entry = state.entries.find(e => e.id === entryId);
     if (entry && entry.participants[partIdx]) {
         entry.participants[partIdx][field] = parseInt(value) || 0;
+        entry.participants[partIdx]._modified = true;
         entry.lastModified = new Date().toISOString();
         state.lastUpdated = Date.now();
         
@@ -367,7 +368,7 @@ function renderAdminView() {
             <div style="display: flex; align-items: baseline; gap: 1rem; flex: 1; justify-content: center; min-width: 250px;">
                 <span style="font-size: 1.2rem; font-weight: bold; color: #ef4444;">マダイ: ${ik.ikA}</span>
                 <span style="font-size: 1.2rem; font-weight: bold; color: #3b82f6;">青物: ${ik.ikB}</span>
-                <span style="font-size: 0.9rem; color: #64748b; font-weight: 600;">(計 ${ik.ikFish}匹 / ${ik.memberCount}名)</span>
+                <span style="font-size: 0.9rem; color: #64748b; font-weight: 600;">(計 ${ik.ikFish}匹 / ${ik.memberCount}名 <span style="margin: 0 4px;">|</span> 平均 ${(ik.ikFish / ik.memberCount).toFixed(1)}匹)</span>
             </div>
 
             <div style="display: flex; align-items: center; gap: 1rem; min-width: 200px; justify-content: flex-end;">
@@ -439,8 +440,14 @@ async function handleSave() {
                 if (serverEntry) {
                     (localEntry.participants || []).forEach((localP, pIdx) => {
                         if (serverEntry.participants[pIdx]) {
-                            serverEntry.participants[pIdx].catchA = localP.catchA;
-                            serverEntry.participants[pIdx].catchB = localP.catchB;
+                            if (localP._modified) {
+                                serverEntry.participants[pIdx].catchA = localP.catchA;
+                                serverEntry.participants[pIdx].catchB = localP.catchB;
+                                delete localP._modified;
+                            } else {
+                                localP.catchA = serverEntry.participants[pIdx].catchA;
+                                localP.catchB = serverEntry.participants[pIdx].catchB;
+                            }
                         }
                     });
                 }
@@ -546,6 +553,7 @@ window.generateMockCatchData = async function() {
                     p.catchB = 0;       // 22%
                 }
                 
+                p._modified = true;
                 updated = true;
             }
         });
@@ -573,6 +581,7 @@ window.clearCatchData = async function() {
                 p.catchA = 0;
                 p.catchB = 0;
                 p.isAwardWinner = false;
+                p._modified = true;
                 updated = true;
             }
         });
