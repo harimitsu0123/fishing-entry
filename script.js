@@ -640,9 +640,13 @@ function restoreUIState() {
         return;
     }
 
-    // v8.1.31: If 'view' or 'src' exists in URL, do NOT restore from session
-    if (viewParam || params.get('src')) return;
-
+    // v8.1.31: If 'view' or 'src' exists in URL, do NOT restore the main view from session
+    if (viewParam || params.get('src')) {
+        if (isAdminAuth && currentAdminTab) {
+            switchAdminTab(currentAdminTab);
+        }
+        return;
+    }
     if (currentViewId && currentViewId !== 'registration-view') {
         // v8.1.55: Use a small delay to ensure elements are ready
         setTimeout(() => {
@@ -792,7 +796,19 @@ function mergeData(local, cloud) {
 
             if (lTime > cTime) {
                 const idx = merged.entries.findIndex(e => e.id === lEntry.id);
-                if (idx !== -1) merged.entries[idx] = lEntry;
+                if (idx !== -1) {
+                    // v8.10.1: Prevent overwriting catches with 0 if cloud has data
+                    (lEntry.participants || []).forEach((localP, pIdx) => {
+                        const serverP = cEntry.participants && cEntry.participants[pIdx];
+                        if (serverP) {
+                            if (!localP.catchA && !localP.catchB && (serverP.catchA || serverP.catchB)) {
+                                localP.catchA = serverP.catchA;
+                                localP.catchB = serverP.catchB;
+                            }
+                        }
+                    });
+                    merged.entries[idx] = lEntry;
+                }
             }
         }
     });
@@ -2991,10 +3007,11 @@ window.setParticipantAsLeader = function(entryId, partIdx) {
     showToast(`${entry.participants[partIdx].name} 様をリーダーに設定しました`, 'info');
 };
 
-let currentDayTab = 'tab-day-reception';
+let currentDayTab = sessionStorage.getItem('currentDayTab') || 'tab-day-reception';
 window.switchDayTab = function(tabId) {
     if (!tabId) return;
     currentDayTab = tabId;
+    sessionStorage.setItem('currentDayTab', tabId);
     document.querySelectorAll('.day-tab-btn').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId));
     document.querySelectorAll('.day-tab-content').forEach(content => content.classList.toggle('active', content.id === tabId));
     if (tabId === 'tab-day-reception') updateReceptionList();
