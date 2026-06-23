@@ -2809,8 +2809,8 @@ window.renderIkesuResultView = function() {
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 45px; text-align: center;">No</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 130px; text-align: center;">グループ名</th>
                             <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; text-align: center;">氏名</th>
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 120px; background: #fff3e0 !important; color: #e65100 !important; text-align: center;">鯛等</th>
-                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 120px; background: #e3f2fd !important; color: #1976d2 !important; text-align: center;">青物、クエ</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 120px; background: #fff3e0 !important; color: #e65100 !important; text-align: center;">鯛・その他</th>
+                            <th style="border: 1px solid #000; border-bottom: 2px solid #000; padding: 0.4rem; width: 120px; background: #e3f2fd !important; color: #1976d2 !important; text-align: center;">青・クエ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -4489,7 +4489,7 @@ window.renderLeaderEntryTable = function() {
     container.innerHTML = `
         <div style="font-size:0.8rem;">
             <table class="table-striped leader-table" style="margin-bottom:0;">
-                <thead><tr><th>氏名</th><th>青物、クエ(2pt)</th><th>鯛等(1pt)</th><th>小計</th></tr></thead>
+                <thead><tr><th>氏名</th><th>青・クエ(2pt)</th><th>鯛・その他(1pt)</th><th>小計</th></tr></thead>
                 <tbody>
                     ${members.map(m => `
                     <tr data-entry="${m.entry.id}" data-idx="${m.idx}">
@@ -5166,7 +5166,7 @@ async function exportGroupsCSV() {
 
 async function exportParticipantsCSV() {
     // v8.9.67: Added timestamp, removed status, and used UI labels for gender/age
-    const headers = ["ID", "区分", "グループ名", "代表電話", "代表メール", "氏名", "ニックネーム", "性別", "年代", "地域", "区分(釣/見)", "サイズ", "登録日時", "備考"];
+    const headers = ["ID", "区分", "グループ名", "代表電話", "代表メール", "氏名", "ニックネーム", "性別", "年代", "地域", "区分(釣/見)", "サイズ", "イケス名", "受付状態", "釣果(鯛・その他)", "釣果(青・クエ)", "ポイント", "登録日時", "備考"];
     const rows = [];
     state.entries.forEach(e => {
         let entryMemo = (e.memo || "").replace(/\n/g, " ");
@@ -5178,6 +5178,29 @@ async function exportParticipantsCSV() {
                 memo = "[参加者キャンセル] " + memo;
             }
             
+            let ikName = '';
+            if (p.ikesuId) {
+                ikName = state.settings.ikesuList?.find(ik => ik.id === p.ikesuId)?.name || p.ikesuId;
+            }
+
+            let pStatus = '未受付';
+            if (e.status === 'cancelled' || p.status === 'cancelled') {
+                pStatus = 'キャンセル';
+            } else if (p.status === 'absent') {
+                pStatus = '欠席';
+            } else if (e.status === 'checked-in') {
+                pStatus = '受付済';
+            }
+
+            let cA = '';
+            let cB = '';
+            let pts = '';
+            if (p.type === 'fisher' && pStatus !== 'キャンセル' && pStatus !== '欠席') {
+                cA = parseInt(p.catchA || 0);
+                cB = parseInt(p.catchB || 0);
+                pts = cA + (cB * 2);
+            }
+
             rows.push([
                 e.id,
                 e.source,
@@ -5191,6 +5214,11 @@ async function exportParticipantsCSV() {
                 `"${p.region || ""}"`,
                 p.type === 'fisher' ? '釣り' : '見学',
                 p.tshirtSize,
+                `"${ikName}"`,
+                pStatus,
+                cA,
+                cB,
+                pts,
                 e.timestamp,
                 `"${memo.trim()}"`
             ]);
@@ -5545,7 +5573,7 @@ window.renderRankings = function() {
                     </td>
                     <td style="padding:8px; text-align:right; font-weight:bold;">
                         <div style="display:flex; justify-content:flex-end; align-items:center; flex-wrap:wrap; gap:4px;">
-                            <span style="font-size:0.75rem; color:#64748b; font-weight:normal; white-space:nowrap;">(マダイ <strong style="color:#ef4444; margin-right:2px; font-size:0.85rem;">${p.cA}</strong> 青物、クエ <strong style="color:#3b82f6; font-size:0.85rem;">${p.cB}</strong>)</span>
+                            <span style="font-size:0.75rem; color:#64748b; font-weight:normal; white-space:nowrap;">(鯛・その他 <strong style="color:#ef4444; margin-right:2px; font-size:0.85rem;">${p.cA}</strong> 青・クエ <strong style="color:#3b82f6; font-size:0.85rem;">${p.cB}</strong>)</span>
                             <span style="font-size:1.6rem; font-weight:900; line-height:1; color:var(--primary-color); white-space:nowrap;">${p.score}<small style="font-size:0.8rem; margin-left:1px;">点</small></span>
                         </div>
                     </td>
@@ -5604,7 +5632,7 @@ window.renderRankings = function() {
                                 <small class="text-muted" style="font-size:0.85rem;">${ik.count}名 / 計${ik.total}点</small>
                             </div>
                             <div style="font-size: 0.85rem; color: #64748b; margin-top: 2px;">
-                                マダイ: <strong style="color: #ef4444;">${ik.cA}</strong> / 青物・クエ: <strong style="color: #3b82f6;">${ik.cB}</strong>
+                                鯛・その他: <strong style="color: #ef4444;">${ik.cA}</strong> / 青・クエ: <strong style="color: #3b82f6;">${ik.cB}</strong>
                             </div>
                             ${membersHtml}
                         </td>

@@ -175,12 +175,12 @@ function renderParticipantList() {
                     <div class="p-scores-row">
                         <div class="p-input-group">
                             <div style="display:flex; flex-direction:column; align-items:center;">
-                                <span style="font-size:0.65rem; color:#ef4444; font-weight:bold; margin-bottom:2px;">マダイ等</span>
+                                <span style="font-size:0.65rem; color:#ef4444; font-weight:bold; margin-bottom:2px;">鯛・その他</span>
                                 <input type="number" class="inline-input red" value="${cA}" min="0" 
                                     onchange="updateInlineScore('${entry.id}', ${idx}, 'catchA', this.value, this)">
                             </div>
                             <div style="display:flex; flex-direction:column; align-items:center;">
-                                <span style="font-size:0.65rem; color:#3b82f6; font-weight:bold; margin-bottom:2px;">青物、クエ</span>
+                                <span style="font-size:0.65rem; color:#3b82f6; font-weight:bold; margin-bottom:2px;">青・クエ</span>
                                 <input type="number" class="inline-input blue" value="${cB}" min="0" 
                                     onchange="updateInlineScore('${entry.id}', ${idx}, 'catchB', this.value, this)">
                             </div>
@@ -402,8 +402,8 @@ function renderAdminView() {
             </div>
 
             <div style="display: flex; align-items: baseline; gap: 1rem; flex: 1; justify-content: center; min-width: 250px;">
-                <span style="font-size: 1.2rem; font-weight: bold; color: #ef4444;">マダイ: ${ik.ikA}</span>
-                <span style="font-size: 1.2rem; font-weight: bold; color: #3b82f6;">青物: ${ik.ikB}</span>
+                <span style="font-size: 1.2rem; font-weight: bold; color: #ef4444;">鯛・その他: ${ik.ikA}</span>
+                <span style="font-size: 1.2rem; font-weight: bold; color: #3b82f6;">青・クエ: ${ik.ikB}</span>
                 <span style="font-size: 0.9rem; color: #64748b; font-weight: 600;">(計 ${ik.ikFish}匹 / ${ik.memberCount}名)</span>
             </div>
 

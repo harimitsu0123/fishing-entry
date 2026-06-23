@@ -1,268 +1,163 @@
 const fs = require('fs');
+let content = fs.readFileSync('script.js', 'utf8');
 
-function patchFile() {
-    let content = fs.readFileSync('script.js', 'utf-8');
+const replacements = [
+    // 1. handleRegistration (Line ~324)
+    [
+        `            participants: finalParticipants,\n            status: existingEntry ? existingEntry.status : 'pending',`,
+        `            participants: finalParticipants,\n            _formModified: true,\n            status: existingEntry ? existingEntry.status : 'pending',`
+    ],
+    // 2. toggleParticipantType (Line ~4014)
+    [
+        `    p.type = p.type === 'fisher' ? 'observer' : 'fisher';\n    \n    // Recalculate counts`,
+        `    p.type = p.type === 'fisher' ? 'observer' : 'fisher';\n    p._typeModified = true;\n    \n    // Recalculate counts`
+    ],
+    // 3. updateParticipantStatus (Line ~4040)
+    [
+        `    const newStatus = isTogglingOff ? 'pending' : status;\n    entry.participants[pIdx].status = newStatus;\n    \n    entry.fishers`,
+        `    const newStatus = isTogglingOff ? 'pending' : status;\n    entry.participants[pIdx].status = newStatus;\n    entry.participants[pIdx]._statusModified = true;\n    \n    entry.fishers`
+    ],
+    // 4. handleIkesuDelete (Line ~4287)
+    [
+        `            if (p.ikesuId === id) p.ikesuId = null;\n        });`,
+        `            if (p.ikesuId === id) { p.ikesuId = null; p._ikesuModified = true; }\n        });`
+    ],
+    // 5. processDrop (Line ~4336)
+    [
+        `    if (type === "group") {\n        entry.participants.forEach(p => p.ikesuId = ikesuId);\n    } else {\n        const idx = parseInt(ev.dataTransfer.getData("idx"));\n        if (entry.participants[idx]) entry.participants[idx].ikesuId = ikesuId;\n    }`,
+        `    if (type === "group") {\n        entry.participants.forEach(p => { p.ikesuId = ikesuId; p._ikesuModified = true; });\n    } else {\n        const idx = parseInt(ev.dataTransfer.getData("idx"));\n        if (entry.participants[idx]) { entry.participants[idx].ikesuId = ikesuId; entry.participants[idx]._ikesuModified = true; }\n    }`
+    ],
+    // 6. toggleLeader (Line ~4618)
+    [
+        `                    if (p.isLeader) { p.isLeader = false; modified = true; }\n                });\n            }\n            // Clear within the same ikesu\n            if (targetIkesuId) {\n                e.participants.forEach(p => {\n                    if (p.ikesuId === targetIkesuId && p.isLeader) { p.isLeader = false; modified = true; }\n                });`,
+        `                    if (p.isLeader) { p.isLeader = false; p._ikesuModified = true; modified = true; }\n                });\n            }\n            // Clear within the same ikesu\n            if (targetIkesuId) {\n                e.participants.forEach(p => {\n                    if (p.ikesuId === targetIkesuId && p.isLeader) { p.isLeader = false; p._ikesuModified = true; modified = true; }\n                });`
+    ],
+    // 7. toggleLeader (isLeader = isNowLeader)
+    [
+        `    entry.participants[pIdx].isLeader = isNowLeader;\n    entry.lastModified = new Date().toISOString();`,
+        `    entry.participants[pIdx].isLeader = isNowLeader;\n    entry.participants[pIdx]._ikesuModified = true;\n    entry.lastModified = new Date().toISOString();`
+    ],
+    // 8. cancelEntry (Line ~5142)
+    [
+        `        entry.status = 'cancelled';\n        entry.lastModified = new Date().toISOString();`,
+        `        entry.status = 'cancelled';\n        entry._statusModified = true;\n        entry.lastModified = new Date().toISOString();`
+    ],
+    // 9. restoreEntry (Line ~5164)
+    [
+        `        entry.status = 'pending';\n        entry.lastModified = new Date().toISOString();`,
+        `        entry.status = 'pending';\n        entry._statusModified = true;\n        entry.lastModified = new Date().toISOString();`
+    ],
+    // 10. mergeData Adopt Server Catch if not explicit (Line 1221)
+    [
+        `                                // Adopt server catch if local is 0 to prevent wiping newly entered catches\n                                if (!localP.catchA && !localP.catchB && (serverEntry.participants[pIdx].catchA || serverEntry.participants[pIdx].catchB)) {\n                                    localP.catchA = serverEntry.participants[pIdx].catchA;\n                                    localP.catchB = serverEntry.participants[pIdx].catchB;\n                                }`,
+        `                                // Adopt server catch if local is not explicitly modified\n                                if (localP._catchModified) {\n                                    delete localP._catchModified;\n                                } else {\n                                    localP.catchA = serverEntry.participants[pIdx].catchA;\n                                    localP.catchB = serverEntry.participants[pIdx].catchB;\n                                }`
+    ],
+    // 11. saveDayCatch (Line 3152)
+    [
+        `    p.catchA = parseInt(document.getElementById('day-input-cA').value) || 0;\n    p.catchB = parseInt(document.getElementById('day-input-cB').value) || 0;\n    saveStateToLocalStorage();`,
+        `    p.catchA = parseInt(document.getElementById('day-input-cA').value) || 0;\n    p.catchB = parseInt(document.getElementById('day-input-cB').value) || 0;\n    p._catchModified = true;\n    saveStateToLocalStorage();`
+    ],
+    // 12. commitLeaderResultsSave (Line 4583)
+    [
+        `        if (entry && entry.participants[idx]) {\n            entry.participants[idx].catchA = parseInt(row.querySelector('.catch-a').value) || 0;\n            entry.participants[idx].catchB = parseInt(row.querySelector('.catch-b').value) || 0;\n        }`,
+        `        if (entry && entry.participants[idx]) {\n            entry.participants[idx].catchA = parseInt(row.querySelector('.catch-a').value) || 0;\n            entry.participants[idx].catchB = parseInt(row.querySelector('.catch-b').value) || 0;\n            entry.participants[idx]._catchModified = true;\n        }`
+    ],
+    // 13. clearCatchData (Line 5309)
+    [
+        `            if (p.catchA > 0 || p.catchB > 0 || p.isAwardWinner) {\n                p.catchA = 0;\n                p.catchB = 0;\n                p.isAwardWinner = false;\n                updated = true;\n            }`,
+        `            if (p.catchA > 0 || p.catchB > 0 || p.isAwardWinner) {\n                p.catchA = 0;\n                p.catchB = 0;\n                p.isAwardWinner = false;\n                p._catchModified = true;\n                updated = true;\n            }`
+    ],
+    // 14. mergeData logic completely replaced (Line 872)
+    [
+        `            // 両方にある場合: 更新日時(lastModified)が新しい方を採用
+            const cEntry = cloudMap.get(lEntry.id);
+            const lTime = new Date(lEntry.lastModified || lEntry.timestamp || 0).getTime();
+            const cTime = new Date(cEntry.lastModified || cEntry.timestamp || 0).getTime();
 
-    const patches = [
-        // 1. Ranking Fix 1
-        [
-            `    state.entries.forEach(entry => {
-        if (entry.status === 'cancelled') return;
-        (entry.participants || []).forEach(p => {
-            if (p.type === 'fisher') {`,
-            
-            `    state.entries.forEach(entry => {
-        if (entry.status === 'cancelled' || entry.status === 'absent') return;
-        (entry.participants || []).forEach(p => {
-            if (p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent') {`
-        ],
-        // 2. Ranking Fix 2
-        [
-            `    // --- Render Individual Table ---
-    // v8.10.0: Tie-breaking rule (Score > Aomono > ID)
-    individualData.sort((a, b) => (b.score - a.score) || (b.cB - a.cB) || a.id.localeCompare(b.id));
-    
-    // v8.10.0: Apply "Award Winners Only" filter if active
-    const awardFilterBtn = document.getElementById('award-filter-btn');
-    const showOnlyAwards = awardFilterBtn && awardFilterBtn.classList.contains('active');
-    const filteredData = showOnlyAwards ? individualData.filter(p => p.isAwardWinner) : individualData;
-    
-    // v8.10.0: Update title based on filter state
-    const titleText = document.getElementById('ranking-title-text');
-    if (titleText) {
-        titleText.textContent = showOnlyAwards ? '表彰対象者' : '個人順位 (Top 100)';
-    }
-
-    if (filteredData.length === 0) {
-        indContainer.innerHTML = \`<p class="text-center p-4 text-muted">\${showOnlyAwards ? '表彰対象者がまだ設定されていません' : 'データがありません'}</p>\`;
-    } else {
-        let html = \`
-            <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
-                <thead>
-                    <tr style="background:#f1f5f9;">
-                        <th style="padding:8px; width:50px;">順位</th>
-                        <th style="padding:8px;">名前 / チーム</th>
-                        <th style="padding:8px; text-align:right;">釣果 / 合計</th>
-                    </tr>
-                </thead>
-                <tbody>\`;
-        filteredData.slice(0, 100).forEach((p, idx) => {
-            const rank = idx + 1;
-            const rankMark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
-            const awardStar = p.isAwardWinner ? '<span style="color:#f1c40f; margin-left:4px;">🏆</span>' : '';`,
-            
-            `    // --- Render Individual Table ---
-    // User requested rule: 1. Aomono > 2. Tai > 3. Janken (No ID sorting)
-    individualData.sort((a, b) => (b.cB - a.cB) || (b.cA - a.cA));
-    
-    // v8.10.0: Apply "Award Winners Only" filter if active
-    const awardFilterBtn = document.getElementById('award-filter-btn');
-    const showOnlyAwards = awardFilterBtn && awardFilterBtn.classList.contains('active');
-    const filteredData = showOnlyAwards ? individualData.filter(p => p.isAwardWinner) : individualData;
-    
-    // v8.10.0: Update title based on filter state
-    const titleText = document.getElementById('ranking-title-text');
-    if (titleText) {
-        titleText.textContent = showOnlyAwards ? '表彰対象者' : '個人順位 (Top 100)';
-    }
-
-    if (filteredData.length === 0) {
-        indContainer.innerHTML = \`<p class="text-center p-4 text-muted">\${showOnlyAwards ? '表彰対象者がまだ設定されていません' : 'データがありません'}</p>\`;
-    } else {
-        let html = \`
-            <table class="table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
-                <thead>
-                    <tr style="background:#f1f5f9;">
-                        <th style="padding:8px; width:50px;">順位</th>
-                        <th style="padding:8px;">名前 / チーム</th>
-                        <th style="padding:8px; text-align:right;">釣果 / 合計</th>
-                    </tr>
-                </thead>
-                <tbody>\`;
-        
-        let currentRank = 1;
-        let lastP = null;
-
-        filteredData.slice(0, 100).forEach((p, idx) => {
-            // 同点（青物も鯛も同じ数）の場合は同じ順位にする
-            if (lastP && p.cB === lastP.cB && p.cA === lastP.cA) {
-                // currentRank はそのまま
-            } else {
-                currentRank = idx + 1;
+            if (lTime > cTime) {
+                const idx = merged.entries.findIndex(e => e.id === lEntry.id);
+                if (idx !== -1) merged.entries[idx] = lEntry;
             }
-            lastP = p;
+        }
+    });`,
+        `            // 両方にある場合: プロパティ単位のディープマージ
+            const cEntry = cloudMap.get(lEntry.id);
+            const lTime = new Date(lEntry.lastModified || lEntry.timestamp || 0).getTime();
+            const cTime = new Date(cEntry.lastModified || cEntry.timestamp || 0).getTime();
 
-            const rankMark = currentRank === 1 ? '🥇' : currentRank === 2 ? '🥈' : currentRank === 3 ? '🥉' : currentRank;
-            const awardStar = p.isAwardWinner ? '<span style="color:#f1c40f; margin-left:4px;">🏆</span>' : '';`
-        ],
-        // 3. Log Fix 1
-        [
-            `        if (oldEntry.memo !== entry.memo) details.push(\`備考欄を更新\`);`,
-            `        if ((oldEntry.memo || '') !== (entry.memo || '')) details.push(\`備考欄を更新\`);`
-        ],
-        // 4. Log Fix 2
-        [
-            `        // Detailed participant check
-        entry.participants.forEach((p, i) => {
-            const oldP = oldEntry.participants && oldEntry.participants[i];
-            if (oldP) {
-                if (oldP.name !== p.name) details.push(\`参加者\${i+1}氏名: \${oldP.name} → \${p.name}\`);
-                if (oldP.age !== p.age) details.push(\`参加者\${i+1}年代の変更\`);
-                if (oldP.gender !== p.gender) details.push(\`参加者\${i+1}性別の変更\`);
-                if (oldP.tshirtSize !== p.tshirtSize) details.push(\`参加者\${i+1}Tシャツサイズ: \${oldP.tshirtSize} → \${p.tshirtSize}\`);
-                if (oldP.type !== p.type) details.push(\`参加者\${i+1}種別: \${oldP.type === 'fisher' ? '釣り' : '見学'} → \${p.type === 'fisher' ? '釣り' : '見学'}\`);
-            } else {
-                details.push(\`参加者追加: \${p.name}\`);
+            const mergedEntry = JSON.parse(JSON.stringify(cEntry)); // Base is Server
+
+            // 1. Form modifications (structural changes)
+            if (lEntry._formModified) {
+                mergedEntry.participants = JSON.parse(JSON.stringify(lEntry.participants));
+                mergedEntry.groupName = lEntry.groupName;
+                mergedEntry.representative = lEntry.representative;
+                mergedEntry.phone = lEntry.phone;
+                mergedEntry.source = lEntry.source;
+                mergedEntry.memo = lEntry.memo;
+                mergedEntry.lastModified = lEntry.lastModified;
+                delete lEntry._formModified;
+            } 
+
+            // 2. Property-level modifications
+            let bumped = false;
+            
+            if (lEntry._statusModified) {
+                mergedEntry.status = lEntry.status;
+                delete lEntry._statusModified;
+                bumped = true;
+            } else if (lTime > cTime && lEntry.status !== cEntry.status) {
+                mergedEntry.status = lEntry.status;
             }
-        });`,
-        
-            `        // Detailed participant check
-        entry.participants.forEach((p, i) => {
-            const oldP = oldEntry.participants && oldEntry.participants[i];
-            if (oldP) {
-                if (oldP.name !== p.name) details.push(\`参加者\${i+1}氏名: \${oldP.name} → \${p.name}\`);
-                if (oldP.age !== p.age) details.push(\`参加者\${i+1}年代の変更\`);
-                if (oldP.gender !== p.gender) details.push(\`参加者\${i+1}性別の変更\`);
-                if (oldP.tshirtSize !== p.tshirtSize) details.push(\`参加者\${i+1}Tシャツサイズ: \${oldP.tshirtSize} → \${p.tshirtSize}\`);
-                if (oldP.type !== p.type) details.push(\`参加者\${i+1}種別: \${oldP.type === 'fisher' ? '釣り' : '見学'} → \${p.type === 'fisher' ? '釣り' : '見学'}\`);
-                if ((oldP.status || 'pending') !== (p.status || 'pending')) {
-                    if (p.status === 'cancelled') details.push(\`参加者\${i+1}をキャンセル\`);
-                    else if (oldP.status === 'cancelled') details.push(\`参加者\${i+1}のキャンセルを取り消し\`);
-                    else details.push(\`参加者\${i+1}ステータス変更: \${oldP.status || 'pending'} → \${p.status}\`);
+
+            (lEntry.participants || []).forEach((lP, pIdx) => {
+                const mP = mergedEntry.participants[pIdx];
+                if (mP) {
+                    if (lP._ikesuModified) { mP.ikesuId = lP.ikesuId; mP.isLeader = lP.isLeader; delete lP._ikesuModified; bumped = true; }
+                    else if (lTime > cTime) { mP.ikesuId = lP.ikesuId; mP.isLeader = lP.isLeader; }
+
+                    if (lP._typeModified) { mP.type = lP.type; delete lP._typeModified; bumped = true; }
+                    else if (lTime > cTime && lP.type !== undefined) { mP.type = lP.type; }
+
+                    if (lP._statusModified) { mP.status = lP.status; delete lP._statusModified; bumped = true; }
+                    else if (lTime > cTime && lP.status !== undefined) { mP.status = lP.status; }
+
+                    if (lP._catchModified) { 
+                        mP.catchA = lP.catchA; 
+                        mP.catchB = lP.catchB; 
+                        delete lP._catchModified; 
+                        bumped = true; 
+                    }
                 }
-            } else {
-                details.push(\`参加者追加: \${p.name}\`);
-            }
-        });`
-        ],
-        // 5. Fishers Count 1
-        [
-            `        const fisherCount = finalParticipants.filter(p => p.type === 'fisher' && p.status !== 'cancelled').length;
-        const observerCount = finalParticipants.filter(p => p.type === 'observer' && p.status !== 'cancelled').length;`,
-            `        const fisherCount = finalParticipants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
-        const observerCount = finalParticipants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;`
-        ],
-        // 6. Fishers Count 2
-        [
-            `    // v7.9.3: Toggle logic - if already active, revert to pending
-    const newStatus = isTogglingOff ? 'pending' : status;
-    entry.participants[pIdx].status = newStatus;
+            });
 
-    // Sync group-level flags (for backward compatibility and stats)`,
-            `    // v7.9.3: Toggle logic - if already active, revert to pending
-    const newStatus = isTogglingOff ? 'pending' : status;
-    entry.participants[pIdx].status = newStatus;
-
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
-
-    // Sync group-level flags (for backward compatibility and stats)`
-        ],
-        // 7. Fishers Count 3
-        [
-            `        if (status === 'checked-in' && p.status === 'absent') {
-            return;
-        }
-        p.status = status;
-    });
-    syncGroupStatusFromParticipants(entry);`,
-            `        if (status === 'checked-in' && p.status === 'absent') {
-            return;
-        }
-        p.status = status;
-    });
-
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;
-
-    syncGroupStatusFromParticipants(entry);`
-        ],
-        // 8. Fishers Count 4
-        [
-            `    entry.participants[pIdx].status = 'cancelled';
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled').length;`,
-            `    entry.participants[pIdx].status = 'cancelled';
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;`
-        ],
-        // 9. Fishers Count 5
-        [
-            `    entry.participants[pIdx].status = 'pending';
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled').length;`,
-            `    entry.participants[pIdx].status = 'pending';
-    entry.fishers = entry.participants.filter(p => p.type === 'fisher' && p.status !== 'cancelled' && p.status !== 'absent').length;
-    entry.observers = entry.participants.filter(p => p.type === 'observer' && p.status !== 'cancelled' && p.status !== 'absent').length;`
-        ],
-        // 10. Settings Checkbox Logic
-        [
-            `        \${document.getElementById('edit-entry-id')?.value ? \`
-        <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
-            <label style="display:flex; align-items:center; gap:8px; color:#ef4444; font-weight:bold; cursor:pointer;">
-                <input type="checkbox" class="p-cancel" style="width:18px; height:18px;" \${data && data.status === 'cancelled' ? 'checked' : ''}>
-                この参加者をキャンセルする
-            </label>
-        </div>\` : ''}`,
-            `        \${(() => {
-            if (!document.getElementById('edit-entry-id')?.value) return '';
-            
-            const isCancelDeadlinePassed = state.settings.cancelDeadline && new Date() > new Date(state.settings.cancelDeadline);
-            const isAdmin = typeof isBypassAllowed === 'function' && isBypassAllowed();
-            
-            if (isCancelDeadlinePassed && !isAdmin) {
-                if (data && data.status === 'cancelled') {
-                    return \`<div class="form-group" style="margin-top: 10px; margin-bottom: 0;"><span style="color:#ef4444; font-weight:bold;">※キャンセル済</span></div>\`;
-                }
-                return '';
+            if (bumped || lEntry._formModified) {
+                mergedEntry.lastModified = new Date().toISOString();
+            } else if (lTime > cTime) {
+                mergedEntry.lastModified = lEntry.lastModified;
             }
 
-            return \`
-            <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
-                <label style="display:flex; align-items:center; gap:8px; color:#ef4444; font-weight:bold; cursor:pointer;">
-                    <input type="checkbox" class="p-cancel" style="width:18px; height:18px;" \${data && data.status === 'cancelled' ? 'checked' : ''}>
-                    この参加者をキャンセルする
-                </label>
-            </div>\`;
-        })()}`
-        ],
-        // 11. Settings Sync UI
-        [
-            `    updateIfInactive('registration-start', state.settings.startTime);
-    updateIfInactive('registration-deadline', state.settings.deadline);
-    updateIfInactive('admin-password-set', state.settings.adminPassword);`,
-            `    updateIfInactive('registration-start', state.settings.startTime);
-    updateIfInactive('registration-deadline', state.settings.deadline);
-    updateIfInactive('cancel-deadline', state.settings.cancelDeadline);
-    updateIfInactive('admin-password-set', state.settings.adminPassword);`
-        ],
-        // 12. Settings Saving
-        [
-            `    state.settings.startTime = getVal('registration-start');
-    state.settings.deadline = getVal('registration-deadline');
-    state.settings.adminPassword = getVal('admin-password-set');`,
-            `    state.settings.startTime = getVal('registration-start');
-    state.settings.deadline = getVal('registration-deadline');
-    state.settings.cancelDeadline = getVal('cancel-deadline');
-    state.settings.adminPassword = getVal('admin-password-set');`
-        ]
-    ];
-
-    let successCount = 0;
-    for (let i = 0; i < patches.length; i++) {
-        const oldStr = patches[i][0];
-        const newStr = patches[i][1];
-        if (content.includes(oldStr)) {
-            content = content.replace(oldStr, newStr);
-            console.log("Patch " + (i + 1) + " applied.");
-            successCount++;
-        } else {
-            console.error("Patch " + (i + 1) + " FAILED. Old string not found.");
+            const idx = merged.entries.findIndex(e => e.id === lEntry.id);
+            if (idx !== -1) merged.entries[idx] = mergedEntry;
         }
+    });`
+    ]
+];
+
+// Special patch for generateMockCatchData because of duplicated lines
+content = content.replace(
+    /\} else \{\n\s*p\.catchB = 0;\s*\/\/\ 22\%\n\s*\}\n\s*updated = true;\n\s*\}\n\s*\/\/ Update counts/,
+    `} else {\n                    p.catchB = 0;       // 22%\n                }\n                p._catchModified = true;\n                updated = true;\n            }\n            // Update counts`
+);
+
+let success = 0;
+for (const [target, repl] of replacements) {
+    if (content.includes(target)) {
+        content = content.replace(target, repl);
+        success++;
+    } else {
+        console.log("Failed to find:\\n" + target);
     }
-
-    fs.writeFileSync('script.js', content, 'utf-8');
-    console.log(successCount + "/" + patches.length + " patches applied.");
 }
-
-patchFile();
+fs.writeFileSync('script.js', content);
+console.log("Applied " + success + " replacements");
