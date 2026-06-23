@@ -3007,10 +3007,11 @@ window.setParticipantAsLeader = function(entryId, partIdx) {
     showToast(`${entry.participants[partIdx].name} 様をリーダーに設定しました`, 'info');
 };
 
-let currentDayTab = 'tab-day-reception';
+let currentDayTab = sessionStorage.getItem('currentDayTab') || 'tab-day-reception';
 window.switchDayTab = function(tabId) {
     if (!tabId) return;
     currentDayTab = tabId;
+    sessionStorage.setItem('currentDayTab', tabId);
     document.querySelectorAll('.day-tab-btn').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId));
     document.querySelectorAll('.day-tab-content').forEach(content => content.classList.toggle('active', content.id === tabId));
     if (tabId === 'tab-day-reception') updateReceptionList();
