@@ -6738,3 +6738,14 @@ window.exportSurveysToCSV = function() {
     link.download = `アンケート結果_${new Date().getTime()}.csv`;
     link.click();
 };
+
+window.deletePreorder = async function(index) {
+    if (confirm("この予約データを削除してもよろしいですか？")) {
+        state.preorders.splice(index, 1);
+        window.renderPreorders();
+        await window.saveData();
+        if (typeof showToast === 'function') {
+            showToast('予約データを削除しました', 'success');
+        }
+    }
+};
