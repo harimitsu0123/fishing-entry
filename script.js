@@ -6557,22 +6557,32 @@ window.renderPreorders = function() {
         return;
     }
     
-    let html = '';
-    [...preorders].reverse().forEach(p => {
-        const dateStr = p.timestamp ? new Date(p.timestamp).toLocaleString() : '-';
-        const itemsStr = (p.items || []).map(i => `${i.name}(${i.quantity})`).join('<br>');
-        html += `
-            <tr>
-                <td>${dateStr}</td>
-                <td>${p.storeName || ''}</td>
-                <td>${p.customerName || ''}</td>
-                <td>${p.customerPhone || ''}</td>
-                <td>${p.customerEmail || ''}</td>
-                <td>${itemsStr}</td>
-            </tr>
-        `;
-    });
-    list.innerHTML = html;
+          let html = '';
+      [...preorders].reverse().forEach((p, idx) => {
+          const originalIndex = preorders.length - 1 - idx;
+          let dateStr = '-';
+          if (p.timestamp) {
+              const d = new Date(p.timestamp);
+              dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+          }
+          const itemsStr = (p.items || []).map(i => {
+              let shortName = i.name.replace(/[（\(]￥.*/, '').trim();
+              return `<div style="padding: 2px 0; border-bottom: 1px dotted #ccc;">${shortName} <span style="font-weight:bold; color:var(--primary-color);">×${i.quantity}</span></div>`;
+          }).join('');
+          
+          html += `
+              <tr>
+                  <td style="white-space: nowrap; font-size: 0.85rem;">${dateStr}</td>
+                  <td style="font-size: 0.85rem;">${p.storeName || ''}</td>
+                  <td style="white-space: nowrap; font-weight: bold;">${p.customerName || ''}</td>
+                  <td style="white-space: nowrap; font-size: 0.85rem;">${p.customerPhone || ''}</td>
+                  <td style="font-size: 0.85rem; word-break: break-all;">${p.customerEmail || ''}</td>
+                  <td style="font-size: 0.85rem; line-height: 1.4;">${itemsStr}</td>
+                  <td style="text-align: center;"><button type="button" onclick="deletePreorder(${originalIndex})" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">削除</button></td>
+              </tr>
+          `;
+      });
+      list.innerHTML = html;
 };
 
 window.renderSurveys = function() {

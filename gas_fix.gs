@@ -16,8 +16,7 @@ function doPost(e) {
     
     var request = JSON.parse(e.postData.contents);
     var props = PropertiesService.getScriptProperties();
-    var rawData = props.getProperty(PROP_KEY);
-    var db = rawData ? JSON.parse(rawData) : { entries: [], settings: {}, lastUpdated: 0 };
+    var db = loadFromDb(props);
     
     var action = request.action;
     
@@ -172,16 +171,65 @@ function generateEntryId(db, source) {
   return prefix + '-' + ("00" + nextNum).slice(-3);
 }
 
+function loadFromDb(props) {
+  // 1. 新しいチャンク方式の確認
+  var chunk0 = props.getProperty(PROP_KEY + "_chunk_0");
+  if (chunk0) {
+    var fullStr = "";
+    var i = 0;
+    while (true) {
+      var chunk = props.getProperty(PROP_KEY + "_chunk_" + i);
+      if (!chunk) break;
+      fullStr += chunk;
+      i++;
+    }
+    try {
+      return JSON.parse(fullStr);
+    } catch(e) {
+      // 壊れている場合はフォールバック
+    }
+  }
+  
+  // 2. 旧方式の読み込み（移行用）
+  var rawData = props.getProperty(PROP_KEY);
+  if (rawData) {
+    return JSON.parse(rawData);
+  }
+  
+  return { entries: [], settings: {}, lastUpdated: 0 };
+}
+
 function saveToDb(db, props) {
   db.lastUpdated = new Date().getTime();
-  props.setProperty(PROP_KEY, JSON.stringify(db));
+  var fullStr = JSON.stringify(db);
+  var CHUNK_SIZE = 90000; // 約90KBごとに分割
+  var chunksNeeded = Math.ceil(fullStr.length / CHUNK_SIZE);
+  
+  // 新しいチャンクを保存
+  for (var i = 0; i < chunksNeeded; i++) {
+    var chunkStr = fullStr.substring(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+    props.setProperty(PROP_KEY + "_chunk_" + i, chunkStr);
+  }
+  
+  // 不要になった古いチャンクを削除
+  var j = chunksNeeded;
+  while (true) {
+    var oldChunk = props.getProperty(PROP_KEY + "_chunk_" + j);
+    if (!oldChunk) break;
+    props.deleteProperty(PROP_KEY + "_chunk_" + j);
+    j++;
+  }
+  
+  // 旧方式のプロパティを削除して総容量（500KB）を節約
+  if (props.getProperty(PROP_KEY)) {
+    props.deleteProperty(PROP_KEY);
+  }
 }
 
 function doGet(e) {
   var props = PropertiesService.getScriptProperties();
-  var rawData = props.getProperty(PROP_KEY);
-  var defaultData = '{"entries":[],"settings":{},"lastUpdated":0}';
-  return createJsonResponse(rawData ? JSON.parse(rawData) : JSON.parse(defaultData));
+  var db = loadFromDb(props);
+  return createJsonResponse(db);
 }
 
 function createJsonResponse(data) {

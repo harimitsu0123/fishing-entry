@@ -36,7 +36,7 @@
             <div class="preorder-header">
                 <h2>🎣 試釣会商品 予約フォーム（みん釣り専用）</h2>
                 <p>ご希望の商品を事前予約し、指定の店舗にてお受け取り（ご購入）いただけます。</p>
-                <div style="background-color: #fff8e1; border-left: 4px solid #ffc107; padding: 10px; margin-top: 15px; text-align: left; border-radius: 4px;">
+                <div id="coupon-banner" style="background-color: #fff8e1; border-left: 4px solid #ffc107; padding: 10px; margin-top: 15px; text-align: left; border-radius: 4px;">
                     <p style="margin: 0; color: #d97706; font-weight: bold; font-size: 0.95rem;">✨ 竿かネット1本ご購入ごとにWEBクーポン3,000円プレゼント！</p>
                     <p style="margin: 5px 0 0; font-size: 0.8rem; color: #555;">注文確定（商品納品後）にメールでコードをお送りいたします。</p>
                 </div>
@@ -162,6 +162,17 @@
                 <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
                 <h3 style="color: var(--primary-color); margin-bottom: 1.5rem; font-size: 1.5rem;">予約受付完了</h3>
                 <p style="color: #334155; line-height: 1.6; margin-bottom: 1.5rem; font-weight: 600;">ご予約を受け付けました。<br>ご指定の店舗にご予約情報を共有させていただきます。<br>入荷案内があるまで少々お待ちください。</p>
+                
+                <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; text-align: left;">
+                    <h4 style="margin-top: 0; margin-bottom: 1rem; color: #1e293b; border-bottom: 2px solid #cbd5e1; padding-bottom: 0.5rem;">ご予約内容の控え</h4>
+                    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.2rem;">受取店舗: <span id="success-store" style="color: #0f172a; font-weight: bold; font-size: 1rem;"></span></p>
+                    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.2rem;">お名前: <span id="success-name" style="color: #0f172a; font-weight: bold; font-size: 1rem;"></span></p>
+                    <div style="margin-top: 1rem;">
+                        <span style="font-size: 0.85rem; color: #64748b;">ご予約商品:</span>
+                        <div id="success-items" style="margin-top: 0.5rem; font-weight: 600; font-size: 1rem; background: white; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 4px; line-height: 1.5;"></div>
+                    </div>
+                </div>
+
                 <div style="background-color: #fff1f2; border: 2px solid #fda4af; border-radius: 8px; padding: 1rem; margin-bottom: 2rem; display: inline-block; text-align: left;">
                     <p style="margin: 0; color: #e11d48; font-weight: bold; font-size: 0.95rem; text-align: center;">📸 念のため、この完了画面をスクリーンショットして保存してください。</p>
                 </div>
@@ -173,6 +184,12 @@
     
     <script>
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbykDT-XvGhrZCQcCp_gCxZAToW3X4s_g_BPX7LBO4E-A84vUY0VE3nlqehITFOfp9f9/exec";
+
+        // Hide coupon banner from 2026-07-07 onwards
+        if (new Date() >= new Date('2026-07-07T00:00:00+09:00')) {
+            const banner = document.getElementById('coupon-banner');
+            if (banner) banner.style.display = 'none';
+        }
 
         let currentPayload = null;
 
@@ -212,6 +229,11 @@
             document.getElementById('confirm-phone').textContent = customerPhone;
             document.getElementById('confirm-email').textContent = customerEmail;
             document.getElementById('confirm-items').innerHTML = itemsHtml;
+            
+            // Populate success screen
+            document.getElementById('success-store').textContent = storeName;
+            document.getElementById('success-name').textContent = customerName;
+            document.getElementById('success-items').innerHTML = itemsHtml;
 
             // Switch to confirm screen
             document.getElementById('step-input').style.display = 'none';
