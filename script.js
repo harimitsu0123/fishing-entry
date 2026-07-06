@@ -6557,7 +6557,7 @@ window.renderPreorders = function() {
         return;
     }
     
-          let html = '';
+                let html = '';
       [...preorders].reverse().forEach((p, idx) => {
           const originalIndex = preorders.length - 1 - idx;
           let dateStr = '-';
@@ -6567,7 +6567,10 @@ window.renderPreorders = function() {
           }
           const itemsStr = (p.items || []).map(i => {
               let shortName = i.name.replace(/[（\(]￥.*/, '').trim();
-              return `<div style="padding: 2px 0; border-bottom: 1px dotted #ccc;">${shortName} <span style="font-weight:bold; color:var(--primary-color);">×${i.quantity}</span></div>`;
+              return `<div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px dotted #ccc;">
+                  <span>${shortName}</span>
+                  <span style="font-weight:bold; color:var(--primary-color); white-space: nowrap; margin-left: 10px;">${i.quantity} 個</span>
+              </div>`;
           }).join('');
           
           html += `
@@ -6578,7 +6581,7 @@ window.renderPreorders = function() {
                   <td style="white-space: nowrap; font-size: 0.85rem;">${p.customerPhone || ''}</td>
                   <td style="font-size: 0.85rem; word-break: break-all;">${p.customerEmail || ''}</td>
                   <td style="font-size: 0.85rem; line-height: 1.4;">${itemsStr}</td>
-                  <td style="text-align: center;"><button type="button" onclick="deletePreorder(${originalIndex})" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">削除</button></td>
+                  <td style="text-align: center; vertical-align: middle;"><button type="button" onclick="deletePreorder(${originalIndex})" style="background: #ef4444; color: white; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; opacity: 0.8;">削除</button></td>
               </tr>
           `;
       });
