@@ -832,7 +832,7 @@ function mergeData(local, cloud) {
     // --- 2.5. 独立フォームのデータマージ ---
     const localPreTime = new Date(local.preordersLastModified || 0).getTime();
     const cloudPreTime = new Date(cloud.preordersLastModified || 0).getTime();
-    if (localPreTime > cloudPreTime && (local.preorders || []).length >= (cloud.preorders || []).length) {
+    if (localPreTime > cloudPreTime) {
         merged.preorders = local.preorders || [];
         merged.preordersLastModified = local.preordersLastModified;
     } else {
@@ -6744,6 +6744,7 @@ window.exportSurveysToCSV = function() {
 window.deletePreorder = async function(index) {
     if (confirm("この予約データを削除してもよろしいですか？")) {
         state.preorders.splice(index, 1);
+        state.preordersLastModified = Date.now();
         window.renderPreorders();
         await window.saveData();
         if (typeof showToast === 'function') {
