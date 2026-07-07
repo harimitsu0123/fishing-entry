@@ -917,6 +917,8 @@ function finalizeLoad(isRefresh = false) {
         updateReceptionList();
         updateSourceAvailability();
         applyMaintenanceMode();
+        if (typeof window.renderPreorders === "function") window.renderPreorders();
+        if (typeof window.renderSurveys === "function") window.renderSurveys();
         
         // v8.9.72 & v8.9.88: Auto-refresh day-of views on sync
         const isDayView = document.getElementById('reception-view')?.style.display !== 'none' || currentAdminTab === 'tab-day';
@@ -6581,7 +6583,7 @@ window.renderPreorders = function() {
                   <td style="white-space: nowrap; font-size: 0.85rem;">${p.customerPhone || ''}</td>
                   <td style="font-size: 0.85rem; word-break: break-all;">${p.customerEmail || ''}</td>
                   <td style="font-size: 0.85rem; line-height: 1.4;">${itemsStr}</td>
-                  <td style="text-align: center; vertical-align: middle;"><button type="button" onclick="deletePreorder(${originalIndex})" style="background: #ef4444; color: white; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; opacity: 0.8;">削除</button></td>
+                  <td style="text-align: center; vertical-align: middle;"><button type="button" onclick="event.stopPropagation(); window.deletePreorder(${originalIndex})" style="background: #ef4444; color: white; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; opacity: 0.8;">削除</button></td>
               </tr>
           `;
       });
