@@ -6672,7 +6672,7 @@ window.renderSurveys = function() {
                 <td>${s.satisfaction || ''}</td>
                 <td>${s.catchResult || ''}</td>
                 <td>${s.nextTime || ''}</td>
-                <td><div style="max-width:200px; max-height:60px; overflow-y:auto; font-size:0.8rem;">${s.comments || ''}</div></td>
+                <td><div style="min-width:300px; max-height:80px; overflow-y:auto; font-size:0.85rem; white-space:pre-wrap; word-break:break-all;">${s.comments || ''}</div></td>
             </tr>
         `;
     });
