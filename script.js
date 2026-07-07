@@ -6667,11 +6667,11 @@ window.renderSurveys = function() {
         const nameToShow = s.participantName || s.groupName || '';
         html += `
             <tr>
-                <td>${dateStr}</td>
-                <td>${nameToShow}</td>
-                <td>${s.satisfaction || ''}</td>
-                <td>${s.catchResult || ''}</td>
-                <td>${s.nextTime || ''}</td>
+                <td style="white-space:nowrap;">${dateStr}</td>
+                <td style="white-space:nowrap;">${nameToShow}</td>
+                <td style="white-space:nowrap; text-align:center;">${s.satisfaction || ''}</td>
+                <td style="white-space:nowrap;">${s.catchResult || ''}</td>
+                <td style="white-space:nowrap; text-align:center;">${s.nextTime || ''}</td>
                 <td><div style="min-width:300px; max-height:80px; overflow-y:auto; font-size:0.85rem; white-space:pre-wrap; word-break:break-all;">${s.comments || ''}</div></td>
             </tr>
         `;
