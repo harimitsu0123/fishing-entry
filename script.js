@@ -6567,23 +6567,31 @@ window.renderPreorders = function() {
               const d = new Date(p.timestamp);
               dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
           }
+          const isShipped = p.shipped === true;
+          const trStyle = isShipped ? 'background-color: #f1f5f9; color: #94a3b8;' : '';
           const itemsStr = (p.items || []).map(i => {
               let shortName = i.name.replace(/[（\(]￥.*/, '').trim();
-              return `<div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; ">
-                  <span>${shortName}</span>
-                  <span style="font-weight:bold; color:var(--primary-color); white-space: nowrap; margin-left: 10px;">${i.quantity} 個</span>
-              </div>`;
+              return \`<div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0;">
+                  <span>\$\{shortName\}</span>
+                  <span style="font-weight:bold; color:\$\{isShipped ? '#94a3b8' : 'var(--primary-color)'\}; white-space: nowrap; margin-left: 10px;">\$\{i.quantity\} 個</span>
+              </div>\`;
           }).join('');
           
-          html += `
-              <tr>
-                  <td style="white-space: nowrap; font-size: 0.85rem;">${dateStr}</td>
-                  <td style="font-size: 0.85rem;">${p.storeName || ''}</td>
-                  <td style="white-space: nowrap; font-weight: bold;">${p.customerName || ''}</td>
-                  <td style="white-space: nowrap; font-size: 0.85rem;">${p.customerPhone || ''}</td>
-                  <td style="font-size: 0.85rem; word-break: break-all;">${p.customerEmail || ''}</td>
-                  <td style="font-size: 0.85rem; line-height: 1.4;">${itemsStr}</td>
-                  <td style="text-align: center; vertical-align: middle;"><button type="button" onclick="event.stopPropagation(); window.deletePreorder(${originalIndex})" style="background: #ef4444; color: white; border: none; padding: 1px 4px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; opacity: 0.8;">削除</button></td>
+          const shipBtnColor = isShipped ? '#94a3b8' : '#3b82f6';
+          const shipBtnText = isShipped ? '発送済' : '未発送';
+
+          html += \`
+              <tr style="\$\{trStyle\}">
+                  <td style="white-space: nowrap; font-size: 0.85rem;">\$\{dateStr\}</td>
+                  <td style="font-size: 0.85rem;">\$\{p.storeName || ''\}</td>
+                  <td style="white-space: nowrap; font-weight: bold;">\$\{p.customerName || ''\}</td>
+                  <td style="white-space: nowrap; font-size: 0.85rem;">\$\{p.customerPhone || ''\}</td>
+                  <td style="font-size: 0.85rem; word-break: break-all;">\$\{p.customerEmail || ''\}</td>
+                  <td style="font-size: 0.85rem; line-height: 1.4;">\$\{itemsStr\}</td>
+                  <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                      <button type="button" onclick="event.stopPropagation(); window.toggleShipped(\$\{originalIndex\})" style="background: \$\{shipBtnColor\}; color: white; border: none; padding: 1px 4px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; opacity: 0.8; margin-bottom: 2px; width: 45px;">\$\{shipBtnText\}</button><br>
+                      <button type="button" onclick="event.stopPropagation(); window.deletePreorder(\$\{originalIndex\})" style="background: #ef4444; color: white; border: none; padding: 1px 4px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; opacity: 0.8; width: 45px;">削除</button>
+                  </td>
               </tr>
           `;
       });
@@ -6708,16 +6716,19 @@ window.clearSurveys = async function() {
 window.exportPreordersToCSV = function() {
     const preorders = state.preorders || [];
     if (preorders.length === 0) return alert('データがありません');
-    let csv = '\uFEFF日時,受取店舗,氏名,電話番号,メールアドレス,予約商品\n';
+    let csv = '\uFEFF日時,受取店舗,氏名,電話番号,メールアドレス,商品名,数量,発送済み\n';
     preorders.forEach(p => {
         const dateStr = p.timestamp ? new Date(p.timestamp).toLocaleString() : '';
-        const itemsStr = (p.items || []).map(i => `${i.name}(${i.quantity})`).join(' / ');
-        csv += `"${dateStr}","${p.storeName || ''}","${p.customerName || ''}","${p.customerPhone || ''}","${p.customerEmail || ''}","${itemsStr}"\n`;
+        const shippedStr = p.shipped ? '発送済' : '未発送';
+        (p.items || []).forEach(i => {
+            const shortName = i.name.replace(/[（\(]￥.*/, '').trim();
+            csv += \`"\$\{dateStr\}","\$\{p.storeName || ''\}","\$\{p.customerName || ''\}","\$\{p.customerPhone || ''\}","\$\{p.customerEmail || ''\}","\$\{shortName\}","\$\{i.quantity\}","\$\{shippedStr\}"\n\`;
+        });
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `予約一覧_${new Date().getTime()}.csv`;
+    link.download = \`予約一覧_\$\{new Date().getTime()\}.csv\`;
     link.click();
 };
 
@@ -6741,7 +6752,17 @@ window.exportSurveysToCSV = function() {
     link.click();
 };
 
-window.deletePreorder = async function(index) {
+
+window.toggleShipped = async function(index) {
+    state.preorders[index].shipped = !state.preorders[index].shipped;
+    state.preordersLastModified = Date.now();
+    window.renderPreorders();
+    await window.saveData();
+    if (typeof showToast === 'function') {
+        showToast(state.preorders[index].shipped ? '発送済みにしました' : '未発送に戻しました', 'success');
+    }
+};
+\nwindow.deletePreorder = async function(index) {
     if (confirm("この予約データを削除してもよろしいですか？")) {
         state.preorders.splice(index, 1);
         state.preordersLastModified = Date.now();
