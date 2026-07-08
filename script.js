@@ -6569,7 +6569,7 @@ window.renderPreorders = function() {
           }
           const itemsStr = (p.items || []).map(i => {
               let shortName = i.name.replace(/[（\(]￥.*/, '').trim();
-              return `<div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px dotted #ccc;">
+              return `<div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; ">
                   <span>${shortName}</span>
                   <span style="font-weight:bold; color:var(--primary-color); white-space: nowrap; margin-left: 10px;">${i.quantity} 個</span>
               </div>`;
@@ -6583,7 +6583,7 @@ window.renderPreorders = function() {
                   <td style="white-space: nowrap; font-size: 0.85rem;">${p.customerPhone || ''}</td>
                   <td style="font-size: 0.85rem; word-break: break-all;">${p.customerEmail || ''}</td>
                   <td style="font-size: 0.85rem; line-height: 1.4;">${itemsStr}</td>
-                  <td style="text-align: center; vertical-align: middle;"><button type="button" onclick="event.stopPropagation(); window.deletePreorder(${originalIndex})" style="background: #ef4444; color: white; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; opacity: 0.8;">削除</button></td>
+                  <td style="text-align: center; vertical-align: middle;"><button type="button" onclick="event.stopPropagation(); window.deletePreorder(${originalIndex})" style="background: #ef4444; color: white; border: none; padding: 1px 4px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; opacity: 0.8;">削除</button></td>
               </tr>
           `;
       });
