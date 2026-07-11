@@ -1,4 +1,4 @@
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbykDT-XvGhrZCQcCp_gCxZAToW3X4s_g_BPX7LBO4E-A84vUY0VE3nlqehITFOfp9f9/exec";
+﻿const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbykDT-XvGhrZCQcCp_gCxZAToW3X4s_g_BPX7LBO4E-A84vUY0VE3nlqehITFOfp9f9/exec";
 
 let state = {
     entries: [],
@@ -470,8 +470,8 @@ async function handleSave() {
         
         let stateToSave = state;
         
-        if (fetchResult.status === 'success' && fetchResult.data) {
-            const serverState = fetchResult.data;
+        if (fetchResult && fetchResult.entries) {
+            const serverState = fetchResult;
             
             // Merge our local catches into the server state
             state.entries.forEach(localEntry => {
@@ -651,3 +651,4 @@ window.clearCatchData = async function() {
         showToast("リセットするデータがありません", "info");
     }
 };
+

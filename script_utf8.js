@@ -1,4 +1,4 @@
-/**
+﻿/**
  * BORIJIN Fishing Entry System
  * Version: v8.10.0 (GitHub Synchronized)
  * Last Updated: 2026-05-15
@@ -1141,8 +1141,8 @@ async function syncToCloud() {
         try {
             const fetchRes = await fetch(GAS_WEB_APP_URL + '?action=load');
             const fetchResult = await fetchRes.json();
-            if (fetchResult.status === 'success' && fetchResult.data) {
-                const serverState = fetchResult.data;
+            if (fetchResult && fetchResult.entries) {
+                const serverState = fetchResult;
                 
                 // v8.9.91: Merge server state to preserve status updates from other devices
                 state = mergeData(state, serverState);
@@ -6774,3 +6774,4 @@ window.deletePreorder = async function(index) {
         }
     }
 };
+
